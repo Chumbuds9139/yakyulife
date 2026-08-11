@@ -155,6 +155,7 @@ table.fin td:first-child,table.fin th:first-child{text-align:left}
     <p class="seedline">世界種子
       <input id="seed-show" maxlength="24" style="width:120px;background:#0e2015;color:#ffc95c;border:1px solid #2b4a38;border-radius:6px;padding:2px 6px;font-family:inherit;font-size:12px;text-align:center">
       · <a href="#" id="seed-re" style="color:var(--blue)">換一個</a><br>相同種子＋相同選擇＝相同人生（可直接輸入朋友的種子碼）</p>
+    <footer style="text-align:center;margin-top:22px;color:var(--dim);font-size:12px">Produced by <a href="https://www.threads.com/@mr.themost" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:none">最先生 Mr.TheMost</a></footer>
   </div>
 </div>
 <div id="app">
@@ -808,9 +809,16 @@ function phasePre(){
     return;
   }
   if(S.stage==='PRO'&&S.age>=36&&S.rehab===0){
-    choose('又是一年春訓，身體大不如前了',[
-      {t:'再戰一年',main:true,f:afterAsk},
-      {t:'召開引退記者會',warn:true,s:'結束選手生涯',f:()=>{buyoutRemaining();daibaFarewell(()=>endGame('功成身退，於 '+S.year+' 年宣布引退。'));}}]);
+    const oldOpts=[{t:'再戰一年',main:true,f:afterAsk}];
+    /* 旅外老將:放棄現有合約,落葉歸根返台(重簽中職,原合約作廢) */
+    if(S.org!=='CPBL'&&ovr()>=LV.CPBL1.min){
+      oldOpts.push({t:'放棄合約，落葉歸根',s:'解約返台，重披中職戰袍',f:()=>{
+        card('good','落葉歸根',`年紀增長，在異鄉打拚的你，也開始想家。這時候有家鄉球隊招手，於是你決定放棄合約，重返臺灣獻技。`);
+        signTo('CPBL','CPBL1'); advance();
+      }});
+    }
+    oldOpts.push({t:'召開引退記者會',warn:true,s:'結束選手生涯',f:()=>{buyoutRemaining();daibaFarewell(()=>endGame('功成身退，於 '+S.year+' 年宣布引退。'));}});
+    choose('又是一年春訓，身體大不如前了',oldOpts);
     return;
   }
   afterAsk();
@@ -1133,7 +1141,8 @@ function tradeCheck(cont){
       cont(); }}]);
 }
 function doTradeExec(){
-  S.teamYears=0; S.champThisTeam=false; S.champTeam=null; S.tradeFrom=S.teamName();
+  /* 季末交易 = 下季起改效力新隊(乾淨轉隊,不設 tradeFrom,避免隔年被誤顯示成兩隊 split) */
+  S.teamYears=0; S.champThisTeam=false; S.champTeam=null;
   const list=S.org==='CPBL'?CPBL_TEAMS:S.org==='NPB'?NPB_TEAMS:MLB_TEAMS;
   const nt=pick(list.filter(t=>t!==S.orgTeam)); S.orgTeam=nt; board(1);
 }
@@ -1709,10 +1718,27 @@ function runDraft(fromSchool,cb){
   const bonus=[0,1000,600,350,350,150,150,150,50,50,50][rd]||50;
   const lv=(rd===1&&o>=50)?'CPBL1':'CPBL2';
   const team=pick(CPBL_TEAMS);
-  S.stage='PRO'; S.team=''; S.salary+=bonus; S.svc=0; S.faElig=false;
-  signTo('CPBL',lv,team,ri(2,3),1); /* 菜鳥分段短約(2~3年) */
-  card('gold','中華職棒選秀會',`第 <b class="hl">${rd}</b> 輪獲 <b class="hl">${team}</b> 指名！簽約金依順位為 <b class="hl">${fmtMoney(bonus)}</b>。${lv==='CPBL1'?'即戰力評價，直接放入一軍名單。':'先從二軍出發。'}`);
-  board(0); cb();
+  const accept=()=>{
+    S.stage='PRO'; S.team=''; S.salary+=bonus; S.svc=0; S.faElig=false;
+    signTo('CPBL',lv,team,ri(2,3),1); /* 菜鳥分段短約(2~3年) */
+    card('gold','中華職棒選秀會',`第 <b class="hl">${rd}</b> 輪獲 <b class="hl">${team}</b> 指名！簽約金依順位為 <b class="hl">${fmtMoney(bonus)}</b>。${lv==='CPBL1'?'即戰力評價，直接放入一軍名單。':'先從二軍出發。'}`);
+    board(0); cb();
+  };
+  /* 輪次不滿意(第 3 輪以後)可選擇重返業餘再拚一年;年齡太大(24+)則不給這選項,避免拖太久 */
+  if(rd>=3 && S.age<24){
+    choose(`中華職棒選秀會 · 第 ${rd} 輪獲 ${team} 指名`,[
+      {t:'接受指名，加盟球隊',main:true,s:`簽約金 ${fmtMoney(bonus)}｜${lv==='CPBL1'?'一軍':'二軍'}出發`,f:accept},
+      {t: (S.stage==='HS'||(S.stage==='U'&&S.stageYr<4))?'重返校園，再拚一年':'重返業餘，再拚一年',warn:true,s:'放棄本次指名，明年重新參加選秀',f:()=>{
+        const goUni = (S.stage==='HS')||(S.stage==='U'&&S.stageYr<4);
+        const fresh = (S.stage==='HS');
+        card('info', goUni?'重返校園':'重返業餘', `看到被選到的輪次，雙眼發黑，原本以為會在前段輪次被選中，卻落到了後段的輪次。你握緊了拳頭，決定${goUni?(fresh?'進入大學繼續深造':'留在校隊繼續磨練'):'重返業餘'}，這一次，你一定要上台戴上所屬球隊的帽子。`);
+        if(fresh){ S.stage='U'; S.stageYr=0; S.team=pick(['文化大學','輔仁大學','國立體大','台灣體大','開南大學']); }
+        else if(!goUni){ S.stage='AMA'; S.team=pick(['合電','台庫','安妞先物','美麗珊瑚']); }
+        advance();
+      }}]);
+    return;
+  }
+  accept();
 }
 function pathChoiceHS(){
   const o=ovr();
@@ -1722,7 +1748,7 @@ function pathChoiceHS(){
     {t:'投入中華職棒選秀',s:'目前綜合 '+o,f:()=>runDraft(false,r=>{
       if(r==='fail')choose('落榜之後',[
         {t:'改就讀大學',main:true,f:()=>{S.stage='U';S.stageYr=0;S.team=pick(['文化大學','輔仁大學','國立體大','台灣體大']);advance();}},
-        {t:'加入業餘成棒隊',f:()=>{S.stage='AMA';S.team=pick(['台電','合庫','安永鮮物','綺麗珊瑚']);advance();}}]);
+        {t:'加入業餘成棒隊',f:()=>{S.stage='AMA';S.team=pick(['合電','台庫','安妞先物','美麗珊瑚']);advance();}}]);
       else advance(); })}];
   if(o>=44)opts.push({t:'洽談旅日合約',s:'從日職二軍（支配下）出發｜滿 8 年視同本土',f:()=>{
     S.stage='PRO';
@@ -1738,7 +1764,7 @@ function pathChoiceU4(){
   const o=ovr();
   const opts=[{t:'投入中華職棒選秀',main:true,s:'綜合 '+o+'｜大學畢業年齡加權下降',f:()=>runDraft(false,r=>{
     if(r==='fail')choose('落榜之後',[
-      {t:'加入業餘成棒隊',f:()=>{S.stage='AMA';S.team=pick(['台電','合庫','安永鮮物']);advance();}},
+      {t:'加入業餘成棒隊',f:()=>{S.stage='AMA';S.team=pick(['合電','台庫','安妞先物']);advance();}},
       {t:'高掛球鞋',warn:true,f:()=>endGame('大學畢業選秀落榜，決定告別球場。')}]);
     else advance(); })}];
 
@@ -2382,6 +2408,5 @@ $('btn-start').onclick=()=>{
 };
 (function(){ const vb=document.getElementById('ver-badge'); if(vb)vb.textContent=APP_VER; })();
 </script>
-<footer style="text-align:center;padding:18px 0 28px;color:var(--dim);font-size:12px">Produced by <a href="https://www.threads.com/@mr.themost" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:none">最先生 Mr.TheMost</a></footer>
 </body>
 </html>
