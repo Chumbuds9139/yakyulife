@@ -1641,8 +1641,14 @@ function faMarket(o,d){
       if(((S.bigInj||0)+(S.tjCount||0))>=2&&of.yrs<=3)of.mult+=0.15; offers.push({...of,org});});
   if(lv==='CPBL1'&&o>=53)makeOffers('NPB',1,1000,2,3,o>=51?'NPB1':'NPB2',null)
     .forEach(of=>offers.push({...of,org:'NPB',mult:1}));
-  if(lv==='NPB1'&&o>=60&&chance(50))makeOffers('MiLB',1,3000,3,5,'MLB',null)
-    .forEach(of=>offers.push({...of,org:'MiLB',mult:1}));
+  if(lv==='NPB1'&&o>=60){
+    /* 滿 7 年 → 海外 FA(免入札,直接跳美);未滿則走入札(有年齡把關) */
+    const freeAgent=(S.npbYears||0)>=7;
+    if(freeAgent || chance(Math.round(50*ageGateUSA(o,60)))){
+      makeOffers('MiLB', freeAgent?ri(1,2):1, 3000, 3,5,'MLB',null)
+        .forEach(of=>offers.push({...of,org:'MiLB',mult:1,posting:!freeAgent})); /* posting=true 表示走入札 */
+    }
+  }
   if(!offers.length){
     card('bad','自由市場',`電話一直沒有響。經紀人聳聳肩——市場對你的評價比想像中冷。`);
     choose('沒有球隊開價',[
@@ -1653,9 +1659,12 @@ function faMarket(o,d){
   }
   const est=of=>fmtMoney(Math.round(salaryFor(of.lv,d)*(of.mult||1)));
   const estL=(of)=>{ const tp=termParams(d,of.lv); return tp.longEligible?`長 ${tp.longY}年×${(tp.longM*(of.mult||1)).toFixed(2)} / 短 ${tp.shortY}年×${(tp.shortM*(of.mult||1)).toFixed(2)}`:`僅短約 ${tp.shortY}年×${(tp.shortM*(of.mult||1)).toFixed(2)}`; };
-  choose('自由市場報價一覽（每隊列出 長約 / 短約 方案）',[...offers.map(of=>({
-    t:`${of.team}（${LV[of.lv].n}）`,
-    s:`簽約金 ${fmtMoney(of.bonus)}｜奪冠率 ${teamChampRate(of.team)}%｜長/短：${estL(of)}`,
+  const cty=og=>({CPBL:'🇹🇼 台灣',NPB:'🇯🇵 日本',MiLB:'🇺🇸 美國',MLB:'🇺🇸 美國'})[og]||'';
+  const ctyOrder={CPBL:0,NPB:1,MiLB:2,MLB:2};
+  offers.sort((a,b)=>(ctyOrder[a.org]??9)-(ctyOrder[b.org]??9)); /* 依國家排序:台→日→美 */
+  choose('自由市場報價一覽（依國家分列 · 每隊列出 長約 / 短約 方案）',[...offers.map(of=>({
+    t:`${cty(of.org)}｜${of.team}（${LV[of.lv].n}）`,
+    s:`簽約金 ${fmtMoney(of.bonus)}｜奪冠率 ${teamChampRate(of.team)}%｜長/短：${estL(of)}${of.posting?'｜入札':''}`,
     f:()=>{ S.salary+=of.bonus; const savedLv=S.lv; S.lv=of.lv;
       termChoice(o,d,`${of.team} · 選擇合約類型`,(y,m)=>{ S.lv=savedLv;
         signTo(of.org,of.lv,of.team,y,+(m*(of.mult||1)).toFixed(2)); advance(); },
@@ -2389,7 +2398,8 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   b.classList.add('on'); selPos=b.dataset.v;
 });
 $('btn-start').onclick=()=>{
-  const nm=$('in-name').value.trim()||'黃鎖頭';
+  const defName=(selPos==='P')?'有有子':(selPos==='IF')?'抹茶多':(['黃鎖頭','藥帝士'][Math.floor(Math.random()*2)]); /* 依守位預設名(外野/捕手隨機) */
+  const nm=$('in-name').value.trim()||defName;
   const sv=$('seed-show').value.trim(); if(sv)SEED=sv; /* 玩家可直接輸入流水碼 */
   history.replaceState(null,'','?seed='+encodeURIComponent(SEED));
   seedInit(SEED);
