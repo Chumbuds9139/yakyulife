@@ -159,7 +159,10 @@ table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.
 #trait-side{display:none}
 #trait-side.empty{display:none!important}
 #trait-side .tt{font-family:var(--head);font-size:12px;letter-spacing:.2em;color:var(--dim);font-weight:700;margin-bottom:8px}
-#trait-tags{display:flex;flex-wrap:wrap;gap:6px}
+#trait-tags{display:flex;flex-direction:column;gap:6px}
+#trait-tags .trow{display:flex;align-items:center;gap:8px;min-width:0}
+#trait-tags .trow .tag{flex:none}
+#trait-tags .trow .td{flex:1;min-width:0;font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* 骰子與加點 */
 /* single row always: dice shrink evenly (44px cap) when the container is narrow */
 #dice{display:flex;align-items:flex-start;gap:8px;flex-wrap:nowrap;margin-bottom:10px}
@@ -597,8 +600,10 @@ function renderTraits(){ /* desktop trait side panel (presentation only) */
   const el=$('trait-tags'),box=$('trait-side'); if(!el||!box)return;
   let h='';
   if(S&&S.traits){
-    [...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].forEach(k=>{ if(S.traits[k])h+=`<span class="tag" style="${traitTagStyle(k)}" title="${TRAIT_FX[k]||''}">${traitName(k)}</span>`; });
-    (S.removed||[]).forEach(l=>h+=`<span class="tag" style="text-decoration:line-through;opacity:.4;color:#8a8a8a;border-color:#4a4a4a">${l}</span>`);
+    /* one row per trait: tag + inline effect text (ellipsized; full text on hover) */
+    const row=(style,name,fx)=>`<div class="trow" title="${fx}"><span class="tag" style="${style}" title="${fx}">${name}</span><span class="td">${fx}</span></div>`;
+    [...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].forEach(k=>{ if(S.traits[k])h+=row(traitTagStyle(k),traitName(k),TRAIT_FX[k]||''); });
+    (S.removed||[]).forEach(l=>h+=`<div class="trow"><span class="tag" style="text-decoration:line-through;opacity:.4;color:#8a8a8a;border-color:#4a4a4a">${l}</span><span class="td" style="opacity:.4">已解除</span></div>`);
   }
   el.innerHTML=h;
   box.classList.toggle('empty',!h); }
