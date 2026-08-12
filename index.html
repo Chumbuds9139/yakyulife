@@ -94,6 +94,7 @@ a{color:var(--info)}
 .tl-item.gone{cursor:default;opacity:.55}
 .tl-seed{font-family:var(--mono);font-size:11px;color:var(--dim)}
 .tl-seed b{color:var(--accent)}
+.tl-ver{display:block;font-size:10px;opacity:.7;letter-spacing:.05em;margin-top:2px}
 /* ---------- 主紀錄 ---------- */
 #log{flex:1;padding:14px 14px 20px;display:flex;flex-direction:column;gap:10px}
 .yr-block{display:flex;flex-direction:column;gap:10px}
@@ -197,7 +198,8 @@ table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* ---------- 桌面三欄(>920px) ---------- */
 @media(min-width:921px){
-  #app{display:grid;grid-template-columns:250px minmax(0,1fr) 340px;align-items:stretch}
+  #app{display:grid;grid-template-columns:250px minmax(0,1fr) 340px;align-items:stretch;
+    max-width:1360px;margin:0 auto;border-left:1px solid var(--edge);border-right:1px solid var(--edge)}
   #tl-side{display:block}
   #tl-in{position:sticky;top:0;max-height:100vh;overflow-y:auto}
   #tl-strip{display:none}
@@ -240,7 +242,7 @@ table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.
   <aside id="tl-side"><div id="tl-in">
     <div class="tl-brand"><span class="stitch small"></span><div><b>YaKyoLife</b><span class="sub">棒球人生模擬器</span></div></div>
     <div id="tl-list"></div>
-    <div class="tl-seed">SEED <b id="tl-seed"></b></div>
+    <div class="tl-seed">SEED <b id="tl-seed"></b><span class="tl-ver" id="tl-ver"></span></div>
   </div></aside>
   <div id="mid">
     <header id="board" style="display:none">
@@ -886,6 +888,7 @@ function renderTimeline(){
 }
 function tlScrollTo(e){ /* scroll via window.scrollTo (not scrollIntoView; see handoff) */
   if(!e||!e.el||!e.el.isConnected)return;
+  e.el.classList.remove('collapsed'); /* expand the target year so the jump has visible feedback */
   const bd=$('board'), off=(bd?bd.offsetHeight:0)+10;
   window.scrollTo(0,Math.max(0,e.el.getBoundingClientRect().top+window.scrollY-off));
 }
@@ -2938,7 +2941,8 @@ $('btn-start').onclick=()=>{
   card('info','球員誕生',`${S.year} 年春天，${POSN[S.pos]} <b class="hl">${S.name}</b> 加入 <b class="hl">${S.team}</b> 棒球隊。三年後的路，要自己選。<br><span style="color:var(--dim);font-size:12px">提示：22 歲前累積擲出 5 次「6」可覺醒隱藏素質。</span>`);
   startYear();
 };
-(function(){ const vb=document.getElementById('ver-badge'); if(vb)vb.textContent=APP_VER; })();
+(function(){ const vb=document.getElementById('ver-badge'); if(vb)vb.textContent=APP_VER;
+  const tv=document.getElementById('tl-ver'); if(tv)tv.textContent=APP_VER; })();
 </script>
 </body>
 </html>
