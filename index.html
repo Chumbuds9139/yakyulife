@@ -50,7 +50,7 @@ body[data-theme='d']{--bg:#f6f7f6;--panel:#ffffff;--panel2:#f2f4f2;--edge:#e2e6e
   --accent:#0f7b4d;--good:#0f7b4d;--bad:#c0392b;--info:#4a76a8;--gold:#b8862d;--r:12px;
   --glow:none;--btnbg:#0f7b4d;--btnedge:#0f7b4d;--btntx:#ffffff;--bgfx:none;--shadow:rgba(26,32,28,.1)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
+html,body{height:100%;overscroll-behavior-y:none}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.6}
 /* stadium glow lives on a fixed pseudo-element: body is only 100vh tall, so a
    body background-image would tile once per viewport and show a seam on scroll */
@@ -907,9 +907,16 @@ function restartModal(){
   modalOpen(`<h3>重新開始</h3><p>確定要放棄這段人生，從頭開始嗎？</p>
     <button class="btn warn" id="md-restart" style="text-align:center">放棄這段人生，重新開始</button>
     <button class="btn" id="md-cancel" style="text-align:center">繼續目前的生涯</button>`);
-  $('md-restart').onclick=()=>{ location.href=location.pathname; };
+  $('md-restart').onclick=()=>{ _allowLeave=true; location.href=location.pathname; };
   $('md-cancel').onclick=menuModal;
 }
+/* Accidental-reload guard: pull-to-refresh / F5 / tab close mid-game triggers the
+   native leave prompt; intentional restarts set _allowLeave, finished games skip it */
+let _allowLeave=false;
+window.addEventListener('beforeunload',function(ev){
+  if(!S||S.done||_allowLeave)return;
+  ev.preventDefault(); ev.returnValue='';
+});
 const THEME_NAMES={a:'深綠記分板',b:'電子看板',c:'報紙版面',d:'現代儀表板'};
 function themeModal(){
   const cur=document.body.dataset.theme||'a';
