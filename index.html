@@ -1216,7 +1216,7 @@ function phasePre(){
     if(S.org!=='CPBL'&&ovr()>=LV.CPBL2.min){
       oldOpts.push({t:'放棄合約，落葉歸根',s:'狀態不再，仍想把最後的球打給家鄉看',f:()=>{
         card('good','落葉歸根',`狀態早已不在巔峰。但家鄉球隊仍然向你招手——他們要的不是現在的數據，是你這個名字陪著大家走過的那些年。你決定放棄合約，回家，把最後的球打給臺灣的球迷看。`);
-        signTo('CPBL','CPBL1'); advance();
+        signTo('CPBL','CPBL1'); afterAsk();
       }});
     }
     oldOpts.push({t:'召開引退記者會',warn:true,s:'結束選手生涯',f:()=>{buyoutRemaining();daibaFarewell(()=>endGame('功成身退，於 '+S.year+' 年宣布引退。'));}});
