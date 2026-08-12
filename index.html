@@ -131,6 +131,8 @@ table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.
 /* ---------- 操作區 ---------- */
 #act-side{position:sticky;bottom:0;z-index:20;background:var(--panel);border-top:2px solid var(--edge);
   box-shadow:0 -8px 24px var(--shadow);max-height:52vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+/* point-allocation UI: expand to show every ability row; tiny screens still scroll */
+#act-side.alloc{max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px)}
 #act-in{display:flex;flex-direction:column}
 #act-toggle{display:none;margin:8px auto 0;background:none;border:1px solid var(--edge);color:var(--dim);
   font-size:11px;font-family:var(--sans);padding:3px 14px;border-radius:999px;cursor:pointer;flex:none}
@@ -211,6 +213,8 @@ table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.
   #log{padding:18px 26px 26px}
   #act-side{position:static;max-height:none;overflow:visible;border-top:none;border-left:1px solid var(--edge);box-shadow:none}
   #act-in{position:sticky;top:0;max-height:100vh;overflow-y:auto;padding:12px 6px 16px}
+  #act-toggle{display:none!important}
+  #act.collapsed{display:block!important}
   #act{padding:8px 14px 16px}
   #start .wrap{padding-top:64px}
 }
@@ -944,7 +948,8 @@ function board(phase){
   [0,1,2].forEach(i=>$('lp'+i).classList.toggle('on',i===phase));
 }
 function actClear(){ const a=$('act'); a.innerHTML=''; a.classList.remove('collapsed');
-  const t=$('act-toggle'); if(t)t.style.display='none'; }
+  const t=$('act-toggle'); if(t)t.style.display='none';
+  const s=$('act-side'); if(s)s.classList.remove('alloc'); }
 function actToggleSync(){
   const a=$('act'), t=$('act-toggle'); if(!t)return;
   const has=a.innerHTML.trim()!=='' && a.style.display!=='none';
@@ -963,7 +968,8 @@ function choose(title,opts){
 }
 /* 加點介面：mode {dice:[..]} 或 {pool:n} */
 function allocUI(mode,label,done){
-  actClear(); const a=$('act'); const keys=POS_AB[S.pos];
+  actClear(); const _as=$('act-side'); if(_as)_as.classList.add('alloc');
+  const a=$('act'); const keys=POS_AB[S.pos];
   let dice=mode.dice?mode.dice.slice():null, pool=mode.pool||0, idx=0, hist=[];
   a.innerHTML=`<div class="title">${label}</div><div id="al-top"></div><div id="al-rows"></div><div class="row2" id="al-btm"></div>`;
   const touchedKeys={};
