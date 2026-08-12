@@ -993,18 +993,27 @@ function careerTimelineCard(){ /* two-layer horizontal timeline for the career s
   const eraCols=['var(--info)','var(--good)','var(--accent)','var(--dim)'];
   const bands=eras.map((e,i)=>{ const to=e.from+e.n-1;
     const span=e.n>1?`${e.from}–${String(to).slice(2)}`:String(e.from);
-    return `<div style="flex:${e.n};min-width:0;background:var(--panel2);border-top:3px solid ${eraCols[i%4]};border-radius:var(--r);padding:6px 8px 5px">`+
+    return `<div title="${e.stage} ${span}" style="flex:${e.n};min-width:0;background:var(--panel2);border-top:3px solid ${eraCols[i%4]};border-radius:var(--r);padding:6px 8px 5px">`+
       `<div style="font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:.08em;white-space:nowrap;overflow:hidden">${e.stage}</div>`+
-      `<div style="font-family:var(--mono);font-size:10px;opacity:.75;white-space:nowrap">${span}</div></div>`; }).join('');
+      `<div style="font-family:var(--mono);font-size:10px;opacity:.75;white-space:nowrap;overflow:hidden">${span}</div></div>`; }).join('');
   const y0=TL[0].year, span=Math.max(1,TL.length-1);
   let ms=TL.filter(e=>e.note);
   if(ms.length>7)ms=ms.slice().sort((a,b)=>b.pri-a.pri||a.year-b.year).slice(0,7).sort((a,b)=>a.year-b.year);
-  const dots=ms.map(e=>`<div style="position:absolute;left:${((e.year-y0)/span*92).toFixed(1)}%;top:0">`+
-      `<span style="width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:var(--glow);display:block;margin-top:4px"></span>`+
-      `<span style="font-family:var(--mono);font-size:10px;color:var(--dim);display:block;margin-top:4px;white-space:nowrap">${e.year}</span>`+
-      `<span style="font-size:10.5px;font-weight:700;display:block;white-space:nowrap">${e.note}</span></div>`).join('');
-  card('','生涯時間軸',`<div style="display:flex;gap:3px;margin:4px 0 6px">${bands}</div>`+
-    `<div style="position:relative;height:58px"><i style="position:absolute;left:0;right:0;top:8px;height:2px;background:var(--edge)"></i>${dots}</div>`);
+  /* milestone labels alternate between two rows so neighbouring years cannot collide */
+  const dots=ms.map((e,j)=>`<div style="position:absolute;left:${((e.year-y0)/span*100).toFixed(2)}%;top:0;transform:translateX(-50%);text-align:center">`+
+      `<span style="width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:var(--glow);display:block;margin:4px auto 0"></span>`+
+      `<div style="margin-top:${j%2?26:4}px">`+
+      `<span style="font-family:var(--mono);font-size:10px;color:var(--dim);display:block;white-space:nowrap">${e.year}</span>`+
+      `<span style="font-size:10.5px;font-weight:700;display:block;white-space:nowrap">${e.note}</span></div></div>`).join('');
+  /* guaranteed width per year; long careers scroll horizontally inside the card */
+  const minW=TL.length*32;
+  card('','生涯時間軸',
+    `<div style="overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin-top:4px;padding-bottom:4px">`+
+    `<div style="min-width:${minW}px">`+
+    `<div style="display:flex;gap:3px;margin-bottom:6px">${bands}</div>`+
+    `<div style="margin:0 26px"><div style="position:relative;height:${ms.some((_,j)=>j%2)?'96px':'62px'}">`+
+    `<i style="position:absolute;left:0;right:0;top:8px;height:2px;background:var(--edge)"></i>${dots}</div></div>`+
+    `</div></div>`);
 }
 function card(cls,title,html){ const d=document.createElement('div'); d.className='card '+cls;
   d.innerHTML=(title?`<h4>${title}</h4>`:'')+html; logTarget().appendChild(d);
