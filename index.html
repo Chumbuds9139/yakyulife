@@ -143,7 +143,7 @@ table.fin td:first-child,table.fin th:first-child{text-align:left}
   <div class="wrap">
     <div class="stitch"></div>
     <h1 id="logo-tap">YaKyoLife<br><em>棒球人生模擬器</em></h1>
-    <div id="ver-badge" style="position:fixed;top:6px;right:8px;font-size:10px;letter-spacing:1px;color:var(--dim);opacity:.55;font-family:monospace;z-index:50;pointer-events:none">v1.3.7</div>
+    <div id="ver-badge" style="position:fixed;top:6px;right:8px;font-size:10px;letter-spacing:1px;color:var(--dim);opacity:.55;font-family:monospace;z-index:50;pointer-events:none">v1.3.6</div>
     <p class="sub">高中三年養成 → 選秀・旅日・旅美 → 國際賽 → 衰退與引退。每一顆骰子都算數。</p>
     <div class="field"><label>球員姓名</label><input id="in-name" maxlength="10" placeholder="例如：林家正" value=""></div>
     <div class="field"><label>守位</label>
@@ -306,7 +306,7 @@ function dposReview(cont){
     f:()=>{ S.dpos=p; card('info','守位調整',`球團季末評估後，新球季改守 <b class="hl">${DPN[p]}</b>。`); cont(); }}));
   choose(`守位會議：教練團認為你的守備已撐不住 ${DPN[S.dpos]}（${LV[S.lv].n}標準）`,opts);
 }
-const APP_VER='v1.3.7';
+const APP_VER='v1.3.6';
 const TEAM_COLOR={
   /* 中職 */
   '台中猛瑪':'#ffd800','府城雄獅':'#ff7f00','桃園金剛':'#8b1a1a','新北騎士':'#003f87','台北恐龍':'#c8102e','高雄神鵰':'#1a7a3a',
@@ -1398,12 +1398,28 @@ function proSeason(){
     st.PA = Math.max(st.PA, st.G); 
   }
   if(S.pendStat>0&&S.seasonFactor>0){ const p=S.pendStat;
-    if(S.pos==='P'){ st.SO+=p*8; st.IP=+(st.IP+p*4).toFixed(1);
+    if(S.pos==='P'){
+      /* 狀態火燙=教練重用:後援先加出賽(不超過場次上限),再加內容;物理約束重夾 */
+      if(!isSP()){ const addG=Math.min(Math.max(0,68-st.G),Math.round(p*1.2)); st.G+=addG; st.IP=+(st.IP+addG*1.05).toFixed(1); }
+      st.SO+=p*8; st.IP=+(st.IP+p*4).toFixed(1);
       if(isSP())st.W+=Math.round(p*0.4); else st.SV+=Math.round(p*0.6);
-      st.era=st.IP>0?clamp(st.era-p*0.05,1.40,9.90):st.era; st.ER=Math.round(st.era*st.IP/9); }
-    else { const addH=p*6, addHR=Math.round(p*1.4);
+      st.era=st.IP>0?clamp(st.era-p*0.05,1.40,9.90):st.era; st.ER=Math.round(st.era*st.IP/9);
+      if(!isSP()){ /* 救援/勝敗不可超過出賽數(物理約束) */
+        st.SV=Math.min(st.SV||0,Math.floor(st.G*0.85));
+        st.HLD=Math.min(st.HLD||0,Math.max(0,st.G-st.SV));
+        const decCap=Math.max(0,st.G-st.SV-st.HLD);
+        if((st.W+st.L)>decCap){ st.W=Math.min(st.W,decCap); st.L=Math.max(0,decCap-st.W); }
+      } }
+    else { const Lg=LV[S.lv];
+      /* 狀態火燙=教練重用:先轉為上場機會(G/PA 連動,不超過聯盟場次),打擊內容同步升溫 */
+      const addG=Math.min(Math.max(0,(Lg.g||120)-st.G), Math.round(p*1.5));
+      const addPA=Math.round(addG*4.25), addAB=Math.round(addPA*0.9);
+      st.G+=addG; st.PA+=addPA; st.AB+=addAB;
+      let addH=Math.round(addAB*0.55)+Math.round(p*1.5); /* 新打席打得火燙+原打席手感提升 */
+      addH=Math.max(0,Math.min(addH, st.AB-st.H));        /* 安打不可超過打數 */
+      const addHR=Math.min(addH, Math.round(p*1.2));
       st.H+=addH; st.HR+=addHR; st.RBI+=Math.round(addHR*2.1+(addH-addHR)*0.3);
-      st.AB+=addH; st.PA+=addH; st.avg=st.AB?st.H/st.AB:0; }
+      st.avg=st.AB?st.H/st.AB:0; }
   }
   S.pendStat=0;
   /* 投法對成績的加成/折損 */
