@@ -153,10 +153,25 @@ table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.
 #dice{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .die{width:44px;height:44px;border-radius:var(--r);background:var(--panel2);border:2px solid var(--edge);
   color:var(--text);font-family:var(--disp);font-size:22px;font-weight:700;
-  display:flex;align-items:center;justify-content:center;transition:.15s}
-.die.active{border-color:var(--accent);color:var(--accent);box-shadow:var(--glow)}
+  display:flex;align-items:center;justify-content:center;transition:.15s;
+  background-image:linear-gradient(rgba(255,255,255,.08),rgba(0,0,0,.14));
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.1)}
+.die.active{border-color:var(--accent);color:var(--accent);
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.1),
+    0 0 10px color-mix(in srgb,var(--accent) 55%,transparent)}
 .die.used{opacity:.25;transform:scale(.9)}
 .die.six{color:var(--bad)} .die.active.six{color:var(--bad)}
+/* per-theme depth: LED inset bezel, letterpress offset block, soft dashboard drop */
+body[data-theme='b'] .die{background-image:none;box-shadow:inset 0 0 8px rgba(0,0,0,.6)}
+body[data-theme='b'] .die.active{box-shadow:inset 0 0 8px rgba(0,0,0,.6),0 0 12px color-mix(in srgb,var(--accent) 70%,transparent)}
+body[data-theme='c'] .die{background-image:none;box-shadow:2.5px 2.5px 0 var(--edge)}
+body[data-theme='c'] .die.active{box-shadow:2.5px 2.5px 0 var(--accent)}
+body[data-theme='d'] .die{background-image:none;box-shadow:0 2px 6px rgba(26,32,28,.18),inset 0 -2px 0 rgba(0,0,0,.05)}
+body[data-theme='d'] .die.active{box-shadow:0 3px 10px color-mix(in srgb,var(--accent) 35%,transparent),inset 0 -2px 0 rgba(0,0,0,.05)}
+@keyframes diceroll{0%{transform:translateY(-5px) rotate(-7deg)}50%{transform:translateY(2px) rotate(5deg)}100%{transform:none}}
+.die.rolling{animation:diceroll .14s linear infinite}
+@keyframes sixflash{0%,100%{box-shadow:none}45%{box-shadow:0 0 16px var(--bad),0 0 4px var(--bad)}}
+.die.flash6{animation:sixflash .6s ease}
 .pool{font-family:var(--mono);font-size:14px;color:var(--accent);font-weight:700;text-shadow:var(--glow);margin-bottom:10px}
 .abrow{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--edge);
   border-radius:var(--r);padding:8px 10px;margin-top:6px;cursor:pointer;user-select:none}
@@ -1002,6 +1017,16 @@ function allocUI(mode,label,done){
     actToggleSync();
   }
   render();
+  /* Roll-in animation on first render only; purely visual (Math.random, not the
+     seeded RNG) — game values always come from dice[] */
+  if(dice && !matchMedia('(prefers-reduced-motion: reduce)').matches){
+    a.querySelectorAll('#dice .die').forEach((el,i)=>{
+      el.classList.add('rolling');
+      const iv=setInterval(()=>{ el.textContent=1+Math.floor(Math.random()*6); },70);
+      setTimeout(()=>{ clearInterval(iv); el.classList.remove('rolling'); el.textContent=dice[i];
+        if(dice[i]===6)el.classList.add('flash6'); },260+i*90);
+    });
+  }
 }
 /* ================= 年度流程 ================= */
 function nextStep(){ if(S.done){ stepQ=[]; return; } /* 已引退:清空後續步驟,不再跑續約/結算 */ const f=stepQ.shift(); if(f)f(); }
