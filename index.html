@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0b1a12">
+<meta name="theme-color" content="#081510">
 <title>YaKyoLife - 棒球人生模擬器</title>
 <meta name="description" content="從高中三大賽到名人堂，一場種子化的台灣棒球員生涯模擬。選秀、旅外、國際賽、傷病、感情、引退——每一個決定都算數。">
 <meta property="og:type" content="website">
@@ -16,126 +16,199 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%2214%22 fill=%22%23fff%22 stroke=%22%23d0d0d0%22/%3E%3Cpath d=%22M8 6 Q13 16 8 26 M24 6 Q19 16 24 26%22 stroke=%22%23c0392b%22 stroke-width=%221.5%22 fill=%22none%22/%3E%3C/svg%3E">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=IBM+Plex+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0b1a12; --panel:#132920; --panel2:#1a382a; --edge:#2b4d3a;
-  --chalk:#ece7d6; --dim:#93ab9c; --amber:#ffc95c; --clay:#c9764a;
-  --good:#8fd08f; --bad:#e2695c; --blue:#7fb3d5;
-  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+/* Theme tokens: one set per body[data-theme]; default = a (深綠記分板).
+   Values mirror the design prototype (yakyulife-app.dc.html helmet style). */
+body{
+  --bg:#081510;--panel:#132920;--panel2:#1a382a;--edge:#2b4d3a;--text:#ece7d6;--dim:#93ab9c;
+  --accent:#ffc95c;--good:#8fd08f;--bad:#e2695c;--info:#7fb3d5;--gold:#ffc95c;--r:10px;
   --sans:'Noto Sans TC',-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;
+  --head:'Noto Sans TC',sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --disp:'IBM Plex Mono',monospace;
+  --glow:0 0 8px rgba(255,201,92,.35);
+  --btnbg:linear-gradient(#2a5038,#1f3f2c);--btnedge:#3c6a4c;--btntx:#ece7d6;
+  --bgfx:radial-gradient(ellipse 120% 60% at 50% -10%,rgba(29,70,48,.5) 0%,transparent 60%);
+  --shadow:rgba(0,0,0,.35);
+  /* legacy aliases: older inline templates still reference these */
+  --chalk:var(--text);--amber:var(--accent);--blue:var(--info);--clay:var(--accent);
 }
+body[data-theme='b']{--bg:#07090c;--panel:#0c1014;--panel2:#10161c;--edge:#232c36;--text:#d8dde2;--dim:#5c6873;
+  --accent:#ffb32e;--good:#49b675;--bad:#e2695c;--info:#3a7bd5;--gold:#ffb32e;--r:4px;
+  --head:'DotGothic16',monospace;--disp:'DotGothic16',monospace;
+  --glow:0 0 10px rgba(255,179,46,.6);--btnbg:#132018;--btnedge:#49b675;--btntx:#d8dde2;--bgfx:none;--shadow:rgba(0,0,0,.5)}
+body[data-theme='c']{--bg:#f4efe1;--panel:#faf6ea;--panel2:#ece5d2;--edge:#1e1c18;--text:#1e1c18;--dim:#6f6857;
+  --accent:#b3402f;--good:#2f6b3a;--bad:#b3402f;--info:#35506b;--gold:#b3402f;--r:0px;
+  --head:'Noto Serif TC',serif;--disp:'Noto Serif TC',serif;
+  --glow:none;--btnbg:#1e1c18;--btnedge:#1e1c18;--btntx:#f4efe1;--bgfx:none;--shadow:rgba(30,28,24,.12)}
+body[data-theme='d']{--bg:#f6f7f6;--panel:#ffffff;--panel2:#f2f4f2;--edge:#e2e6e3;--text:#1a201c;--dim:#7a857e;
+  --accent:#0f7b4d;--good:#0f7b4d;--bad:#c0392b;--info:#4a76a8;--gold:#b8862d;--r:12px;
+  --glow:none;--btnbg:#0f7b4d;--btnedge:#0f7b4d;--btntx:#ffffff;--bgfx:none;--shadow:rgba(26,32,28,.1)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
-body{background:var(--bg);color:var(--chalk);font-family:var(--sans);font-size:15px;line-height:1.6;
-  background-image:radial-gradient(ellipse 120% 60% at 50% -10%,#16352644 0%,transparent 60%);}
-#app{max-width:560px;margin:0 auto;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+body{background:var(--bg);background-image:var(--bgfx);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.6}
+a{color:var(--info)}
+/* ---------- 版型骨架:手機單欄(預設) / 桌面三欄(>920px) ---------- */
+#app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+#mid{flex:1;display:flex;flex-direction:column;min-width:0}
+#tl-side{display:none;background:var(--panel);border-right:1px solid var(--edge)}
 /* ---------- 記分板 ---------- */
-#board{position:sticky;top:0;z-index:20;background:linear-gradient(#173125,#122519);
-  border-bottom:2px solid var(--edge);padding:10px 14px 8px;box-shadow:0 6px 18px #0009}
+#board{position:sticky;top:0;z-index:20;background:var(--panel);
+  border-bottom:2px solid var(--edge);padding:10px 14px 8px;box-shadow:0 6px 18px var(--shadow)}
 #bd-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-#bd-name{font-weight:900;font-size:17px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#bd-name small{color:var(--dim);font-weight:500;font-size:12px;margin-left:6px}
-#bd-team{color:var(--amber);font-size:12.5px;font-weight:700;letter-spacing:.06em;white-space:nowrap}
+#bd-name{font-family:var(--head);font-weight:900;font-size:17px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bd-name small{color:var(--dim);font-weight:500;font-size:12px;margin-left:6px;font-family:var(--sans)}
+#bd-team{color:var(--accent);font-size:12.5px;font-weight:700;letter-spacing:.06em;white-space:nowrap}
 #bd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
-.bd-cell{background:#0d2115;border:1px solid var(--edge);border-radius:6px;padding:4px 6px 3px;text-align:center}
-.bd-cell b{display:block;font-family:var(--mono);font-size:17px;font-weight:700;color:var(--amber);
-  text-shadow:0 0 8px #ffc95c55;line-height:1.2}
+.bd-cell{background:var(--panel2);border:1px solid var(--edge);border-radius:var(--r);padding:4px 6px 3px;text-align:center}
+.bd-cell b{display:block;font-family:var(--disp);font-size:17px;font-weight:700;color:var(--accent);
+  text-shadow:var(--glow);line-height:1.2}
 .bd-cell span{font-size:10px;color:var(--dim);letter-spacing:.15em}
 #lamps{display:flex;gap:14px;justify-content:center;margin-top:7px}
 .lamp{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--dim);letter-spacing:.12em}
-.lamp i{width:9px;height:9px;border-radius:50%;background:#243c2e;border:1px solid #35543f;display:inline-block}
-.lamp.on{color:var(--chalk)} .lamp.on i{background:var(--amber);box-shadow:0 0 8px var(--amber);border-color:var(--amber)}
+.lamp i{width:9px;height:9px;border-radius:50%;background:var(--panel2);border:1px solid var(--edge);display:inline-block}
+.lamp.on{color:var(--text);font-weight:700} .lamp.on i{background:var(--accent);box-shadow:var(--glow);border-color:var(--accent)}
+/* ---------- 生涯時間軸:手機橫向膠囊列 ---------- */
+#tl-strip{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+#tl-strip:empty{display:none}
+.tl-chip{font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--edge);border-radius:999px;
+  padding:3px 10px;white-space:nowrap;flex:none;cursor:pointer}
+.tl-chip.now{color:var(--accent);border-color:var(--accent);font-weight:700}
+/* ---------- 生涯時間軸:桌面側欄 ---------- */
+#tl-in{display:flex;flex-direction:column;gap:18px;padding:22px 16px 22px 22px}
+.tl-brand{display:flex;align-items:center;gap:10px}
+.tl-brand .stitch{flex:none}
+.tl-brand b{font-family:var(--head);font-weight:900;font-size:16px;letter-spacing:.06em;display:block;line-height:1.3}
+.tl-brand span.sub{font-size:10px;color:var(--dim);letter-spacing:.2em;display:block}
+#tl-list{flex:1;position:relative;padding-left:16px;min-height:40px}
+#tl-list::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--edge)}
+.tlg{margin-bottom:16px}
+.tlg-h{font-family:var(--head);font-size:10px;letter-spacing:.3em;color:var(--dim);font-weight:700;margin-bottom:9px;padding-left:8px}
+.tl-item{display:flex;align-items:center;gap:10px;margin-bottom:9px;cursor:pointer}
+.tl-item .dot{width:10px;height:10px;border-radius:50%;background:var(--panel2);border:2px solid var(--edge);flex:none;margin-left:-13px}
+.tl-item.now .dot{width:16px;height:16px;background:var(--accent);border:3px solid var(--panel);box-shadow:0 0 12px var(--accent);margin-left:-16px}
+.tl-item .t{font-family:var(--mono);font-size:12px;color:var(--dim);line-height:1.45}
+.tl-item.now .t{color:var(--accent);font-weight:700;font-size:13px}
+.tl-item .t b{color:var(--accent);font-weight:700}
+.tl-item.gone{cursor:default;opacity:.55}
+.tl-seed{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.tl-seed b{color:var(--accent)}
 /* ---------- 主紀錄 ---------- */
 #log{flex:1;padding:14px 14px 20px;display:flex;flex-direction:column;gap:10px}
-.card{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:12px 14px;
-  animation:pop .25s ease;overflow-wrap:anywhere}
+.yr-block{display:flex;flex-direction:column;gap:10px}
+.yr-body{display:flex;flex-direction:column;gap:10px}
+.card{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);padding:12px 14px;
+  animation:pop .25s ease;overflow-wrap:anywhere;overflow-x:auto}
 @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.card h4{font-size:12px;letter-spacing:.2em;color:var(--dim);font-weight:700;margin-bottom:6px;
-  display:flex;align-items:center;gap:8px}
-.card h4::before{content:'';width:8px;height:8px;background:var(--clay);border-radius:2px;transform:rotate(45deg);flex:none}
-.card.gold h4::before{background:var(--amber)} .card.bad h4::before{background:var(--bad)}
-.card.good h4::before{background:var(--good)} .card.info h4::before{background:var(--blue)}
+.card h4{font-family:var(--head);font-size:12px;letter-spacing:.2em;color:var(--dim);font-weight:700;margin-bottom:6px;
+  display:flex;align-items:center;gap:7px}
+.card h4::before{content:'■';font-size:9px;line-height:1;flex:none}
+.card.gold{border:1.5px solid var(--gold)}
+.card.gold h4{color:var(--gold);text-shadow:var(--glow)}
+.card.bad h4{color:var(--bad)} .card.good h4{color:var(--good)} .card.info h4{color:var(--info)}
 .card p{font-size:14px} .card p+p{margin-top:4px}
-.tag{display:inline-block;font-family:var(--mono);font-size:12px;padding:0 6px;border-radius:4px;
-  background:#0d2115;border:1px solid var(--edge);color:var(--amber);margin:0 2px}
-.up{color:var(--good);font-weight:700}.dn{color:var(--bad);font-weight:700}.hl{color:var(--amber);font-weight:700}
-.statline{font-family:var(--mono);font-size:12.5px;color:var(--chalk);background:#0d2115;border:1px dashed var(--edge);
-  border-radius:6px;padding:6px 8px;margin-top:6px;line-height:1.7}
-table.fin{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;margin-top:6px}
-table.fin th,table.fin td{border-bottom:1px solid var(--edge);padding:4px 4px;text-align:right}
-table.fin th{color:var(--dim);font-weight:500;letter-spacing:.05em}
-table.fin td:first-child,table.fin th:first-child{text-align:left}
+.tag{display:inline-block;font-family:var(--mono);font-size:12px;padding:0 6px;border-radius:min(var(--r),4px);
+  background:var(--panel2);border:1px solid var(--edge);color:var(--accent);margin:0 2px}
+.up{color:var(--good);font-weight:700}.dn{color:var(--bad);font-weight:700}.hl{color:var(--accent);font-weight:700}
+.statline{font-family:var(--mono);font-size:12.5px;color:var(--text);background:var(--panel2);border:1px dashed var(--edge);
+  border-radius:min(var(--r),6px);padding:6px 10px;margin-top:6px;line-height:1.7}
+table.fin,table.st{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;margin-top:6px}
+table.fin th,table.fin td,table.st th,table.st td{border-bottom:1px solid var(--edge);padding:4px 4px;text-align:right;white-space:nowrap}
+table.fin th,table.st th{color:var(--dim);font-weight:500;letter-spacing:.05em}
+table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.st th:first-child{text-align:left}
 .divider{text-align:center;color:var(--dim);font-size:11px;letter-spacing:.4em;padding:6px 0 0}
+.divider::before,.divider::after{content:'———'}
 .yr-head{text-align:center;color:var(--dim);font-size:11px;letter-spacing:.3em;padding:8px 0 0;cursor:pointer;user-select:none}
-.yr-head:hover{color:var(--amber)}
+.yr-head:hover{color:var(--accent)}
 .yr-block.collapsed .yr-body{display:none}
 .yr-block.collapsed .yr-head::after{content:' ▸'}
 .yr-block:not(.collapsed) .yr-head.has-body::after{content:' ▾'}
-.divider::before,.divider::after{content:'———'}
 /* ---------- 操作區 ---------- */
-#act{position:sticky;bottom:0;z-index:20;background:linear-gradient(#122519ee,#0b1a12);border-top:2px solid var(--edge);
-  padding:12px 14px calc(12px + env(safe-area-inset-bottom));backdrop-filter:blur(6px)}
-#act .title{font-size:12px;letter-spacing:.2em;color:var(--dim);margin-bottom:8px;font-weight:700}
-.btn{display:block;width:100%;background:var(--panel2);border:1px solid var(--edge);color:var(--chalk);
-  font-family:var(--sans);font-size:15px;font-weight:700;border-radius:10px;padding:11px 14px;margin-top:8px;
+#act-side{position:sticky;bottom:0;z-index:20;background:var(--panel);border-top:2px solid var(--edge);
+  box-shadow:0 -8px 24px var(--shadow);max-height:52vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#act-in{display:flex;flex-direction:column}
+#act-toggle{display:none;margin:8px auto 0;background:none;border:1px solid var(--edge);color:var(--dim);
+  font-size:11px;font-family:var(--sans);padding:3px 14px;border-radius:999px;cursor:pointer;flex:none}
+#act-toggle:hover{color:var(--accent);border-color:var(--accent)}
+#act{padding:10px 14px calc(12px + env(safe-area-inset-bottom))}
+#act .title{font-family:var(--head);font-size:12px;letter-spacing:.2em;color:var(--dim);margin-bottom:8px;font-weight:700}
+#act.collapsed{display:none!important}
+.btn{display:block;width:100%;background:var(--panel2);border:1px solid var(--edge);color:var(--text);
+  font-family:var(--sans);font-size:15px;font-weight:700;border-radius:var(--r);padding:11px 14px;margin-top:8px;
   cursor:pointer;text-align:left;transition:.15s}
-.btn:active{transform:scale(.98)} .btn:hover{border-color:var(--amber)}
+.btn:active{transform:scale(.98)} .btn:hover{border-color:var(--accent)}
 .btn small{display:block;font-weight:400;font-size:12px;color:var(--dim);margin-top:2px}
-.btn.main{background:linear-gradient(#2a5038,#1f3f2c);border-color:#3c6a4c;text-align:center}
-.btn.warn{border-color:#6a3c3c}
-/* 骰子 */
+.btn.main{background:var(--btnbg);border-color:var(--btnedge);color:var(--btntx);text-align:center}
+.btn.main small{color:inherit;opacity:.8}
+.btn.warn{border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+#act .row2{display:flex;gap:8px}#act .row2 .btn{flex:1;text-align:center}
+/* 骰子與加點 */
 #dice{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
-.die{width:44px;height:44px;border-radius:9px;background:var(--chalk);color:#12251a;font-family:var(--mono);
-  font-size:22px;font-weight:700;display:flex;align-items:center;justify-content:center;
-  box-shadow:inset 0 -3px 0 #0003;position:relative}
-.die::after{content:'';position:absolute;inset:4px;border-radius:6px;border:1.5px dashed #c9764a55}
-.die.used{opacity:.22;transform:scale(.9)} .die.active{outline:3px solid var(--amber);outline-offset:2px}
-.die.six{color:#b3402f}
-.pool{font-family:var(--mono);font-size:15px;color:var(--amber);margin-bottom:10px}
-.abrow{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--edge);
-  border-radius:8px;padding:7px 10px;margin-top:6px;cursor:pointer;user-select:none}
-.abrow:active{background:var(--panel2)}
+.die{width:44px;height:44px;border-radius:var(--r);background:var(--panel2);border:2px solid var(--edge);
+  color:var(--text);font-family:var(--disp);font-size:22px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;transition:.15s}
+.die.active{border-color:var(--accent);color:var(--accent);box-shadow:var(--glow)}
+.die.used{opacity:.25;transform:scale(.9)}
+.die.six{color:var(--bad)} .die.active.six{color:var(--bad)}
+.pool{font-family:var(--mono);font-size:14px;color:var(--accent);font-weight:700;text-shadow:var(--glow);margin-bottom:10px}
+.abrow{display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--edge);
+  border-radius:var(--r);padding:8px 10px;margin-top:6px;cursor:pointer;user-select:none}
+.abrow:active{border-color:var(--accent)}
 .abrow .nm{width:74px;font-size:13.5px;font-weight:700;flex:none}
-.abrow .bar{flex:1;height:8px;background:#0d2115;border-radius:4px;overflow:hidden}
-.abrow .bar i{display:block;height:100%;background:linear-gradient(90deg,#3c6a4c,var(--amber));border-radius:4px;transition:.2s}
-.abrow .val{font-family:var(--mono);width:58px;text-align:right;font-size:14px;flex:none}
+.abrow .bar{flex:1;height:8px;background:var(--bg);border-radius:4px}
+.abrow .bar i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:.2s}
+.abrow .val{font-family:var(--mono);width:62px;text-align:right;font-size:14px;flex:none}
 .abrow .val b{color:var(--good)}
 .abrow.capped{opacity:.45}
-#act .row2{display:flex;gap:8px}#act .row2 .btn{flex:1;text-align:center}
-/* 開場 */
-#start{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;
-  background-image:radial-gradient(ellipse 120% 50% at 50% -5%,#1d4630aa,transparent 60%)}
-#start .wrap{max-width:560px;margin:0 auto;padding:40px 22px 60px}
-#start h1{font-size:34px;font-weight:900;letter-spacing:.08em;line-height:1.25;margin-top:18px}
-#start h1 em{font-style:normal;color:var(--amber)}
-#start .sub{color:var(--dim);margin:10px 0 26px;font-size:13.5px;letter-spacing:.08em}
+.bar{position:relative}
+.bar em{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--accent);opacity:.5;border-radius:1px}
+/* ---------- 開場 ---------- */
+#start{position:fixed;inset:0;z-index:50;background:var(--bg);background-image:var(--bgfx);overflow-y:auto}
+#start .wrap{max-width:560px;margin:0 auto;padding:44px 22px 60px}
+#start h1{font-family:var(--head);font-size:34px;font-weight:900;letter-spacing:.08em;line-height:1.25;margin-top:18px}
+#start h1 em{font-style:normal;color:var(--accent);text-shadow:var(--glow)}
+#start .sub{color:var(--dim);margin:10px 0 8px;font-size:13.5px;letter-spacing:.08em}
 .field{margin-top:18px}
 .field label{display:block;font-size:12px;letter-spacing:.25em;color:var(--dim);font-weight:700;margin-bottom:8px}
-.field input{width:100%;background:var(--panel);border:1px solid var(--edge);border-radius:10px;color:var(--chalk);
+.field input{width:100%;background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);color:var(--text);
   font-family:var(--sans);font-size:16px;padding:11px 14px;outline:none}
-.field input:focus{border-color:var(--amber)}
+.field input:focus{border-color:var(--accent)}
 .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .seg.two{grid-template-columns:repeat(2,1fr)}
-.seg button{background:var(--panel);border:1px solid var(--edge);border-radius:10px;color:var(--dim);
+.seg button{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);color:var(--dim);
   font-family:var(--sans);font-size:14.5px;font-weight:700;padding:11px 4px;cursor:pointer}
-.seg button.on{background:var(--panel2);color:var(--amber);border-color:var(--amber)}
+.seg button.on{background:var(--panel2);color:var(--accent);border-color:var(--accent)}
 .seedline{font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:22px}
-.seedline b{color:var(--amber)}
-.stitch{width:64px;height:64px;border-radius:50%;background:var(--chalk);position:relative;box-shadow:inset -6px -8px 0 #00000014}
+.seedline b{color:var(--accent)}
+#seed-show{width:120px;background:var(--panel);color:var(--accent);border:1px solid var(--edge);
+  border-radius:min(var(--r),6px);padding:2px 6px;font-family:inherit;font-size:12px;text-align:center}
+.stitch{width:64px;height:64px;border-radius:50%;background:#ece7d6;position:relative;
+  box-shadow:inset -6px -8px 0 rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.15)}
 .stitch::before,.stitch::after{content:'';position:absolute;top:8px;bottom:8px;width:18px;
   border:3px dashed #b3402f;border-top:none;border-bottom:none}
 .stitch::before{left:8px;border-right:none;border-radius:50% 0 0 50%}
 .stitch::after{right:8px;border-left:none;border-radius:0 50% 50% 0}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-.bar{position:relative}
-.bar em{position:absolute;top:-2px;bottom:-2px;width:2px;background:#ffc95c66;border-radius:1px}
-#btn-restart{background:none;border:1px solid #2b4a38;color:#8fae9c;border-radius:8px;
+.stitch.small{width:28px;height:28px;box-shadow:inset -3px -4px 0 rgba(0,0,0,.1)}
+.stitch.small::before,.stitch.small::after{top:4px;bottom:4px;width:8px;border-width:2px}
+#btn-restart{background:none;border:1px solid var(--edge);color:var(--dim);border-radius:min(var(--r),8px);
  font-size:14px;line-height:1;padding:4px 8px;margin-left:8px;cursor:pointer;flex:none}
-#btn-restart:active{background:#12271b}
-#act-toggle{display:block;margin:0 auto -4px;background:#0e2015;border:1px solid #2b4a38;
- border-bottom:none;color:#8fae9c;font-size:11px;padding:3px 14px;border-radius:10px 10px 0 0;cursor:pointer}
-#act.collapsed{display:none!important}
+#btn-restart:hover{color:var(--accent);border-color:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ---------- 桌面三欄(>920px) ---------- */
+@media(min-width:921px){
+  #app{display:grid;grid-template-columns:250px minmax(0,1fr) 340px;align-items:stretch}
+  #tl-side{display:block}
+  #tl-in{position:sticky;top:0;max-height:100vh;overflow-y:auto}
+  #tl-strip{display:none}
+  #board{padding:14px 26px 12px}
+  .bd-cell b{font-size:19px}
+  #log{padding:18px 26px 26px}
+  #act-side{position:static;max-height:none;overflow:visible;border-top:none;border-left:1px solid var(--edge);box-shadow:none}
+  #act-in{position:sticky;top:0;max-height:100vh;overflow-y:auto;padding:12px 6px 16px}
+  #act{padding:8px 14px 16px}
+  #start .wrap{padding-top:64px}
+}
 </style>
 </head>
 <body>
@@ -151,31 +224,46 @@ table.fin td:first-child,table.fin th:first-child{text-align:left}
         <button data-v="P" class="on">投手</button><button data-v="C">捕手</button>
         <button data-v="IF">內野手</button><button data-v="OF">外野手</button>
       </div></div>
+    <div class="field"><label>佈景主題</label>
+      <div class="seg two" id="seg-theme">
+        <button data-t="a" class="on">深綠記分板</button><button data-t="b">電子看板</button>
+        <button data-t="c">報紙版面</button><button data-t="d">現代儀表板</button>
+      </div></div>
     <button class="btn main" style="margin-top:28px" id="btn-start">開始生涯 ▸ 高一春天</button>
     <p class="seedline">世界種子
-      <input id="seed-show" maxlength="24" style="width:120px;background:#0e2015;color:#ffc95c;border:1px solid #2b4a38;border-radius:6px;padding:2px 6px;font-family:inherit;font-size:12px;text-align:center">
-      · <a href="#" id="seed-re" style="color:var(--blue)">換一個</a><br>相同種子＋相同選擇＝相同人生（可直接輸入朋友的種子碼）</p>
-    <footer style="text-align:center;margin-top:22px;color:var(--dim);font-size:12px">Produced by <a href="https://www.threads.com/@mr.themost" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:none">最先生 Mr.TheMost</a></footer>
+      <input id="seed-show" maxlength="24">
+      · <a href="#" id="seed-re">換一個</a><br>相同種子＋相同選擇＝相同人生（可直接輸入朋友的種子碼）</p>
+    <footer style="text-align:center;margin-top:22px;color:var(--dim);font-size:12px">Produced by <a href="https://www.threads.com/@mr.themost" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">最先生 Mr.TheMost</a></footer>
   </div>
 </div>
 <div id="app">
-  <header id="board" style="display:none">
-    <div id="bd-top"><div id="bd-name"></div><div id="bd-team"></div><span id="bd-tj" style="color:var(--dim);font-size:11px;margin-left:6px;white-space:nowrap"></span><button id="btn-restart" title="重新開始">↺</button></div>
-    <div id="bd-grid">
-      <div class="bd-cell"><b id="bd-age">16</b><span>年齡</span></div>
-      <div class="bd-cell"><b id="bd-year">2026</b><span>年份</span></div>
-      <div class="bd-cell"><b id="bd-ovr">30</b><span>綜合</span></div>
-      <div class="bd-cell"><b id="bd-sal">0</b><span>生涯薪(萬)</span></div>
-    </div>
-    <div id="lamps">
-      <span class="lamp" id="lp0"><i></i>季初</span>
-      <span class="lamp" id="lp1"><i></i>賽季中</span>
-      <span class="lamp" id="lp2"><i></i>季末</span>
-    </div>
-  </header>
-  <main id="log"></main>
-  <button id="act-toggle" style="display:none">⌄ 收合選項</button>
-  <footer id="act" style="display:none"></footer>
+  <aside id="tl-side"><div id="tl-in">
+    <div class="tl-brand"><span class="stitch small"></span><div><b>YaKyoLife</b><span class="sub">棒球人生模擬器</span></div></div>
+    <div id="tl-list"></div>
+    <div class="tl-seed">SEED <b id="tl-seed"></b></div>
+  </div></aside>
+  <div id="mid">
+    <header id="board" style="display:none">
+      <div id="bd-top"><div id="bd-name"></div><div id="bd-team"></div><span id="bd-tj" style="color:var(--dim);font-size:11px;margin-left:6px;white-space:nowrap"></span><button id="btn-restart" title="重新開始">↺</button></div>
+      <div id="bd-grid">
+        <div class="bd-cell"><b id="bd-age">16</b><span>年齡</span></div>
+        <div class="bd-cell"><b id="bd-year">2026</b><span>年份</span></div>
+        <div class="bd-cell"><b id="bd-ovr">30</b><span>綜合</span></div>
+        <div class="bd-cell"><b id="bd-sal">0</b><span>生涯薪(萬)</span></div>
+      </div>
+      <div id="lamps">
+        <span class="lamp" id="lp0"><i></i>季初</span>
+        <span class="lamp" id="lp1"><i></i>賽季中</span>
+        <span class="lamp" id="lp2"><i></i>季末</span>
+      </div>
+      <div id="tl-strip"></div>
+    </header>
+    <main id="log"></main>
+  </div>
+  <aside id="act-side"><div id="act-in">
+    <button id="act-toggle" style="display:none">⌄ 收合選項</button>
+    <footer id="act" style="display:none"></footer>
+  </div></aside>
 </div>
 <script>
 /* ================= RNG（種子化） ================= */
@@ -751,6 +839,77 @@ const $=id=>document.getElementById(id);
 var _curYearBody=null; /* 當前年度的內容容器 */
 var MAX_YEARS=8;         /* DOM 最多保留幾個年度區塊 */
 function logTarget(){ return _curYearBody || $('log'); }
+/* ================= 主題系統(純呈現層) ================= */
+const THEME_KEY='yakyu-theme';
+function applyTheme(t){
+  if(t!=='a'&&t!=='b'&&t!=='c'&&t!=='d')t='a';
+  document.body.dataset.theme=t;
+  try{localStorage.setItem(THEME_KEY,t);}catch(e){}
+  document.querySelectorAll('#seg-theme button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  const m=document.querySelector('meta[name="theme-color"]');
+  if(m)m.setAttribute('content',(getComputedStyle(document.body).getPropertyValue('--bg')||'#081510').trim());
+}
+/* ================= 生涯時間軸(純呈現層,不觸碰 RNG) ================= */
+let TL=[];
+function tlStage(){
+  if(!S)return '';
+  if(S.stage==='HS')return '高中 · '+S.team;
+  if(S.stage==='U')return '大學 · '+S.team;
+  if(S.stage==='AMA')return '業餘 · '+S.team;
+  const og={CPBL:'中職',NPB:'旅日',MiLB:'旅美'}[S.org]||'職業';
+  return og+' · '+(S.orgTeam||'');
+}
+function tlPush(){
+  TL.push({year:S.year,stage:tlStage(),lab:stageLabel(),note:'',pri:0,el:_curYearBody?_curYearBody.parentElement:null});
+  renderTimeline();
+}
+function tlNote(pri,txt){ /* keep only the highest-priority note per year */
+  const e=TL[TL.length-1]; if(!e||!txt)return;
+  if(pri>=e.pri){ e.note=txt; e.pri=pri; renderTimeline(); }
+}
+function renderTimeline(){
+  const list=$('tl-list'), strip=$('tl-strip');
+  if(list){
+    let html='',cur=null;
+    TL.forEach((e,i)=>{
+      if(e.stage!==cur){ if(cur!==null)html+='</div>'; html+=`<div class="tlg"><div class="tlg-h">${e.stage}</div>`; cur=e.stage; }
+      const now=i===TL.length-1, gone=!(e.el&&e.el.isConnected);
+      html+=`<div class="tl-item${now?' now':''}${(gone&&!now)?' gone':''}" data-i="${i}"><span class="dot"></span><span class="t">${e.year} ${e.lab}${e.note?' <b>'+e.note+'</b>':''}</span></div>`;
+    });
+    if(cur!==null)html+='</div>';
+    list.innerHTML=html;
+  }
+  if(strip){
+    strip.innerHTML=TL.map((e,i)=>`<span class="tl-chip${i===TL.length-1?' now':''}" data-i="${i}">${e.year}${e.note?'★':''}</span>`).join('');
+    strip.scrollLeft=strip.scrollWidth;
+  }
+}
+function tlScrollTo(e){ /* scroll via window.scrollTo (not scrollIntoView; see handoff) */
+  if(!e||!e.el||!e.el.isConnected)return;
+  const bd=$('board'), off=(bd?bd.offsetHeight:0)+10;
+  window.scrollTo(0,Math.max(0,e.el.getBoundingClientRect().top+window.scrollY-off));
+}
+function careerTimelineCard(){ /* two-layer horizontal timeline for the career summary */
+  if(!TL.length)return;
+  const eras=[];
+  TL.forEach(e=>{ const last=eras[eras.length-1];
+    if(last&&last.stage===e.stage)last.n++; else eras.push({stage:e.stage,from:e.year,n:1}); });
+  const eraCols=['var(--info)','var(--good)','var(--accent)','var(--dim)'];
+  const bands=eras.map((e,i)=>{ const to=e.from+e.n-1;
+    const span=e.n>1?`${e.from}–${String(to).slice(2)}`:String(e.from);
+    return `<div style="flex:${e.n};min-width:0;background:var(--panel2);border-top:3px solid ${eraCols[i%4]};border-radius:var(--r);padding:6px 8px 5px">`+
+      `<div style="font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:.08em;white-space:nowrap;overflow:hidden">${e.stage}</div>`+
+      `<div style="font-family:var(--mono);font-size:10px;opacity:.75;white-space:nowrap">${span}</div></div>`; }).join('');
+  const y0=TL[0].year, span=Math.max(1,TL.length-1);
+  let ms=TL.filter(e=>e.note);
+  if(ms.length>7)ms=ms.slice().sort((a,b)=>b.pri-a.pri||a.year-b.year).slice(0,7).sort((a,b)=>a.year-b.year);
+  const dots=ms.map(e=>`<div style="position:absolute;left:${((e.year-y0)/span*92).toFixed(1)}%;top:0">`+
+      `<span style="width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:var(--glow);display:block;margin-top:4px"></span>`+
+      `<span style="font-family:var(--mono);font-size:10px;color:var(--dim);display:block;margin-top:4px;white-space:nowrap">${e.year}</span>`+
+      `<span style="font-size:10.5px;font-weight:700;display:block;white-space:nowrap">${e.note}</span></div>`).join('');
+  card('','生涯時間軸',`<div style="display:flex;gap:3px;margin:4px 0 6px">${bands}</div>`+
+    `<div style="position:relative;height:58px"><i style="position:absolute;left:0;right:0;top:8px;height:2px;background:var(--edge)"></i>${dots}</div>`);
+}
 function card(cls,title,html){ const d=document.createElement('div'); d.className='card '+cls;
   d.innerHTML=(title?`<h4>${title}</h4>`:'')+html; logTarget().appendChild(d);
   scrollBottom(); }
@@ -840,7 +999,7 @@ function stageLabel(){
   if(S.stage==='AMA')return '業餘成棒';
   return LV[S.lv].n;
 }
-function startYear(){ stepQ=[phasePre,phaseMid,phaseEnd]; divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); nextStep(); }
+function startYear(){ stepQ=[phasePre,phaseMid,phaseEnd]; divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* ---------- 季初 ---------- */
 function phasePre(){
   board(0); S.tmpInj=0; S.seasonFactor=1; S.skipMid=false; S.prevD=S.lastD||0; S.lastD=0; /* 先保留上季 d 供投手定位判定 */
@@ -1318,7 +1477,7 @@ function doTradeExec(){
   /* 季末交易 = 下季起改效力新隊(乾淨轉隊,不設 tradeFrom,避免隔年被誤顯示成兩隊 split) */
   S.teamYears=0; S.champThisTeam=false; S.champTeam=null;
   const list=S.org==='CPBL'?CPBL_TEAMS:S.org==='NPB'?NPB_TEAMS:MLB_TEAMS;
-  const nt=pick(list.filter(t=>t!==S.orgTeam)); S.orgTeam=nt; board(1);
+  const nt=pick(list.filter(t=>t!==S.orgTeam)); S.orgTeam=nt; tlNote(2,'轉隊 '+nt); board(1);
 }
 function portionOf(st,r){
   const p={...st};
@@ -1594,6 +1753,8 @@ function awards(bucket,st){
   /* 6. 後續獲獎觸發特質 */
   const added=h.filter(x=>x.startsWith(String(y)));
   if(added.length){ card('gold','年度獎項',added.map(x=>x.slice(5)).join('｜'));
+    const topAw=added.find(x=>/年度MVP/.test(x))||added.find(x=>/最佳投手|王/.test(x))||added.find(x=>/新人王/.test(x))||added[0];
+    tlNote(3,topAw.slice(5));
     if(S.traits.yips){ removeTrait('yips','失憶症'); card('good','走出陰影','站上大舞台拿下獎項的那一刻，腦海裡的雜音消失了——<b class="hl">失憶症痊癒</b>。'); }
     if(S.traits.glass&&!S.traits.phoenix){ const big=added.some(x=>/MVP|最佳投手|打擊王|全壘打王|新人王/.test(x));
       if(big){ S.traits.phoenix=true; removeTrait('glass','玻璃人');
@@ -1645,6 +1806,7 @@ function maybeIntl(done){
       if(!S.traits.intlace&&S.intlCount>=3&&(S.intlTop4||0)>=2){ S.traits.intlace=true;
         card('gold','隱藏屬性解鎖：國際賽之鬼','只要穿上 CT 球衣，你的痛覺就會消失——你是為大場面而生的男人。<b class="hl">國際賽不再增加受傷風險，且每次徵召能力點保底 +2</b>。'); }
       if(i<=2)S.honors.push(`${S.year} ${name}${rk}`);
+      if(i===0)tlNote(3,(wbc?'經典賽':'12強')+'冠軍');
       let ex=''; const mp=S.traits.clutch?2:1; if((i===0&&chance(30*mp))||(i===1&&chance(8*mp))){S.honors.push(`${S.year} ${name}MVP`);ex='你被選為<b class="hl">賽會MVP</b>！';}
       card(i<=1?'gold':'info',name,`中華隊最終成績：<b class="hl">${rk}</b>。${ex}獲得能力點 <b class="hl">${gpts}</b> 點。${S.traits.intlace?'國家英雄不知何謂疲憊。':'國際賽的高強度消耗，讓下季受傷風險上升。'}`);
       done(); }},
@@ -1753,6 +1915,7 @@ function movement(){
       if(idx<path.length-2){ const nx2=path[idx+2];
         if(o>=LV[nx2].min+2&&(S.lastD||0)>=4)to=nx2; }
       S.lv=to; card('good','升級通知',`表現獲得肯定，${to!==nx?'<b class="hl">連跳兩級</b>':'晉升'} <b class="hl">${LV[to].n}</b>！`); board(2);
+      if(LV[to].top)tlNote(2,'升上'+LV[to].n);
       if(S.traits.yips){ removeTrait('yips','失憶症'); card('good','走出陰影','重回上一層舞台，你終於找回了節奏——<b class="hl">失憶症痊癒</b>。'); } } }
   if(!S.ct)S.ct={yrs:2,mult:1};
   S.ct.yrs--;
@@ -1848,7 +2011,7 @@ function signTo(org,lv,team,yrs,mult){
   S.org=org; S.lv=lv;
   /* 【修正】先決定新球隊是誰，比對不一樣才把年資歸零，最後再蓋掉 S.orgTeam */
   const newTeam = team || pick(teamListOf(org));
-  if(newTeam !== S.orgTeam){ S.teamYears=0; S.champThisTeam=false; S.champTeam=null; }
+  if(newTeam !== S.orgTeam){ S.teamYears=0; S.champThisTeam=false; S.champTeam=null; tlNote(2,'加盟 '+newTeam); }
   S.orgTeam = newTeam;
   S.ct={yrs:yrs||2,mult:mult||1};
   if(org!=='NPB')S.npbYears=0;
@@ -2037,6 +2200,7 @@ function runDraft(fromSchool,cb){
     S.stage='PRO'; S.team=''; S.salary+=bonus; S.svc=0; S.faElig=false;
     signTo('CPBL',lv,team,ri(2,3),1); /* 菜鳥分段短約(2~3年) */
     card('gold','中華職棒選秀會',`第 <b class="hl">${rd}</b> 輪獲 <b class="hl">${team}</b> 指名！簽約金依順位為 <b class="hl">${fmtMoney(bonus)}</b>。${lv==='CPBL1'?'即戰力評價，直接放入一軍名單。':'先從二軍出發。'}`);
+    tlNote(4,'選秀第'+rd+'輪');
     board(0); cb();
   };
   /* 輪次不滿意(第 3 輪以後)可選擇重返業餘再拚一年;年齡太大(24+)則不給這選項,避免拖太久 */
@@ -2267,6 +2431,7 @@ function endGame(reason){
   S.done=true; actClear();
   divider('生涯終幕');
   card('info','引退',reason);
+  tlNote(5,'引退'); careerTimelineCard();
   /* 各聯盟數據與評價 */
   let tables='',evals=[],best=99; const tiersByLg={};
   ['MLB','NPB','CPBL','MINOR'].forEach(b=>{ if(S.stats[b]){ tables+=statTable(b);
@@ -2520,6 +2685,11 @@ function shareImage(evals,out){
   const cv=document.createElement('canvas');
   const c=cv.getContext('2d');
   c.font='13px sans-serif';
+  /* Canvas colors follow the active theme tokens (read from computed style) */
+  const _css=getComputedStyle(document.body), _tk=(n,fb)=>((_css.getPropertyValue(n)||'').trim()||fb);
+  const C_BG=_tk('--bg','#0b1a12'), C_EDGE=_tk('--edge','#2b4a38'), C_DIM=_tk('--dim','#8fae9c'),
+        C_ACC=_tk('--accent','#ffc95c'), C_TX=_tk('--text','#e8efe9'), C_GOOD=_tk('--good','#9fd8a8'),
+        C_BAD=_tk('--bad','#ff8b7a'), C_P2=_tk('--panel2','#173524');
 
   /* 處理榮譽雙欄換行 */
   const colW=(W-PAD*2)/2, maxTextW=colW-20;
@@ -2557,15 +2727,15 @@ function shareImage(evals,out){
   H+=70;
   cv.width=W*scale; cv.height=H*scale;
   c.scale(scale,scale);
-  c.fillStyle='#0b1a12'; c.fillRect(0,0,W,H);
-  c.strokeStyle='#2b4a38'; c.lineWidth=3; c.strokeRect(10,10,W-20,H-20);
+  c.fillStyle=C_BG; c.fillRect(0,0,W,H);
+  c.strokeStyle=C_EDGE; c.lineWidth=3; c.strokeRect(10,10,W-20,H-20);
   c.textBaseline='top';
   const posN={P:roleN(S.role)+'投手',C:'捕手',IF:'內野手',OF:'外野手'}[S.pos];
 
   // Header
-  c.fillStyle='#8fae9c'; c.font='13px sans-serif'; c.fillText('Y a K y o L i f e ・ 引 退 紀 念',PAD,30);
-  c.fillStyle='#ffc95c'; c.font='bold 36px sans-serif'; c.fillText(S.name,PAD,52);
-  c.fillStyle='#e8efe9'; c.font='15px sans-serif';
+  c.fillStyle=C_DIM; c.font='13px sans-serif'; c.fillText('Y a K y o L i f e ・ 引 退 紀 念',PAD,30);
+  c.fillStyle=C_ACC; c.font='bold 36px sans-serif'; c.fillText(S.name,PAD,52);
+  c.fillStyle=C_TX; c.font='15px sans-serif';
   c.fillText(`${primaryPos()}｜${playerType()}｜${hist.length?hist[0].y:'?'}–${S.year}｜引退時 ${S.age} 歲${S.pos==='P'&&S.tjCount?`｜TJ×${S.tjCount}`:''}`,PAD,98);
   // 特性列(header 右方)
   let y=126;
@@ -2576,7 +2746,7 @@ function shareImage(evals,out){
     if(o.key==='mrteam'){ const tc=TEAM_COLOR[S.mrTeamName]||'#ffc95c'; return {bg:'#1a1a1a',bd:tc,fg:tc}; }
     if(o.key==='genius')return {bg:'#232733',bd:'#c8d0e0',fg:'#e8eef7'}; /* 銀 */
     if(o.neg)return {bg:'#2a0f0f',bd:'#c0392b',fg:'#ff8b7a'};             /* 紅 */
-    return {bg:'#173524',bd:'#2b4a38',fg:'#9fd8a8'};                      /* 琥珀綠 */
+    return {bg:C_P2,bd:C_EDGE,fg:C_GOOD};                                 /* 主題色 */
   }
   function drawTags(items){ items.forEach(function(o){ const t=o.label, col=tagColor(o);
     c.font='12px sans-serif'; const w=c.measureText(t).width+16;
@@ -2589,19 +2759,19 @@ function shareImage(evals,out){
   var tagx=PAD;
   if(keepTr.length||remTr.length){ drawTags(keepTr.concat(remTr)); y+=30; }
 
-  function hr(){ c.strokeStyle='#2b4a38'; c.lineWidth=1; c.beginPath(); c.moveTo(PAD,y); c.lineTo(W-PAD,y); c.stroke(); y+=12; }
-  function sectionTitle(t){ c.fillStyle='#8fae9c'; c.font='bold 13px sans-serif'; c.fillText(t,PAD,y); y+=22; }
+  function hr(){ c.strokeStyle=C_EDGE; c.lineWidth=1; c.beginPath(); c.moveTo(PAD,y); c.lineTo(W-PAD,y); c.stroke(); y+=12; }
+  function sectionTitle(t){ c.fillStyle=C_DIM; c.font='bold 13px sans-serif'; c.fillText(t,PAD,y); y+=22; }
 
   // 評價
   hr(); sectionTitle('生涯評價');
-  c.font='bold 16px sans-serif'; c.fillStyle='#ffc95c';
+  c.font='bold 16px sans-serif'; c.fillStyle=C_ACC;
   tiers.forEach(function(t){ c.fillText('★ '+t,PAD,y); y+=24; }); y+=6;
 
   // 生涯數據表
   hr(); sectionTitle('生涯累積數據');
   const cols=isP?[['League',90],['Yrs',36],['G',48],['IP',54],['W',36],['L',36],['SV',48],['HLD',48],['SO',52],['BB',48],['ERA',52],['WHIP',54]]
                 :[['League',80],['Yrs',34],['G',40],['PA',46],['AVG',48],['OBP',48],['SLG',48],['OPS',48],['H',44],['HR',38],['RBI',44],['SB',40],['DEF',40]];
-  function row(cells,head){ let x=PAD; c.font=(head?'bold ':'')+'13px monospace'; c.fillStyle=head?'#8fae9c':'#e8efe9';
+  function row(cells,head){ let x=PAD; c.font=(head?'bold ':'')+'13px monospace'; c.fillStyle=head?C_DIM:C_TX;
     cells.forEach(function(cell,i){ c.fillText(String(cell),x,y); x+=cols[i][1]; }); y+=head?24:26; }
   row(cols.map(cc=>cc[0]),true);
   leagues.forEach(function(b){ const st=S.stats[b];
@@ -2620,7 +2790,7 @@ function shareImage(evals,out){
   // 國際賽生涯成績
   if(S.intlCount>0){ const IS=S.intlStat;
     hr(); sectionTitle('國際賽生涯（中華隊 '+S.intlCount+' 屆）');
-    const rowIntl=(cells,head)=>{ let x=PAD; c.font=(head?'bold ':'')+'13px monospace'; c.fillStyle=head?'#8fae9c':'#e8efe9';
+    const rowIntl=(cells,head)=>{ let x=PAD; c.font=(head?'bold ':'')+'13px monospace'; c.fillStyle=head?C_DIM:C_TX;
       cells.forEach(function(cell,i){ c.fillText(String(cell),x,y); x+=ic[i][1]; }); y+=head?24:28; };
     var ic;
     if(isP){ const era=IS.IP>0?(IS.ER*9/IS.IP).toFixed(2):'-';
@@ -2637,7 +2807,7 @@ function shareImage(evals,out){
 
   // 榮譽(雙欄橫式,過長自動換行)
   hr(); sectionTitle('生涯榮譽（'+honors.length+' 項）');
-  c.font='13px sans-serif'; c.fillStyle='#9fd8a8';
+  c.font='13px sans-serif'; c.fillStyle=C_GOOD;
   let startY = y;
   let currY = startY;
   honorBlocks.forEach(function(b, i){
@@ -2652,10 +2822,10 @@ function shareImage(evals,out){
   if(amaLogs.length > 0){
     hr(); sectionTitle('生涯年表（業餘成績）');
     const hc=[['年',48],['齡',40],['球隊',150],['成績',W-PAD*2-238]];
-    let x=PAD; c.font='bold 12px monospace'; c.fillStyle='#8fae9c';
+    let x=PAD; c.font='bold 12px monospace'; c.fillStyle=C_DIM;
     hc.forEach(function(h){ c.fillText(h[0],x,y); x+=h[1]; }); y+=20;
     c.font='11px monospace';
-    amaLogs.forEach(function(r){ x=PAD; c.fillStyle=r.inj?'#ff8b7a':'#cfe0d4';
+    amaLogs.forEach(function(r){ x=PAD; c.fillStyle=r.inj?C_BAD:C_TX;
       const cells=[String(r.y),String(r.age),r.tm,r.line];
       cells.forEach(function(cell,i){
         let t=String(cell); const maxw=hc[i][1]-8;
@@ -2668,10 +2838,10 @@ function shareImage(evals,out){
     const hc = isP
       ? [['年',46],['齡',36],['球隊',124],['G',45],['IP',55],['W',36],['L',36],['SV',42],['HLD',42],['SO',46],['BB',46],['ERA',52],['WHIP',54]]
       : [['年',46],['齡',34],['球隊',120],['G',36],['PA',42],['AVG',46],['OBP',46],['SLG',46],['OPS',46],['H',40],['HR',36],['RBI',40],['SB',36],['DEF',40]];
-    let x=PAD; c.font='bold 12px monospace'; c.fillStyle='#8fae9c';
+    let x=PAD; c.font='bold 12px monospace'; c.fillStyle=C_DIM;
     hc.forEach(function(h){ c.fillText(h[0],x,y); x+=h[1]; }); y+=20;
     c.font='12px monospace';
-    proLogs.forEach(function(r){ x=PAD; c.fillStyle=r.inj?'#ff8b7a':'#cfe0d4';
+    proLogs.forEach(function(r){ x=PAD; c.fillStyle=r.inj?C_BAD:C_TX;
       const tmS=r.tm;
       const s = r.st || {G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,avg:0,era:0,WHIP:0,DEF:0};
       let cells = [];
@@ -2697,9 +2867,9 @@ function shareImage(evals,out){
     y+=4;
   }
 
-  c.fillStyle='#ffc95c'; c.font='bold 16px sans-serif';
+  c.fillStyle=C_ACC; c.font='bold 16px sans-serif';
   c.fillText('生涯總薪資 '+fmtMoney(Math.round(S.salary))+' 台幣',PAD,y); y+=26;
-  c.fillStyle='#8fae9c'; c.font='11px monospace'; c.fillText('seed: '+SEED,PAD,H-40);
+  c.fillStyle=C_DIM; c.font='11px monospace'; c.fillText('seed: '+SEED,PAD,H-40);
   c.textAlign='right'; c.fillText(APP_VER,W-PAD,H-40); c.textAlign='left';
 
   const url=cv.toDataURL('image/png');
@@ -2733,6 +2903,13 @@ function shareImage(evals,out){
   if(t)t.onclick=()=>{ document.getElementById('act').classList.toggle('collapsed');
     t.textContent=document.getElementById('act').classList.contains('collapsed')?'⌃ 展開選項':'⌄ 收合選項'; };
 })();
+(function(){ /* theme init + timeline click delegation */
+  let t='a'; try{t=localStorage.getItem(THEME_KEY)||'a';}catch(e){}
+  document.querySelectorAll('#seg-theme button').forEach(b=>b.onclick=()=>applyTheme(b.dataset.t));
+  applyTheme(t);
+  ['tl-list','tl-strip'].forEach(id=>{ const el=$(id);
+    if(el)el.onclick=ev=>{ const n=ev.target.closest('[data-i]'); if(n)tlScrollTo(TL[+n.dataset.i]); }; });
+})();
 let selPos='P';
 $('seed-show').value=SEED;
 $('seed-re').onclick=e=>{e.preventDefault();SEED=Math.random().toString(36).slice(2,10);$('seed-show').value=SEED;};
@@ -2756,6 +2933,8 @@ $('btn-start').onclick=()=>{
   };
   $('start').style.display='none';
   $('board').style.display=''; $('act').style.display='';
+  TL=[]; renderTimeline();
+  const ts=$('tl-seed'); if(ts)ts.textContent=SEED;
   card('info','球員誕生',`${S.year} 年春天，${POSN[S.pos]} <b class="hl">${S.name}</b> 加入 <b class="hl">${S.team}</b> 棒球隊。三年後的路，要自己選。<br><span style="color:var(--dim);font-size:12px">提示：22 歲前累積擲出 5 次「6」可覺醒隱藏素質。</span>`);
   startYear();
 };
