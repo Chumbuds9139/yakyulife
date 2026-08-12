@@ -47,7 +47,10 @@ body[data-theme='d']{--bg:#f6f7f6;--panel:#ffffff;--panel2:#f2f4f2;--edge:#e2e6e
   --glow:none;--btnbg:#0f7b4d;--btnedge:#0f7b4d;--btntx:#ffffff;--bgfx:none;--shadow:rgba(26,32,28,.1)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
-body{background:var(--bg);background-image:var(--bgfx);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.6}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.6}
+/* stadium glow lives on a fixed pseudo-element: body is only 100vh tall, so a
+   body background-image would tile once per viewport and show a seam on scroll */
+body::before{content:'';position:fixed;inset:0;z-index:-1;background:var(--bgfx);pointer-events:none}
 a{color:var(--info)}
 /* ---------- 版型骨架:手機單欄(預設) / 桌面三欄(>920px) ---------- */
 #app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
