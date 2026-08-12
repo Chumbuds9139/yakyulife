@@ -143,7 +143,7 @@ table.fin td:first-child,table.fin th:first-child{text-align:left}
   <div class="wrap">
     <div class="stitch"></div>
     <h1 id="logo-tap">YaKyoLife<br><em>棒球人生模擬器</em></h1>
-    <div id="ver-badge" style="position:fixed;top:6px;right:8px;font-size:10px;letter-spacing:1px;color:var(--dim);opacity:.55;font-family:monospace;z-index:50;pointer-events:none">v1.3.5</div>
+    <div id="ver-badge" style="position:fixed;top:6px;right:8px;font-size:10px;letter-spacing:1px;color:var(--dim);opacity:.55;font-family:monospace;z-index:50;pointer-events:none">v1.3.6</div>
     <p class="sub">高中三年養成 → 選秀・旅日・旅美 → 國際賽 → 衰退與引退。每一顆骰子都算數。</p>
     <div class="field"><label>球員姓名</label><input id="in-name" maxlength="10" placeholder="例如：林家正" value=""></div>
     <div class="field"><label>守位</label>
@@ -297,7 +297,7 @@ function dposReview(cont){
     f:()=>{ S.dpos=p; card('info','守位調整',`球團季末評估後，新球季改守 <b class="hl">${DPN[p]}</b>。`); cont(); }}));
   choose(`守位會議：教練團認為你的守備已撐不住 ${DPN[S.dpos]}（${LV[S.lv].n}標準）`,opts);
 }
-const APP_VER='v1.3.5';
+const APP_VER='v1.3.6';
 const TEAM_COLOR={
   /* 中職 */
   '台中猛瑪':'#ffd800','府城雄獅':'#ff7f00','桃園金剛':'#8b1a1a','新北騎士':'#003f87','台北恐龍':'#c8102e','高雄神鵰':'#1a7a3a',
@@ -600,13 +600,16 @@ function simSeason(lv){
       const dec=Math.round(st.G*0.72), wp=clamp(0.50+d*0.014+N0(0.05),0.15,0.85);
       st.W=Math.round(dec*wp); st.L=dec-st.W;
     }else if(S.role==='CL'){
-      st.W=ri(1,4); st.L=ri(0,4);
-      st.SV=d>=3?Math.round(clamp(20+d*2,0,48)*f*perfF):(chance(25)?ri(1,6):0);
-      st.HLD=Math.round(clamp(8+d,0,25)*f*perfF*0.4);
-    }else{ /* 中繼:累積中繼成功 HLD */
-      st.W=ri(1,6); st.L=ri(0,4);
-      st.HLD=Math.round(clamp(12+d*2,0,40)*f*perfF);
-      st.SV=chance(20)?ri(1,5):0;
+      /* 終結者:救援以出賽數為基礎(轉化率隨表現 d),SV 天生 <= G;每場最多 1 救援 */
+      const svRate=clamp(0.55+d*0.02,0.35,0.82);            /* 救援轉化率:35%~82% */
+      st.SV=Math.min(st.G, Math.round(st.G*svRate));         /* 不可超過出賽數 */
+      st.HLD=Math.min(Math.max(0,st.G-st.SV), Math.round(st.G*0.12)); /* 非救援登板的中繼 */
+      const dec=Math.max(1,Math.round(st.G*0.14)); st.W=Math.round(dec*clamp(0.45+d*0.02,0.3,0.7)); st.L=Math.max(0,dec-st.W);
+    }else{ /* 中繼:中繼成功 HLD 以出賽數為基礎 */
+      const hldRate=clamp(0.45+d*0.02,0.25,0.72);
+      st.HLD=Math.min(st.G, Math.round(st.G*hldRate));       /* 不可超過出賽數 */
+      st.SV=Math.min(Math.max(0,st.G-st.HLD), chance(25)?ri(1,5):0);
+      const dec=Math.max(1,Math.round(st.G*0.14)); st.W=Math.round(dec*clamp(0.5+d*0.015,0.35,0.7)); st.L=Math.max(0,dec-st.W);
     }
   }else{
     const q=a.con*0.6+a.eye*0.2+a.spd*0.2, d=q-par; st.d=d;
@@ -623,7 +626,7 @@ function simSeason(lv){
     }
     /* 表現係數:打得好才有滿打席,爛表現(d<0)出賽再打折 */
     const perfF=clamp(0.82+d*0.03,0.45,1.12);
-    st.G=Math.round(L.g*clamp(staF*perfF,0.10,1.0)*f*(0.95+R()*0.06));
+    st.G=Math.min(L.g, Math.round(L.g*clamp(staF*perfF,0.10,1.0)*f*(0.95+R()*0.06))); /* 上限=聯盟場次,不可超過 */
     st.PA=Math.round(st.G*4.25);
     st._dh=dhThisYear; /* 供 accStat 記 DH 年 */
     st.BB=Math.round(st.PA*clamp(0.062+(a.eye-par)*0.0034,0.045,0.17));
@@ -635,7 +638,37 @@ function simSeason(lv){
     st.RBI=Math.round(st.HR*2.1+(st.H-st.HR)*0.30);
     st.DEF=defRuns(lv);
   }
+  applySeasonForm(st,lv);   /* 低潮年/生涯年:調整率值與產出(不動出賽數) */
   return st;
+}
+/* 賽季狀態:10% 低潮(成績×0.65)、10% 生涯年(成績×1.2,需健康);倍率只作用產出/率值,出賽數 G 不變 */
+function applySeasonForm(st,lv){
+  if(S.seasonFactor<=0)return;                 /* 傷缺全季不觸發 */
+  st.form=0;                                    /* 0=正常 1=生涯年 -1=低潮 */
+  const roll=R();
+  const canCareer=S.seasonFactor>=0.9;          /* 生涯年需該季健康 */
+  let m=1;
+  if(roll<0.10){ st.form=-1; m=0.65; }          /* 低潮:成績打 65 折 */
+  else if(canCareer && roll<0.20){ st.form=1; m=1.20; } /* 生涯年:成績 ×1.2 */
+  if(m===1)return;
+  if(S.pos==='P'){
+    /* 投手:三振/勝場隨倍率;被安打與自責分反向(生涯年變少、低潮變多);SV/HLD 依倍率但不超過出賽數 */
+    st.SO=Math.round(st.SO*m);
+    st.W=Math.round(st.W*m); if(st.L!=null)st.L=Math.max(0,Math.round(st.L/(m||1)));
+    st.H=Math.max(0,Math.round(st.H/m)); st.ER=Math.max(0,Math.round(st.ER/m));
+    st.era=st.IP>0?+(st.ER*9/st.IP).toFixed(2):st.era;
+    st.WHIP=st.IP>0?+((st.H+st.BB)/st.IP).toFixed(2):st.WHIP;
+    if(st.SV)st.SV=Math.min(st.G,Math.round(st.SV*m));
+    if(st.HLD)st.HLD=Math.min(Math.max(0,st.G-(st.SV||0)),Math.round(st.HLD*m));
+  }else{
+    /* 打者:安打/全壘打/盜壘/打點隨倍率;打席與出賽數不變(打率連帶變動) */
+    st.H=Math.round(st.H*m); st.HR=Math.round(st.HR*m); st.SB=Math.round(st.SB*m);
+    if(st.H>st.AB)st.H=st.AB;                   /* 安打不可超過打數 */
+    st.avg=st.AB?st.H/st.AB:0;
+    st.RBI=Math.round(st.HR*2.1+(st.H-st.HR)*0.30);
+  }
+  /* d 值(影響評價/獎項/下放)跟著狀態調整 */
+  st.d += st.form===1?4:st.form===-1?-4:0;
 }
 /* 守備分(近似 defensive runs):守位難度權重 × 守備工具相對聯盟基準的幅度 × 出賽比重 */
 function defRuns(lv){
@@ -1344,6 +1377,13 @@ function proSeason(){
       `<span class="tag">合計</span><div class="statline">${statLine(st)}</div>`);
   }
   else card('','球季數據',`<span class="tag">${S.teamName()}${S.dpos?'｜'+S.dpos:''}</span><div class="statline">${statLine(st)}</div>`);
+  /* 低潮年 / 生涯年 敘述卡 */
+  if(st.form===-1){
+    card('bad','巨大的低潮',`身體狀況很好，但是成績一直打不出來，遇到了巨大的低潮。孤獨、無助，就像是溺水一樣，只能隨意抓取孤木。`);
+  }else if(st.form===1){
+    if(S.pos==='P') card('gold','生涯年','縫線掠過指尖的感覺無與倫比，而你投出去的球像是有了生命，用一個無人能想像的到的角度，閃過了打者的球棒，並穩穩投進捕手的手套。');
+    else card('gold','生涯年','投來的每顆球看起來都像籃球一樣大，你看得到縫線、球的轉動，就和駭客任務的子彈一樣慢了下來，而你每一顆擊中甜蜜點的球，都往全壘打牆奔去。');
+  }
   const isInj = S.seasonFactor <= 0.45; /* 判斷是否為大傷報廢年 */
   S.log.push({y:S.year,age:S.age,tm:S.tradeFrom?`${S.tradeFrom}→${S.teamName()}`:S.teamName(),p:S.dpos||'',line:S.seasonFactor===0?'傷缺全季':statLine(st), inj: isInj, st: st});
   S.tradeFrom=null;
