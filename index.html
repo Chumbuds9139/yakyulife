@@ -1468,8 +1468,10 @@ function proSeason(){
   else if(S.seasonFactor<0.95)S.ironStreak=0;
   /* 只會這個:先看夠不夠格當主力,夠格絕不判工具人;不夠格才看有無突出工具 */
   if(S.pos!=='P'){ const tg=toolGap();
-    /* 主力判定:本季出賽達聯盟場次 60% → 每日球員以上,絕不是工具人 */
-    const isRegular = S.seasonFactor>0 && st.G >= LV[S.lv].g*0.60;
+    /* 主力判定:還原健康狀態下的預估出賽數,傷病缺陣不影響評估
+       (出賽數公式含 seasonFactor,除回即得健康時的預估;表現係數仍保留) */
+    const projG = S.seasonFactor > 0 ? (st.G / S.seasonFactor) : 0;
+    const isRegular = projG >= LV[S.lv].g * 0.60;
     if(!S.traits.onetool && !isRegular && tg.gap>=22 && tg.val>=58 && careerAllStars()<4){ S.traits.onetool=true;
       const wasBefore=S.removed.includes('只會這個');
       S.removed=S.removed.filter(x=>x!=='只會這個'); /* 重新觸發:清掉刪除線記錄 */
@@ -1479,7 +1481,7 @@ function proSeason(){
         traitCard('onetool','只會這個',`歲月帶走了你的其他工具，只剩<b class="hl">${role}</b>那一項本領還在。教練把你當成板凳上的秘密武器——關鍵時刻，你仍然可靠。`,'bad');
       else
         traitCard('onetool','只會這個',`你只有一項武器強得誇張，其餘全是破洞。教練不敢讓你先發，只在關鍵時刻派你上去做一件事——你成了球隊的<b class="hl">${role}</b>。出賽數銳減，但那一項本領無人能及。`,'bad'); }
-    else if(S.traits.onetool && (tg.gap<18 || (S.seasonFactor>0 && st.G>=LV[S.lv].g*0.60))){ /* 補起來 或 打回主力 → 解除 */
+    else if(S.traits.onetool && (tg.gap<18 || isRegular)){ /* 補起來 或 實力打回主力 → 解除 */
       removeTrait('onetool','只會這個'); S.toolRole=null;
       card('good','不再是工具人','教練終於敢把你放進先發打線——你證明了自己不只是板凳上的一招鮮。<b class="hl">「只會這個」解除</b>，你是個完整的球員了。'); board(1); } }
   awards(bucket,st);
