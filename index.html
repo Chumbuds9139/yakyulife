@@ -212,16 +212,24 @@ body[data-theme='d'] .die.active{box-shadow:0 3px 10px color-mix(in srgb,var(--a
 .stitch::after{right:8px;border-left:none;border-radius:0 50% 50% 0}
 .stitch.small{width:28px;height:28px;box-shadow:inset -3px -4px 0 rgba(0,0,0,.1)}
 .stitch.small::before,.stitch.small::after{top:4px;bottom:4px;width:8px;border-width:2px}
-#btn-restart{background:none;border:1px solid var(--edge);color:var(--dim);border-radius:min(var(--r),8px);
- font-size:14px;line-height:1;padding:4px 8px;margin-left:8px;cursor:pointer;flex:none}
-#btn-restart:hover{color:var(--accent);border-color:var(--accent)}
+#btn-restart,#btn-theme{background:none;border:1px solid var(--edge);color:var(--dim);border-radius:min(var(--r),8px);
+ font-size:14px;line-height:1;padding:4px 8px;margin-left:8px;cursor:pointer;flex:none;white-space:nowrap}
+#btn-theme{font-size:11px;padding:5px 8px}
+#btn-restart:hover,#btn-theme:hover{color:var(--accent);border-color:var(--accent)}
+/* ---------- 主題化對話框(取代原生 confirm) ---------- */
+#modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:22px}
+#modal.show{display:flex}
+#modal-box{background:var(--panel);border:1.5px solid var(--edge);border-radius:var(--r);padding:18px 18px 14px;
+  max-width:340px;width:100%;box-shadow:0 18px 50px var(--shadow);animation:pop .2s ease}
+#modal-box h3{font-family:var(--head);font-size:13px;letter-spacing:.25em;color:var(--dim);font-weight:700;margin-bottom:4px}
+#modal-box p{font-size:14px;margin:6px 0 4px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* ---------- 桌面三欄(>920px) ---------- */
 @media(min-width:921px){
   #app{display:grid;grid-template-columns:250px minmax(0,1fr) 340px;align-items:stretch;
     max-width:1360px;margin:0 auto;border-left:1px solid var(--edge);border-right:1px solid var(--edge)}
   #tl-side{display:block}
-  #tl-in{position:sticky;top:0;max-height:100vh;overflow-y:auto}
+  #tl-in{position:sticky;top:0;height:100vh;height:100dvh;overflow-y:auto}
   #tl-strip{display:none}
   #board{padding:14px 26px 12px}
   .bd-cell b{font-size:19px}
@@ -268,7 +276,7 @@ body[data-theme='d'] .die.active{box-shadow:0 3px 10px color-mix(in srgb,var(--a
   </div></aside>
   <div id="mid">
     <header id="board" style="display:none">
-      <div id="bd-top"><div id="bd-name"></div><div id="bd-team"></div><span id="bd-tj" style="color:var(--dim);font-size:11px;margin-left:6px;white-space:nowrap"></span><button id="btn-restart" title="重新開始">↺</button></div>
+      <div id="bd-top"><div id="bd-name"></div><div id="bd-team"></div><span id="bd-tj" style="color:var(--dim);font-size:11px;margin-left:6px;white-space:nowrap"></span><button id="btn-theme" title="切換佈景主題">主題</button><button id="btn-restart" title="重新開始">↺</button></div>
       <div id="bd-grid">
         <div class="bd-cell"><b id="bd-age">16</b><span>年齡</span></div>
         <div class="bd-cell"><b id="bd-year">2026</b><span>年份</span></div>
@@ -289,6 +297,7 @@ body[data-theme='d'] .die.active{box-shadow:0 3px 10px color-mix(in srgb,var(--a
     <footer id="act" style="display:none"></footer>
   </div></aside>
 </div>
+<div id="modal"><div id="modal-box"></div></div>
 <script>
 /* ================= RNG（種子化） ================= */
 let SEED = new URLSearchParams(location.search).get('seed') || Math.random().toString(36).slice(2,10);
@@ -872,6 +881,25 @@ function applyTheme(t){
   document.querySelectorAll('#seg-theme button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
   const m=document.querySelector('meta[name="theme-color"]');
   if(m)m.setAttribute('content',(getComputedStyle(document.body).getPropertyValue('--bg')||'#081510').trim());
+}
+/* ---------- 主題化對話框(純呈現層) ---------- */
+function modalOpen(html){ const m=$('modal'); if(!m)return; $('modal-box').innerHTML=html; m.classList.add('show'); }
+function modalClose(){ const m=$('modal'); if(m)m.classList.remove('show'); }
+function restartModal(){
+  modalOpen(`<h3>重新開始</h3><p>確定要放棄這段人生，從頭開始嗎？</p>
+    <button class="btn warn" id="md-restart" style="text-align:center">放棄這段人生，重新開始</button>
+    <button class="btn" id="md-cancel" style="text-align:center">繼續目前的生涯</button>`);
+  $('md-restart').onclick=()=>{ location.href=location.pathname; };
+  $('md-cancel').onclick=modalClose;
+}
+const THEME_NAMES={a:'深綠記分板',b:'電子看板',c:'報紙版面',d:'現代儀表板'};
+function themeModal(){
+  const cur=document.body.dataset.theme||'a';
+  modalOpen('<h3>佈景主題</h3>'+['a','b','c','d'].map(t=>
+    `<button class="btn${t===cur?' main':''}" data-mt="${t}" style="text-align:center">${THEME_NAMES[t]}${t===cur?' ✓':''}</button>`).join('')+
+    `<button class="btn" id="md-close" style="text-align:center;margin-top:14px">關閉</button>`);
+  $('modal-box').querySelectorAll('[data-mt]').forEach(b=>b.onclick=()=>{ applyTheme(b.dataset.mt); themeModal(); });
+  $('md-close').onclick=modalClose;
 }
 /* ================= 生涯時間軸(純呈現層,不觸碰 RNG) ================= */
 let TL=[];
@@ -2297,9 +2325,7 @@ function pathChoiceU4(){
   choose(`大學畢業 · 綜合能力 ${o}`,opts);
 }
 if(typeof document!=='undefined'&&document.getElementById('btn-restart')){
-  document.getElementById('btn-restart').onclick=function(){
-    if(confirm('確定要放棄這段人生，從頭開始嗎？'))location.href=location.pathname;
-  };
+  document.getElementById('btn-restart').onclick=restartModal;
 }
 function advance(){
   S.age++; S.year++; S.stageYr++; startYear();
@@ -2946,6 +2972,9 @@ function shareImage(evals,out){
   applyTheme(t);
   ['tl-list','tl-strip'].forEach(id=>{ const el=$(id);
     if(el)el.onclick=ev=>{ const n=ev.target.closest('[data-i]'); if(n)tlScrollTo(TL[+n.dataset.i]); }; });
+  const bt=$('btn-theme'); if(bt)bt.onclick=themeModal;
+  const md=$('modal'); if(md)md.onclick=ev=>{ if(ev.target===md)modalClose(); };
+  document.addEventListener('keydown',ev=>{ if(ev.key==='Escape')modalClose(); });
 })();
 let selPos='P';
 $('seed-show').value=SEED;
