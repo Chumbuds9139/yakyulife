@@ -260,14 +260,16 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
   body:not(.mobile-ui) #board{padding:14px 26px 12px;padding-top:calc(14px + env(safe-area-inset-top,0px))}
   body:not(.mobile-ui) .bd-cell b{font-size:19px}
   body:not(.mobile-ui) #log{padding:18px 26px 26px}
-  /* pin the action panel to the bottom-right so the gaze stays on the lower band
-     (newest log + dice + choices), matching the mobile bottom sheet position */
-  body:not(.mobile-ui) #act-side{position:static;max-height:none;overflow:visible;border-top:none;border-left:1px solid var(--edge);box-shadow:none;display:flex;flex-direction:column}
-  body:not(.mobile-ui) #trait-side{display:block;padding:14px 20px 10px;max-height:42vh;overflow-y:auto}
-  body:not(.mobile-ui) #act-in{position:sticky;bottom:0;margin-top:auto;max-height:100vh;overflow-y:auto;padding:12px 6px 16px}
+  /* the right column is a viewport-pinned full-height flex column (like the left
+     timeline column): traits stay at the top, actions stick to the bottom so the
+     gaze stays on the lower band (newest log + dice + choices), and neither
+     scrolls away with the body */
+  body:not(.mobile-ui) #act-side{position:static;max-height:none;overflow:visible;border-top:none;border-left:1px solid var(--edge);box-shadow:none}
+  body:not(.mobile-ui) #trait-side{display:block;padding:14px 14px 10px;max-height:42vh;overflow-y:auto;flex:0 3 auto;min-height:0}
+  body:not(.mobile-ui) #act-in{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden;padding:12px 6px 16px}
   body:not(.mobile-ui) #act-toggle{display:none!important}
   body:not(.mobile-ui) #act.collapsed{display:block!important}
-  body:not(.mobile-ui) #act{padding:8px 14px 16px}
+  body:not(.mobile-ui) #act{padding:8px 14px 16px;margin-top:auto;overflow-y:auto;min-height:0}
   body:not(.mobile-ui) #start .wrap{padding-top:64px}
   body.mobile-ui #app{max-width:560px;margin:0 auto}
   #fld-ui{display:block} /* unguarded: visible in both layouts so it can switch back */
@@ -327,7 +329,8 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
     </header>
     <main id="log"></main>
   </div>
-  <aside id="act-side"><div id="trait-side"><div class="tt">特質</div><div id="trait-tags"></div></div><div id="act-in">
+  <aside id="act-side"><div id="act-in">
+    <div id="trait-side"><div class="tt">特質</div><div id="trait-tags"></div></div>
     <button id="act-toggle" style="display:none">⌄ 收合選項</button>
     <footer id="act" style="display:none"></footer>
   </div></aside>
