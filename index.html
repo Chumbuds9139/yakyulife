@@ -212,10 +212,13 @@ body[data-theme='d'] .die.active{box-shadow:0 3px 10px color-mix(in srgb,var(--a
 .stitch::after{right:8px;border-left:none;border-radius:0 50% 50% 0}
 .stitch.small{width:28px;height:28px;box-shadow:inset -3px -4px 0 rgba(0,0,0,.1)}
 .stitch.small::before,.stitch.small::after{top:4px;bottom:4px;width:8px;border-width:2px}
-#btn-restart,#btn-theme{background:none;border:1px solid var(--edge);color:var(--dim);border-radius:min(var(--r),8px);
- font-size:14px;line-height:1;padding:4px 8px;margin-left:8px;cursor:pointer;flex:none;white-space:nowrap}
-#btn-theme{font-size:11px;padding:5px 8px}
-#btn-restart:hover,#btn-theme:hover{color:var(--accent);border-color:var(--accent)}
+/* theme b: 8-bit pixel baseball logo */
+body[data-theme='b'] .stitch{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23232c36' d='M6 0h4v1h-4zM4 1h2v1h-2zM10 1h2v1h-2zM3 2h1v1h-1zM12 2h1v1h-1zM2 3h1v1h-1zM13 3h1v1h-1zM1 4h1v1h-1zM14 4h1v1h-1zM1 5h1v1h-1zM14 5h1v1h-1zM0 6h1v1h-1zM15 6h1v1h-1zM0 7h1v1h-1zM15 7h1v1h-1zM0 8h1v1h-1zM15 8h1v1h-1zM0 9h1v1h-1zM15 9h1v1h-1zM1 10h1v1h-1zM14 10h1v1h-1zM1 11h1v1h-1zM14 11h1v1h-1zM2 12h1v1h-1zM13 12h1v1h-1zM3 13h1v1h-1zM12 13h1v1h-1zM4 14h2v1h-2zM10 14h2v1h-2zM6 15h4v1h-4z'/%3E%3Cpath fill='%23d8dde2' d='M6 1h4v1h-4zM4 2h8v1h-8zM3 3h1v1h-1zM5 3h6v1h-6zM12 3h1v1h-1zM2 4h1v1h-1zM4 4h8v1h-8zM13 4h1v1h-1zM2 5h1v1h-1zM4 5h8v1h-8zM13 5h1v1h-1zM1 6h1v1h-1zM3 6h10v1h-10zM14 6h1v1h-1zM1 7h1v1h-1zM3 7h10v1h-10zM14 7h1v1h-1zM1 8h1v1h-1zM3 8h10v1h-10zM14 8h1v1h-1zM1 9h1v1h-1zM3 9h10v1h-10zM14 9h1v1h-1zM2 10h1v1h-1zM4 10h8v1h-8zM13 10h1v1h-1zM2 11h1v1h-1zM4 11h8v1h-8zM13 11h1v1h-1zM3 12h1v1h-1zM5 12h6v1h-6zM12 12h1v1h-1zM4 13h8v1h-8zM6 14h4v1h-4z'/%3E%3Cpath fill='%23e2695c' d='M4 3h1v1h-1zM11 3h1v1h-1zM3 4h1v1h-1zM12 4h1v1h-1zM3 5h1v1h-1zM12 5h1v1h-1zM2 6h1v1h-1zM13 6h1v1h-1zM2 7h1v1h-1zM13 7h1v1h-1zM2 8h1v1h-1zM13 8h1v1h-1zM2 9h1v1h-1zM13 9h1v1h-1zM3 10h1v1h-1zM12 10h1v1h-1zM3 11h1v1h-1zM12 11h1v1h-1zM4 12h1v1h-1zM11 12h1v1h-1z'/%3E%3C/svg%3E") center/contain no-repeat;border:none;border-radius:0;box-shadow:none}
+body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content:none}
+#btn-menu{background:var(--panel2);border:1px solid var(--edge);color:var(--text);border-radius:min(var(--r),8px);
+ font-family:var(--sans);font-size:14px;font-weight:700;line-height:1;padding:9px 15px;margin-left:8px;
+ cursor:pointer;flex:none;white-space:nowrap}
+#btn-menu:hover{color:var(--accent);border-color:var(--accent)}
 /* ---------- 主題化對話框(取代原生 confirm) ---------- */
 #modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:22px}
 #modal.show{display:flex}
@@ -276,7 +279,7 @@ body[data-theme='d'] .die.active{box-shadow:0 3px 10px color-mix(in srgb,var(--a
   </div></aside>
   <div id="mid">
     <header id="board" style="display:none">
-      <div id="bd-top"><div id="bd-name"></div><div id="bd-team"></div><span id="bd-tj" style="color:var(--dim);font-size:11px;margin-left:6px;white-space:nowrap"></span><button id="btn-theme" title="切換佈景主題">主題</button><button id="btn-restart" title="重新開始">↺</button></div>
+      <div id="bd-top"><div id="bd-name"></div><div id="bd-team"></div><span id="bd-tj" style="color:var(--dim);font-size:11px;margin-left:6px;white-space:nowrap"></span><button id="btn-menu" title="選單">選單</button></div>
       <div id="bd-grid">
         <div class="bd-cell"><b id="bd-age">16</b><span>年齡</span></div>
         <div class="bd-cell"><b id="bd-year">2026</b><span>年份</span></div>
@@ -885,21 +888,30 @@ function applyTheme(t){
 /* ---------- 主題化對話框(純呈現層) ---------- */
 function modalOpen(html){ const m=$('modal'); if(!m)return; $('modal-box').innerHTML=html; m.classList.add('show'); }
 function modalClose(){ const m=$('modal'); if(m)m.classList.remove('show'); }
+function menuModal(){
+  modalOpen(`<h3>選單</h3>
+    <button class="btn" id="md-theme" style="text-align:center">切換佈景主題</button>
+    <button class="btn warn" id="md-restart0" style="text-align:center">重新開始</button>
+    <button class="btn" id="md-close" style="text-align:center;margin-top:14px">關閉</button>`);
+  $('md-theme').onclick=themeModal;
+  $('md-restart0').onclick=restartModal;
+  $('md-close').onclick=modalClose;
+}
 function restartModal(){
   modalOpen(`<h3>重新開始</h3><p>確定要放棄這段人生，從頭開始嗎？</p>
     <button class="btn warn" id="md-restart" style="text-align:center">放棄這段人生，重新開始</button>
     <button class="btn" id="md-cancel" style="text-align:center">繼續目前的生涯</button>`);
   $('md-restart').onclick=()=>{ location.href=location.pathname; };
-  $('md-cancel').onclick=modalClose;
+  $('md-cancel').onclick=menuModal;
 }
 const THEME_NAMES={a:'深綠記分板',b:'電子看板',c:'報紙版面',d:'現代儀表板'};
 function themeModal(){
   const cur=document.body.dataset.theme||'a';
   modalOpen('<h3>佈景主題</h3>'+['a','b','c','d'].map(t=>
     `<button class="btn${t===cur?' main':''}" data-mt="${t}" style="text-align:center">${THEME_NAMES[t]}${t===cur?' ✓':''}</button>`).join('')+
-    `<button class="btn" id="md-close" style="text-align:center;margin-top:14px">關閉</button>`);
+    `<button class="btn" id="md-back" style="text-align:center;margin-top:14px">返回選單</button>`);
   $('modal-box').querySelectorAll('[data-mt]').forEach(b=>b.onclick=()=>{ applyTheme(b.dataset.mt); themeModal(); });
-  $('md-close').onclick=modalClose;
+  $('md-back').onclick=menuModal;
 }
 /* ================= 生涯時間軸(純呈現層,不觸碰 RNG) ================= */
 let TL=[];
@@ -2324,8 +2336,8 @@ function pathChoiceU4(){
     pickOfferUI('大聯盟球團報價','MiLB',makeOffers('MiLB',2,bonusMiLB,3,4,o>=55?'A1':'R',null),advance);}});
   choose(`大學畢業 · 綜合能力 ${o}`,opts);
 }
-if(typeof document!=='undefined'&&document.getElementById('btn-restart')){
-  document.getElementById('btn-restart').onclick=restartModal;
+if(typeof document!=='undefined'&&document.getElementById('btn-menu')){
+  document.getElementById('btn-menu').onclick=menuModal;
 }
 function advance(){
   S.age++; S.year++; S.stageYr++; startYear();
@@ -2972,7 +2984,6 @@ function shareImage(evals,out){
   applyTheme(t);
   ['tl-list','tl-strip'].forEach(id=>{ const el=$(id);
     if(el)el.onclick=ev=>{ const n=ev.target.closest('[data-i]'); if(n)tlScrollTo(TL[+n.dataset.i]); }; });
-  const bt=$('btn-theme'); if(bt)bt.onclick=themeModal;
   const md=$('modal'); if(md)md.onclick=ev=>{ if(ev.target===md)modalClose(); };
   document.addEventListener('keydown',ev=>{ if(ev.key==='Escape')modalClose(); });
 })();
