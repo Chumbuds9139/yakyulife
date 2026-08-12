@@ -1008,19 +1008,38 @@ function careerTimelineCard(){ /* two-layer horizontal timeline for the career s
   const y0=TL[0].year, span=Math.max(1,TL.length-1);
   let ms=TL.filter(e=>e.note);
   if(ms.length>7)ms=ms.slice().sort((a,b)=>b.pri-a.pri||a.year-b.year).slice(0,7).sort((a,b)=>a.year-b.year);
-  /* milestone labels alternate between two rows so neighbouring years cannot collide */
-  const dots=ms.map((e,j)=>`<div style="position:absolute;left:${((e.year-y0)/span*100).toFixed(2)}%;top:0;transform:translateX(-50%);text-align:center">`+
+  /* width-aware greedy lanes: each label takes the first of 3 rows where it
+     clears that row's previous label (widths estimated from char count at the
+     guaranteed min-width, so wider containers only add slack); if 3 rows are
+     not enough, the per-year pixel width grows until everything fits */
+  const estW=s=>{let w=0;for(const c of s)w+=c.codePointAt(0)>0x2E7F?10.5:7.5;return w;};
+  const labW=e=>Math.max(estW(String(e.year)),estW(e.note))+10;
+  let pxY=32,placed=null;
+  while(!placed&&pxY<=320){
+    const axisW=TL.length*pxY-52,right=[],out=[];
+    for(const e of ms){
+      const x=(e.year-y0)/span*axisW,w=labW(e);
+      let r=0;
+      while(r<right.length&&x-w/2<right[r])r++;
+      if(r>2){out.length=0;break;}
+      right[r]=x+w/2;out.push({e,r});
+    }
+    if(out.length===ms.length)placed=out;else pxY+=8;
+  }
+  if(!placed)placed=ms.map((e,j)=>({e,r:j%3})); /* same-year duplicates can never separate; degrade gracefully */
+  const maxR=placed.reduce((m,p)=>Math.max(m,p.r),0);
+  const dots=placed.map(({e,r})=>`<div style="position:absolute;left:${((e.year-y0)/span*100).toFixed(2)}%;top:0;transform:translateX(-50%);text-align:center">`+
       `<span style="width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:var(--glow);display:block;margin:4px auto 0"></span>`+
-      `<div style="margin-top:${j%2?26:4}px">`+
+      `<div style="margin-top:${4+r*38}px">`+ /* row step 38px: the 2-line label block is ~33px tall at the inherited 1.6 line-height */
       `<span style="font-family:var(--mono);font-size:10px;color:var(--dim);display:block;white-space:nowrap">${e.year}</span>`+
       `<span style="font-size:10.5px;font-weight:700;display:block;white-space:nowrap">${e.note}</span></div></div>`).join('');
   /* guaranteed width per year; long careers scroll horizontally inside the card */
-  const minW=TL.length*32;
+  const minW=TL.length*pxY;
   card('','生涯時間軸',
     `<div style="overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;margin-top:4px;padding-bottom:4px">`+
     `<div style="min-width:${minW}px">`+
     `<div style="display:flex;gap:3px;margin-bottom:6px">${bands}</div>`+
-    `<div style="margin:0 26px"><div style="position:relative;height:${ms.some((_,j)=>j%2)?'96px':'62px'}">`+
+    `<div style="margin:0 26px"><div style="position:relative;height:${62+38*maxR}px">`+
     `<i style="position:absolute;left:0;right:0;top:8px;height:2px;background:var(--edge)"></i>${dots}</div></div>`+
     `</div></div>`);
 }
