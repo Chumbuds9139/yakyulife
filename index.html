@@ -156,10 +156,11 @@ table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.
 .btn.warn{border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
 #act .row2{display:flex;gap:8px}#act .row2 .btn{flex:1;text-align:center}
 /* 骰子與加點 */
-#dice{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+/* single row always: dice shrink evenly (44px cap) when the container is narrow */
+#dice{display:flex;align-items:flex-start;gap:8px;flex-wrap:nowrap;margin-bottom:10px}
 /* dice as baseballs: light ball face + dashed stitch ring (per-theme tint), depth per theme */
-.die{width:44px;height:44px;border-radius:var(--r);background:#ece7d6;border:2px solid rgba(0,0,0,.16);
-  color:#13291c;font-family:var(--disp);font-size:22px;font-weight:700;
+.die{flex:1 1 0;max-width:44px;min-width:0;aspect-ratio:1;height:auto;border-radius:var(--r);background:#ece7d6;border:2px solid rgba(0,0,0,.16);
+  color:#13291c;font-family:var(--disp);font-size:22px;font-weight:700;line-height:1; /* inherited 1.6 would floor the auto height above the aspect-ratio square */
   display:flex;align-items:center;justify-content:center;transition:.15s;position:relative;
   --stitch:rgba(179,64,47,.5);
   background-image:linear-gradient(rgba(255,255,255,.25),rgba(0,0,0,.08));
@@ -245,7 +246,8 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
 /* ---------- 桌面三欄(>920px) ---------- */
 @media(min-width:921px){
   /* body.mobile-ui opts out of the desktop layout (user toggle in the menu) */
-  body:not(.mobile-ui) #app{display:grid;grid-template-columns:250px minmax(0,1fr) 340px;align-items:stretch;
+  /* right column widens on large screens so 7 dice (max roll) fit at full size */
+  body:not(.mobile-ui) #app{display:grid;grid-template-columns:250px minmax(0,1fr) clamp(340px,31vw,400px);align-items:stretch;
     max-width:1360px;margin:0 auto;border-left:1px solid var(--edge);border-right:1px solid var(--edge)}
   body:not(.mobile-ui) #tl-side{display:block}
   body:not(.mobile-ui) #tl-in{position:sticky;top:0;height:100vh;height:100dvh;overflow-y:auto}
