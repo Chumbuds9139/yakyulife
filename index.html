@@ -1915,11 +1915,22 @@ function maybeIntl(done){
       /* 累積國際賽個人成績(一屆約 6-8 場),依能力 d 值決定表現 */
       { const a=S.ab, par=52; const IS=S.intlStat;
         if(S.pos==='P'){ const dd=(a.vel+a.ctl+a.brk)/3-par;
-          const ip=+(ri(4,9)+R()*3).toFixed(1); IS.IP=+(IS.IP+ip).toFixed(1);
+          /* 【修正】區分先發與後援，並將局數與出賽場次連動，符合國際賽球數限制 */
+          let g, ip;
+          if(isSP()){
+            g = ri(1, 2); /* 先發王牌一屆大約扛 1~2 場 */
+            ip = +(g * (4.5 + R() * 2.5)).toFixed(1); /* 配合球數限制，單場大約吃 4.5~7 局 */
+          } else {
+            g = ri(3, 6); /* 牛棚一屆大約頻繁上陣 3~6 場 */
+            ip = +(g * (0.8 + R() * 0.8)).toFixed(1); /* 每次上場大約拆彈或投 0.8~1.6 局 */
+          }
+          
+          IS.IP=+(IS.IP+ip).toFixed(1);
+          IS.G+=g;
+          
           const k9=clamp(7.5+dd*0.12,4,14); IS.SO+=Math.round(ip/9*k9);
           const era=clamp(3.6-dd*0.16,0.8,8); IS.ER+=Math.round(era*ip/9);
           if(i<=2&&chance(45))IS.W++; if(!isSP()&&chance(30))IS.SV++;
-          IS.G+=ri(1,3);
         } else { const dd=(a.con*0.5+a.pow*0.2+a.eye*0.18+a.spd*0.12)-par-0.5; /* 同步賽季 d 公式(含 pow) */
           const g=ri(5,8), pa=g*ri(3,4); IS.G+=g; IS.PA+=pa;
           const ab=Math.round(pa*0.86); IS.AB+=ab;
