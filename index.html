@@ -143,7 +143,7 @@ table.fin td:first-child,table.fin th:first-child{text-align:left}
   <div class="wrap">
     <div class="stitch"></div>
     <h1 id="logo-tap">YaKyoLife<br><em>棒球人生模擬器</em></h1>
-    <div id="ver-badge" style="position:fixed;top:6px;right:8px;font-size:10px;letter-spacing:1px;color:var(--dim);opacity:.55;font-family:monospace;z-index:50;pointer-events:none">v1.3.6</div>
+    <div id="ver-badge" style="position:fixed;top:6px;right:8px;font-size:10px;letter-spacing:1px;color:var(--dim);opacity:.55;font-family:monospace;z-index:50;pointer-events:none">v1.3.7</div>
     <p class="sub">高中三年養成 → 選秀・旅日・旅美 → 國際賽 → 衰退與引退。每一顆骰子都算數。</p>
     <div class="field"><label>球員姓名</label><input id="in-name" maxlength="10" placeholder="例如：林家正" value=""></div>
     <div class="field"><label>守位</label>
@@ -306,7 +306,7 @@ function dposReview(cont){
     f:()=>{ S.dpos=p; card('info','守位調整',`球團季末評估後，新球季改守 <b class="hl">${DPN[p]}</b>。`); cont(); }}));
   choose(`守位會議：教練團認為你的守備已撐不住 ${DPN[S.dpos]}（${LV[S.lv].n}標準）`,opts);
 }
-const APP_VER='v1.3.6';
+const APP_VER='v1.3.7';
 const TEAM_COLOR={
   /* 中職 */
   '台中猛瑪':'#ffd800','府城雄獅':'#ff7f00','桃園金剛':'#8b1a1a','新北騎士':'#003f87','台北恐龍':'#c8102e','高雄神鵰':'#1a7a3a',
@@ -976,6 +976,12 @@ function drawEvents(n,done){
 /* 出廠預設為全虛構人名;玩家可透過隱藏編輯器自訂名單(僅存於玩家本機) */
 let CHEER=['林曉晴','陳若彤','張沛慈','王詠恩','許昀熙','蘇采蓁','周依潔','郭芷萱'];
 const CHEER_DEFAULT=CHEER.slice();
+let CHEER_SAFE=['馮海莎']; /* 不會變成小三的名單:可交往/結婚,永不出現在外遇人選 */
+function datePool(){ /* 交往/結婚名單 */
+  if(CHEER_SAFE.length>=CHEER.length) return CHEER_SAFE.slice();      /* 安全名單較長:直接整組替換 */
+  return CHEER_SAFE.concat(CHEER.slice(CHEER_SAFE.length));           /* 較短:同數量替換進名單 */
+}
+function affairPool(){ return CHEER.slice(); } /* 外遇名單=原啦啦隊名單 */
 function loveEvent(next){
   const L=S.love;
   if(S.stage!=='PRO'||S.age<20){ next(); return; }
@@ -995,7 +1001,7 @@ function loveEvent(next){
     const ask=()=>proposalAsk(next);
     if(chance(30)){ /* 三成機率先來一段插曲,結束後照樣問婚 */
       const r=R()*100;
-      if(r<40){ const t=pick(CHEER.filter(n=>n!==L.partner));
+      if(r<40){ const t=pick(affairPool().filter(n=>n!==L.partner));
         choose(`聚餐散場，${t} 說順路想搭你的車`,[
           {t:'讓她上車（賭一把）',warn:true,s:'沒被抓到＝體力提升｜被抓到＝能力下跌、當年分手率+30%',f:()=>{
             L.affairs++;
@@ -1015,7 +1021,7 @@ function loveEvent(next){
   if(!chance(fire)){ next(); return; }
   /* ---------- 未婚/離婚:緋聞 → 雙重關卡 → 交往 ---------- */
   if(L.st==='single'||L.st==='divorced'){
-    const p=pick(CHEER);
+    const p=pick(datePool());
     card('info','場外話題',`你和啦啦隊女神 <b class="hl">${p}</b> 被拍到球場外同框，緋聞登上娛樂版頭條。${L.exes.length?'（評論區：「離過婚還這麼搶手」）':''}`);
     choose('記者把麥克風遞到你面前：「兩位是在交往嗎？」',[
       {t:'大方承認：「請大家祝福我們」',s:'還要看她那邊敢不敢承認（球團有禁愛令傳聞）',f:()=>{
@@ -1038,7 +1044,7 @@ function loveEvent(next){
   }
   const r=R()*100;
   if(r<40){ /* 外遇誘惑:唯一可以賭的婚內事件 */
-    const t=pick(CHEER.filter(n=>n!==L.partner));
+    const t=pick(affairPool().filter(n=>n!==L.partner));
     choose(`客場飯店酒吧，${t} 傳來訊息：「睡了嗎？」`,[
       {t:'赴約（賭一把）',warn:true,s:'沒被抓到＝體力提升｜被抓到＝能力下跌、婚姻危機',f:()=>{
         L.affairs++;
@@ -1397,7 +1403,9 @@ function proSeason(){
     /* 野手防呆：打席數不可能少於出賽數 */
     st.PA = Math.max(st.PA, st.G); 
   }
-  if(S.pendStat>0&&S.seasonFactor>0){ const p=S.pendStat;
+  if(S.pendStat>0&&S.seasonFactor>0){
+    /* 【修正】狀態火燙的加成，必須依照該季實際出賽的比例（seasonFactor）進行打折 */
+    const p = S.pendStat * S.seasonFactor;
     if(S.pos==='P'){
       /* 狀態火燙=教練重用:後援先加出賽(不超過場次上限),再加內容;物理約束重夾 */
       if(!isSP()){ const addG=Math.min(Math.max(0,68-st.G),Math.round(p*1.2)); st.G+=addG; st.IP=+(st.IP+addG*1.05).toFixed(1); }
