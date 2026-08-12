@@ -90,7 +90,8 @@ a{color:var(--info)}
 .tl-brand .stitch{flex:none}
 .tl-brand b{font-family:var(--head);font-weight:900;font-size:16px;letter-spacing:.06em;display:block;line-height:1.3}
 .tl-brand span.sub{font-size:10px;color:var(--dim);letter-spacing:.2em;display:block}
-#tl-list{flex:1;position:relative;padding-left:16px;min-height:40px}
+/* no flex-grow: the list hugs its content so the spine line grows with the career */
+#tl-list{position:relative;padding-left:16px;min-height:40px}
 #tl-list::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--edge)}
 .tlg{margin-bottom:16px}
 .tlg-h{font-family:var(--head);font-size:10px;letter-spacing:.3em;color:var(--dim);font-weight:700;margin-bottom:9px;padding-left:8px}
@@ -101,7 +102,7 @@ a{color:var(--info)}
 .tl-item.now .t{color:var(--accent);font-weight:700;font-size:13px}
 .tl-item .t b{color:var(--accent);font-weight:700}
 .tl-item.gone{cursor:default;opacity:.55}
-.tl-seed{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.tl-seed{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:auto} /* keeps the SEED footer at the column bottom now that the list no longer grows */
 .tl-seed b{color:var(--accent)}
 .tl-ver{display:block;font-size:10px;opacity:.7;letter-spacing:.05em;margin-top:2px}
 /* ---------- 主紀錄 ---------- */
