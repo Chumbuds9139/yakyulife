@@ -1409,7 +1409,7 @@ function proSeason(){
     if(S.pos==='P'){
       /* 狀態火燙=教練重用:後援先加出賽(不超過場次上限),再加內容;物理約束重夾 */
       if(!isSP()){ const addG=Math.min(Math.max(0,68-st.G),Math.round(p*1.2)); st.G+=addG; st.IP=+(st.IP+addG*1.05).toFixed(1); }
-      st.SO+=p*8; st.IP=+(st.IP+p*4).toFixed(1);
+      st.SO+=Math.round(p*8); st.IP=+(st.IP+p*4).toFixed(1);
       if(isSP())st.W+=Math.round(p*0.4); else st.SV+=Math.round(p*0.6);
       st.era=st.IP>0?clamp(st.era-p*0.05,1.40,9.90):st.era; st.ER=Math.round(st.era*st.IP/9);
       if(!isSP()){ /* 救援/勝敗不可超過出賽數(物理約束) */
@@ -2342,6 +2342,7 @@ function endGame(reason){
   card('','生涯累積數據',(tables||'<p>（無職業層級出賽紀錄）</p>')+intlTable);
   if(evals.length)card('gold','生涯評價',evals.join('<br>'));
   /* 獎項與大賽成績（群組化） */
+  /* 獎項與大賽成績（群組化） */
   let honorsHTML = '（生涯未獲得任何獎項）';
   if(S.honors.length) {
     const awardMap = {};
@@ -2355,8 +2356,23 @@ function endGame(reason){
     const honorsList = [];
     for(const awd in awardMap) {
        const yrs = awardMap[awd];
-       if(yrs.length > 1 && yrs[0] !== '') honorsList.push(`· ${awd} *${yrs.length} (${yrs.join('、')})`);
-       else honorsList.push(`· ${awd} ${yrs[0]?`(${yrs[0]})`:''}`);
+       if(yrs[0] !== '') {
+         let nums = yrs.map(Number).sort((a,b)=>a-b);
+         let res=[], st=nums[0], ed=nums[0];
+         for(let i=1; i<=nums.length; i++){
+           if(i<nums.length && nums[i]===ed+1){ ed=nums[i]; }
+           else {
+             if(ed-st>=2) res.push(`${st}~${ed}`); // 三年或以上連號，用 ~
+             else if(ed-st===1) res.push(`${st}、${ed}`); // 兩年連號，維持頓號
+             else res.push(`${st}`); // 單一年份
+             if(i<nums.length){ st=nums[i]; ed=nums[i]; }
+           }
+         }
+         if(yrs.length > 1) honorsList.push(`· ${awd} *${yrs.length} (${res.join('、')})`);
+         else honorsList.push(`· ${awd} (${res[0]})`);
+       } else {
+         honorsList.push(`· ${awd}`);
+       }
     }
     honorsHTML = honorsList.join('<br>');
   }
@@ -2477,8 +2493,23 @@ function shareImage(evals,out){
   });
   for(const awd in aMap) {
      const yrs = aMap[awd];
-     if(yrs.length > 1 && yrs[0] !== '') honors.push(`${awd} *${yrs.length} (${yrs.join(',')})`);
-     else honors.push(`${awd} ${yrs[0]?`(${yrs[0]})`:''}`);
+     if(yrs[0] !== '') {
+       let nums = yrs.map(Number).sort((a,b)=>a-b);
+       let res=[], st=nums[0], ed=nums[0];
+       for(let i=1; i<=nums.length; i++){
+         if(i<nums.length && nums[i]===ed+1){ ed=nums[i]; }
+         else {
+           if(ed-st>=2) res.push(`${st}~${ed}`);
+           else if(ed-st===1) res.push(`${st}、${ed}`);
+           else res.push(`${st}`);
+           if(i<nums.length){ st=nums[i]; ed=nums[i]; }
+         }
+       }
+       if(yrs.length > 1) honors.push(`${awd} *${yrs.length} (${res.join('、')})`);
+       else honors.push(`${awd} (${res[0]})`);
+     } else {
+       honors.push(`${awd}`);
+     }
   }
   /* 歷年成績 */
   const hist=S.log.slice();
