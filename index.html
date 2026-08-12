@@ -7,7 +7,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="YaKyoLife">
+<meta name="apple-mobile-web-app-title" content="YaKyoLife - 棒球人生模擬器">
 <title>YaKyoLife - 棒球人生模擬器</title>
 <meta name="description" content="從高中三大賽到名人堂，一場種子化的台灣棒球員生涯模擬。選秀、旅外、國際賽、傷病、感情、引退——每一個決定都算數。">
 <meta property="og:type" content="website">
@@ -3071,7 +3071,7 @@ const PWA_ICON_512='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAIAAA
   if(!/^https?:$/.test(location.protocol))return; /* keep file:// double-click usage untouched */
   try{
     const dir=location.origin+location.pathname.replace(/[^/]*$/,'');
-    const mf={id:dir,name:'YaKyoLife 棒球人生模擬器',short_name:'YaKyoLife',
+    const mf={id:dir,name:document.title||'YaKyoLife - 棒球人生模擬器',short_name:'YaKyoLife',
       description:'從高中三大賽到名人堂，一場種子化的台灣棒球員生涯模擬。',
       lang:'zh-Hant',start_url:dir,scope:dir,display:'standalone',
       background_color:'#081510',theme_color:'#081510',
