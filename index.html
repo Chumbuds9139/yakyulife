@@ -49,7 +49,8 @@ body[data-theme='c']{--bg:#f4efe1;--panel:#faf6ea;--panel2:#ece5d2;--edge:#1e1c1
 body[data-theme='d']{--bg:#f6f7f6;--panel:#ffffff;--panel2:#f2f4f2;--edge:#e2e6e3;--text:#1a201c;--dim:#7a857e;
   --accent:#0f7b4d;--good:#0f7b4d;--bad:#c0392b;--info:#4a76a8;--gold:#b8862d;--r:12px;
   --glow:none;--btnbg:#0f7b4d;--btnedge:#0f7b4d;--btntx:#ffffff;--bgfx:none;--shadow:rgba(26,32,28,.1)}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+/* touch-action:manipulation keeps pan + pinch but kills double-tap zoom (tap-heavy game) */
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 html,body{height:100%;overscroll-behavior-y:none}
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.6}
 /* stadium glow lives on a fixed pseudo-element: body is only 100vh tall, so a
