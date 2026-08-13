@@ -299,11 +299,18 @@ body.big-text .abrow{padding:10px}
 body.big-text .abrow .nm{font-size:19.6px;width:107px}
 body.big-text .abrow .val{font-size:20.3px;width:90px}
 body.big-text #modal-box p{font-size:20.3px}
-/* full-screen allocation, mobile layout only, opened from the bottom panel */
-#alloc-full{position:fixed;inset:0;z-index:70;background:var(--bg);background-image:var(--bgfx);
-  display:none;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px))}
+/* full-screen allocation, mobile layout only, opened from the bottom panel.
+   The backdrop is viewport-anchored but the panel inside it has to track the mobile-UI
+   content column: at >=921px with the mobile layout forced on, #app is a 560px centred
+   box, so an inset:0 panel would spill across the whole desktop window. Same split as
+   #modal / #modal-box. The cap lives in that media query beside body.mobile-ui #app,
+   because below 921px #app is uncapped and a hardcoded 560 would mismatch there. */
+#alloc-full{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.55);
+  display:none;justify-content:center;align-items:stretch}
 #alloc-full.show{display:flex}
+#af-inner{width:100%;display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  background:var(--bg);background-image:var(--bgfx);
+  padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px))}
 #alloc-full .af-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex:none}
 #alloc-full .af-title{font-family:var(--head);font-size:12px;letter-spacing:.2em;color:var(--dim);font-weight:700}
 body.big-text #alloc-full .af-title{font-size:17.4px}
@@ -333,6 +340,8 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
   body:not(.mobile-ui) #act{padding:8px 14px 16px;margin-top:auto;overflow-y:auto;min-height:0}
   body:not(.mobile-ui) #start .wrap{padding-top:64px}
   body.mobile-ui #app{max-width:560px;margin:0 auto}
+  /* keep the allocation panel on the same column as #app above; these two must match */
+  body.mobile-ui #af-inner{max-width:560px}
   #fld-ui{display:block} /* unguarded: visible in both layouts so it can switch back */
 }
 </style>
@@ -401,7 +410,7 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
   </div></aside>
 </div>
 <div id="modal"><div id="modal-box"></div></div>
-<div id="alloc-full"><div class="af-head"><span class="af-title" id="af-title"></span><button class="btn" id="af-close">收起</button></div><div id="af-body"></div></div>
+<div id="alloc-full"><div id="af-inner"><div class="af-head"><span class="af-title" id="af-title"></span><button class="btn" id="af-close">收起</button></div><div id="af-body"></div></div></div>
 <script>
 /* ================= RNG（種子化） ================= */
 let SEED = new URLSearchParams(location.search).get('seed') || Math.random().toString(36).slice(2,10);
