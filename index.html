@@ -261,13 +261,7 @@ body[data-theme='d'] .die.active{border-color:var(--accent);box-shadow:0 3px 10p
 #fld-display>summary:hover{color:var(--accent)}
 #fld-display>summary .sum{opacity:.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #disp-body{padding-top:2px}
-/* Animate expand/collapse natively. Browsers without ::details-content just snap open, which
-   is the behaviour this replaces, so nothing is lost. interpolate-size is scoped to this
-   subtree rather than :root, and reduced-motion is already handled by the global rule below. */
-#fld-display{interpolate-size:allow-keywords}
-#fld-display::details-content{block-size:0;overflow:hidden;
-  transition:block-size .28s ease,content-visibility .28s allow-discrete}
-#fld-display[open]::details-content{block-size:auto}
+
 #disp-body .field:first-child{margin-top:10px}
 .seedline{font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:22px}
 .seedline b{color:var(--accent)}
@@ -3282,6 +3276,26 @@ function shareImage(evals,out){
   const afc=$('af-close'); if(afc)afc.onclick=allocFullClose;
   /* the layout entry appears and disappears at the breakpoint, so the summary re-syncs on resize */
   window.addEventListener('resize',updDispSum);
+  /* Slide the panel open and shut. ::details-content only interpolates with
+     interpolate-size, which is Chromium-only, so Firefox and Safari saw it snap; the Web
+     Animations API works everywhere. While collapsing, `open` has to stay set until the
+     animation ends or the content would vanish on the first frame. Reduced motion is
+     checked here because the global *{transition:none} rule cannot match a pseudo-element. */
+  (function(){ const det=document.getElementById('fld-display'); if(!det)return;
+    const body=document.getElementById('disp-body'), sum=det.querySelector('summary');
+    if(!body||!sum)return; let anim=null;
+    sum.addEventListener('click',ev=>{
+      if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+      ev.preventDefault();
+      if(anim){ anim.cancel(); anim=null; }
+      const opening=!det.open;
+      if(opening)det.open=true;
+      const h=body.getBoundingClientRect().height;
+      body.style.overflow='hidden';
+      anim=body.animate({height:opening?['0px',h+'px']:[h+'px','0px'],
+        opacity:opening?[0,1]:[1,0]},{duration:280,easing:'ease'});
+      anim.onfinish=()=>{ body.style.overflow=''; anim=null; if(!opening)det.open=false; };
+    }); })();
   let t='a'; try{t=localStorage.getItem(THEME_KEY)||'a';}catch(e){}
   document.querySelectorAll('#seg-theme button').forEach(b=>b.onclick=()=>applyTheme(b.dataset.t));
   applyTheme(t);
