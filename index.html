@@ -74,9 +74,10 @@ a{color:var(--info)}
 .bd-cell b{display:block;font-family:var(--disp);font-size:17px;font-weight:700;color:var(--accent);
   text-shadow:var(--glow);line-height:1.2}
 .bd-cell span{font-size:10px;color:var(--dim);letter-spacing:.15em}
-/* salary cell: compact value inline, full amount in an out-of-flow tip.
-   nowrap keeps 億/萬 on one line (CJK offers break opportunities the old digit string did not). */
-#bd-sal{white-space:nowrap}
+/* salary cell: bare number in the value row, unit carried by the label,
+   full amount in an out-of-flow tip. nowrap on both rows because the label's
+   CJK gives the line-breaker opportunities the bare digits do not. */
+#bd-sal,#bd-sal-lbl{white-space:nowrap}
 #bd-sal-cell{cursor:pointer;outline:none}
 .bd-tip{position:absolute;top:calc(100% + 6px);right:0;z-index:3;white-space:nowrap;
   font-style:normal;font-family:var(--mono);font-size:12px;font-weight:400;letter-spacing:0;
@@ -86,6 +87,16 @@ a{color:var(--info)}
 /* gate hover so a touch tap does not latch :hover and leave the tip stuck open */
 @media (hover:hover){ #bd-sal-cell:hover .bd-tip{opacity:1} }
 #bd-sal-cell.show .bd-tip,#bd-sal-cell:focus-visible .bd-tip{opacity:1}
+/* crossing 萬 -> 億 makes the figure look smaller (9,999 becomes 1.0), so pulse the label
+   once to surface the unit change. Colour only, no motion, and fill-mode stays none so the
+   label reverts on its own when the animation ends. --glow is none in the light themes,
+   which is why the colour carries the effect rather than the shadow. */
+@keyframes bd-unitflip{
+  0%{color:var(--dim)}
+  15%{color:var(--accent);text-shadow:var(--glow)}
+  60%{color:var(--accent);text-shadow:var(--glow)}
+  100%{color:var(--dim);text-shadow:none}}
+#bd-sal-lbl.unitflip{animation:bd-unitflip 1.6s ease-out 1}
 #lamps{display:flex;gap:14px;justify-content:center;margin-top:7px}
 .lamp{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--dim);letter-spacing:.12em}
 .lamp i{width:9px;height:9px;border-radius:50%;background:var(--panel2);border:1px solid var(--edge);display:inline-block}
@@ -320,7 +331,7 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
         <div class="bd-cell"><b id="bd-age">16</b><span>年齡</span></div>
         <div class="bd-cell"><b id="bd-year">2026</b><span>年份</span></div>
         <div class="bd-cell"><b id="bd-ovr">30</b><span>綜合</span></div>
-        <div class="bd-cell" id="bd-sal-cell" tabindex="0"><b id="bd-sal">0</b><span>生涯薪</span><i class="bd-tip" id="bd-sal-tip"></i></div>
+        <div class="bd-cell" id="bd-sal-cell" tabindex="0"><b id="bd-sal">0</b><span id="bd-sal-lbl">生涯薪(萬)</span><i class="bd-tip" id="bd-sal-tip"></i></div>
       </div>
       <div id="lamps">
         <span class="lamp" id="lp0"><i></i>季初</span>
@@ -907,10 +918,12 @@ function salaryFor(lv,d){
 }
 const fmtMoney=w=>{ const y=Math.floor(w/10000),m=Math.round(w%10000); return (y?y+'億':'')+(m?m.toLocaleString()+'萬':(y?'':'0萬')); };
 /* scoreboard-only compact form: one unit at a time, 1 decimal above 1億.
+   Value and unit are returned separately so the unit can sit in the cell label,
+   leaving the value row purely numeric like the other three cells.
    Truncated, never rounded up, so the glanceable figure never exceeds the real one
    (19,999萬 -> 1.9億, matching the card's 1億9,999萬 rather than overstating it as 2.0億).
    Switches unit at exactly the same 10,000萬 threshold as fmtMoney. */
-const fmtSal=w=>w<10000?w.toLocaleString()+'萬':(Math.floor(w/1000)/10).toFixed(1)+'億';
+const salParts=w=>w<10000?{v:w.toLocaleString(),u:'萬'}:{v:(Math.floor(w/1000)/10).toFixed(1),u:'億'};
 /* ================= UI 基礎 ================= */
 const $=id=>document.getElementById(id);
 var _curYearBody=null; /* 當前年度的內容容器 */
@@ -1085,7 +1098,12 @@ function board(phase){
     $('bd-team').innerHTML = dot + `<span style="color:${txtColor}; ${bgStyle} font-weight:900;">${t}</span>`; }
   $('bd-age').textContent=S.age; $('bd-year').textContent=S.year;
   $('bd-ovr').textContent=ovr(); if(S.pos==='P'){const el=$('bd-tj'); if(el)el.textContent='';}
-  { const sal=Math.round(S.salary); $('bd-sal').textContent=fmtSal(sal);
+  { const sal=Math.round(S.salary),sp=salParts(sal); $('bd-sal').textContent=sp.v;
+    const lb=$('bd-sal-lbl');
+    if(lb){ const prev=lb.dataset.u; lb.textContent='生涯薪('+sp.u+')';
+      /* prev is unset on the first render of a career, so the opening board never pulses */
+      if(prev&&prev!==sp.u){ lb.classList.remove('unitflip'); void lb.offsetWidth; lb.classList.add('unitflip'); }
+      lb.dataset.u=sp.u; }
     const tip=$('bd-sal-tip'); if(tip)tip.textContent=fmtMoney(sal)+' 台幣'; }
   [0,1,2].forEach(i=>$('lp'+i).classList.toggle('on',i===phase));
 }
