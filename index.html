@@ -74,10 +74,16 @@ a{color:var(--info)}
 #board{position:sticky;top:0;z-index:20;background:var(--panel);
   border-bottom:2px solid var(--edge);padding:10px 14px 8px;box-shadow:0 6px 18px var(--shadow);
   padding-top:calc(10px + env(safe-area-inset-top,0px))}
-#bd-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-#bd-name{font-family:var(--head);font-weight:900;font-size:17px;letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#bd-name small{color:var(--dim);font-weight:500;font-size:12px;margin-left:6px;font-family:var(--sans)}
-#bd-team{color:var(--accent);font-size:12.5px;font-weight:700;letter-spacing:.06em;white-space:nowrap}
+#bd-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:'name role menu' 'team team menu';
+  align-items:center;column-gap:6px;row-gap:3px}
+#bd-name{grid-area:name;min-width:0;font-family:var(--head);font-weight:900;font-size:17px;line-height:1.3;
+  letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:baseline}
+#bd-name small{color:var(--accent);font-weight:700;font-size:12px;line-height:1.3;margin-left:5px;font-family:var(--sans);letter-spacing:0}
+#bd-role{grid-area:role;min-width:0;color:var(--dim);font-weight:500;font-size:12px;line-height:1.3;font-family:var(--sans);align-self:baseline;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bd-team{grid-area:team;justify-self:start;color:var(--accent);font-size:12.5px;font-weight:700;letter-spacing:.06em;white-space:nowrap}
+#bd-tj{display:none}
+#btn-menu{grid-area:menu;align-self:center}
 #bd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
 .bd-cell{position:relative;background:var(--panel2);border:1px solid var(--edge);border-radius:var(--r);padding:4px 6px 3px;text-align:center}
 .bd-cell b{display:block;font-family:var(--disp);font-size:17px;font-weight:700;color:var(--accent);
@@ -342,6 +348,9 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
   body:not(.mobile-ui) #tl-in{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden}
   body:not(.mobile-ui) #tl-strip{display:none}
   body:not(.mobile-ui) #board{padding:14px 26px 12px;padding-top:calc(14px + env(safe-area-inset-top,0px))}
+  body:not(.mobile-ui) #bd-top{display:flex;align-items:baseline;gap:8px}
+  body:not(.mobile-ui) #bd-role{white-space:nowrap}
+  body:not(.mobile-ui) #bd-team{margin-left:auto}
   body:not(.mobile-ui) .bd-cell b{font-size:19px}
   body:not(.mobile-ui) #log{padding:18px 26px 26px}
   /* the right column is a viewport-pinned full-height flex column (like the left
@@ -413,7 +422,7 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
   </div></aside>
   <div id="mid">
     <header id="board" style="display:none">
-      <div id="bd-top"><div id="bd-name"></div><div id="bd-team"></div><span id="bd-tj" style="color:var(--dim);font-size:11px;margin-left:6px;white-space:nowrap"></span><button id="btn-menu" title="選單">選單</button></div>
+      <div id="bd-top"><div id="bd-name"></div><div id="bd-role"></div><div id="bd-team"></div><span id="bd-tj"></span><button id="btn-menu" title="選單">選單</button></div>
       <div id="bd-grid">
         <div class="bd-cell"><b id="bd-age">16</b><span>年齡</span></div>
         <div class="bd-cell"><b id="bd-year">2026</b><span>年份</span></div>
@@ -1403,7 +1412,8 @@ function card(cls,title,html){ const d=document.createElement('div'); d.classNam
 function divider(t){ /* 每個 divider 開啟新的年度摺疊區塊 */ const log=$('log'); const blocks=log.querySelectorAll('.yr-block'); /* 替剛結束的「上一年」加上下拉箭頭標記，但保留展開（不加上 collapsed） */ const prev = blocks[blocks.length - 1]; if(prev){ const h = prev.querySelector('.yr-head'); if(h && prev.querySelector('.yr-body').children.length) h.classList.add('has-body'); } /* 找到「前年」（倒數第二個區塊）並將其摺疊起來 */ const prevPrev = blocks[blocks.length - 2]; if(prevPrev){ prevPrev.classList.add('collapsed'); } /* 建新區塊 */ const block=document.createElement('div'); block.className='yr-block'; const head=document.createElement('div'); head.className='yr-head'; head.textContent=t; const body=document.createElement('div'); body.className='yr-body'; head.onclick=()=>block.classList.toggle('collapsed'); block.appendChild(head); block.appendChild(body); log.appendChild(block); _curYearBody=body; /* 超過上限:移除最舊的年度區塊(釋放 DOM) */ const newBlocks=log.querySelectorAll('.yr-block'); if(newBlocks.length>MAX_YEARS){ for(let i=0;i<newBlocks.length-MAX_YEARS;i++)newBlocks[i].remove(); } }
 function board(phase){
   renderTraits();
-  $('bd-name').innerHTML=`${playerName()}<small>${S.dpos?DPN[S.dpos]:POSN[S.pos]}${S.role?'·'+roleN(S.role):''}·${playerType()}${S.traits.genius?' ★':''}</small>`;
+  $('bd-name').innerHTML=`${S.name}<small>#${S.jersey}</small>`;
+  $('bd-role').textContent=`${S.dpos?DPN[S.dpos]:POSN[S.pos]}${S.role?'・'+roleN(S.role):''}・${playerType()}${S.traits.genius?' ★':''}`;
   let t;
   if(S.stage==='HS')t=S.team+'（高'+['一','二','三'][S.stageYr-1]+'）';
   else if(S.stage==='U')t=S.team+'（大'+['一','二','三','四'][S.stageYr-1]+'）';
