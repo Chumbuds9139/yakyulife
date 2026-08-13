@@ -90,8 +90,12 @@ a{color:var(--info)}
 .tl-brand .stitch{flex:none}
 .tl-brand b{font-family:var(--head);font-weight:900;font-size:16px;letter-spacing:.06em;display:block;line-height:1.3}
 .tl-brand span.sub{font-size:10px;color:var(--dim);letter-spacing:.2em;display:block}
-#tl-list{flex:1;position:relative;padding-left:16px;min-height:40px}
-#tl-list::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--edge)}
+/* no flex-grow: the list hugs its content so the spine line grows with the career;
+   long careers scroll inside the list so the brand header and SEED footer stay fixed */
+#tl-list{flex:0 1 auto;min-height:40px;overflow-y:auto}
+/* the spine lives on the inner wrapper so it spans the full scrollable content */
+#tl-wrap{position:relative;padding-left:16px}
+#tl-wrap::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--edge)}
 .tlg{margin-bottom:16px}
 .tlg-h{font-family:var(--head);font-size:10px;letter-spacing:.3em;color:var(--dim);font-weight:700;margin-bottom:9px;padding-left:8px}
 .tl-item{display:flex;align-items:center;gap:10px;margin-bottom:9px;cursor:pointer}
@@ -101,7 +105,7 @@ a{color:var(--info)}
 .tl-item.now .t{color:var(--accent);font-weight:700;font-size:13px}
 .tl-item .t b{color:var(--accent);font-weight:700}
 .tl-item.gone{cursor:default;opacity:.55}
-.tl-seed{font-family:var(--mono);font-size:11px;color:var(--dim)}
+.tl-seed{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:auto} /* keeps the SEED footer at the column bottom now that the list no longer grows */
 .tl-seed b{color:var(--accent)}
 .tl-ver{display:block;font-size:10px;opacity:.7;letter-spacing:.05em;margin-top:2px}
 /* ---------- 主紀錄 ---------- */
@@ -258,7 +262,7 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
   body:not(.mobile-ui) #app{display:grid;grid-template-columns:250px minmax(0,1fr) clamp(340px,31vw,400px);align-items:stretch;
     max-width:1360px;margin:0 auto;border-left:1px solid var(--edge);border-right:1px solid var(--edge)}
   body:not(.mobile-ui) #tl-side{display:block}
-  body:not(.mobile-ui) #tl-in{position:sticky;top:0;height:100vh;height:100dvh;overflow-y:auto}
+  body:not(.mobile-ui) #tl-in{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden}
   body:not(.mobile-ui) #tl-strip{display:none}
   body:not(.mobile-ui) #board{padding:14px 26px 12px;padding-top:calc(14px + env(safe-area-inset-top,0px))}
   body:not(.mobile-ui) .bd-cell b{font-size:19px}
@@ -1023,7 +1027,8 @@ function renderTimeline(){
       html+=`<div class="tl-item${now?' now':''}${(gone&&!now)?' gone':''}" data-i="${i}"><span class="dot"></span><span class="t">${e.year} ${e.lab}${e.note?' <b>'+e.note+'</b>':''}</span></div>`;
     });
     if(cur!==null)html+='</div>';
-    list.innerHTML=html;
+    list.innerHTML='<div id="tl-wrap">'+html+'</div>';
+    list.scrollTop=list.scrollHeight; /* keep the newest year in view */
   }
   if(strip){
     strip.innerHTML=TL.map((e,i)=>`<span class="tl-chip${i===TL.length-1?' now':''}" data-i="${i}">${e.year}${e.note?'★':''}</span>`).join('');
