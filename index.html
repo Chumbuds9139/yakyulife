@@ -261,6 +261,13 @@ body[data-theme='d'] .die.active{border-color:var(--accent);box-shadow:0 3px 10p
 #fld-display>summary:hover{color:var(--accent)}
 #fld-display>summary .sum{opacity:.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #disp-body{padding-top:2px}
+/* Animate expand/collapse natively. Browsers without ::details-content just snap open, which
+   is the behaviour this replaces, so nothing is lost. interpolate-size is scoped to this
+   subtree rather than :root, and reduced-motion is already handled by the global rule below. */
+#fld-display{interpolate-size:allow-keywords}
+#fld-display::details-content{block-size:0;overflow:hidden;
+  transition:block-size .28s ease,content-visibility .28s allow-discrete}
+#fld-display[open]::details-content{block-size:auto}
 #disp-body .field:first-child{margin-top:10px}
 .seedline{font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:22px}
 .seedline b{color:var(--accent)}
@@ -1138,9 +1145,15 @@ const THEME_NAMES={a:'深綠記分板',b:'電子看板',c:'報紙版面',d:'現�
    expand it just to find out what is set. Layout is left out on purpose: it is hidden below
    921px, and naming a setting that cannot be seen would be worse than saying nothing. */
 function updDispSum(){ const el=document.getElementById('disp-sum'); if(!el)return;
-  const t=THEME_NAMES[document.body.dataset.theme||'a'];
-  const b=document.body.classList.contains('big-text')?'大字':'標準';
-  el.textContent='\u3000'+t+' · '+b; }
+  const parts=[THEME_NAMES[document.body.dataset.theme||'a'],
+    document.body.classList.contains('big-text')?'大字':'標準'];
+  /* The layout row only exists at desktop width. Read its computed display instead of
+     repeating the 921px breakpoint here, so the summary keeps listing exactly the settings
+     the player can actually see even if that breakpoint ever moves. */
+  const ui=document.getElementById('fld-ui');
+  if(ui&&getComputedStyle(ui).display!=='none')
+    parts.push(document.body.classList.contains('mobile-ui')?'手機版':'電腦版');
+  el.textContent='\u3000'+parts.join(' · '); }
 function themeModal(){
   const cur=document.body.dataset.theme||'a';
   modalOpen('<h3>佈景主題</h3>'+['a','b','c','d'].map(t=>
@@ -3267,6 +3280,8 @@ function shareImage(evals,out){
   try{ applyBigText(localStorage.getItem(BIG_KEY)==='1'); }catch(e){}
   document.querySelectorAll('#seg-big button').forEach(b=>b.onclick=()=>applyBigText(b.dataset.b==='1'));
   const afc=$('af-close'); if(afc)afc.onclick=allocFullClose;
+  /* the layout entry appears and disappears at the breakpoint, so the summary re-syncs on resize */
+  window.addEventListener('resize',updDispSum);
   let t='a'; try{t=localStorage.getItem(THEME_KEY)||'a';}catch(e){}
   document.querySelectorAll('#seg-theme button').forEach(b=>b.onclick=()=>applyTheme(b.dataset.t));
   applyTheme(t);
