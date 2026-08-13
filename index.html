@@ -251,6 +251,17 @@ body[data-theme='d'] .die.active{border-color:var(--accent);box-shadow:0 3px 10p
   font-family:var(--sans);font-size:14.5px;font-weight:700;padding:11px 4px;cursor:pointer}
 .seg button.on{background:var(--panel2);color:var(--accent);border-color:var(--accent)}
 #fld-ui{display:none} /* desktop-width only; shown via the media query below */
+/* display settings: a quiet text line at the seed line's visual weight, not a panel */
+#fld-display{margin-top:20px}
+#fld-display>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:7px;
+  font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--dim);padding:2px 0}
+#fld-display>summary::-webkit-details-marker{display:none}
+#fld-display>summary::before{content:'▸';font-size:10px;display:inline-block;transition:transform .15s;flex:none}
+#fld-display[open]>summary::before{transform:rotate(90deg)}
+#fld-display>summary:hover{color:var(--accent)}
+#fld-display>summary .sum{opacity:.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#disp-body{padding-top:2px}
+#disp-body .field:first-child{margin-top:10px}
 .seedline{font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:22px}
 .seedline b{color:var(--accent)}
 #seed-show{width:120px;background:var(--panel);color:var(--accent);border:1px solid var(--edge);
@@ -359,20 +370,28 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
         <button data-v="P" class="on">投手</button><button data-v="C">捕手</button>
         <button data-v="IF">內野手</button><button data-v="OF">外野手</button>
       </div></div>
-    <div class="field"><label>佈景主題</label>
-      <div class="seg two" id="seg-theme">
-        <button data-t="a" class="on">深綠記分板</button><button data-t="b">電子看板</button>
-        <button data-t="c">報紙版面</button><button data-t="d">現代儀表板</button>
-      </div></div>
-    <div class="field" id="fld-big"><label>字級</label>
-      <div class="seg" id="seg-big">
-        <button data-b="0" class="on">標準</button><button data-b="1">大字</button>
-      </div></div>
-    <div class="field" id="fld-ui"><label>介面版型</label>
-      <div class="seg two" id="seg-ui">
-        <button data-u="0" class="on">電腦版</button><button data-u="1">手機版</button>
-      </div></div>
     <button class="btn main" style="margin-top:28px" id="btn-start">開始生涯 ▸ 高一春天</button>
+    <!-- Display preferences sit apart from the career choices above and are collapsed by
+         default: none of them affect the run, and all three are also reachable from the
+         in-game menu. Native <details> so keyboard and screen-reader behaviour come free. -->
+    <details id="fld-display">
+      <summary>顯示設定<span class="sum" id="disp-sum"></span></summary>
+      <div id="disp-body">
+        <div class="field"><label>佈景主題</label>
+          <div class="seg two" id="seg-theme">
+            <button data-t="a" class="on">深綠記分板</button><button data-t="b">電子看板</button>
+            <button data-t="c">報紙版面</button><button data-t="d">現代儀表板</button>
+          </div></div>
+        <div class="field" id="fld-big"><label>字級</label>
+          <div class="seg" id="seg-big">
+            <button data-b="0" class="on">標準</button><button data-b="1">大字</button>
+          </div></div>
+        <div class="field" id="fld-ui"><label>介面版型</label>
+          <div class="seg two" id="seg-ui">
+            <button data-u="0" class="on">電腦版</button><button data-u="1">手機版</button>
+          </div></div>
+      </div>
+    </details>
     <p class="seedline">世界種子
       <input id="seed-show" maxlength="24">
       · <a href="#" id="seed-re">換一個</a><br>相同種子＋相同選擇＝相同人生（可直接輸入朋友的種子碼）</p>
@@ -1027,6 +1046,7 @@ function applyTheme(t){
   document.body.dataset.theme=t;
   try{localStorage.setItem(THEME_KEY,t);}catch(e){}
   document.querySelectorAll('#seg-theme button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  updDispSum();
   const m=document.querySelector('meta[name="theme-color"]');
   if(m)m.setAttribute('content',(getComputedStyle(document.body).getPropertyValue('--bg')||'#081510').trim());
 }
@@ -1037,6 +1057,7 @@ function applyMobileUI(on){
   document.body.classList.toggle('mobile-ui',!!on);
   try{localStorage.setItem('yakyu-mobile-ui',on?'1':'0');}catch(e){}
   document.querySelectorAll('#seg-ui button').forEach(b=>b.classList.toggle('on',(b.dataset.u==='1')===!!on));
+  updDispSum();
   allocPlace(); /* switching layout mid-allocation must re-home the rows, not strand them */
 }
 /* The desktop layout is @media(min-width:921px) AND body:not(.mobile-ui). A phone fails
@@ -1048,6 +1069,7 @@ function applyBigText(on){
   document.body.classList.toggle('big-text',!!on);
   try{localStorage.setItem(BIG_KEY,on?'1':'0');}catch(e){}
   document.querySelectorAll('#seg-big button').forEach(b=>b.classList.toggle('on',(b.dataset.b==='1')===!!on));
+  updDispSum();
   allocPlace();
 }
 function allocFullOpen(){ const f=$('alloc-full'); if(f)f.classList.add('show'); }
@@ -1112,6 +1134,13 @@ window.addEventListener('beforeunload',function(ev){
   ev.preventDefault(); ev.returnValue='';
 });
 const THEME_NAMES={a:'深綠記分板',b:'電子看板',c:'報紙版面',d:'現代儀表板'};
+/* Keeps the collapsed 顯示設定 line reporting the current values, so the player never has to
+   expand it just to find out what is set. Layout is left out on purpose: it is hidden below
+   921px, and naming a setting that cannot be seen would be worse than saying nothing. */
+function updDispSum(){ const el=document.getElementById('disp-sum'); if(!el)return;
+  const t=THEME_NAMES[document.body.dataset.theme||'a'];
+  const b=document.body.classList.contains('big-text')?'大字':'標準';
+  el.textContent='\u3000'+t+' · '+b; }
 function themeModal(){
   const cur=document.body.dataset.theme||'a';
   modalOpen('<h3>佈景主題</h3>'+['a','b','c','d'].map(t=>
