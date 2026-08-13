@@ -264,6 +264,13 @@ body[data-theme='d'] .die.active{border-color:var(--accent);box-shadow:0 3px 10p
 
 #disp-body .field:first-child{margin-top:10px}
 .seedline{font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:22px}
+/* community link: a pill in the quiet bottom band, deliberately lighter than 開始生涯 so it
+   does not compete with the primary action, but with a real outline so it reads as tappable */
+#community{text-align:center;margin-top:20px}
+#community a{display:inline-flex;align-items:center;gap:7px;
+  border:1px solid var(--edge);border-radius:999px;padding:8px 16px;
+  color:var(--text);text-decoration:none;font-size:12.5px;letter-spacing:.06em;transition:.15s}
+#community a:hover,#community a:focus-visible{color:var(--accent);border-color:var(--accent)}
 .seedline b{color:var(--accent)}
 #seed-show{width:120px;background:var(--panel);color:var(--accent);border:1px solid var(--edge);
   border-radius:min(var(--r),6px);padding:2px 6px;font-family:inherit;font-size:12px;text-align:center}
@@ -396,6 +403,7 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
     <p class="seedline">世界種子
       <input id="seed-show" maxlength="24">
       · <a href="#" id="seed-re">換一個</a><br>相同種子＋相同選擇＝相同人生（可直接輸入朋友的種子碼）</p>
+    <div id="community"><a href="https://discord.gg/UnDYxFtz4U" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">💬</span>加入 Discord 社群</a></div>
     <footer style="text-align:center;margin-top:22px;color:var(--dim);font-size:12px">Produced by <a href="https://www.threads.com/@mr.themost" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">最先生 Mr.TheMost</a></footer>
   </div>
 </div>
