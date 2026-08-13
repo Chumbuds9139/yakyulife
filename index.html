@@ -89,7 +89,7 @@ a{color:var(--info)}
 .bd-cell b{display:block;font-family:var(--disp);font-size:17px;font-weight:700;color:var(--accent);
   text-shadow:var(--glow);line-height:1.2}
 .bd-cell span{font-size:10px;color:var(--dim);letter-spacing:.15em}
-/* 薪資格顯示與結算完全相同的精確金額；長數字縮小字級但不截斷。 */
+/* 記分板維持緊湊的萬／億縮寫；完整精確金額顯示在點擊提示與引退結算。 */
 #bd-sal,#bd-sal-lbl{white-space:nowrap}
 #bd-sal-cell{cursor:pointer;outline:none}
 .bd-tip{position:absolute;top:calc(100% + 6px);right:0;z-index:3;white-space:nowrap;
@@ -1191,8 +1191,10 @@ function controlledAnnual(lv,d,healthMult){
   if(!cfg)return calcContractAnnual(lv,d,1);
   return Math.round(Math.max(levelMinAnnual(lv),market*cfg.rates[svc]*(healthMult||1)*dpMult()));
 }
-/* 記分板與結算共用完全相同的金額格式，不再把 1億9,999萬 截成 1.9億。 */
-const salParts=w=>({v:fmtMoney(Math.round(w)),u:'台幣'});
+/* 記分板專用縮寫：未滿一億顯示萬；一億以上四捨五入到小數一位。完整金額仍由 fmtMoney 顯示。 */
+const salParts=w=>w<10000
+  ?{v:Math.round(w).toLocaleString(),u:'萬'}
+  :{v:(Math.round(w/1000)/10).toFixed(1),u:'億'};
 /* ================= UI 基礎 ================= */
 const $=id=>document.getElementById(id);
 var _curYearBody=null; /* 當前年度的內容容器 */
@@ -1434,8 +1436,8 @@ function board(phase){
   $('bd-age').textContent=S.age; $('bd-year').textContent=S.year;
   $('bd-ovr').textContent=ovr(); if(S.pos==='P'){const el=$('bd-tj'); if(el)el.textContent='';}
   { const sal=Math.round(S.salary),sp=salParts(sal),salEl=$('bd-sal'); salEl.textContent=sp.v;
-    salEl.style.fontSize=sp.v.length>=8?'12px':sp.v.length>=6?'14px':'';
-    const lb=$('bd-sal-lbl'); if(lb)lb.textContent='生涯總薪資';
+    salEl.style.fontSize='';
+    const lb=$('bd-sal-lbl'); if(lb)lb.textContent=`生涯薪(${sp.u})`;
     const tip=$('bd-sal-tip'); if(tip)tip.textContent=fmtMoney(sal)+' 台幣'; }
   [0,1,2].forEach(i=>$('lp'+i).classList.toggle('on',i===phase));
 }
