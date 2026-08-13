@@ -1037,6 +1037,7 @@ function applyMobileUI(on){
   document.body.classList.toggle('mobile-ui',!!on);
   try{localStorage.setItem('yakyu-mobile-ui',on?'1':'0');}catch(e){}
   document.querySelectorAll('#seg-ui button').forEach(b=>b.classList.toggle('on',(b.dataset.u==='1')===!!on));
+  allocPlace(); /* switching layout mid-allocation must re-home the rows, not strand them */
 }
 /* The desktop layout is @media(min-width:921px) AND body:not(.mobile-ui). A phone fails
    the media query and never carries the class, so both halves have to be tested; checking
@@ -1047,9 +1048,39 @@ function applyBigText(on){
   document.body.classList.toggle('big-text',!!on);
   try{localStorage.setItem(BIG_KEY,on?'1':'0');}catch(e){}
   document.querySelectorAll('#seg-big button').forEach(b=>b.classList.toggle('on',(b.dataset.b==='1')===!!on));
+  allocPlace();
 }
 function allocFullOpen(){ const f=$('alloc-full'); if(f)f.classList.add('show'); }
 function allocFullClose(){ const f=$('alloc-full'); if(f)f.classList.remove('show'); }
+/* The live allocation, so its nodes can be re-homed when a setting changes mid-way.
+   render() only ever writes into these same three nodes, which is what makes moving
+   them between the panel and the overlay safe. */
+let ALLOC=null;
+function allocPlace(){
+  if(!ALLOC)return;
+  const a=$('act'), full=document.body.classList.contains('big-text')&&isMobileLayout();
+  const s=$('act-side'); if(s)s.classList.toggle('alloc',!full);
+  if(full){
+    /* move the nodes out of #act before rewriting it, or the rewrite would destroy them */
+    const fb=$('af-body');
+    fb.appendChild(ALLOC.top); fb.appendChild(ALLOC.rows); fb.appendChild(ALLOC.btm);
+    const ft=$('af-title'); if(ft)ft.textContent=ALLOC.label;
+    a.innerHTML=`<div class="title">${ALLOC.label}</div><div class="pool" id="al-cue"></div>`;
+    /* both entry points already sit behind an explicit 分配 button, so the overlay opens
+       straight away; this one is only the way back after the player dismisses it */
+    const ob=document.createElement('button'); ob.className='btn main'; ob.id='al-open';
+    ob.style.textAlign='center'; ob.textContent='繼續分配 ▸'; ob.onclick=allocFullOpen;
+    a.appendChild(ob);
+    allocFullOpen();
+  }else{
+    const frag=document.createDocumentFragment();
+    frag.appendChild(ALLOC.top); frag.appendChild(ALLOC.rows); frag.appendChild(ALLOC.btm);
+    a.innerHTML=`<div class="title">${ALLOC.label}</div>`;
+    a.appendChild(frag);
+    allocFullClose();
+  }
+  ALLOC.render();
+}
 function menuModal(){
   const wide=matchMedia('(min-width:921px)').matches;
   const mob=document.body.classList.contains('mobile-ui');
@@ -1219,8 +1250,8 @@ function board(phase){
 function actClear(){ const a=$('act'); a.innerHTML=''; a.classList.remove('collapsed');
   const t=$('act-toggle'); if(t)t.style.display='none';
   /* every actClear() site is a point where an allocation has ended or is restarting,
-     so this is also where the full-screen overlay is torn down */
-  allocFullClose(); const fb=$('af-body'); if(fb)fb.innerHTML='';
+     so this is also where the overlay is torn down and the live allocation forgotten */
+  ALLOC=null; allocFullClose(); const fb=$('af-body'); if(fb)fb.innerHTML='';
   const s=$('act-side'); if(s)s.classList.remove('alloc'); }
 function actToggleSync(){
   const a=$('act'), t=$('act-toggle'); if(!t)return;
@@ -1241,32 +1272,14 @@ function choose(title,opts){
 /* 加點介面：mode {dice:[..]} 或 {pool:n} */
 function allocUI(mode,label,done){
   actClear();
-  /* large text on a phone: the rows no longer fit under the log, so they move into a
-     full-screen overlay opened from the panel. The very same three nodes are reused,
-     so render() below writes to them without caring where they live. The form is fixed
-     for the duration of this allocation; changing the setting mid-way takes effect next
-     time rather than relocating live DOM. */
-  const full=document.body.classList.contains('big-text')&&isMobileLayout();
-  const _as=$('act-side'); if(_as&&!full)_as.classList.add('alloc');
   const a=$('act'); const keys=POS_AB[S.pos];
   let dice=mode.dice?mode.dice.slice():null, pool=mode.pool||0, idx=0, hist=[];
   a.innerHTML=`<div class="title">${label}</div><div id="al-top"></div><div id="al-rows"></div><div class="row2" id="al-btm"></div>`;
   const touchedKeys={};
   const top=$('al-top'),rows=$('al-rows'),btm=$('al-btm');
-  if(full){
-    const fb=$('af-body'); fb.innerHTML='';
-    fb.appendChild(top); fb.appendChild(rows); fb.appendChild(btm);
-    const ft=$('af-title'); if(ft)ft.textContent=label;
-    a.innerHTML=`<div class="title">${label}</div><div class="pool" id="al-cue"></div>`;
-    /* Both entry points already sit behind an explicit "▸ 分配訓練成果" / "▸ 分配能力點"
-       button (see the choose() calls below), so allocUI() is never reached unbidden and a
-       second tap to open would be redundant. The overlay opens straight away; this button
-       is only the way back after the player dismisses it to re-read the log. */
-    const ob=document.createElement('button'); ob.className='btn main'; ob.id='al-open';
-    ob.style.textAlign='center'; ob.textContent='繼續分配 ▸'; ob.onclick=allocFullOpen;
-    a.appendChild(ob);
-    allocFullOpen();
-  }
+  /* allocPlace() below decides panel vs overlay from the current settings, and can be
+     called again by applyMobileUI / applyBigText if the player changes them mid-allocation */
+  ALLOC={top,rows,btm,label,render};
   function remaining(){ return dice?dice.length-idx:pool; }
   function render(){
     if(dice){ top.innerHTML='<div id="dice">'+dice.map((v,i)=>`<div class="die ${i<idx?'used':''} ${i===idx?'active':''} ${v===6?'six':''}">${v}</div>`).join('')+'</div>'; }
@@ -1295,11 +1308,12 @@ function allocUI(mode,label,done){
       c.onclick=()=>{ actClear(); allocDone(touchedKeys,dice?true:false); done(); }; btm.appendChild(c); }
     actToggleSync();
   }
-  render();
+  allocPlace();
   /* Roll-in animation on first render only; purely visual (Math.random, not the
-     seeded RNG) — game values always come from dice[] */
+     seeded RNG) — game values always come from dice[]. Scoped to `top` rather than #act
+     because in the overlay form the dice live in #af-body, where #act cannot see them. */
   if(dice && !matchMedia('(prefers-reduced-motion: reduce)').matches){
-    a.querySelectorAll('#dice .die').forEach((el,i)=>{
+    top.querySelectorAll('#dice .die').forEach((el,i)=>{
       el.classList.add('rolling');
       const iv=setInterval(()=>{ el.textContent=1+Math.floor(Math.random()*6); },70);
       setTimeout(()=>{ clearInterval(iv); el.classList.remove('rolling'); el.textContent=dice[i];
