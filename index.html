@@ -251,6 +251,18 @@ body[data-theme='d'] .die.active{border-color:var(--accent);box-shadow:0 3px 10p
   font-family:var(--sans);font-size:14.5px;font-weight:700;padding:11px 4px;cursor:pointer}
 .seg button.on{background:var(--panel2);color:var(--accent);border-color:var(--accent)}
 #fld-ui{display:none} /* desktop-width only; shown via the media query below */
+/* display settings: a quiet text line at the seed line's visual weight, not a panel */
+#fld-display{margin-top:20px}
+#fld-display>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:7px;
+  font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--dim);padding:2px 0}
+#fld-display>summary::-webkit-details-marker{display:none}
+#fld-display>summary::before{content:'▸';font-size:10px;display:inline-block;transition:transform .15s;flex:none}
+#fld-display[open]>summary::before{transform:rotate(90deg)}
+#fld-display>summary:hover{color:var(--accent)}
+#fld-display>summary .sum{opacity:.7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#disp-body{padding-top:2px}
+
+#disp-body .field:first-child{margin-top:10px}
 .seedline{font-family:var(--mono);font-size:12px;color:var(--dim);margin-top:22px}
 .seedline b{color:var(--accent)}
 #seed-show{width:120px;background:var(--panel);color:var(--accent);border:1px solid var(--edge);
@@ -277,6 +289,44 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
   max-width:340px;width:100%;box-shadow:0 18px 50px var(--shadow);animation:pop .2s ease}
 #modal-box h3{font-family:var(--head);font-size:13px;letter-spacing:.25em;color:var(--dim);font-weight:700;margin-bottom:4px}
 #modal-box p{font-size:14px;margin:6px 0 4px}
+/* ================= 大字模式（設定：字級） =================
+   Additive only: none of the base declarations above are edited, so syncing with
+   upstream stays conflict-free. Card body text comes from body{font-size:15px} by
+   inheritance, so it is scaled through .card rather than .card p, which the card()
+   builder rarely emits. body itself is never scaled, and that is what keeps the dice
+   and every other inheritor at their original size. .bd-cell and .die are excluded
+   on purpose: the scoreboard grid sits at min-content with roughly zero slack at
+   320px, so enlarging it would overflow the header. */
+body.big-text .card{font-size:21.8px;line-height:1.7}
+body.big-text .card h4{font-size:17.4px}
+body.big-text .card p{font-size:20.3px}
+body.big-text .tag{font-size:17.4px}
+body.big-text .statline{font-size:18.1px}
+body.big-text .yr-head{font-size:16px}
+body.big-text .btn{font-size:21.8px}
+body.big-text .btn small{font-size:17.4px}
+body.big-text #act .title{font-size:17.4px}
+body.big-text .pool{font-size:20.3px}
+body.big-text .abrow{padding:10px}
+body.big-text .abrow .nm{font-size:19.6px;width:107px}
+body.big-text .abrow .val{font-size:20.3px;width:90px}
+body.big-text #modal-box p{font-size:20.3px}
+/* full-screen allocation, mobile layout only, opened from the bottom panel.
+   The backdrop is viewport-anchored but the panel inside it has to track the mobile-UI
+   content column: at >=921px with the mobile layout forced on, #app is a 560px centred
+   box, so an inset:0 panel would spill across the whole desktop window. Same split as
+   #modal / #modal-box. The cap lives in that media query beside body.mobile-ui #app,
+   because below 921px #app is uncapped and a hardcoded 560 would mismatch there. */
+#alloc-full{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.55);
+  display:none;justify-content:center;align-items:stretch}
+#alloc-full.show{display:flex}
+#af-inner{width:100%;display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  background:var(--bg);background-image:var(--bgfx);
+  padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px))}
+#alloc-full .af-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex:none}
+#alloc-full .af-title{font-family:var(--head);font-size:12px;letter-spacing:.2em;color:var(--dim);font-weight:700}
+body.big-text #alloc-full .af-title{font-size:17.4px}
+#af-close{width:auto;margin:0;padding:8px 14px;flex:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* ---------- 桌面三欄(>920px) ---------- */
 @media(min-width:921px){
@@ -302,6 +352,8 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
   body:not(.mobile-ui) #act{padding:8px 14px 16px;margin-top:auto;overflow-y:auto;min-height:0}
   body:not(.mobile-ui) #start .wrap{padding-top:64px}
   body.mobile-ui #app{max-width:560px;margin:0 auto}
+  /* keep the allocation panel on the same column as #app above; these two must match */
+  body.mobile-ui #af-inner{max-width:560px}
   #fld-ui{display:block} /* unguarded: visible in both layouts so it can switch back */
 }
 </style>
@@ -319,16 +371,28 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
         <button data-v="P" class="on">投手</button><button data-v="C">捕手</button>
         <button data-v="IF">內野手</button><button data-v="OF">外野手</button>
       </div></div>
-    <div class="field"><label>佈景主題</label>
-      <div class="seg two" id="seg-theme">
-        <button data-t="a" class="on">深綠記分板</button><button data-t="b">電子看板</button>
-        <button data-t="c">報紙版面</button><button data-t="d">現代儀表板</button>
-      </div></div>
-    <div class="field" id="fld-ui"><label>介面版型</label>
-      <div class="seg two" id="seg-ui">
-        <button data-u="0" class="on">電腦版</button><button data-u="1">手機版</button>
-      </div></div>
     <button class="btn main" style="margin-top:28px" id="btn-start">開始生涯 ▸ 高一春天</button>
+    <!-- Display preferences sit apart from the career choices above and are collapsed by
+         default: none of them affect the run, and all three are also reachable from the
+         in-game menu. Native <details> so keyboard and screen-reader behaviour come free. -->
+    <details id="fld-display">
+      <summary>顯示設定<span class="sum" id="disp-sum"></span></summary>
+      <div id="disp-body">
+        <div class="field"><label>佈景主題</label>
+          <div class="seg two" id="seg-theme">
+            <button data-t="a" class="on">深綠記分板</button><button data-t="b">電子看板</button>
+            <button data-t="c">報紙版面</button><button data-t="d">現代儀表板</button>
+          </div></div>
+        <div class="field" id="fld-big"><label>字級</label>
+          <div class="seg" id="seg-big">
+            <button data-b="0" class="on">標準</button><button data-b="1">大字</button>
+          </div></div>
+        <div class="field" id="fld-ui"><label>介面版型</label>
+          <div class="seg two" id="seg-ui">
+            <button data-u="0" class="on">電腦版</button><button data-u="1">手機版</button>
+          </div></div>
+      </div>
+    </details>
     <p class="seedline">世界種子
       <input id="seed-show" maxlength="24">
       · <a href="#" id="seed-re">換一個</a><br>相同種子＋相同選擇＝相同人生（可直接輸入朋友的種子碼）</p>
@@ -366,6 +430,7 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
   </div></aside>
 </div>
 <div id="modal"><div id="modal-box"></div></div>
+<div id="alloc-full"><div id="af-inner"><div class="af-head"><span class="af-title" id="af-title"></span><button class="btn" id="af-close">收起</button></div><div id="af-body"></div></div></div>
 <script>
 /* ================= RNG（種子化） ================= */
 let SEED = new URLSearchParams(location.search).get('seed') || Math.random().toString(36).slice(2,10);
@@ -532,6 +597,20 @@ const TEAM_COLOR={
   '黛紫高原':'#33006F',
   '女王城紅軍':'#C6011F'
 };
+/* Team colours are jersey primaries, not text colours. Measured against the old #1a1a1a chip
+   background, 29 of the 48 fell below 3:1 and 紐約帝國 (#0C2340) sat at 1.10:1, which is what
+   players reported as too dark to read. Use the colour as the chip's background instead and
+   pick the text from its luminance: that keeps the team identity at full saturation and puts
+   every one of the 48 above 4.5:1. The border is the text colour at low alpha so a dark team
+   still reads as a chip against a dark card. */
+function teamChip(hex){
+  const h=hex.replace('#','');
+  const v=[0,2,4].map(i=>{ const c=parseInt(h.slice(i,i+2),16)/255;
+    return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4); });
+  const L=.2126*v[0]+.7152*v[1]+.0722*v[2];
+  const dark=(L+.05)/.05 > 1.05/(L+.05); /* black text out-contrasts white on this colour */
+  return {bg:hex,fg:dark?'#000000':'#ffffff',bd:dark?'rgba(0,0,0,.4)':'rgba(255,255,255,.45)'};
+}
 const CPBL_TEAMS=['台中猛瑪','府城雄獅','桃園金剛','新北騎士','台北恐龍','高雄神鵰'];
 const NPB_TEAMS=['東京大人','阪神猛虎','橫濱海星','廣島紅鯉','神宮飛燕','名古屋神龍','福岡猛禽','北海道培根','千葉海潮','仙台金梟','大阪蠻牛','埼玉雄獅'];
 const MLB_TEAMS=['洛城藍電','聖港修士','灣區大人','紐約帝國','波士頓襪王','紐約大蘋果','費城鐵魂','亞城戰斧','風城幼熊','河濱緋雀','星港火箭','孤星騎兵','翡翠水兵','洛城神使','楓葉藍鴉','快船金鷗','海灣雷射','森林悍將','汽車城猛虎','北星雙塔','風城襪王','向日葵王室','競技者','奶油杜康','鋼鐵船長','魔法魚人','首都人民','沙漠眼鏡蛇','黛紫高原','女王城紅軍'];
@@ -619,7 +698,7 @@ function traitTagStyle(k){
   if(TRAIT_KEYS.neg.includes(k))return 'background:#2a0f0f;border-color:#c0392b;color:#ff8b7a'; /* 負向:紅 */
   if(k==='legend'||k==='taiwan')return 'background:#3a2c05;border-color:#ffc95c;color:#ffe08a'; /* 歷史級/挺台灣:金 */
   if(k==='goldcloth')return 'background:#3a3505;border-color:#e8d43a;color:#fff35a'; /* 黃金聖衣:黃 */
-  if(k==='mrteam'){ const tc=TEAM_COLOR[S.mrTeamName]||'#ffc95c'; return 'background:#1a1a1a;border-color:'+tc+';color:'+tc; }
+  if(k==='mrteam'){ const c=teamChip(TEAM_COLOR[S.mrTeamName]||'#ffc95c'); return 'background:'+c.bg+';border-color:'+c.bd+';color:'+c.fg; }
   if(k==='genius')return 'background:#232733;border-color:#c8d0e0;color:#e8eef7'; /* 天才:銀 */
   return ''; /* 正向:預設琥珀 */ }
 const TRAIT_FX={genius:'訓練骰永久 4 點起，事件卡好結果機率 70%',late:'訓練骰永久 3 點起，事件卡好結果機率 70%',disc:'衰退曲線整體延後兩年',academy:'25 歲前受傷率 −5%、季初擲骰期望值提升',iron:'受傷機率上限 10%',clutch:'全力一搏成功率天才級、成功 +4／失敗僅 −2、受傷風險降級',combo:'季初自動擲 1 顆骰，加在專精的能力上',rubber:'TJ 量表上限翻倍、打針成功率翻倍',phoenix:'玻璃人懲罰解除，受傷率恢復正常',intlace:'國際賽不增加受傷風險，每次徵召能力點保底 +2',franchise:'母隊續約年薪係數固定 ≥×1.2，引退評價加成',goldcloth:'效力台中猛瑪滿十年，主場的信仰',mrteam:'同一支球隊十五年，球隊的代名詞',taiwan:'國際賽徵召超過 5 次的國家隊常客',confidante:'紅粉知己遍佈，情場的隱藏稱號',smallschool:'小學校出身，站上頂級舞台',grinder:'平庸天賦，靠汗水熬成的生涯',legend:'名人堂首輪入選的歷史級評價',rainbow:'同一聯盟效力球隊數爆表',glass:'受傷機率下限 40%',yips:'系統評價 −3，升上更高層級或奪得年度獎項可解除',distract:'季初擲骰永久 −1 顆（最低 2 顆）',cancer:'季中被交易機率大增、續約條件惡化',ambience:'轉隊機率永久提高',thief:'事件卡失敗率永久 +10%',scum:'每次外遇被抓到，全能力 −5',onetool:'只剩一項武器的替補奇兵，出賽數銳減'};
@@ -982,6 +1061,7 @@ function applyTheme(t){
   document.body.dataset.theme=t;
   try{localStorage.setItem(THEME_KEY,t);}catch(e){}
   document.querySelectorAll('#seg-theme button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  updDispSum();
   const m=document.querySelector('meta[name="theme-color"]');
   if(m)m.setAttribute('content',(getComputedStyle(document.body).getPropertyValue('--bg')||'#081510').trim());
 }
@@ -992,16 +1072,64 @@ function applyMobileUI(on){
   document.body.classList.toggle('mobile-ui',!!on);
   try{localStorage.setItem('yakyu-mobile-ui',on?'1':'0');}catch(e){}
   document.querySelectorAll('#seg-ui button').forEach(b=>b.classList.toggle('on',(b.dataset.u==='1')===!!on));
+  updDispSum();
+  allocPlace(); /* switching layout mid-allocation must re-home the rows, not strand them */
+}
+/* The desktop layout is @media(min-width:921px) AND body:not(.mobile-ui). A phone fails
+   the media query and never carries the class, so both halves have to be tested; checking
+   the class alone would report "desktop" on every real phone. */
+const isMobileLayout=()=>!(matchMedia('(min-width:921px)').matches&&!document.body.classList.contains('mobile-ui'));
+const BIG_KEY='yakyu-big-text';
+function applyBigText(on){
+  document.body.classList.toggle('big-text',!!on);
+  try{localStorage.setItem(BIG_KEY,on?'1':'0');}catch(e){}
+  document.querySelectorAll('#seg-big button').forEach(b=>b.classList.toggle('on',(b.dataset.b==='1')===!!on));
+  updDispSum();
+  allocPlace();
+}
+function allocFullOpen(){ const f=$('alloc-full'); if(f)f.classList.add('show'); }
+function allocFullClose(){ const f=$('alloc-full'); if(f)f.classList.remove('show'); }
+/* The live allocation, so its nodes can be re-homed when a setting changes mid-way.
+   render() only ever writes into these same three nodes, which is what makes moving
+   them between the panel and the overlay safe. */
+let ALLOC=null;
+function allocPlace(){
+  if(!ALLOC)return;
+  const a=$('act'), full=document.body.classList.contains('big-text')&&isMobileLayout();
+  const s=$('act-side'); if(s)s.classList.toggle('alloc',!full);
+  if(full){
+    /* move the nodes out of #act before rewriting it, or the rewrite would destroy them */
+    const fb=$('af-body');
+    fb.appendChild(ALLOC.top); fb.appendChild(ALLOC.rows); fb.appendChild(ALLOC.btm);
+    const ft=$('af-title'); if(ft)ft.textContent=ALLOC.label;
+    a.innerHTML=`<div class="title">${ALLOC.label}</div><div class="pool" id="al-cue"></div>`;
+    /* both entry points already sit behind an explicit 分配 button, so the overlay opens
+       straight away; this one is only the way back after the player dismisses it */
+    const ob=document.createElement('button'); ob.className='btn main'; ob.id='al-open';
+    ob.style.textAlign='center'; ob.textContent='繼續分配 ▸'; ob.onclick=allocFullOpen;
+    a.appendChild(ob);
+    allocFullOpen();
+  }else{
+    const frag=document.createDocumentFragment();
+    frag.appendChild(ALLOC.top); frag.appendChild(ALLOC.rows); frag.appendChild(ALLOC.btm);
+    a.innerHTML=`<div class="title">${ALLOC.label}</div>`;
+    a.appendChild(frag);
+    allocFullClose();
+  }
+  ALLOC.render();
 }
 function menuModal(){
   const wide=matchMedia('(min-width:921px)').matches;
   const mob=document.body.classList.contains('mobile-ui');
+  const big=document.body.classList.contains('big-text');
   modalOpen(`<h3>選單</h3>
     <button class="btn" id="md-theme" style="text-align:center">切換佈景主題</button>
+    <button class="btn" id="md-big" style="text-align:center">${big?'切回標準字級':'改用大字級'}</button>
     ${wide?`<button class="btn" id="md-ui" style="text-align:center">${mob?'切回電腦版介面':'改用手機版介面'}</button>`:''}
     <button class="btn warn" id="md-restart0" style="text-align:center">重新開始</button>
     <button class="btn" id="md-close" style="text-align:center;margin-top:14px">關閉</button>`);
   $('md-theme').onclick=themeModal;
+  $('md-big').onclick=()=>{ applyBigText(!big); menuModal(); };
   const mu=$('md-ui'); if(mu)mu.onclick=()=>{ applyMobileUI(!mob); menuModal(); };
   $('md-restart0').onclick=restartModal;
   $('md-close').onclick=modalClose;
@@ -1021,6 +1149,19 @@ window.addEventListener('beforeunload',function(ev){
   ev.preventDefault(); ev.returnValue='';
 });
 const THEME_NAMES={a:'深綠記分板',b:'電子看板',c:'報紙版面',d:'現代儀表板'};
+/* Keeps the collapsed 顯示設定 line reporting the current values, so the player never has to
+   expand it just to find out what is set. Layout is left out on purpose: it is hidden below
+   921px, and naming a setting that cannot be seen would be worse than saying nothing. */
+function updDispSum(){ const el=document.getElementById('disp-sum'); if(!el)return;
+  const parts=[THEME_NAMES[document.body.dataset.theme||'a'],
+    document.body.classList.contains('big-text')?'大字':'標準'];
+  /* The layout row only exists at desktop width. Read its computed display instead of
+     repeating the 921px breakpoint here, so the summary keeps listing exactly the settings
+     the player can actually see even if that breakpoint ever moves. */
+  const ui=document.getElementById('fld-ui');
+  if(ui&&getComputedStyle(ui).display!=='none')
+    parts.push(document.body.classList.contains('mobile-ui')?'手機版':'電腦版');
+  el.textContent='\u3000'+parts.join(' · '); }
 function themeModal(){
   const cur=document.body.dataset.theme||'a';
   modalOpen('<h3>佈景主題</h3>'+['a','b','c','d'].map(t=>
@@ -1158,6 +1299,9 @@ function board(phase){
 }
 function actClear(){ const a=$('act'); a.innerHTML=''; a.classList.remove('collapsed');
   const t=$('act-toggle'); if(t)t.style.display='none';
+  /* every actClear() site is a point where an allocation has ended or is restarting,
+     so this is also where the overlay is torn down and the live allocation forgotten */
+  ALLOC=null; allocFullClose(); const fb=$('af-body'); if(fb)fb.innerHTML='';
   const s=$('act-side'); if(s)s.classList.remove('alloc'); }
 function actToggleSync(){
   const a=$('act'), t=$('act-toggle'); if(!t)return;
@@ -1177,16 +1321,20 @@ function choose(title,opts){
 }
 /* 加點介面：mode {dice:[..]} 或 {pool:n} */
 function allocUI(mode,label,done){
-  actClear(); const _as=$('act-side'); if(_as)_as.classList.add('alloc');
+  actClear();
   const a=$('act'); const keys=POS_AB[S.pos];
   let dice=mode.dice?mode.dice.slice():null, pool=mode.pool||0, idx=0, hist=[];
   a.innerHTML=`<div class="title">${label}</div><div id="al-top"></div><div id="al-rows"></div><div class="row2" id="al-btm"></div>`;
   const touchedKeys={};
   const top=$('al-top'),rows=$('al-rows'),btm=$('al-btm');
+  /* allocPlace() below decides panel vs overlay from the current settings, and can be
+     called again by applyMobileUI / applyBigText if the player changes them mid-allocation */
+  ALLOC={top,rows,btm,label,render};
   function remaining(){ return dice?dice.length-idx:pool; }
   function render(){
     if(dice){ top.innerHTML='<div id="dice">'+dice.map((v,i)=>`<div class="die ${i<idx?'used':''} ${i===idx?'active':''} ${v===6?'six':''}">${v}</div>`).join('')+'</div>'; }
     else top.innerHTML=`<div class="pool">剩餘可分配點數：${pool} 點（點一下能力 +1）</div>`;
+    const cue=$('al-cue'); if(cue)cue.textContent=dice?`剩餘 ${remaining()} 顆骰子未分配`:`剩餘 ${remaining()} 點未分配`;
     rows.innerHTML='';
     keys.forEach(k=>{ const v=S.ab[k],cap=v>=80;
       const r=document.createElement('div'); r.className='abrow'+(cap?' capped':'');
@@ -1210,11 +1358,12 @@ function allocUI(mode,label,done){
       c.onclick=()=>{ actClear(); allocDone(touchedKeys,dice?true:false); done(); }; btm.appendChild(c); }
     actToggleSync();
   }
-  render();
+  allocPlace();
   /* Roll-in animation on first render only; purely visual (Math.random, not the
-     seeded RNG) — game values always come from dice[] */
+     seeded RNG) — game values always come from dice[]. Scoped to `top` rather than #act
+     because in the overlay form the dice live in #af-body, where #act cannot see them. */
   if(dice && !matchMedia('(prefers-reduced-motion: reduce)').matches){
-    a.querySelectorAll('#dice .die').forEach((el,i)=>{
+    top.querySelectorAll('#dice .die').forEach((el,i)=>{
       el.classList.add('rolling');
       const iv=setInterval(()=>{ el.textContent=1+Math.floor(Math.random()*6); },70);
       setTimeout(()=>{ clearInterval(iv); el.classList.remove('rolling'); el.textContent=dice[i];
@@ -2973,7 +3122,7 @@ function shareImage(evals,out){
     if(o.rem)return {bg:'#242424',bd:'#4a4a4a',fg:'#8a8a8a'};
     if(o.key==='legend'||o.key==='taiwan')return {bg:'#3a2c05',bd:'#ffc95c',fg:'#ffe08a'}; /* 金(歷史級/Team Taiwan) */
     if(o.key==='goldcloth')return {bg:'#3a3505',bd:'#e8d43a',fg:'#fff35a'}; /* 黃 */
-    if(o.key==='mrteam'){ const tc=TEAM_COLOR[S.mrTeamName]||'#ffc95c'; return {bg:'#1a1a1a',bd:tc,fg:tc}; }
+    if(o.key==='mrteam')return teamChip(TEAM_COLOR[S.mrTeamName]||'#ffc95c');
     if(o.key==='genius')return {bg:'#232733',bd:'#c8d0e0',fg:'#e8eef7'}; /* 銀 */
     if(o.neg)return {bg:'#2a0f0f',bd:'#c0392b',fg:'#ff8b7a'};             /* 紅 */
     return {bg:C_P2,bd:C_EDGE,fg:C_GOOD};                                 /* 主題色 */
@@ -3136,13 +3285,38 @@ function shareImage(evals,out){
 (function(){ /* theme init + timeline click delegation */
   try{ applyMobileUI(localStorage.getItem('yakyu-mobile-ui')==='1'); }catch(e){}
   document.querySelectorAll('#seg-ui button').forEach(b=>b.onclick=()=>applyMobileUI(b.dataset.u==='1'));
+  try{ applyBigText(localStorage.getItem(BIG_KEY)==='1'); }catch(e){}
+  document.querySelectorAll('#seg-big button').forEach(b=>b.onclick=()=>applyBigText(b.dataset.b==='1'));
+  const afc=$('af-close'); if(afc)afc.onclick=allocFullClose;
+  /* the layout entry appears and disappears at the breakpoint, so the summary re-syncs on resize */
+  window.addEventListener('resize',updDispSum);
+  /* Slide the panel open and shut. ::details-content only interpolates with
+     interpolate-size, which is Chromium-only, so Firefox and Safari saw it snap; the Web
+     Animations API works everywhere. While collapsing, `open` has to stay set until the
+     animation ends or the content would vanish on the first frame. Reduced motion is
+     checked here because the global *{transition:none} rule cannot match a pseudo-element. */
+  (function(){ const det=document.getElementById('fld-display'); if(!det)return;
+    const body=document.getElementById('disp-body'), sum=det.querySelector('summary');
+    if(!body||!sum)return; let anim=null;
+    sum.addEventListener('click',ev=>{
+      if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+      ev.preventDefault();
+      if(anim){ anim.cancel(); anim=null; }
+      const opening=!det.open;
+      if(opening)det.open=true;
+      const h=body.getBoundingClientRect().height;
+      body.style.overflow='hidden';
+      anim=body.animate({height:opening?['0px',h+'px']:[h+'px','0px'],
+        opacity:opening?[0,1]:[1,0]},{duration:280,easing:'ease'});
+      anim.onfinish=()=>{ body.style.overflow=''; anim=null; if(!opening)det.open=false; };
+    }); })();
   let t='a'; try{t=localStorage.getItem(THEME_KEY)||'a';}catch(e){}
   document.querySelectorAll('#seg-theme button').forEach(b=>b.onclick=()=>applyTheme(b.dataset.t));
   applyTheme(t);
   ['tl-list','tl-strip'].forEach(id=>{ const el=$(id);
     if(el)el.onclick=ev=>{ const n=ev.target.closest('[data-i]'); if(n)tlScrollTo(TL[+n.dataset.i]); }; });
   const md=$('modal'); if(md)md.onclick=ev=>{ if(ev.target===md)modalClose(); };
-  document.addEventListener('keydown',ev=>{ if(ev.key==='Escape')modalClose(); });
+  document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ modalClose(); allocFullClose(); } });
 })();
 let selPos='P';
 $('seed-show').value=SEED;
