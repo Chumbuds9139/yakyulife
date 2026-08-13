@@ -155,6 +155,14 @@ table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.
 .btn.main small{color:inherit;opacity:.8}
 .btn.warn{border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
 #act .row2{display:flex;gap:8px}#act .row2 .btn{flex:1;text-align:center}
+/* trait side panel: desktop top-right list of unlocked hidden traits (hidden on mobile; settlement unchanged) */
+#trait-side{display:none}
+#trait-side.empty{display:none!important}
+#trait-side .tt{font-family:var(--head);font-size:12px;letter-spacing:.2em;color:var(--dim);font-weight:700;margin-bottom:8px}
+#trait-tags{display:flex;flex-direction:column;gap:6px}
+#trait-tags .trow{display:flex;align-items:center;gap:8px;min-width:0}
+#trait-tags .trow .tag{flex:none}
+#trait-tags .trow .td{flex:1;min-width:0;font-size:11px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* 骰子與加點 */
 /* single row always: dice shrink evenly (44px cap) when the container is narrow */
 #dice{display:flex;align-items:flex-start;gap:8px;flex-wrap:nowrap;margin-bottom:10px}
@@ -255,11 +263,16 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
   body:not(.mobile-ui) #board{padding:14px 26px 12px;padding-top:calc(14px + env(safe-area-inset-top,0px))}
   body:not(.mobile-ui) .bd-cell b{font-size:19px}
   body:not(.mobile-ui) #log{padding:18px 26px 26px}
+  /* the right column is a viewport-pinned full-height flex column (like the left
+     timeline column): traits stay at the top, actions stick to the bottom so the
+     gaze stays on the lower band (newest log + dice + choices), and neither
+     scrolls away with the body */
   body:not(.mobile-ui) #act-side{position:static;max-height:none;overflow:visible;border-top:none;border-left:1px solid var(--edge);box-shadow:none}
-  body:not(.mobile-ui) #act-in{position:sticky;top:0;max-height:100vh;overflow-y:auto;padding:12px 6px 16px}
+  body:not(.mobile-ui) #trait-side{display:block;padding:14px 14px 10px;max-height:42vh;overflow-y:auto;flex:0 3 auto;min-height:0}
+  body:not(.mobile-ui) #act-in{position:sticky;top:0;height:100vh;height:100dvh;overflow:hidden;padding:12px 6px 16px}
   body:not(.mobile-ui) #act-toggle{display:none!important}
   body:not(.mobile-ui) #act.collapsed{display:block!important}
-  body:not(.mobile-ui) #act{padding:8px 14px 16px}
+  body:not(.mobile-ui) #act{padding:8px 14px 16px;margin-top:auto;overflow-y:auto;min-height:0}
   body:not(.mobile-ui) #start .wrap{padding-top:64px}
   body.mobile-ui #app{max-width:560px;margin:0 auto}
   #fld-ui{display:block} /* unguarded: visible in both layouts so it can switch back */
@@ -320,6 +333,7 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
     <main id="log"></main>
   </div>
   <aside id="act-side"><div id="act-in">
+    <div id="trait-side"><div class="tt">特質</div><div id="trait-tags"></div></div>
     <button id="act-toggle" style="display:none">⌄ 收合選項</button>
     <footer id="act" style="display:none"></footer>
   </div></aside>
@@ -565,6 +579,34 @@ function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
     if(!S.removed.includes(label))S.removed.push(label); } }
+/* ---------- trait names/order/styles/effects, shared by the settlement tags, the share image and the desktop trait panel ---------- */
+const TRAIT_KEYS={pos:['legend','taiwan','goldcloth','mrteam','confidante','genius','iron','late','disc','academy','intlace','franchise','clutch','phoenix','rubber','onetool','smallschool','grinder','combo','rainbow'],
+  neg:['glass','scum','yips','distract','cancer','ambience','thief']};
+const TRAIT_N={genius:'天才',iron:'鐵人',glass:'玻璃人',scum:'渣男',late:'大器晚成',disc:'自律狂',academy:'學院派',intlace:'國際賽之鬼',franchise:'神主牌',clutch:'大心臟',phoenix:'浴火重生',onetool:'只會這個',rubber:'橡膠手臂',goldcloth:'黃金聖衣',confidante:'閨中密友',smallschool:'小學校之光',grinder:'努力仔',yips:'失憶症',distract:'外務纏身',cancer:'更衣室毒瘤',ambience:'氣氛大師',thief:'薪水小倫',combo:'大巧不工',taiwan:'Team Taiwan'};
+function traitName(k){
+  if(k==='mrteam')return (teamNick(S.mrTeamName||'')||'')+'先生';
+  if(k==='legend')return (S.legendLeague||'')+'歷史級球星';
+  if(k==='rainbow')return (S.rainbowLg||'')+'七彩球衣';
+  return TRAIT_N[k]||k; }
+function traitTagStyle(k){
+  if(TRAIT_KEYS.neg.includes(k))return 'background:#2a0f0f;border-color:#c0392b;color:#ff8b7a'; /* 負向:紅 */
+  if(k==='legend'||k==='taiwan')return 'background:#3a2c05;border-color:#ffc95c;color:#ffe08a'; /* 歷史級/挺台灣:金 */
+  if(k==='goldcloth')return 'background:#3a3505;border-color:#e8d43a;color:#fff35a'; /* 黃金聖衣:黃 */
+  if(k==='mrteam'){ const tc=TEAM_COLOR[S.mrTeamName]||'#ffc95c'; return 'background:#1a1a1a;border-color:'+tc+';color:'+tc; }
+  if(k==='genius')return 'background:#232733;border-color:#c8d0e0;color:#e8eef7'; /* 天才:銀 */
+  return ''; /* 正向:預設琥珀 */ }
+const TRAIT_FX={genius:'訓練骰永久 4 點起，事件卡好結果機率 70%',late:'訓練骰永久 3 點起，事件卡好結果機率 70%',disc:'衰退曲線整體延後兩年',academy:'25 歲前受傷率 −5%、季初擲骰期望值提升',iron:'受傷機率上限 10%',clutch:'全力一搏成功率天才級、成功 +4／失敗僅 −2、受傷風險降級',combo:'季初自動擲 1 顆骰，加在專精的能力上',rubber:'TJ 量表上限翻倍、打針成功率翻倍',phoenix:'玻璃人懲罰解除，受傷率恢復正常',intlace:'國際賽不增加受傷風險，每次徵召能力點保底 +2',franchise:'母隊續約年薪係數固定 ≥×1.2，引退評價加成',goldcloth:'效力台中猛瑪滿十年，主場的信仰',mrteam:'同一支球隊十五年，球隊的代名詞',taiwan:'國際賽徵召超過 5 次的國家隊常客',confidante:'紅粉知己遍佈，情場的隱藏稱號',smallschool:'小學校出身，站上頂級舞台',grinder:'平庸天賦，靠汗水熬成的生涯',legend:'名人堂首輪入選的歷史級評價',rainbow:'同一聯盟效力球隊數爆表',glass:'受傷機率下限 40%',yips:'系統評價 −3，升上更高層級或奪得年度獎項可解除',distract:'季初擲骰永久 −1 顆（最低 2 顆）',cancer:'季中被交易機率大增、續約條件惡化',ambience:'轉隊機率永久提高',thief:'事件卡失敗率永久 +10%',scum:'每次外遇被抓到，全能力 −5',onetool:'只剩一項武器的替補奇兵，出賽數銳減'};
+function renderTraits(){ /* desktop trait side panel (presentation only) */
+  const el=$('trait-tags'),box=$('trait-side'); if(!el||!box)return;
+  let h='';
+  if(S&&S.traits){
+    /* one row per trait: tag + inline effect text (ellipsized; full text on hover) */
+    const row=(style,name,fx)=>`<div class="trow" title="${fx}"><span class="tag" style="${style}" title="${fx}">${name}</span><span class="td">${fx}</span></div>`;
+    [...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].forEach(k=>{ if(S.traits[k])h+=row(traitTagStyle(k),traitName(k),TRAIT_FX[k]||''); });
+    (S.removed||[]).forEach(l=>h+=`<div class="trow"><span class="tag" style="text-decoration:line-through;opacity:.4;color:#8a8a8a;border-color:#4a4a4a">${l}</span><span class="td" style="opacity:.4">已解除</span></div>`);
+  }
+  el.innerHTML=h;
+  box.classList.toggle('empty',!h); }
 /* 只會這個:只吃三種角色維度——打擊(力量/Contact)、跑壘(速度)、守備(綜合) */
 function careerAllStars(){ let n=0; ['CPBL','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }
 function toolGap(){ const a=S.ab;
@@ -1045,9 +1087,11 @@ function careerTimelineCard(){ /* two-layer horizontal timeline for the career s
 }
 function card(cls,title,html){ const d=document.createElement('div'); d.className='card '+cls;
   d.innerHTML=(title?`<h4>${title}</h4>`:'')+html; logTarget().appendChild(d);
+  renderTraits(); /* settlement-time trait unlocks emit a card without a board() refresh */
   scrollBottom(); }
 function divider(t){ /* 每個 divider 開啟新的年度摺疊區塊 */ const log=$('log'); const blocks=log.querySelectorAll('.yr-block'); /* 替剛結束的「上一年」加上下拉箭頭標記，但保留展開（不加上 collapsed） */ const prev = blocks[blocks.length - 1]; if(prev){ const h = prev.querySelector('.yr-head'); if(h && prev.querySelector('.yr-body').children.length) h.classList.add('has-body'); } /* 找到「前年」（倒數第二個區塊）並將其摺疊起來 */ const prevPrev = blocks[blocks.length - 2]; if(prevPrev){ prevPrev.classList.add('collapsed'); } /* 建新區塊 */ const block=document.createElement('div'); block.className='yr-block'; const head=document.createElement('div'); head.className='yr-head'; head.textContent=t; const body=document.createElement('div'); body.className='yr-body'; head.onclick=()=>block.classList.toggle('collapsed'); block.appendChild(head); block.appendChild(body); log.appendChild(block); _curYearBody=body; /* 超過上限:移除最舊的年度區塊(釋放 DOM) */ const newBlocks=log.querySelectorAll('.yr-block'); if(newBlocks.length>MAX_YEARS){ for(let i=0;i<newBlocks.length-MAX_YEARS;i++)newBlocks[i].remove(); } }
 function board(phase){
+  renderTraits();
   $('bd-name').innerHTML=`${S.name}<small>${S.dpos?DPN[S.dpos]:POSN[S.pos]}${S.role?'·'+roleN(S.role):''}·${playerType()}${S.traits.genius?' ★':''}</small>`;
   let t;
   if(S.stage==='HS')t=S.team+'（高'+['一','二','三'][S.stageYr-1]+'）';
@@ -2700,17 +2744,7 @@ function endGame(reason){
   card(S.honors.length?'gold':'','獎項與大賽成績', honorsHTML);
   /* 特質與薪資 */
   const tr=[];
-  const TN={genius:'天才',iron:'鐵人',glass:'玻璃人',scum:'渣男',late:'大器晚成',disc:'自律狂',academy:'學院派',intlace:'國際賽之鬼',franchise:'神主牌',clutch:'大心臟',phoenix:'浴火重生',onetool:'只會這個',rubber:'橡膠手臂',goldcloth:'黃金聖衣',mrteam:(teamNick(S.mrTeamName||'')||'')+'先生',confidante:'閨中密友',smallschool:'小學校之光',grinder:'努力仔',legend:(S.legendLeague||'')+'歷史級球星',yips:'失憶症',distract:'外務纏身',cancer:'更衣室毒瘤',ambience:'氣氛大師',thief:'薪水小倫',combo:'大巧不工',rainbow:(S.rainbowLg||'')+'七彩球衣',taiwan:'Team Taiwan'};
-  const posT={pos:['legend','taiwan','goldcloth','mrteam','confidante','genius','late','disc','academy','intlace','franchise','clutch','phoenix','rubber','onetool','smallschool','grinder','combo','rainbow'],neg:['glass','scum','yips','distract','cancer','ambience','thief']};
-  const tagStyle=k=>{
-    if(k==='legend'||k==='taiwan')return 'background:#3a2c05;border-color:#ffc95c;color:#ffe08a'; /* 歷史級/挺台灣:金 */
-    if(k==='goldcloth')return 'background:#3a3505;border-color:#e8d43a;color:#fff35a'; /* 黃金聖衣:黃 */
-    if(k==='mrteam'){ const tc=TEAM_COLOR[S.mrTeamName]||'#ffc95c'; return 'background:#1a1a1a;border-color:'+tc+';color:'+tc; }
-    if(k==='genius')return 'background:#232733;border-color:#c8d0e0;color:#e8eef7';        /* 天才:銀 */
-    return ''; /* 正向:預設琥珀 */
-  };
-  posT.pos.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag" style="${tagStyle(k)}">${TN[k]}</span>`); });
-  posT.neg.forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag" style="background:#2a0f0f;border-color:#c0392b;color:#ff8b7a">${TN[k]}</span>`); });
+  [...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].forEach(k=>{ if(S.traits[k])tr.push(`<span class="tag" style="${traitTagStyle(k)}">${traitName(k)}</span>`); });
   (S.removed||[]).forEach(lbl=>tr.push(`<span class="tag" style="text-decoration:line-through;opacity:.4;color:#8a8a8a;border-color:#4a4a4a">${lbl}</span>`));
   const lv=S.love;
   const cur=lv.st==='married'?`老婆 ${lv.partner}（${lv.kids}）`:lv.st==='dating'?`交往中 ${lv.partner}（${lv.dyrs||0} 年）`:lv.st==='divorced'?'離婚':'未婚';
@@ -2780,9 +2814,7 @@ function shareImage(evals,out){
   const isP=S.pos==='P';
   const tiers=evals.map(t=>t.replace(/<[^>]+>/g,''));
   /* 特性(保留 + 刪除線標記) */
-  const TN2={legend:(S.legendLeague||'')+'歷史級球星',taiwan:'Team Taiwan',goldcloth:'黃金聖衣',genius:'天才',iron:'鐵人',glass:'玻璃人',scum:'渣男',late:'大器晚成',disc:'自律狂',academy:'學院派',intlace:'國際賽之鬼',franchise:'神主牌',clutch:'大心臟',phoenix:'浴火重生',onetool:'只會這個',rubber:'橡膠手臂',mrteam:(teamNick(S.mrTeamName||'')||'')+'先生',confidante:'閨中密友',smallschool:'小學校之光',grinder:'努力仔',yips:'失憶症',distract:'外務纏身',cancer:'更衣室毒瘤',ambience:'氣氛大師',thief:'薪水小倫',combo:'大巧不工',rainbow:(S.rainbowLg||'')+'七彩球衣'};
-  const negK=['glass','scum','yips','distract','cancer','ambience','thief'];
-  const keepTr=Object.keys(TN2).filter(k=>S.traits[k]).map(k=>({label:TN2[k],key:k,neg:negK.includes(k)}));
+  const keepTr=[...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].filter(k=>S.traits[k]).map(k=>({label:traitName(k),key:k,neg:TRAIT_KEYS.neg.includes(k)}));
   const remTr=(S.removed||[]).map(l=>({label:l,key:'',neg:false,rem:true}));
   /* 生涯數據列(每聯盟一列) */
   const leagues=['MLB','NPB','CPBL'].filter(b=>S.stats[b]);
