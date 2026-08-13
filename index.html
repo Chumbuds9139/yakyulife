@@ -277,6 +277,37 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
   max-width:340px;width:100%;box-shadow:0 18px 50px var(--shadow);animation:pop .2s ease}
 #modal-box h3{font-family:var(--head);font-size:13px;letter-spacing:.25em;color:var(--dim);font-weight:700;margin-bottom:4px}
 #modal-box p{font-size:14px;margin:6px 0 4px}
+/* ================= 大字模式（設定：字級） =================
+   Additive only: none of the base declarations above are edited, so syncing with
+   upstream stays conflict-free. Card body text comes from body{font-size:15px} by
+   inheritance, so it is scaled through .card rather than .card p, which the card()
+   builder rarely emits. body itself is never scaled, and that is what keeps the dice
+   and every other inheritor at their original size. .bd-cell and .die are excluded
+   on purpose: the scoreboard grid sits at min-content with roughly zero slack at
+   320px, so enlarging it would overflow the header. */
+body.big-text .card{font-size:21.8px;line-height:1.7}
+body.big-text .card h4{font-size:17.4px}
+body.big-text .card p{font-size:20.3px}
+body.big-text .tag{font-size:17.4px}
+body.big-text .statline{font-size:18.1px}
+body.big-text .yr-head{font-size:16px}
+body.big-text .btn{font-size:21.8px}
+body.big-text .btn small{font-size:17.4px}
+body.big-text #act .title{font-size:17.4px}
+body.big-text .pool{font-size:20.3px}
+body.big-text .abrow{padding:10px}
+body.big-text .abrow .nm{font-size:19.6px;width:107px}
+body.big-text .abrow .val{font-size:20.3px;width:90px}
+body.big-text #modal-box p{font-size:20.3px}
+/* full-screen allocation, mobile layout only, opened from the bottom panel */
+#alloc-full{position:fixed;inset:0;z-index:70;background:var(--bg);background-image:var(--bgfx);
+  display:none;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(14px + env(safe-area-inset-bottom,0px))}
+#alloc-full.show{display:flex}
+#alloc-full .af-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex:none}
+#alloc-full .af-title{font-family:var(--head);font-size:12px;letter-spacing:.2em;color:var(--dim);font-weight:700}
+body.big-text #alloc-full .af-title{font-size:17.4px}
+#af-close{width:auto;margin:0;padding:8px 14px;flex:none}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 /* ---------- 桌面三欄(>920px) ---------- */
 @media(min-width:921px){
@@ -324,6 +355,10 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
         <button data-t="a" class="on">深綠記分板</button><button data-t="b">電子看板</button>
         <button data-t="c">報紙版面</button><button data-t="d">現代儀表板</button>
       </div></div>
+    <div class="field" id="fld-big"><label>字級</label>
+      <div class="seg" id="seg-big">
+        <button data-b="0" class="on">標準</button><button data-b="1">大字</button>
+      </div></div>
     <div class="field" id="fld-ui"><label>介面版型</label>
       <div class="seg two" id="seg-ui">
         <button data-u="0" class="on">電腦版</button><button data-u="1">手機版</button>
@@ -366,6 +401,7 @@ body[data-theme='b'] .stitch::before,body[data-theme='b'] .stitch::after{content
   </div></aside>
 </div>
 <div id="modal"><div id="modal-box"></div></div>
+<div id="alloc-full"><div class="af-head"><span class="af-title" id="af-title"></span><button class="btn" id="af-close">收起</button></div><div id="af-body"></div></div>
 <script>
 /* ================= RNG（種子化） ================= */
 let SEED = new URLSearchParams(location.search).get('seed') || Math.random().toString(36).slice(2,10);
@@ -993,15 +1029,30 @@ function applyMobileUI(on){
   try{localStorage.setItem('yakyu-mobile-ui',on?'1':'0');}catch(e){}
   document.querySelectorAll('#seg-ui button').forEach(b=>b.classList.toggle('on',(b.dataset.u==='1')===!!on));
 }
+/* The desktop layout is @media(min-width:921px) AND body:not(.mobile-ui). A phone fails
+   the media query and never carries the class, so both halves have to be tested; checking
+   the class alone would report "desktop" on every real phone. */
+const isMobileLayout=()=>!(matchMedia('(min-width:921px)').matches&&!document.body.classList.contains('mobile-ui'));
+const BIG_KEY='yakyu-big-text';
+function applyBigText(on){
+  document.body.classList.toggle('big-text',!!on);
+  try{localStorage.setItem(BIG_KEY,on?'1':'0');}catch(e){}
+  document.querySelectorAll('#seg-big button').forEach(b=>b.classList.toggle('on',(b.dataset.b==='1')===!!on));
+}
+function allocFullOpen(){ const f=$('alloc-full'); if(f)f.classList.add('show'); }
+function allocFullClose(){ const f=$('alloc-full'); if(f)f.classList.remove('show'); }
 function menuModal(){
   const wide=matchMedia('(min-width:921px)').matches;
   const mob=document.body.classList.contains('mobile-ui');
+  const big=document.body.classList.contains('big-text');
   modalOpen(`<h3>選單</h3>
     <button class="btn" id="md-theme" style="text-align:center">切換佈景主題</button>
+    <button class="btn" id="md-big" style="text-align:center">${big?'切回標準字級':'改用大字級'}</button>
     ${wide?`<button class="btn" id="md-ui" style="text-align:center">${mob?'切回電腦版介面':'改用手機版介面'}</button>`:''}
     <button class="btn warn" id="md-restart0" style="text-align:center">重新開始</button>
     <button class="btn" id="md-close" style="text-align:center;margin-top:14px">關閉</button>`);
   $('md-theme').onclick=themeModal;
+  $('md-big').onclick=()=>{ applyBigText(!big); menuModal(); };
   const mu=$('md-ui'); if(mu)mu.onclick=()=>{ applyMobileUI(!mob); menuModal(); };
   $('md-restart0').onclick=restartModal;
   $('md-close').onclick=modalClose;
@@ -1158,6 +1209,9 @@ function board(phase){
 }
 function actClear(){ const a=$('act'); a.innerHTML=''; a.classList.remove('collapsed');
   const t=$('act-toggle'); if(t)t.style.display='none';
+  /* every actClear() site is a point where an allocation has ended or is restarting,
+     so this is also where the full-screen overlay is torn down */
+  allocFullClose(); const fb=$('af-body'); if(fb)fb.innerHTML='';
   const s=$('act-side'); if(s)s.classList.remove('alloc'); }
 function actToggleSync(){
   const a=$('act'), t=$('act-toggle'); if(!t)return;
@@ -1177,16 +1231,33 @@ function choose(title,opts){
 }
 /* 加點介面：mode {dice:[..]} 或 {pool:n} */
 function allocUI(mode,label,done){
-  actClear(); const _as=$('act-side'); if(_as)_as.classList.add('alloc');
+  actClear();
+  /* large text on a phone: the rows no longer fit under the log, so they move into a
+     full-screen overlay opened from the panel. The very same three nodes are reused,
+     so render() below writes to them without caring where they live. The form is fixed
+     for the duration of this allocation; changing the setting mid-way takes effect next
+     time rather than relocating live DOM. */
+  const full=document.body.classList.contains('big-text')&&isMobileLayout();
+  const _as=$('act-side'); if(_as&&!full)_as.classList.add('alloc');
   const a=$('act'); const keys=POS_AB[S.pos];
   let dice=mode.dice?mode.dice.slice():null, pool=mode.pool||0, idx=0, hist=[];
   a.innerHTML=`<div class="title">${label}</div><div id="al-top"></div><div id="al-rows"></div><div class="row2" id="al-btm"></div>`;
   const touchedKeys={};
   const top=$('al-top'),rows=$('al-rows'),btm=$('al-btm');
+  if(full){
+    const fb=$('af-body'); fb.innerHTML='';
+    fb.appendChild(top); fb.appendChild(rows); fb.appendChild(btm);
+    const ft=$('af-title'); if(ft)ft.textContent=label;
+    a.innerHTML=`<div class="title">${label}</div><div class="pool" id="al-cue"></div>`;
+    const ob=document.createElement('button'); ob.className='btn main'; ob.id='al-open';
+    ob.style.textAlign='center'; ob.textContent='開始分配 ▸'; ob.onclick=allocFullOpen;
+    a.appendChild(ob);
+  }
   function remaining(){ return dice?dice.length-idx:pool; }
   function render(){
     if(dice){ top.innerHTML='<div id="dice">'+dice.map((v,i)=>`<div class="die ${i<idx?'used':''} ${i===idx?'active':''} ${v===6?'six':''}">${v}</div>`).join('')+'</div>'; }
     else top.innerHTML=`<div class="pool">剩餘可分配點數：${pool} 點（點一下能力 +1）</div>`;
+    const cue=$('al-cue'); if(cue)cue.textContent=dice?`剩餘 ${remaining()} 顆骰子未分配`:`剩餘 ${remaining()} 點未分配`;
     rows.innerHTML='';
     keys.forEach(k=>{ const v=S.ab[k],cap=v>=80;
       const r=document.createElement('div'); r.className='abrow'+(cap?' capped':'');
@@ -3136,13 +3207,16 @@ function shareImage(evals,out){
 (function(){ /* theme init + timeline click delegation */
   try{ applyMobileUI(localStorage.getItem('yakyu-mobile-ui')==='1'); }catch(e){}
   document.querySelectorAll('#seg-ui button').forEach(b=>b.onclick=()=>applyMobileUI(b.dataset.u==='1'));
+  try{ applyBigText(localStorage.getItem(BIG_KEY)==='1'); }catch(e){}
+  document.querySelectorAll('#seg-big button').forEach(b=>b.onclick=()=>applyBigText(b.dataset.b==='1'));
+  const afc=$('af-close'); if(afc)afc.onclick=allocFullClose;
   let t='a'; try{t=localStorage.getItem(THEME_KEY)||'a';}catch(e){}
   document.querySelectorAll('#seg-theme button').forEach(b=>b.onclick=()=>applyTheme(b.dataset.t));
   applyTheme(t);
   ['tl-list','tl-strip'].forEach(id=>{ const el=$(id);
     if(el)el.onclick=ev=>{ const n=ev.target.closest('[data-i]'); if(n)tlScrollTo(TL[+n.dataset.i]); }; });
   const md=$('modal'); if(md)md.onclick=ev=>{ if(ev.target===md)modalClose(); };
-  document.addEventListener('keydown',ev=>{ if(ev.key==='Escape')modalClose(); });
+  document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ modalClose(); allocFullClose(); } });
 })();
 let selPos='P';
 $('seed-show').value=SEED;
