@@ -1258,9 +1258,14 @@ function allocUI(mode,label,done){
     fb.appendChild(top); fb.appendChild(rows); fb.appendChild(btm);
     const ft=$('af-title'); if(ft)ft.textContent=label;
     a.innerHTML=`<div class="title">${label}</div><div class="pool" id="al-cue"></div>`;
+    /* Both entry points already sit behind an explicit "▸ 分配訓練成果" / "▸ 分配能力點"
+       button (see the choose() calls below), so allocUI() is never reached unbidden and a
+       second tap to open would be redundant. The overlay opens straight away; this button
+       is only the way back after the player dismisses it to re-read the log. */
     const ob=document.createElement('button'); ob.className='btn main'; ob.id='al-open';
-    ob.style.textAlign='center'; ob.textContent='開始分配 ▸'; ob.onclick=allocFullOpen;
+    ob.style.textAlign='center'; ob.textContent='繼續分配 ▸'; ob.onclick=allocFullOpen;
     a.appendChild(ob);
+    allocFullOpen();
   }
   function remaining(){ return dice?dice.length-idx:pool; }
   function render(){
