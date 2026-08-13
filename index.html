@@ -3037,25 +3037,39 @@ function statTable(bucket){
   const asN=st.AS||0;
   return `<p style="margin-top:8px"><b>${LG_N[bucket]}</b>${asN?` · 明星賽 ${asN} 度入選`:''}</p><table class="fin">${rows}</table>`;
 }
-function milestoneBat(label,st){
+const MILESTONE_DEF={
+  bat:[['H',1000,'安'],['HR',100,'轟'],['SB',50,'盜']],
+  pit:[['IP',1000,'局'],['W',100,'勝'],['SV',100,'救援'],['HLD',100,'中繼'],['SO',1000,'K']]
+};
+function milestoneLevel(st,key,unit){ return Math.floor((st&&st[key]||0)/unit)*unit; }
+function milestoneLine(label,st,defs,onlyKeys){
   if(!st)return '';
-  const hit=Math.floor((st.H||0)/1000)*1000, hr=Math.floor((st.HR||0)/100)*100, sb=Math.floor((st.SB||0)/50)*50;
-  const parts=[]; if(hit)parts.push(`${hit}安`); if(hr)parts.push(`${hr}轟`); if(sb)parts.push(`${sb}盜`);
+  const parts=[];
+  defs.forEach(([key,unit,suffix])=>{
+    if(onlyKeys&&!onlyKeys.has(key))return;
+    const value=milestoneLevel(st,key,unit); if(value)parts.push(`${value}${suffix}`);
+  });
   return parts.length?`${label} ${parts.join('・')}`:'';
 }
 function careerMilestones(){
   const out=[];
   (S.hofInfo||[]).forEach(h=>out.push(`${h.lg}名人堂｜第 ${h.yr} 年入選｜得票率 ${h.pct}%`));
   const leagues=['MLB','NPB','CPBL'];
-  if(S.pos==='P'){
-    const sum={W:0,SV:0,HLD:0,SO:0}; leagues.forEach(b=>{const st=S.stats[b];if(st)Object.keys(sum).forEach(k=>sum[k]+=st[k]||0);});
-    if(sum.W||sum.SO||sum.SV||sum.HLD)out.push(`通算 ${sum.W}勝・${sum.SO}K・${sum.SV}救援・${sum.HLD}中繼`);
-    leagues.forEach(b=>{const st=S.stats[b];if(st&&(st.W||st.SO||st.SV||st.HLD))out.push(`${LG_N[b]} ${st.W||0}勝・${st.SO||0}K・${st.SV||0}救援・${st.HLD||0}中繼`);});
-  }else{
-    const sum={H:0,HR:0,SB:0}; leagues.forEach(b=>{const st=S.stats[b];if(st){sum.H+=st.H||0;sum.HR+=st.HR||0;sum.SB+=st.SB||0;}});
-    const total=milestoneBat('通算',sum); if(total)out.push(total);
-    leagues.forEach(b=>{const m=milestoneBat(LG_N[b],S.stats[b]);if(m)out.push(m);});
+  const defs=S.pos==='P'?MILESTONE_DEF.pit:MILESTONE_DEF.bat;
+  const played=leagues.filter(b=>{const st=S.stats[b];return st&&((st.yr||0)>0||(st.G||0)>0||(st.PA||0)>0||(st.IP||0)>0);});
+  const sum={}; defs.forEach(([key])=>sum[key]=0);
+  played.forEach(b=>defs.forEach(([key])=>sum[key]+=S.stats[b][key]||0));
+  /* 通算只在兩聯盟以上且加總真的跨過任何單一聯盟的下一級里程碑時，額外列出該項；各聯盟紀錄仍全部保留。 */
+  if(played.length>=2){
+    const raised=new Set();
+    defs.forEach(([key,unit])=>{
+      const combined=milestoneLevel(sum,key,unit);
+      const best=Math.max(0,...played.map(b=>milestoneLevel(S.stats[b],key,unit)));
+      if(combined>best)raised.add(key);
+    });
+    const total=milestoneLine('通算',sum,defs,raised); if(total)out.push(total);
   }
+  leagues.forEach(b=>{const m=milestoneLine(LG_N[b],S.stats[b],defs);if(m)out.push(m);});
   return out;
 }
 function honorRank(awd){
