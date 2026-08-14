@@ -248,6 +248,14 @@ body[data-theme='d'] .die.active{border-color:var(--accent);box-shadow:0 3px 10p
 .field input{width:100%;background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);color:var(--text);
   font-family:var(--sans);font-size:16px;padding:11px 14px;outline:none}
 .field input:focus{border-color:var(--accent)}
+.player-id-input{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;
+  background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);overflow:hidden;transition:border-color .15s}
+.player-id-input:focus-within{border-color:var(--accent)}
+.player-id-input input{min-width:0;background:transparent;border:0;border-radius:0}
+.player-id-input input:focus{border-color:transparent}
+.jersey-input{display:flex;align-items:center;border-left:1px solid var(--edge);padding-left:11px}
+.jersey-input span{color:var(--accent);font-family:var(--mono);font-size:15px;font-weight:700}
+.player-id-input .jersey-input input{width:3.2ch;padding:11px 10px 11px 5px;text-align:center;font-family:var(--mono)}
 .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .seg.two{grid-template-columns:repeat(2,1fr)}
 .seg button{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);color:var(--dim);
@@ -378,8 +386,12 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
     <h1 id="logo-tap">YaKyoLife<br><em>棒球人生模擬器</em></h1>
     <div id="ver-badge" style="position:fixed;top:6px;right:8px;font-size:10px;letter-spacing:1px;color:var(--dim);opacity:.55;font-family:monospace;z-index:50;pointer-events:none">v1.4.3</div>
     <p class="sub">高中三年養成 → 選秀・旅日・旅美 → 國際賽 → 衰退與引退。每一顆骰子都算數。</p>
-    <div class="field"><label>球員姓名</label><input id="in-name" maxlength="10" value="有有子"></div>
-    <div class="field"><label>背號（1～99）</label><input id="in-number" type="number" inputmode="numeric" min="1" max="99" step="1" value="11"></div>
+    <div class="field"><label for="in-name">球員資料</label>
+      <div class="player-id-input">
+        <input id="in-name" maxlength="10" value="有有子" aria-label="球員姓名">
+        <div class="jersey-input"><span aria-hidden="true">#</span><input id="in-number" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="11" aria-label="背號"></div>
+      </div>
+    </div>
     <div class="field"><label>守位</label>
       <div class="seg" id="seg-pos">
         <button data-v="P" class="on">投手</button><button data-v="C">捕手</button>
@@ -3302,7 +3314,7 @@ function endGame(reason){
   const totKids=lv.kids+lv.exes.reduce((t,e)=>t+e.kids,0);
   card('','生涯檔案',`隱藏素質：${tr.join(' ')||'（無）'}<br>家庭：${cur}${exStr}｜子女共 ${totKids} 人${lv.affairs?`｜外遇 ${lv.affairs}(${lv.caught})`:''}<br>國際賽出賽：${S.intlCount} 次｜生涯大傷：${S.bigInj} 次${S.pos==='P'?`｜手肘危機：${S.tjCrises||0} 次｜Tommy John 手術：${S.tjCount} 次`:''}<br>生涯總薪資：<b class="hl" style="font-size:18px">${fmtMoney(Math.round(S.salary))}</b> 台幣`);
   /* 球迷留言 */
-  const pool=FAN[best].slice(); const picks=[];
+  const pool=FAN[best].filter(p=>S.pos!=='P'||!p.includes('代打人生')); const picks=[];
   while(picks.length<3&&pool.length)picks.push(pool.splice(Math.floor(R()*pool.length),1)[0]);
   /* 盤子留言:低聯盟明星以上,旅外到更高聯盟卻淪替補/邊緣 */
   { const LGR={CPBL:0,NPB:1,MLB:2}, CTY={CPBL:'台灣',NPB:'日本',MLB:'美國'};
