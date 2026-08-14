@@ -1,18 +1,15 @@
 import {SEED, setSeed, seedInit, R, ri, pick, chance, clamp, N0} from './core/rng.js';
+import {ABL, POS_AB, POSN, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK, GLOVE_TH} from './data/abilities.js';
+import {TEAM_COLOR, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, LV, PATHS, HS_CUPS, U_CUPS, LG_N} from './data/teams.js';
+import {TRAIT_KEYS, TRAIT_N, TRAIT_FX} from './data/traits.js';
+import {EVENTS} from './data/events.js';
+import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN, TIER_TH, MILESTONE_DEF, FAN, RP_TICKS, RP_LV_SUF} from './data/economy.js';
 
 function scrollBottom(){ /* iOS Safari 於 iframe 內平滑滾動易觸發白畫面,改用同步滾動+rAF */
   try{ requestAnimationFrame(function(){ window.scrollTo(0, document.body.scrollHeight); }); }
   catch(e){ try{ window.scrollTo(0, document.body.scrollHeight); }catch(_){} }
 }
 /* ================= 靜態資料 ================= */
-const ABL={sta:'體力',vel:'球速',ctl:'控球',brk:'變化球',con:'Contact',pow:'力量',spd:'速度',eye:'選球',rng:'守備範圍',fld:'接球',arm:'臂力',cat:'配球'};
-const POS_AB={P:['sta','vel','ctl','brk'],C:['sta','con','pow','spd','eye','rng','fld','arm','cat'],IF:['sta','con','pow','spd','eye','rng','fld','arm'],OF:['sta','con','pow','spd','eye','rng','fld','arm']};
-const POSN={P:'投手',C:'捕手',IF:'內野手',OF:'外野手'};
-/* ---------- 守位系統 ---------- */
-const DPN={SS:'游擊手','2B':'二壘手','3B':'三壘手','1B':'一壘手',
- CF:'中外野手',RF:'右外野手',LF:'左外野手',DH:'指定打擊',C:'捕手'};
-/* 每個守位對 範圍/接球/臂力 各有自己的門檻(相對聯盟基準的位移)
-   例:三壘不需要游擊等級的範圍,一壘的臂力幾乎不看 */
 /* 各守位守備分公式:依守位看重不同能力(回傳一個綜合守備分) */
 function dpScore(p){ const a=S.ab;
   switch(p){
@@ -27,19 +24,6 @@ function dpScore(p){ const a=S.ab;
     default: return 99;
   }
 }
-/* 各守位 × 各聯盟 守備門檻(守備分需 >= 此值才守得動);大聯盟最嚴 */
-const DP_TH={
-  C:  {CPBL1:46, NPB1:54, MLB:60},
-  SS: {CPBL1:50, NPB1:58, MLB:64},
-  CF: {CPBL1:49, NPB1:57, MLB:63},
-  '2B':{CPBL1:46,NPB1:53, MLB:59},
-  '3B':{CPBL1:44,NPB1:51, MLB:57},
-  RF: {CPBL1:43, NPB1:50, MLB:56},
-  LF: {CPBL1:41, NPB1:47, MLB:53},
-  '1B':{CPBL1:36,NPB1:42, MLB:48}};
-const DP_BAR={CPBL1:45,NPB1:54,MLB:60}; /* 保留給捕手 cOk 等舊判定 */
-/* 類 WAR 守位調整（每 162 場的 runs）：薪資與生涯評價共用同一把尺。 */
-const POS_ADJ_RUNS={C:9,SS:7.5,CF:5,'2B':3,'3B':2,RF:-5,LF:-7,'1B':-10,DH:-17.5};
 function posAdjLabel(p){ const v=POS_ADJ_RUNS[p]||0; return `薪資守位調整 ${v>0?'+':''}${v}／162 場`; }
 function dpBar(){ /* 年輕球員吃潛力紅利,球團不急著拔守位 */
   const base=DP_BAR[S.lv]||0;
@@ -53,7 +37,6 @@ function dpQual(p){
   const youthAdj = S.age<24?-3 : S.age<26?-1.5 : 0;
   return dpScore(p) >= DP_TH[p][S.lv]+youthAdj;
 }
-const DP_RANK={SS:0,CF:0,'2B':1,'3B':2,RF:2,'1B':3,LF:3,DH:4,C:0}; /* 守位身價階層(SS>2B>3B) */
 function dpList(){ /* 依守位難度掃描:內野手守內野序、外野手守外野序,選出守得動的(最高階在前) */
   /* 候選守位依當前守位群:內野走內野光譜、外野走外野光譜 */
   const order = S.pos==='IF'
@@ -121,42 +104,6 @@ function dposReview(cont){
 const APP_VER='v1.4.5';
 const OFFICIAL_URL='https://www.yakyolife.com/';
 const OFFICIAL_HOST=OFFICIAL_URL.replace(/^https?:\/\//,'').replace(/\/$/,'');
-const TEAM_COLOR={
-  /* 中職 */
-  '台中猛獁':'#ffd800','府城雄獅':'#ff7f00','桃園金剛':'#8b1a1a','新北騎士':'#003f87','台北恐龍':'#c8102e','高雄神鵰':'#1a7a3a',
-  /* 日職 */
-  '東京大人':'#f97709','阪神猛虎':'#ffe201','橫濱海星':'#0a3ce0','廣島紅鯉':'#e60012','神宮飛燕':'#0a7bc2','名古屋神龍':'#003a70','福岡猛禽':'#f5c400','北海道培根':'#0a2d5c','千葉海潮':'#111111','仙台金梟':'#8b0000','大阪蠻牛':'#0033a0','埼玉雄獅':'#1268b3',
-  /* 大聯盟 */
-  '洛城藍電':'#005A9C',   '聖港修士':'#2F241D', 
-  '灣區大人':'#FD5A1E',
-  '紐約帝國':'#0C2340', 
-  '波士頓襪王':'#BD3039',
-  '紐約大蘋果':'#FF5910',
-  '費城鐵魂':'#E81828',
-  '亞城戰斧':'#13274F',
-  '風城幼熊':'#0E3386',
-  '河濱緋雀':'#C41E3A',
-  '星港火箭':'#EB6E1F',
-  '孤星騎兵':'#003278',
-  '翡翠水兵':'#005C5C', 
-  '洛城神使':'#BA0021',
-  '楓葉藍鴉':'#134A8E',
-  '快船金鷗':'#DF4601',
-  '海灣雷射':'#092C5C', 
-  '森林悍將':'#E31937',
-  '汽車城猛虎':'#0C2340',
-  '北星雙塔':'#002B5C',
-  '風城襪王':'#27251F',
-  '向日葵王室':'#174885',
-  '競技者':'#003831',
-  '奶油杜康':'#FFC52F',
-  '鋼鐵船長':'#FDB827',
-  '魔法魚人':'#00A3E0',
-  '首都人民':'#AB0003',
-  '沙漠眼鏡蛇':'#A71930',
-  '黛紫高原':'#33006F',
-  '女王城紅軍':'#C6011F'
-};
 /* Team colours are jersey primaries, not text colours. Measured against the old #1a1a1a chip
    background, 29 of the 48 fell below 3:1 and 紐約帝國 (#0C2340) sat at 1.10:1, which is what
    players reported as too dark to read. Use the colour as the chip's background instead and
@@ -171,44 +118,6 @@ function teamChip(hex){
   const dark=(L+.05)/.05 > 1.05/(L+.05); /* black text out-contrasts white on this colour */
   return {bg:hex,fg:dark?'#000000':'#ffffff',bd:dark?'rgba(0,0,0,.4)':'rgba(255,255,255,.45)'};
 }
-const CPBL_TEAMS=['台中猛獁','府城雄獅','桃園金剛','新北騎士','台北恐龍','高雄神鵰'];
-const NPB_TEAMS=['東京大人','阪神猛虎','橫濱海星','廣島紅鯉','神宮飛燕','名古屋神龍','福岡猛禽','北海道培根','千葉海潮','仙台金梟','大阪蠻牛','埼玉雄獅'];
-const MLB_TEAMS=['洛城藍電','聖港修士','灣區大人','紐約帝國','波士頓襪王','紐約大蘋果','費城鐵魂','亞城戰斧','風城幼熊','河濱緋雀','星港火箭','孤星騎兵','翡翠水兵','洛城神使','楓葉藍鴉','快船金鷗','海灣雷射','森林悍將','汽車城猛虎','北星雙塔','風城襪王','向日葵王室','競技者','奶油杜康','鋼鐵船長','魔法魚人','首都人民','沙漠眼鏡蛇','黛紫高原','女王城紅軍'];
-/* par=該層級平均水準, min=最低限度(低於→降級/戰力外), g=球季場次 */
-const LV={
- CPBL2:{n:'中職二軍',par:34,min:30,g:80, org:'CPBL'},
- CPBL1:{n:'中職一軍',par:44,min:41,g:120,org:'CPBL',top:'CPBL'},
- NPB2:{n:'日職二軍',par:47,min:44,g:100,org:'NPB'},
- NPB1:{n:'日職一軍',par:53,min:50,g:143,org:'NPB',top:'NPB'},
- R:{n:'新人聯盟',par:41,min:39,g:55, org:'MiLB'},
- A1:{n:'1A',par:45,min:43,g:110,org:'MiLB'},
- A2:{n:'2A',par:49,min:47,g:120,org:'MiLB'},
- A3:{n:'3A',par:54,min:52,g:130,org:'MiLB'},
- MLB:{n:'大聯盟',par:59,min:56,g:162,org:'MiLB',top:'MLB'},
-};
-const PATHS={CPBL:['CPBL2','CPBL1'],NPB:['NPB2','NPB1'],MiLB:['R','A1','A2','A3','MLB']};
-const HS_CUPS=['木棒聯賽','黑豹旗','玉山盃'];
-const U_CUPS=['大學春季聯賽','大專盃'];
-/* 事件卡：全部中性，好結果機率 50%（天才 70%） */
-const EVENTS=[
- {n:'打擊機特訓',for:'B',gt:'手感火燙，擊球點完全咬中',bt:'越打越糊，姿勢跑掉了',g:{con:2},b:{con:-2}},
- {n:'重量訓練週期',for:'A',gt:'深蹲破 PR，全身充滿力量',bt:'操之過急，肌肉緊繃了好幾週',g:{pow:2,sta:1},b:{sta:-2}},
- {n:'牛棚加練',for:'P',gt:'新的握法找到了，尾勁明顯提升',bt:'越丟越歪，投球機制亂掉',g:{brk:2},b:{ctl:-2}},
- {n:'長傳接訓練',for:'A',gt:'雷射肩養成中',bt:'肩膀有點緊，教練喊停',g:{arm:2},b:{arm:-2}},
- {n:'影像分析課',for:'*',gt:'看穿投打習性，判斷力大增',bt:'資訊爆炸，站上場反而想太多',g:{eye:2,cat:2,ctl:1},b:{eye:-2,ctl:-1}},
- {n:'跑壘特訓',for:'A',gt:'起跑判斷進步神速',bt:'拉傷大腿後側，休了兩週',g:{spd:2},b:{spd:-1,inj:5}},
- {n:'守備千球練習',for:'A',gt:'手套像吸塵器一樣',bt:'吃了無數個彈跳球，信心受挫',g:{rng:1,fld:2},b:{fld:-2}},
- {n:'觸身球驚魂',for:'*',gt:'側身閃過，反應快得嚇人',bt:'結結實實吃了一顆速球',g:{spd:1},b:{inj:12}},
- {n:'媒體專訪',for:'*',gt:'應對得體，人氣上升，打球更有動力',bt:'失言上了新聞，壓力影響狀態',g:{sta:1},b:{con:-1,ctl:-1,sta:-1}},
- {n:'教練團關注',for:'*',gt:'獲得單獨指導的機會',bt:'被盯上缺點，一直被要求改動作',g:{rand:2},b:{rand:-2}},
- {n:'伙食與睡眠計畫',for:'*',gt:'體脂下降，恢復速度變快',bt:'水土不服，腸胃炎折騰一週',g:{sta:2},b:{sta:-1,inj:4}},
- {n:'學長／老將指點',for:'*',gt:'一句話點醒夢中人',bt:'學了不適合自己的招，繞了遠路',g:{rand:2},b:{rand:-2}},
- {n:'球速測定日',for:'P',gt:'雷達槍跳出生涯新高',bt:'出力過猛，手肘發炎',g:{vel:2},b:{inj:10}},
- {n:'配球讀書會',for:'P',gt:'進壘點的想像力打開了',bt:'想得太多，投得綁手綁腳',g:{ctl:2},b:{brk:-2}},
- {n:'宵夜文化',for:'*',gt:'控制住了，體態維持得宜',bt:'體重直線上升，第一步變慢了',g:{sta:1},b:{spd:-2,sta:-1,rng:-1}},
- {n:'場外代言邀約',for:'PRO',gt:'商演安排得宜，多賺零用錢也沒荒廢訓練',bt:'行程太滿，訓練量明顯掉了',g:{sta:1},b:{rand:-2,sta:-1}},
- {n:'季中低潮',for:'*',gt:'靠著調整心態走出來，更強了',bt:'低潮拖了一個月',g:{eye:1,ctl:1,sta:1},b:{con:-2,brk:-1,sta:-1}},
-];
 /* ================= 遊戲狀態 ================= */
 let S=null, stepQ=[];
 function newState(name,jersey,pos,role){
@@ -248,10 +157,6 @@ function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
     if(!S.removed.includes(label))S.removed.push(label); } }
-/* ---------- trait names/order/styles/effects, shared by the settlement tags, the share image and the desktop trait panel ---------- */
-const TRAIT_KEYS={pos:['legend','taiwan','goldcloth','mrteam','confidante','genius','iron','late','disc','academy','intlace','franchise','clutch','phoenix','rubber','onetool','smallschool','grinder','combo','rainbow'],
-  neg:['glass','scum','yips','distract','cancer','ambience','thief']};
-const TRAIT_N={genius:'天才',iron:'鐵人',glass:'玻璃人',scum:'渣男',late:'大器晚成',disc:'自律狂',academy:'學院派',intlace:'國際賽之鬼',franchise:'神主牌',clutch:'大心臟',phoenix:'浴火重生',onetool:'只會這個',rubber:'橡膠手臂',goldcloth:'黃金聖衣',confidante:'閨中密友',smallschool:'小學校之光',grinder:'努力仔',yips:'失憶症',distract:'外務纏身',cancer:'更衣室毒瘤',ambience:'氣氛大師',thief:'薪水小倫',combo:'大巧不工',taiwan:'Team Taiwan'};
 function traitName(k){
   if(k==='mrteam')return (teamNick(S.mrTeamName||'')||'')+'先生';
   if(k==='legend')return (S.legendLeague||'')+'歷史級球星';
@@ -264,7 +169,6 @@ function traitTagStyle(k){
   if(k==='mrteam'){ const c=teamChip(TEAM_COLOR[S.mrTeamName]||'#ffc95c'); return 'background:'+c.bg+';border-color:'+c.bd+';color:'+c.fg; }
   if(k==='genius')return 'background:#232733;border-color:#c8d0e0;color:#e8eef7'; /* 天才:銀 */
   return ''; /* 正向:預設琥珀 */ }
-const TRAIT_FX={genius:'訓練骰永久 4 點起，事件卡好結果機率 70%',late:'訓練骰永久 3 點起，事件卡好結果機率 70%',disc:'衰退曲線整體延後兩年',academy:'25 歲前受傷率 −5%、季初擲骰期望值提升',iron:'受傷機率上限 10%',clutch:'全力一搏成功率天才級、成功 +4／失敗僅 −2、受傷風險降級；國際賽個人成績小幅提升',combo:'季初自動擲 1 顆骰，加在專精的能力上',rubber:'TJ 量表上限翻倍、打針成功率提升至 85%',phoenix:'玻璃人懲罰解除，受傷率恢復正常',intlace:'國際賽不增加受傷風險，每次徵召能力點保底 +2',franchise:'合約市場保有 4% 招牌球星溢價，引退評價加成',goldcloth:'效力台中猛獁滿十年，主場的信仰',mrteam:'同一支球隊十五年，球隊的代名詞',taiwan:'國際賽徵召超過 5 次的國家隊常客',confidante:'紅粉知己遍佈，情場的隱藏稱號',smallschool:'小學校出身，站上頂級舞台',grinder:'平庸天賦，靠汗水熬成的生涯',legend:'名人堂首輪入選的歷史級評價',rainbow:'同一聯盟效力球隊數爆表',glass:'受傷機率下限 40%',yips:'系統評價 −3，升上更高層級或奪得年度獎項可解除',distract:'季初擲骰永久 −1 顆（最低 2 顆）',cancer:'季末被交易機率大增、續約條件惡化',ambience:'季末轉隊機率永久提高',thief:'事件卡失敗率永久 +10%',scum:'每次外遇被抓到，全能力 −5',onetool:'只剩一項武器的替補奇兵，出賽數銳減'};
 function renderTraits(){ /* desktop trait side panel (presentation only) */
   const el=$('trait-tags'),box=$('trait-side'); if(!el||!box)return;
   let h='';
@@ -717,9 +621,6 @@ function slgOf(st){
   return tb/st.AB;
 }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
-const AMA_ANNUAL=48; /* 業餘企業隊工作年薪：4 萬／月，不視為職業合約。 */
-const LEVEL_MIN_ANNUAL={CPBL2:84,CPBL1:100,NPB2:240,NPB1:320,R:60,A1:95,A2:105,A3:125,MLB:2400};
-const MLB_SERVICE_MINOR_MIN=381; /* 2026 MLB CBA：已有 MLB 年資者回小聯盟，年薪至少約 US$127,100（匯率 30）。 */
 function hasMlbService(){
   return !!(S&&((S.stats&&S.stats.MLB&&S.stats.MLB.yr>0)||(S.log||[]).some(r=>r.lv==='MLB')));
 }
@@ -1787,7 +1688,6 @@ function awardP(value,hardLow,autoWin,base=25,lower=false){
   const progress=lower?(hardLow-value)/(hardLow-autoWin):(value-hardLow)/(autoWin-hardLow);
   return clamp(base+progress*(95-base),base,95);
 }
-const GLOVE_TH={C:[4,16],SS:[5,18],'2B':[4,16],'3B':[4,16],CF:[5,18],RF:[3,15],LF:[3,14],'1B':[3,13]};
 function awards(bucket,st){
   if(!LV[S.lv].top||S.seasonFactor===0)return;
   const y=S.year,h=S.honors,lgN={CPBL:'中職',NPB:'日職',MLB:'大聯盟'}[bucket];
@@ -2570,8 +2470,6 @@ function advance(){
   S.age++; S.year++; S.stageYr++; startYear();
 }
 /* ================= 生涯終章 ================= */
-const TIER_TH={CPBL:[12000,7000,4300,2100],NPB:[8500,6200,3000,1900],MLB:[7500,6200,3500,1900]}; /* M2:五帶金字塔校準(擬真玩家尺)——成功稀有化、浮沉為大宗、失敗有感 */
-const LG_N={CPBL:'中職',NPB:'日職',MLB:'大聯盟',MINOR:'小聯盟／二軍'};
 function positionScore(st){
   if(!st||!st.DPG)return 0;
   let runs=0; Object.entries(st.DPG).forEach(([dp,g])=>{ runs+=(POS_ADJ_RUNS[dp]||0)*(g/162); });
@@ -2671,10 +2569,6 @@ function statTable(bucket){
   const asN=st.AS||0;
   return `<p style="margin-top:8px"><b>${LG_N[bucket]}</b>${asN?` · 明星賽 ${asN} 度入選`:''}</p><table class="fin">${rows}</table>`;
 }
-const MILESTONE_DEF={
-  bat:[['H',1000,'安'],['HR',100,'轟'],['SB',50,'盜']],
-  pit:[['IP',1000,'局'],['W',100,'勝'],['SV',100,'救援'],['HLD',100,'中繼'],['SO',1000,'K']]
-};
 function milestoneLevel(st,key,unit){ return Math.floor((st&&st[key]||0)/unit)*unit; }
 function milestoneLine(label,st,defs,onlyKeys){
   if(!st)return '';
@@ -2738,7 +2632,6 @@ function honorText(g){
    All values come from S.*; the in-game settlement cards are untouched. */
 /* Baseball tick marks: precomputed points on the left seam (a quadratic from
    (7.6,1.9) over (2.6,12) to (7.6,22.1)); the right seam mirrors them at x=24-x. */
-const RP_TICKS=[[4.75,5.57,7.25,6.31],[4.04,8.78,6.61,9.16],[3.8,12,6.4,12],[4.04,15.22,6.61,14.84],[4.75,18.43,7.25,17.69]];
 function rpTagline(){
   const first=S.log.length?S.log[0].y:'?';
   return `${primaryPos()}｜${playerType()}｜${first}–${S.year}｜引退時 ${S.age} 歲`+
@@ -2799,7 +2692,6 @@ function rpHonorItems(){ /* [[text,accent?],...] per item; ×N gets the accent c
       if(ranges.length)parts.push([` (${ranges.join('、')})`,0]);
       return parts; }));
 }
-const RP_LV_SUF=['二軍','新人聯盟','1A','2A','3A'];
 function rpOrgOf(r){ /* org team + league + level label for one pro-log row */
   let tm=r.tm||'', lvl='';
   for(const s of RP_LV_SUF){ if(tm.endsWith(s)){ lvl=s; tm=tm.slice(0,-s.length); break; } }
@@ -2844,13 +2736,6 @@ function rpProData(proLogs){ /* team segments: a new block whenever the org chan
     else { if(bHR>0&&r.hr===bHR)r.best[7]=true; if(r.ops!=null&&r.ops===bOPS)r.best[5]=true; } }));
   return {hd,blocks};
 }
-const FAN={
- 0:['{n}退休了……我的青春也跟著結束了 QQ','以後帶小孩進場，我會指著引退背號說：爸爸看過{n}打球。','外電已經在算名人堂得票率了，根本沒有懸念','謝謝你把台灣棒球帶到世界的舞台上','這種等級的選手，一個世代只會出現一個','引退試合門票秒殺，黃牛價已經翻五倍了'],
- 1:['{n}確定引退，推文區已經滿滿的 QQ','明星賽常客就這樣說再見了，唉','生涯數據攤開來還是很漂亮，值得一面背號布幕','謝謝你每一次的全力奔跑，辛苦了','小時候牆上貼的海報就是他，時代的眼淚'],
- 2:['稱不上超級巨星，但每天打開轉播都看得到他，這樣就夠了','默默扛了這麼多年，辛苦了','這種工兵型選手才是一支球隊真正的骨幹','數據不會說謊，穩定就是他最大的天賦'],
- 3:['板凳暖了這麼多年，也是一種浪漫啦','至少他真的站上過職棒舞台，比鍵盤上的我們都強','代打人生，謝謝那幾支關鍵安打','二軍發電機引退，只有鐵粉會記得，但我們記得'],
- 4:['欸這誰？……查了一下，原來真的打過職業喔','棒球真的好難，祝福第二人生順利','又一個被現實打敗的追夢人，唏噓','看板留言只有三則，其中一則還是他本人回的'],
-};
 function retireScene(tiers){
   /* tiers: {CPBL:{i,sc},NPB:...,MLB:...} 有出賽才有 */
   /* 生涯代表聯盟＝出賽最久的頂級聯盟;分級取生涯最佳(i 最小) */
