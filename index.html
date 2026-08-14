@@ -903,9 +903,23 @@ function abCost(k){ /* 目前這一級要花幾點(須與 addAb 成本公式一�
   let c=isP?(cur>=66?7:cur>=58?4:cur>=50?2:1):(cur>=72?3:cur>=64?2:1);
   if(cur>=pk)c*=isP?4:3; return c;
 }
-function addAb(k,v){ if(!(k in S.ab))return 0; const o=S.ab[k];
+function normalizeAbCarry(k){
+  if(!S.carry)S.carry={};
+  /* 能力只使用整數；進度固定為 0～分母-1，避免降能力跨級距後出現 2/2 卻未升級。 */
+  S.ab[k]=clamp(Math.round(Number(S.ab[k])||1),1,80);
+  const cost=abCost(k);
+  S.carry[k]=clamp(Math.floor(Number(S.carry[k])||0),0,Math.max(0,cost-1));
+  return S.carry[k];
+}
+function addAb(k,v){ if(!(k in S.ab))return 0;
+  normalizeAbCarry(k);
+  const o=S.ab[k];
   S.lastOverflow=0; /* 【修正】紀錄真正溢出的點數 */
-  if(v<0){ S.ab[k]=clamp(o+v,1,80); return S.ab[k]-o; } /* 扣值 1:1,不吃量表成本 */
+  if(v<0){
+    S.ab[k]=clamp(o+v,1,80);
+    normalizeAbCarry(k);
+    return S.ab[k]-o;
+  } /* 扣值 1:1,不吃量表成本 */
   if(!S.carry)S.carry={};
   let cur=o,bud=v+(S.carry[k]||0); /* 未滿一級的點數累積在進度槽,不再蒸發 */
   const pk=(S&&S.pot&&S.pot[k])||62;
@@ -1526,7 +1540,7 @@ function allocUI(mode,label,done){
     else top.innerHTML=`<div class="pool">剩餘可分配點數：${pool} 點（點一下能力 +1）</div>`;
     const cue=$('al-cue'); if(cue)cue.textContent=dice?`剩餘 ${remaining()} 顆骰子未分配`:`剩餘 ${remaining()} 點未分配`;
     rows.innerHTML='';
-    keys.forEach(k=>{ const v=S.ab[k],cap=v>=80;
+    keys.forEach(k=>{ normalizeAbCarry(k); const v=S.ab[k],cap=v>=80;
       const r=document.createElement('div'); r.className='abrow'+(cap?' capped':'');
       const pk=(S.pot&&S.pot[k])||62, cst=abCost(k), cr=(S.carry&&S.carry[k])||0;
       r.innerHTML=`<span class="nm">${ABL[k]}</span><span class="bar"><i style="width:${v/80*100}%"></i><em style="left:${pk/80*100}%"></em></span><span class="val" style="line-height:1.1">${v}<small style="opacity:.5">/${pk}</small>${cst>1?`<span style="display:block;opacity:.5;font-size:10.5px;letter-spacing:1px;margin-top:-2px">${cr}/${cst}</span>`:''}</span>`;
@@ -2255,12 +2269,34 @@ function awards(bucket,st){
   };
   const th = TH[bucket] || TH.CPBL;
 
-  /* 1. 明星賽入選：隨表現 (d值) 動態提升機率 */
-  { const d=st.d;
-    let asP=awardP(d,-2,10,15);
-    if(asP>0&&asP<100&&bucket==='CPBL'&&S.orgTeam==='台中猛獁')asP=clamp(asP+30,15,97); /* 人氣球團加成 */
-    if(chance(asP)){ S.stats[bucket].AS++;
-      h.push(`${y} ${lgN}明星賽`+((bucket==='CPBL'&&S.orgTeam==='台中猛獁'&&d<2)?'（人氣入選）':'')); } }
+  /* 1. 明星賽入選：一般球隊須先達真實成績門檻；台中猛獁可用 30% 人氣票入選。 */
+  {
+    const d=st.d;
+    const popular=bucket==='CPBL'&&S.orgTeam==='台中猛獁';
+    const workloadOK=S.pos==='P'
+      ? (isSP()?st.IP>=60:st.G>=25)
+      : st.PA>=Math.round(LV[S.lv].g*1.7);
+    let performanceOK=false;
+    if(S.pos==='P'){
+      const era=st.IP>0?st.ER*9/st.IP:99;
+      performanceOK=isSP()
+        ? st.IP>=80&&era<=4.00
+        : st.G>=30&&era<=3.80&&((st.SV||0)>=10||(st.HLD||0)>=10||d>=2);
+    }else{
+      const obp=st.PA>0?(st.H+st.BB)/st.PA:0;
+      const ops=obp+slgOf(st);
+      performanceOK=st.PA>=300&&(st.avg>=0.260||ops>=0.750||st.HR>=15||st.SB>=15);
+    }
+    let asP=0;
+    if(workloadOK){
+      if(performanceOK)asP=awardP(d,0,10,10);
+      if(popular)asP=performanceOK?clamp(asP+30,30,97):30;
+    }
+    if(chance(asP)){
+      S.stats[bucket].AS++;
+      h.push(`${y} ${lgN}明星賽`+(popular&&!performanceOK?'（人氣入選）':''));
+    }
+  }
 
   /* 2. 新人王：依 d 值成長機率 */
   const rookieOK=bucket!=='CPBL'||!(S.stats.NPB||S.stats.MLB||S.stats.MINOR);
@@ -2322,18 +2358,35 @@ function awards(bucket,st){
     }
   }
 
-  /* 5. 年度 MVP（最高榮譽） */
+  /* 5. 年度 MVP（最高榮譽）：先通過真實成績門檻，再與聯盟其他球員競爭。 */
   const isReliever=S.pos==='P'&&!isSP();
-  const mvpQual=S.pos==='P'?(isSP()?st.IP>=120:st.G>=45):st.PA>=LV[S.lv].g*3.4;
+  let mvpQual=false;
+  if(S.pos==='P'){
+    if(isSP()){
+      mvpQual=st.IP>=140&&st.era<=3.20&&(st.W>=12||st.SO>=th.so[0]);
+    }else{
+      mvpQual=st.G>=50&&st.era<=2.20&&((st.SV||0)>=35||(st.HLD||0)>=30);
+    }
+  }else{
+    const obp=st.PA>0?(st.H+st.BB)/st.PA:0;
+    const ops=obp+slgOf(st);
+    mvpQual=st.PA>=LV[S.lv].g*3.6&&(
+      ops>=0.850||
+      st.HR>=th.hr[0]||
+      (st.avg>=th.avg[0]&&st.RBI>=th.rbi[0])
+    );
+  }
   if(mvpQual&&S.seasonFactor>=0.9){
     if(isReliever){
-      /* MLB 史上後援投手拿 MVP 極罕見：低於 d10 或 ERA 2.20 直接出局，神級季也不保證。 */
-      if(st.d>=10&&st.era<=2.20){
-        const pMVP=clamp(0.5+(st.d-10)*0.6+(2.20-st.era)*2+Math.max(0,(st.SV||0)-35)*0.08,0.5,6);
-        if(chance(pMVP))h.push(`${y} ${lgN}年度MVP`);
-      }
+      /* 後援 MVP 保持極低機率，且必須先達神級救援／中繼實績。 */
+      const pMVP=clamp(
+        0.5+Math.max(0,st.d-10)*0.4+Math.max(0,2.20-st.era)*2+
+        Math.max(0,(st.SV||0)-35)*0.08+Math.max(0,(st.HLD||0)-30)*0.04,
+        0.5,5
+      );
+      if(chance(pMVP))h.push(`${y} ${lgN}年度MVP`);
     }else{
-      const pMVP=awardP(st.d,6,15,12);
+      const pMVP=awardP(st.d,8,16,8);
       if(chance(pMVP))h.push(`${y} ${lgN}年度MVP`);
     }
   }
