@@ -388,8 +388,8 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
     <p class="sub">高中三年養成 → 選秀・旅日・旅美 → 國際賽 → 衰退與引退。每一顆骰子都算數。</p>
     <div class="field"><label for="in-name">球員資料</label>
       <div class="player-id-input">
-        <input id="in-name" maxlength="10" value="有有子" aria-label="球員姓名">
-        <div class="jersey-input"><span aria-hidden="true">#</span><input id="in-number" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" value="11" aria-label="背號"></div>
+        <input id="in-name" maxlength="10" placeholder="姓名" aria-label="球員姓名">
+        <div class="jersey-input"><span aria-hidden="true">#</span><input id="in-number" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="背號" aria-label="背號"></div>
       </div>
     </div>
     <div class="field"><label>守位</label>
@@ -3704,29 +3704,18 @@ function shareImage(evals,out){
   document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ modalClose(); allocFullClose(); } });
 })();
 let selPos='P';
-const DEFAULT_PLAYERS={P:{name:'有有子',jersey:11},IF:{name:'抹茶多',jersey:13}};
-const DEFAULT_PLAYER_PAIRS=[
-  DEFAULT_PLAYERS.P,DEFAULT_PLAYERS.IF,{name:'藥帝士',jersey:23},{name:'黃鎖頭',jersey:22}
-];
-function defaultPlayer(pos){
-  if(DEFAULT_PLAYERS[pos])return DEFAULT_PLAYERS[pos];
-  return DEFAULT_PLAYER_PAIRS[2+Math.floor(Math.random()*2)];
-}
-function isDefaultPlayerPair(name,jersey){
-  const no=Number(jersey);
-  return DEFAULT_PLAYER_PAIRS.some(p=>p.name===name.trim()&&p.jersey===no);
-}
+const PLAYER_NAME_KEY='yakyu-player-name';
+const PLAYER_JERSEY_KEY='yakyu-player-jersey';
+/* 第一次進入保持空白；玩家開始過生涯後，重新整理或重新開始時帶回上次輸入。 */
+try{
+  $('in-name').value=(localStorage.getItem(PLAYER_NAME_KEY)||'').slice(0,10);
+  $('in-number').value=(localStorage.getItem(PLAYER_JERSEY_KEY)||'').slice(0,2);
+}catch(e){}
 $('seed-show').value=SEED;
 $('seed-re').onclick=e=>{e.preventDefault();SEED=Math.random().toString(36).slice(2,10);$('seed-show').value=SEED;};
 document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#seg-pos button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on'); selPos=b.dataset.v;
-  /* 只有仍使用任一組系統預設姓名＋背號時才跟著守位切換；玩家自訂任一項後不再覆蓋。 */
-  if(isDefaultPlayerPair($('in-name').value,$('in-number').value)){
-    const def=defaultPlayer(selPos); /* 捕手／外野在切換守位當下隨機決定 */
-    $('in-name').value=def.name;
-    $('in-number').value=String(def.jersey);
-  }
 });
 $('btn-start').onclick=()=>{
   const sv=$('seed-show').value.trim(); if(sv)SEED=sv; /* 玩家可直接輸入流水碼 */
@@ -3745,6 +3734,10 @@ $('btn-start').onclick=()=>{
     $('in-number').reportValidity(); return;
   }
   $('in-number').setCustomValidity('');
+  try{
+    localStorage.setItem(PLAYER_NAME_KEY,nm);
+    localStorage.setItem(PLAYER_JERSEY_KEY,String(jersey));
+  }catch(e){}
   S=newState(nm,jersey,selPos,null);
   S.teamName=function(){
     if(!this.orgTeam)return '';
