@@ -6,7 +6,8 @@ import {DPN, POSN} from '../data/abilities.js';
 import {TEAM_COLOR} from '../data/teams.js';
 import {playerName} from '../core/state.js';
 /* temporary scaffold until engine modules are extracted */
-import {roleN, salParts, fmtMoney} from '../main.js';
+import {salParts, fmtMoney} from '../main.js';
+import {roleN} from '../engine/season.js';
 import {playerType, ovr} from '../engine/ability.js';
 
 export const $=id=>document.getElementById(id);

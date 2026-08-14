@@ -3,8 +3,7 @@ import {R, ri, chance, clamp} from '../core/rng.js';
 import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js';
 import {LV} from '../data/teams.js';
 import {card, choose, board} from '../ui/dom.js';
-/* temporary scaffold until engine/season + flow are extracted */
-import {roleN, pitcherRole} from '../main.js';
+import {roleN, pitcherRole} from './season.js';
 export function dpScore(p){ const a=S.ab;
   switch(p){
     case 'SS': return a.rng*0.5 + a.fld*0.3 + a.arm*0.2;   /* 游擊:範圍主導 */

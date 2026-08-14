@@ -4,8 +4,9 @@ import {ABL, POS_AB} from '../data/abilities.js';
 import {LV} from '../data/teams.js';
 import {card, choose, board} from '../ui/dom.js';
 import {addAb} from './ability.js';
-/* temporary scaffold until engine/season + flow are extracted */
-import {isSP, removeTrait} from '../main.js';
+import {isSP} from './season.js';
+/* temporary scaffold until flow is extracted */
+import {removeTrait} from '../main.js';
 export function tjAccrue(st,lv){ /* 球威風險 × 投法 × 角色標準化工作量；體力不參與。 */
   if(S.pos!=='P'||S.seasonFactor<=0||!st||!(st.G>0))return;
   const L=LV[lv||S.lv],effort={'全力投':1.30,'普通投':1.0,'養生球':0.80}[S.effort]||1.0;
