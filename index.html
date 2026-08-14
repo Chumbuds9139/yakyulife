@@ -37,7 +37,7 @@
    Values mirror the design prototype (yakyulife-app.dc.html helmet style). */
 body{
   --bg:#081510;--panel:#132920;--panel2:#1a382a;--edge:#2b4d3a;--text:#ece7d6;--dim:#93ab9c;
-  --accent:#ffc95c;--good:#8fd08f;--bad:#e2695c;--info:#7fb3d5;--gold:#ffc95c;--r:10px;
+  --accent:#ffc95c;--good:#8fd08f;--bad:#e2695c;--info:#7fb3d5;--gold:#ffc95c;--row:#0d2115;--r:10px;
   --sans:'Noto Sans TC',-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;
   --head:'Noto Sans TC',sans-serif;
   --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
@@ -50,15 +50,15 @@ body{
   --chalk:var(--text);--amber:var(--accent);--blue:var(--info);--clay:var(--accent);
 }
 body[data-theme='b']{--bg:#07090c;--panel:#0c1014;--panel2:#10161c;--edge:#232c36;--text:#d8dde2;--dim:#5c6873;
-  --accent:#ffb32e;--good:#49b675;--bad:#e2695c;--info:#3a7bd5;--gold:#ffb32e;--r:4px;
+  --accent:#ffb32e;--good:#49b675;--bad:#e2695c;--info:#3a7bd5;--gold:#ffb32e;--row:#0b0f14;--r:4px;
   --head:'DotGothic16',monospace;--disp:'DotGothic16',monospace;
   --glow:0 0 10px rgba(255,179,46,.6);--btnbg:#132018;--btnedge:#49b675;--btntx:#d8dde2;--bgfx:none;--shadow:rgba(0,0,0,.5)}
 body[data-theme='c']{--bg:#f4efe1;--panel:#faf6ea;--panel2:#ece5d2;--edge:#1e1c18;--text:#1e1c18;--dim:#6f6857;
-  --accent:#b3402f;--good:#2f6b3a;--bad:#b3402f;--info:#35506b;--gold:#b3402f;--r:0px;
+  --accent:#b3402f;--good:#2f6b3a;--bad:#b3402f;--info:#35506b;--gold:#b3402f;--row:#ede6d4;--r:0px;
   --head:'Noto Serif TC',serif;--disp:'Noto Serif TC',serif;
   --glow:none;--btnbg:#1e1c18;--btnedge:#1e1c18;--btntx:#f4efe1;--bgfx:none;--shadow:rgba(30,28,24,.12)}
 body[data-theme='d']{--bg:#f6f7f6;--panel:#ffffff;--panel2:#f2f4f2;--edge:#e2e6e3;--text:#1a201c;--dim:#7a857e;
-  --accent:#0f7b4d;--good:#0f7b4d;--bad:#c0392b;--info:#4a76a8;--gold:#b8862d;--r:12px;
+  --accent:#0f7b4d;--good:#0f7b4d;--bad:#c0392b;--info:#4a76a8;--gold:#b8862d;--row:#eef1ef;--r:12px;
   --glow:none;--btnbg:#0f7b4d;--btnedge:#0f7b4d;--btntx:#ffffff;--bgfx:none;--shadow:rgba(26,32,28,.1)}
 /* touch-action:manipulation keeps pan + pinch but kills double-tap zoom (tap-heavy game) */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
@@ -3226,6 +3226,112 @@ function honorText(g){
   if(!ranges.length)return g.awd;
   return count>1?`${g.awd} ×${count} (${ranges.join('、')})`:`${g.awd} (${ranges[0]})`;
 }
+/* ================= 結算圖資料建構 =================
+   Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
+   All values come from S.*; the in-game settlement cards are untouched. */
+/* Baseball tick marks: precomputed points on the left seam (a quadratic from
+   (7.6,1.9) over (2.6,12) to (7.6,22.1)); the right seam mirrors them at x=24-x. */
+const RP_TICKS=[[4.75,5.57,7.25,6.31],[4.04,8.78,6.61,9.16],[3.8,12,6.4,12],[4.04,15.22,6.61,14.84],[4.75,18.43,7.25,17.69]];
+function rpTagline(){
+  const first=S.log.length?S.log[0].y:'?';
+  return `${primaryPos()}｜${playerType()}｜${first}–${S.year}｜引退時 ${S.age} 歲`+
+    (S.pos==='P'&&(S.tjCrises||S.tjCount)?`｜手肘危機×${S.tjCrises||0}／TJ×${S.tjCount}`:'');
+}
+function rpFamily(){
+  const lv=S.love, kid=n=>n?`（育${n}）`:'';
+  const cur=lv.st==='married'?`老婆 ${lv.partner}${kid(lv.kids)}`
+    :lv.st==='dating'?`交往中 ${lv.partner}（${lv.dyrs||0} 年）`
+    :lv.st==='divorced'?'離婚':'未婚';
+  const ex=lv.exes.length?`｜前妻 ${lv.exes.map(e=>`${e.name}${kid(e.kids)}`).join('、')}`:'';
+  const kids=lv.kids+lv.exes.reduce((t,e)=>t+e.kids,0);
+  return `家庭：${cur}${ex}｜子女共 ${kids} 人${lv.affairs?`｜外遇 ${lv.affairs} 次（抓 ${lv.caught}）`:''}`;
+}
+const RP_F3=v=>v==null?'-':v.toFixed(3).replace(/^0/,'');
+const RP_F2=v=>v==null?'-':v.toFixed(2);
+function rpCumData(){ /* per-league career totals; best-of-column marks need 2+ rows */
+  const isP=S.pos==='P';
+  const order=['MLB','NPB','CPBL','MINOR'].filter(b=>S.stats[b]);
+  const hd=isP?['Yrs','G','IP','W','L','SV','HLD','SO','BB','ERA','WHIP']
+             :['Yrs','G','PA','AVG','OBP','SLG','OPS','H','HR','RBI','SB','DEF'];
+  const rows=order.map(b=>{ const st=S.stats[b];
+    if(isP){
+      const era=st.IP>0?st.ER*9/st.IP:null, whip=st.IP>0?(st.H+st.BB)/st.IP:null;
+      return {b,txt:[st.yr,st.G,fmtIP(st.IP),st.W,st.L,st.SV||0,st.HLD||0,st.SO,st.BB||0,RP_F2(era),RP_F2(whip)],
+              num:[st.yr,st.G,st.IP,st.W,st.L,st.SV||0,st.HLD||0,st.SO,st.BB||0,era,whip]};
+    }
+    const obp=st.PA>0?(st.H+st.BB)/st.PA:null, slg=st.AB>0?slgOf(st):null,
+          avg=st.AB>0?st.H/st.AB:null, ops=(obp!=null&&slg!=null)?obp+slg:null;
+    return {b,txt:[st.yr,st.G,st.PA,RP_F3(avg),RP_F3(obp),RP_F3(slg),RP_F3(ops),st.H,st.HR,st.RBI,st.SB,(st.DEF>0?'+':'')+(st.DEF||0)],
+            num:[st.yr,st.G,st.PA,avg,obp,slg,ops,st.H,st.HR,st.RBI,st.SB,st.DEF||0]};
+  });
+  /* Yrs never marked; L/BB "best" is meaningless; ERA/WHIP take the minimum */
+  const minCols=isP?{9:1,10:1}:{}, skip=isP?{0:1,4:1,8:1}:{0:1}, best={};
+  if(rows.length>=2)hd.forEach((_,i)=>{ if(skip[i])return;
+    const vs=rows.map(r=>r.num[i]).filter(v=>v!=null&&!(v===0&&!minCols[i]));
+    if(vs.length)best[i]=minCols[i]?Math.min(...vs):Math.max(...vs); });
+  rows.forEach(r=>r.best=r.num.map((v,i)=>best[i]!=null&&v===best[i]));
+  return {hd,rows};
+}
+function rpIntlData(){
+  const isP=S.pos==='P', IS=S.intlStat, il=S.intlLog||[];
+  if(isP){
+    return {hd:['G','IP','W','SV','SO','ERA'],
+      rows:il.map(r=>{ const st=r.st; return {year:r.year,name:r.name,rank:r.rank,
+        txt:[st.G,fmtIP(st.IP),st.W,st.SV,st.SO,RP_F2(st.IP>0?st.ER*9/st.IP:null)]}; }),
+      tot:[IS.G,fmtIP(IS.IP),IS.W,IS.SV,IS.SO,RP_F2(IS.IP>0?IS.ER*9/IS.IP:null)]};
+  }
+  return {hd:['G','PA','AVG','H','HR','RBI'],
+    rows:il.map(r=>{ const st=r.st; return {year:r.year,name:r.name,rank:r.rank,
+      txt:[st.G,st.PA,RP_F3(st.AB>0?st.H/st.AB:null),st.H,st.HR,st.RBI]}; }),
+    tot:[IS.G,IS.PA,RP_F3(IS.AB>0?IS.H/IS.AB:null),IS.H,IS.HR,IS.RBI]};
+}
+function rpHonorItems(){ /* [[text,accent?],...] per item; ×N gets the accent color */
+  return careerMilestones().map(t=>[[t,0]])
+    .concat(honorGroups().map(g=>{ const ranges=yearRanges(g.yrs), n=g.yrs.length, parts=[[g.awd,0]];
+      if(n>1)parts.push([` ×${n}`,1]);
+      if(ranges.length)parts.push([` (${ranges.join('、')})`,0]);
+      return parts; }));
+}
+const RP_LV_SUF=['二軍','新人聯盟','1A','2A','3A'];
+function rpOrgOf(r){ /* org team + league + level label for one pro-log row */
+  let tm=r.tm||'', lvl='';
+  for(const s of RP_LV_SUF){ if(tm.endsWith(s)){ lvl=s; tm=tm.slice(0,-s.length); break; } }
+  const lg=CPBL_TEAMS.includes(tm)?'CPBL':NPB_TEAMS.includes(tm)?'NPB':MLB_TEAMS.includes(tm)?'MLB'
+    :(r.lv&&LV[r.lv]?(LV[r.lv].top||(LV[r.lv].org==='MiLB'?'MLB':LV[r.lv].org)):'CPBL');
+  if(!lvl)lvl=lg==='MLB'?'大聯盟':'一軍';
+  return {team:tm,lg,lvl,minor:lvl!=='一軍'&&lvl!=='大聯盟'};
+}
+function rpProData(proLogs){ /* team segments: a new block whenever the org changes */
+  const isP=S.pos==='P';
+  const hd=isP?['G','IP','W-L','SV','HLD','SO','BB','ERA','WHIP']
+             :['G','PA','AVG','OBP','SLG','OPS','H','HR','RBI','SB','DEF'];
+  const blocks=[]; let cur=null;
+  proLogs.forEach(r=>{ const o=rpOrgOf(r);
+    if(!cur||cur.team!==o.team||cur.lg!==o.lg){ cur={team:o.team,lg:o.lg,rows:[]}; blocks.push(cur); }
+    const s=r.st||blankStat(); let txt,era=null,ops=null;
+    if(isP){ era=s.IP>0?s.ER*9/s.IP:null;
+      txt=[s.G,fmtIP(s.IP),`${s.W}-${s.L}`,s.SV||0,s.HLD||0,s.SO,s.BB||0,RP_F2(era),RP_F2(s.IP>0?(s.H+s.BB)/s.IP:null)];
+    } else { const obp=s.PA>0?(s.H+s.BB)/s.PA:null, slg=s.AB>0?slgOf(s):null;
+      ops=(obp!=null&&slg!=null)?obp+slg:null;
+      txt=[s.G,s.PA,RP_F3(s.AB>0?s.H/s.AB:null),RP_F3(obp),RP_F3(slg),RP_F3(ops),s.H,s.HR,s.RBI,s.SB,(s.DEF>0?'+':'')+(s.DEF||0)];
+    }
+    cur.rows.push({y:r.y,age:r.age,lvl:o.lvl,minor:o.minor,inj:!!r.inj,txt,sv:s.SV||0,era,hr:s.HR||0,ops});
+  });
+  /* career-best marks: SV + ERA for pitchers, HR + OPS for batters (ties all marked);
+     a single pro season has no "best" to speak of, so 2+ rows are required */
+  let bSV=0,bERA=null,bHR=0,bOPS=null;
+  const nRows=blocks.reduce((a,b)=>a+b.rows.length,0);
+  blocks.forEach(b=>b.rows.forEach(r=>{
+    bSV=Math.max(bSV,r.sv); bHR=Math.max(bHR,r.hr);
+    if(r.era!=null&&(bERA==null||r.era<bERA))bERA=r.era;
+    if(r.ops!=null&&(bOPS==null||r.ops>bOPS))bOPS=r.ops; }));
+  blocks.forEach(b=>b.rows.forEach(r=>{
+    r.best=hd.map(()=>false);
+    if(nRows<2)return;
+    if(isP){ if(bSV>0&&r.sv===bSV)r.best[3]=true; if(r.era!=null&&r.era===bERA)r.best[7]=true; }
+    else { if(bHR>0&&r.hr===bHR)r.best[7]=true; if(r.ops!=null&&r.ops===bOPS)r.best[5]=true; } }));
+  return {hd,blocks};
+}
 const FAN={
  0:['{n}退休了……我的青春也跟著結束了 QQ','以後帶小孩進場，我會指著引退背號說：爸爸看過{n}打球。','外電已經在算名人堂得票率了，根本沒有懸念','謝謝你把台灣棒球帶到世界的舞台上','這種等級的選手，一個世代只會出現一個','引退試合門票秒殺，黃牛價已經翻五倍了'],
  1:['{n}確定引退，推文區已經滿滿的 QQ','明星賽常客就這樣說再見了，唉','生涯數據攤開來還是很漂亮，值得一面背號布幕','謝謝你每一次的全力奔跑，辛苦了','小時候牆上貼的海報就是他，時代的眼淚'],
@@ -3434,7 +3540,7 @@ function endGame(reason){
       <button class="btn" id="sh-url" style="flex:1">🔗 複製重播連結</button>
     </div><div id="sh-out" style="margin-top:8px"></div>`;
   $('log').appendChild(sh);
-  sh.querySelector('#sh-img').onclick=()=>shareImage(evals,sh.querySelector('#sh-out'));
+  sh.querySelector('#sh-img').onclick=()=>shareImage(evals,picks,sh.querySelector('#sh-out'));
   sh.querySelector('#sh-url').onclick=e=>{
     const url=OFFICIAL_URL+'?seed='+SEED;
     const okmsg=()=>{e.target.textContent='✅ 已複製';setTimeout(()=>e.target.textContent='🔗 複製重播連結',1600);};
@@ -3450,218 +3556,282 @@ function endGame(reason){
     for(const h of heads){ if(h.textContent==='生涯終幕'){ h.scrollIntoView({behavior:'auto',block:'start'}); break; } }
   }catch(e){} }, 250);
 }
-/* 結算圖（Canvas 產生 PNG，可長按儲存或自動下載） */
-function shareImage(evals,out){
+/* 結算圖（Canvas 產生 PNG，可長按儲存或自動下載）
+   Single-sheet settlement layout from the design handoff, drawn 1:1 at the
+   design's 820px width. The layout is rendered twice: a measure pass on a
+   throwaway canvas walks the full flow to learn the total height, then the
+   real pass paints background, border, content and footer. */
+function shareImage(evals,picks,out){
   const isP=S.pos==='P';
-  const tiers=evals.map(t=>t.replace(/<[^>]+>/g,''));
+  const tiers=(evals||[]).map(t=>String(t).replace(/<[^>]+>/g,''));
+  const hist=S.log.slice(), amaLogs=hist.filter(r=>!r.st), proLogs=hist.filter(r=>r.st);
+  const cum=rpCumData(), honors=rpHonorItems();
+  const pro=proLogs.length?rpProData(proLogs):null;
+  const intl=S.intlCount>0?rpIntlData():null;
+  const fans=(picks||[]).map(p=>'「'+p.replace(/{n}/g,S.name)+'」');
+  const W=820,PADX=36,CW=W-PADX*2,scale=2;
+  /* Canvas colors/fonts follow the active theme tokens (read from computed style) */
+  const _css=getComputedStyle(document.body), _tk=(n,fb)=>((_css.getPropertyValue(n)||'').trim()||fb);
+  const C_BG=_tk('--bg','#081510'), C_EDGE=_tk('--edge','#2b4d3a'), C_DIM=_tk('--dim','#93ab9c'),
+        C_ACC=_tk('--accent','#ffc95c'), C_TX=_tk('--text','#ece7d6'), C_GOOD=_tk('--good','#8fd08f'),
+        C_BAD=_tk('--bad','#e2695c'), C_INFO=_tk('--info','#7fb3d5'), C_P2=_tk('--panel2','#1a382a'),
+        C_PANEL=_tk('--panel','#132920'), C_ROW=_tk('--row','#0d2115'), C_GOLD=_tk('--gold','#ffc95c'),
+        C_BTNEDGE=_tk('--btnedge',C_EDGE);
+  const F_SANS=_tk('--sans',"'Noto Sans TC',sans-serif"), F_MONO=_tk('--mono',"'IBM Plex Mono',monospace"),
+        F_HEAD=_tk('--head',F_SANS);
+  const GLOW=_tk('--glow','none')!=='none';
+  const glowC=(_tk('--bgfx','none').match(/rgba?\([^)]*\)/)||[])[0]||null;
+  const LGC={MLB:C_INFO,NPB:C_BAD,CPBL:C_ACC,MINOR:C_DIM};
   /* 特性(保留 + 刪除線標記) */
   const keepTr=[...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].filter(k=>S.traits[k]).map(k=>({label:traitName(k),key:k,neg:TRAIT_KEYS.neg.includes(k)}));
   const remTr=(S.removed||[]).map(l=>({label:l,key:'',neg:false,rem:true}));
-  /* 生涯數據列(每聯盟一列) */
-  const leagues=['MLB','NPB','CPBL'].filter(b=>S.stats[b]);
-  /* 指定順序：名人堂 → 通算／各聯盟里程碑 → 國家隊 → MLB → NPB → CPBL。 */
-  const honors=careerMilestones().concat(honorGroups().map(honorText));
-  /* 歷年成績 */
-  const hist=S.log.slice();
-
-  const W=920, PAD=34, scale=2;
-
-  /* 為了計算換行，先建立 Canvas 與 Context 來測量字體寬度 */
-  const cv=document.createElement('canvas');
-  const c=cv.getContext('2d');
-  c.font='13px sans-serif';
-  /* Canvas colors follow the active theme tokens (read from computed style) */
-  const _css=getComputedStyle(document.body), _tk=(n,fb)=>((_css.getPropertyValue(n)||'').trim()||fb);
-  const C_BG=_tk('--bg','#0b1a12'), C_EDGE=_tk('--edge','#2b4a38'), C_DIM=_tk('--dim','#8fae9c'),
-        C_ACC=_tk('--accent','#ffc95c'), C_TX=_tk('--text','#e8efe9'), C_GOOD=_tk('--good','#9fd8a8'),
-        C_BAD=_tk('--bad','#ff8b7a'), C_P2=_tk('--panel2','#173524');
-
-  /* 處理榮譽雙欄換行 */
-  const colW=(W-PAD*2)/2, maxTextW=colW-20;
-  const honorBlocks = honors.map(h => {
-    let text = '· ' + h;
-    let lines = []; let curr = '';
-    for(let i=0; i<text.length; i++) {
-      let test = curr + text[i];
-      if(c.measureText(test).width > maxTextW && curr.length > 0) {
-        lines.push(curr);
-        curr = '  ' + text[i];
-      } else { curr = test; }
-    }
-    if(curr) lines.push(curr);
-    return lines;
-  });
-  const rows2=Math.ceil(honorBlocks.length/2);
-  let leftH=0, rightH=0;
-  honorBlocks.slice(0, rows2).forEach(b => leftH += b.length * 23);
-  honorBlocks.slice(rows2).forEach(b => rightH += b.length * 23);
-  const honorsTotalHeight = Math.max(leftH, rightH);
-  /* 預估總高度 */
-  let H=150; // header
-  H+=30+tiers.length*24+14; // 評價
-  if(keepTr.length||remTr.length)H+=54;
-  H+=34+(leagues.length+1)*26+16; // 生涯數據表
-  if(S.intlCount>0)H+=30+24+(Math.max(0,(S.intlLog||[]).length)+1)*28+12; // 逐屆國際賽＋通算
-  H+=30+honorsTotalHeight+16; // 榮譽(雙欄換行後的高度)
-
-  const amaLogs = hist.filter(r => !r.st);
-  const proLogs = hist.filter(r => r.st);
-  if(amaLogs.length > 0) H += 34 + amaLogs.length * 20 + 24;
-  if(proLogs.length > 0) H += 34 + proLogs.length * 20 + 24;
-
-  H+=70;
-  cv.width=W*scale; cv.height=H*scale;
-  c.scale(scale,scale);
-  c.fillStyle=C_BG; c.fillRect(0,0,W,H);
-  c.strokeStyle=C_EDGE; c.lineWidth=3; c.strokeRect(10,10,W-20,H-20);
-  c.textBaseline='top';
-  const posN={P:roleN(S.role)+'投手',C:'捕手',IF:'內野手',OF:'外野手'}[S.pos];
-
-  // Header
-  c.fillStyle=C_DIM; c.font='13px sans-serif'; c.fillText('Y a K y o L i f e ・ 引 退 紀 念',PAD,30);
-  c.fillStyle=C_ACC; c.font='bold 36px sans-serif'; c.fillText(playerName(),PAD,52);
-  c.fillStyle=C_TX; c.font='15px sans-serif';
-  c.fillText(`${primaryPos()}｜${playerType()}｜${hist.length?hist[0].y:'?'}–${S.year}｜引退時 ${S.age} 歲${S.pos==='P'&&(S.tjCrises||S.tjCount)?`｜手肘危機×${S.tjCrises||0}／TJ×${S.tjCount}`:''}`,PAD,98);
-  // 特性列(header 右方)
-  let y=126;
-  function tagColor(o){
+  function tagColor(o){ /* keep in sync with traitTagStyle() + the .tag defaults */
     if(o.rem)return {bg:'#242424',bd:'#4a4a4a',fg:'#8a8a8a'};
     if(o.key==='legend'||o.key==='taiwan')return {bg:'#3a2c05',bd:'#ffc95c',fg:'#ffe08a'}; /* 金(歷史級/Team Taiwan) */
     if(o.key==='goldcloth')return {bg:'#3a3505',bd:'#e8d43a',fg:'#fff35a'}; /* 黃 */
     if(o.key==='mrteam')return teamChip(TEAM_COLOR[S.mrTeamName]||'#ffc95c');
     if(o.key==='genius')return {bg:'#232733',bd:'#c8d0e0',fg:'#e8eef7'}; /* 銀 */
     if(o.neg)return {bg:'#2a0f0f',bd:'#c0392b',fg:'#ff8b7a'};             /* 紅 */
-    return {bg:C_P2,bd:C_EDGE,fg:C_GOOD};                                 /* 主題色 */
+    return {bg:C_P2,bd:C_EDGE,fg:C_ACC};                                  /* 主題色 */
   }
-  function drawTags(items){ items.forEach(function(o){ const t=o.label, col=tagColor(o);
-    c.font='12px sans-serif'; const w=c.measureText(t).width+16;
-    c.fillStyle=col.bg; c.strokeStyle=col.bd; c.lineWidth=1;
-    c.fillRect(tagx,y,w,20); c.strokeRect(tagx,y,w,20);
-    c.fillStyle=col.fg; c.fillText(t,tagx+8,y+3);
-    if(o.rem){ c.strokeStyle='#8a8a8a'; c.beginPath(); c.moveTo(tagx+4,y+10); c.lineTo(tagx+w-4,y+10); c.stroke(); }
-    tagx+=w+8; if(tagx>W-160){tagx=PAD;y+=26;}
-  }); }
-  var tagx=PAD;
-  if(keepTr.length||remTr.length){ drawTags(keepTr.concat(remTr)); y+=30; }
-
-  function hr(){ c.strokeStyle=C_EDGE; c.lineWidth=1; c.beginPath(); c.moveTo(PAD,y); c.lineTo(W-PAD,y); c.stroke(); y+=12; }
-  function sectionTitle(t){ c.fillStyle=C_DIM; c.font='bold 13px sans-serif'; c.fillText(t,PAD,y); y+=22; }
-
-  // 評價
-  hr(); sectionTitle('生涯評價');
-  c.font='bold 16px sans-serif'; c.fillStyle=C_ACC;
-  tiers.forEach(function(t){ c.fillText('★ '+t,PAD,y); y+=24; }); y+=6;
-
-  // 生涯數據表
-  hr(); sectionTitle('生涯累積數據');
-  const cols=isP?[['League',90],['Yrs',36],['G',48],['IP',54],['W',36],['L',36],['SV',48],['HLD',48],['SO',52],['BB',48],['ERA',52],['WHIP',54]]
-                :[['League',80],['Yrs',34],['G',40],['PA',46],['AVG',48],['OBP',48],['SLG',48],['OPS',48],['H',44],['HR',38],['RBI',44],['SB',40],['DEF',40]];
-  function row(cells,head){ let x=PAD; c.font=(head?'bold ':'')+'13px monospace'; c.fillStyle=head?C_DIM:C_TX;
-    cells.forEach(function(cell,i){ c.fillText(String(cell),x,y); x+=cols[i][1]; }); y+=head?24:26; }
-  row(cols.map(cc=>cc[0]),true);
-  leagues.forEach(function(b){ const st=S.stats[b];
-    if(isP){ const era=st.IP>0?(st.ER*9/st.IP).toFixed(2):'-'; const whip=st.IP>0?((st.H+st.BB)/st.IP).toFixed(2):'-';
-      row([LG_N[b],st.yr,st.G,fmtIP(st.IP),st.W,st.L,st.SV||0,st.HLD||0,st.SO,st.BB||0,era,whip]); }
-    else{
-      const obpN = st.PA>0 ? (st.H+st.BB)/st.PA : 0;
-      const slgN = slgOf(st);
-      const avg = st.AB>0 ? (st.H/st.AB).toFixed(3).replace(/^0/,'') : '-';
-      const obp = st.PA>0 ? obpN.toFixed(3).replace(/^0/,'') : '-';
-      const slg = st.AB>0 ? slgN.toFixed(3).replace(/^0/,'') : '-';
-      const ops = st.AB>0 ? (obpN+slgN).toFixed(3).replace(/^0/,'') : '-';
-      row([LG_N[b],st.yr,st.G,st.PA,avg,obp,slg,ops,st.H,st.HR,st.RBI,st.SB,(st.DEF>0?'+':'')+(st.DEF||0)]); } });
-  y+=6;
-
-  // 國際賽逐屆成績，最後一列才做通算
-  if(S.intlCount>0){ const IS=S.intlStat;
-    const il=S.intlLog||[];
-    hr(); sectionTitle('國際賽逐屆成績（中華隊 '+S.intlCount+' 屆）');
-    const rowIntl=(cells,head)=>{ let x=PAD; c.font=(head?'bold ':'')+'13px monospace'; c.fillStyle=head?C_DIM:C_TX;
-      cells.forEach(function(cell,i){ c.fillText(String(cell),x,y); x+=ic[i][1]; }); y+=head?24:28; };
-    var ic;
-    if(isP){ const era=IS.IP>0?(IS.ER*9/IS.IP).toFixed(2):'-';
-      ic=[['年度',58],['賽事',150],['結果',82],['G',54],['IP',70],['W',54],['SV',60],['SO',64],['ERA',64]];
-      rowIntl(ic.map(cc=>cc[0]),true);
-      il.forEach(r=>{ const st=r.st, e=st.IP>0?(st.ER*9/st.IP).toFixed(2):'-'; rowIntl([r.year,r.name,r.rank,st.G,fmtIP(st.IP),st.W,st.SV,st.SO,e],false); });
-      rowIntl(['通算','','',IS.G,fmtIP(IS.IP),IS.W,IS.SV,IS.SO,era],false);
-    } else { const avg=IS.AB>0?(IS.H/IS.AB).toFixed(3).replace(/^0/,''):'-';
-      ic=[['年度',58],['賽事',150],['結果',82],['G',54],['PA',64],['AVG',68],['H',58],['HR',58],['RBI',64]];
-      rowIntl(ic.map(cc=>cc[0]),true);
-      il.forEach(r=>{ const st=r.st, a=st.AB>0?(st.H/st.AB).toFixed(3).replace(/^0/,''):'-'; rowIntl([r.year,r.name,r.rank,st.G,st.PA,a,st.H,st.HR,st.RBI],false); });
-      rowIntl(['通算','','',IS.G,IS.PA,avg,IS.H,IS.HR,IS.RBI],false);
+  function rr(c,x,y,w,h,r){ c.beginPath();
+    c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r);
+    c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+  function drawBall(c,cx,cy,d){ /* stylized baseball, 24-box geometry scaled to d */
+    const k=d/24, X=x=>cx-d/2+x*k, Y=y=>cy-d/2+y*k;
+    c.save();
+    c.beginPath(); c.arc(cx,cy,d/2-k*.5,0,Math.PI*2);
+    c.fillStyle='#faf7ee'; c.fill();
+    /* ring rides --text so the white face keeps its outline on light themes too */
+    c.save(); c.globalAlpha=.55; c.lineWidth=Math.max(1,1.6*k); c.strokeStyle=C_TX; c.stroke(); c.restore();
+    c.lineCap='round'; c.strokeStyle=C_BAD;
+    c.lineWidth=1.5*k; c.beginPath();
+    c.moveTo(X(7.6),Y(1.9)); c.quadraticCurveTo(X(2.6),Y(12),X(7.6),Y(22.1));
+    c.moveTo(X(16.4),Y(1.9)); c.quadraticCurveTo(X(21.4),Y(12),X(16.4),Y(22.1)); c.stroke();
+    c.lineWidth=1.1*k; c.beginPath();
+    RP_TICKS.forEach(p=>{ c.moveTo(X(p[0]),Y(p[1])); c.lineTo(X(p[2]),Y(p[3]));
+      c.moveTo(X(24-p[0]),Y(p[1])); c.lineTo(X(24-p[2]),Y(p[3])); });
+    c.stroke(); c.restore(); }
+  function wrap(c,t,font,maxW){ c.font=font; const out=[]; let cur='';
+    for(const ch of String(t)){ if(c.measureText(cur+ch).width>maxW&&cur){ out.push(cur); cur=ch; } else cur+=ch; }
+    if(cur)out.push(cur); return out; }
+  function render(c){
+    let y=32;
+    const ls=v=>{ try{c.letterSpacing=v;}catch(e){} };
+    /* All text is anchored on the alphabetic baseline: 'top'/'middle' derive from the
+       font bounding box, which Safari and Chrome compute differently, so device renders
+       drifted vertically. mid() centers a string on cy using its measured ink box. */
+    c.textBaseline='alphabetic'; c.textAlign='left'; c.lineJoin='round';
+    const mid=(t,x,cy)=>{ const m=c.measureText(t), a=m.actualBoundingBoxAscent, d=m.actualBoundingBoxDescent;
+      c.fillText(t,x,cy+((a!=null?a:8)-(d!=null?d:0))/2); };
+    /* ---- 刊頭 lockup (main text, sub and ball share one baseline) ---- */
+    const wmBase=y+25;
+    c.font='900 32px '+F_HEAD; c.fillStyle=C_TX; ls('1.3px');
+    const w1=c.measureText('YaKy').width;
+    c.fillText('YaKy',PADX,wmBase);
+    drawBall(c,PADX+w1+11.5,wmBase-9,21);
+    c.fillText('Life',PADX+w1+23,wmBase);
+    const wmW=w1+23+c.measureText('Life').width;
+    ls('0px');
+    c.font='13px '+F_SANS; c.fillStyle=C_DIM; ls('3.6px');
+    c.fillText('棒球人生模擬器',PADX+wmW+12,wmBase); ls('0px');
+    /* 引退紀念鋼印章 */
+    c.font='700 12px '+F_SANS; ls('3.6px');
+    const stT='引退紀念', stW=c.measureText(stT).width+21, stH=27, stX=W-PADX-stW;
+    if(GLOW){ c.save(); c.shadowColor=C_ACC; c.shadowBlur=12; }
+    c.strokeStyle=C_ACC; c.lineWidth=1.5; rr(c,stX,y,stW,stH,3); c.stroke();
+    if(GLOW)c.restore();
+    c.fillStyle=C_ACC; mid(stT,stX+13,y+stH/2); ls('0px');
+    y+=54;
+    /* ---- 球員名＋背號牌 (badge digits sit on the name baseline) ---- */
+    const nameBase=y+35;
+    c.font='900 44px '+F_HEAD; c.fillStyle=C_ACC;
+    const wN=c.measureText(S.name).width;
+    c.fillText(S.name,PADX,nameBase);
+    c.font='700 31px '+F_MONO;
+    const jT='#'+S.jersey, jW=c.measureText(jT).width+18, bCy=nameBase-11;
+    c.fillStyle=C_ACC; rr(c,PADX+wN+12,bCy-19,jW,38,5); c.fill();
+    c.fillStyle=C_BG; mid(jT,PADX+wN+21,bCy);
+    y+=52;
+    /* ---- 副標 ---- */
+    c.font='15px '+F_SANS; c.fillStyle=C_TX; mid(rpTagline(),PADX,y+11); y+=27;
+    /* ---- 特質標籤＋家庭＋總薪資 ---- */
+    const salW=210, leftW=CW-salW-20;
+    if(keepTr.length||remTr.length){
+      let tx=PADX; c.font='700 13px '+F_SANS;
+      keepTr.concat(remTr).forEach(o=>{ const col=tagColor(o), w=c.measureText(o.label).width+20;
+        if(tx>PADX&&tx+w>PADX+leftW){ tx=PADX; y+=32; }
+        c.fillStyle=col.bg; rr(c,tx,y,w,24,3); c.fill();
+        c.strokeStyle=col.bd; c.lineWidth=1; rr(c,tx,y,w,24,3); c.stroke();
+        c.fillStyle=col.fg; mid(o.label,tx+10,y+12);
+        if(o.rem){ c.strokeStyle='#8a8a8a'; c.beginPath(); c.moveTo(tx+6,y+12); c.lineTo(tx+w-6,y+12); c.stroke(); }
+        tx+=w+8; });
+      y+=34;
     }
-    y+=6;
-  }
-
-  // 榮譽(雙欄橫式,過長自動換行)
-  hr(); sectionTitle('生涯榮譽（'+honors.length+' 項）');
-  c.font='13px sans-serif'; c.fillStyle=C_GOOD;
-  let startY = y;
-  let currY = startY;
-  honorBlocks.forEach(function(b, i){
-    const isRightCol = i >= rows2;
-    if(i === rows2) currY = startY;
-    const hx = PAD + (isRightCol ? colW : 0);
-    b.forEach(line => { c.fillText(line, hx, currY); currY += 23; });
-  });
-  y += honorsTotalHeight + 8;
-
-  // 年表(分為業餘與職業表格)
-  if(amaLogs.length > 0){
-    hr(); sectionTitle('生涯年表（業餘成績）');
-    const hc=[['年',48],['齡',40],['球隊',150],['成績',W-PAD*2-238]];
-    let x=PAD; c.font='bold 12px monospace'; c.fillStyle=C_DIM;
-    hc.forEach(function(h){ c.fillText(h[0],x,y); x+=h[1]; }); y+=20;
-    c.font='11px monospace';
-    amaLogs.forEach(function(r){ x=PAD; c.fillStyle=r.inj?C_BAD:C_TX;
-      const cells=[String(r.y),String(r.age),r.tm,r.line];
-      cells.forEach(function(cell,i){
-        let t=String(cell); const maxw=hc[i][1]-8;
+    const famLines=wrap(c,rpFamily(),'12.5px '+F_SANS,leftW);
+    c.font='12.5px '+F_SANS; c.fillStyle=C_DIM;
+    famLines.forEach(l=>{ mid(l,PADX,y+9); y+=19; });
+    { /* 生涯總薪資(右下,金額與「台幣」共用基線,與家庭行底對齊) */
+      const salBase=y-6;
+      c.textAlign='right';
+      c.font='12px '+F_SANS; c.fillStyle=C_DIM;
+      const uW=c.measureText('台幣').width;
+      c.fillText('台幣',W-PADX,salBase);
+      c.fillText('生涯總薪資',W-PADX,salBase-30);
+      c.font='700 24px '+F_MONO; c.fillStyle=C_ACC;
+      if(GLOW){ c.save(); c.shadowColor=C_ACC; c.shadowBlur=10; }
+      c.fillText(fmtMoney(Math.round(S.salary)),W-PADX-uW-6,salBase);
+      if(GLOW)c.restore();
+      c.textAlign='left';
+    }
+    /* ---- 生涯評價 ---- */
+    if(tiers.length){
+      y+=18; c.strokeStyle=C_EDGE; c.lineWidth=1;
+      c.beginPath(); c.moveTo(PADX,y+.5); c.lineTo(W-PADX,y+.5); c.stroke();
+      y+=16;
+    }
+    const sec=(t,inline)=>{ if(!inline)y+=24;
+      drawBall(c,PADX+6,y+6,12);
+      c.font='700 12px '+F_SANS; c.fillStyle=C_DIM; ls('3px');
+      const tw=c.measureText(t).width;
+      mid(t,PADX+20,y+6); ls('0px');
+      c.strokeStyle=C_EDGE; c.lineWidth=1; c.beginPath();
+      c.moveTo(PADX+20+tw+8,y+6.5); c.lineTo(W-PADX,y+6.5); c.stroke();
+      y+=22; };
+    if(tiers.length){
+      sec('生涯評價',true);
+      tiers.forEach(t=>{ drawBall(c,PADX+8.5,y+11,17);
+        c.font='700 16px '+F_SANS; c.fillStyle=C_ACC; mid(t,PADX+26,y+11); y+=24; });
+    }
+    /* ---- 表格繪製共用 ---- */
+    function tcols(defs){ const tot=defs.reduce((a,d)=>a+d.w,0); let x=PADX;
+      return defs.map(d=>{ const w=d.w/tot*CW, o={t:d.t,a:d.a,zh:d.zh,x,w}; x+=w; return o; }); }
+    function thRow(cols){
+      cols.forEach(cc=>{ c.font='500 12px '+(cc.zh?F_SANS:F_MONO); c.fillStyle=C_DIM;
+        c.textAlign=cc.a==='l'?'left':'right';
+        mid(cc.t,cc.a==='l'?cc.x+7:cc.x+cc.w-7,y+9); });
+      c.textAlign='left'; y+=22;
+      c.strokeStyle=C_EDGE; c.lineWidth=1; c.beginPath(); c.moveTo(PADX,y-.5); c.lineTo(W-PADX,y-.5); c.stroke(); }
+    function tdRow(cols,cells,opt){
+      opt=opt||{}; const rh=opt.rh||25, fs=opt.fs||12.5;
+      if(opt.bg){ c.fillStyle=opt.bg; c.fillRect(PADX,y,CW,rh); }
+      if(opt.topline){ c.strokeStyle=C_EDGE; c.lineWidth=1; c.beginPath(); c.moveTo(PADX,y+.5); c.lineTo(W-PADX,y+.5); c.stroke(); }
+      if(opt.bar){ c.fillStyle=opt.bar; c.fillRect(PADX,y,3,rh); }
+      const cyR=y+rh/2;
+      cells.forEach((cell,i)=>{ if(cell==null)return; const cc=cols[i];
+        const o=(cell&&typeof cell==='object')?cell:{t:cell};
+        if(o.badge!==undefined){ /* 國際賽結果膠囊 badge */
+          c.font='700 11.5px '+F_SANS;
+          const bw=c.measureText(String(o.t)).width+16, bx=cc.x+7, bh=19, byy=y+(rh-bh)/2;
+          let fg=C_DIM, bd=C_BTNEDGE;
+          if(o.badge==='gold'){ fg=C_GOLD; bd=C_GOLD;
+            c.save(); c.globalAlpha=.12; c.fillStyle=C_GOLD; rr(c,bx,byy,bw,bh,3); c.fill(); c.restore(); }
+          else if(o.badge==='silver'){ fg='#e8eef7'; bd='#c8d0e0';
+            c.fillStyle='#232733'; rr(c,bx,byy,bw,bh,3); c.fill(); }
+          c.strokeStyle=bd; c.lineWidth=1; rr(c,bx,byy,bw,bh,3); c.stroke();
+          c.fillStyle=fg; mid(String(o.t),bx+8,cyR); return; }
+        c.font=(o.best||o.bold||opt.bold?'700 ':'')+fs+'px '+((cc.zh||o.zh)?F_SANS:F_MONO);
+        c.fillStyle=o.best?C_ACC:(o.color||opt.color||C_TX);
+        c.textAlign=cc.a==='l'?'left':'right';
+        let t=String(o.t); const maxw=cc.w-12;
         while(c.measureText(t).width>maxw&&t.length>1)t=t.slice(0,-1);
-        c.fillText(t,x,y); x+=hc[i][1]; }); y+=20; });
-    y+=4;
+        mid(t,cc.a==='l'?cc.x+7:cc.x+cc.w-7,cyR); });
+      c.textAlign='left'; y+=rh; }
+    /* ---- 生涯累積數據 ---- */
+    sec('生涯累積數據');
+    if(cum.rows.length){
+      const wide={IP:1,ERA:1,WHIP:1,AVG:1,OBP:1,SLG:1,OPS:1};
+      const cols=tcols([{t:'League',w:84,a:'l'}].concat(cum.hd.map(t=>({t,w:wide[t]?58:46,a:'r'}))));
+      thRow(cols);
+      cum.rows.forEach((r,i)=>{ tdRow(cols,
+        [{t:LG_N[r.b],zh:true,bold:true}].concat(r.txt.map((t,j)=>({t,best:r.best[j]}))),
+        {bg:i%2?C_ROW:null,bar:LGC[r.b]}); });
+    } else { c.font='13px '+F_SANS; c.fillStyle=C_DIM; mid('（無職業層級出賽紀錄）',PADX,y+9); y+=22; }
+    /* ---- 國際賽逐屆成績 ---- */
+    if(intl){
+      sec('國際賽逐屆成績（中華隊 '+S.intlCount+' 屆）');
+      const cols=tcols([{t:'年度',w:56,a:'l'},{t:'賽事',w:140,a:'l',zh:true},{t:'結果',w:96,a:'l',zh:true}]
+        .concat(intl.hd.map(t=>({t,w:56,a:'r'}))));
+      thRow(cols);
+      intl.rows.forEach((r,i)=>{ tdRow(cols,
+        [r.year,{t:r.name,zh:true},{t:r.rank,badge:/冠軍/.test(r.rank)?'gold':/亞軍/.test(r.rank)?'silver':''}]
+          .concat(r.txt),{bg:i%2?C_ROW:null,rh:28}); });
+      tdRow(cols,[{t:'通算',zh:true,bold:true,color:C_GOOD},null,null].concat(intl.tot.map(t=>({t,bold:true}))),
+        {bg:C_PANEL,topline:true,rh:28});
+    }
+    /* ---- 生涯榮譽(雙欄條列,直向優先) ---- */
+    sec('生涯榮譽（'+honors.length+' 項）');
+    if(honors.length){
+      const colW=(CW-28)/2, rows2=Math.ceil(honors.length/2), lh=22, fs=13.5;
+      const drawItem=(parts,x,yy)=>{ let cx=x;
+        const put=(txt,acc)=>{ c.font=(acc?'700 ':'')+fs+'px '+F_SANS; c.fillStyle=acc?C_ACC:C_GOOD;
+          for(const ch of txt){ const w=c.measureText(ch).width;
+            if(cx+w>x+colW&&cx>x){ yy+=lh; cx=x+12; }
+            c.fillText(ch,cx,yy+16); cx+=w; } };
+        parts.forEach((p,i)=>put((i?'':'· ')+p[0],p[1]));
+        return yy+lh; };
+      let yl=y, yr=y;
+      honors.forEach((p,i)=>{ if(i<rows2)yl=drawItem(p,PADX,yl); else yr=drawItem(p,PADX+colW+28,yr); });
+      y=Math.max(yl,yr);
+    } else { c.font='13px '+F_SANS; c.fillStyle=C_DIM; mid('（生涯未獲得任何獎項或里程碑）',PADX,y+9); y+=22; }
+    /* ---- 生涯年表(業餘) ---- */
+    if(amaLogs.length){
+      sec('生涯年表（業餘成績）');
+      const cols=tcols([{t:'年',w:50,a:'l'},{t:'齡',w:38,a:'r'},{t:'球隊',w:110,a:'l',zh:true},{t:'成績',w:550,a:'l',zh:true}]);
+      thRow(cols);
+      amaLogs.forEach((r,i)=>{ tdRow(cols,
+        [r.y,r.age,{t:r.tm,zh:true},{t:r.line,zh:true,color:r.inj?null:C_DIM}],
+        {bg:i%2?C_ROW:null,rh:21,fs:12,color:r.inj?C_BAD:null,bold:r.inj}); });
+    }
+    /* ---- 生涯年表(職業,按球隊分段) ---- */
+    if(pro){
+      sec('生涯年表（職業成績）');
+      const defs=isP
+        ?[{t:'年',w:48,a:'l'},{t:'齡',w:34,a:'r'},{t:'球隊',w:64,a:'l',zh:true},{t:'G',w:40,a:'r'},{t:'IP',w:54,a:'r'},{t:'W-L',w:50,a:'r'},{t:'SV',w:42,a:'r'},{t:'HLD',w:46,a:'r'},{t:'SO',w:44,a:'r'},{t:'BB',w:42,a:'r'},{t:'ERA',w:52,a:'r'},{t:'WHIP',w:54,a:'r'}]
+        :[{t:'年',w:48,a:'l'},{t:'齡',w:34,a:'r'},{t:'球隊',w:64,a:'l',zh:true},{t:'G',w:38,a:'r'},{t:'PA',w:44,a:'r'},{t:'AVG',w:50,a:'r'},{t:'OBP',w:50,a:'r'},{t:'SLG',w:50,a:'r'},{t:'OPS',w:50,a:'r'},{t:'H',w:38,a:'r'},{t:'HR',w:38,a:'r'},{t:'RBI',w:42,a:'r'},{t:'SB',w:36,a:'r'},{t:'DEF',w:42,a:'r'}];
+      const cols=tcols(defs); thRow(cols);
+      pro.blocks.forEach(b=>{
+        y+=6; c.font='700 11px '+F_SANS; c.fillStyle=LGC[b.lg]||C_DIM; ls('2.2px');
+        mid((LG_N[b.lg]||'')+' · '+b.team,PADX+7,y+6); ls('0px'); y+=19;
+        b.rows.forEach((r,i)=>{ tdRow(cols,
+          [r.y,r.age,{t:r.lvl,zh:true,color:r.inj?null:(r.minor?C_DIM:null)}]
+            .concat(r.txt.map((t,j)=>({t,best:r.best[j]}))),
+          {bg:i%2?C_ROW:null,rh:21,fs:12,color:r.inj?C_BAD:null,bold:r.inj}); });
+      });
+    }
+    /* ---- 球迷看板・引退串 ---- */
+    if(fans.length){
+      sec('球迷看板 · 引退串');
+      fans.forEach(t=>{ const lines=wrap(c,t,'13px '+F_SANS,CW-14), top=y;
+        c.font='13px '+F_SANS; c.fillStyle=C_TX;
+        lines.forEach(l=>{ c.fillText(l,PADX+14,y+15); y+=21; });
+        c.fillStyle=C_EDGE; c.fillRect(PADX,top+2,2,y-top-6);
+        y+=8; });
+    }
+    return y;
   }
-  if(proLogs.length > 0){
-    hr(); sectionTitle('生涯年表（職業成績）');
-    const hc = isP
-      ? [['年',46],['齡',36],['球隊',124],['G',45],['IP',55],['W',36],['L',36],['SV',42],['HLD',42],['SO',46],['BB',46],['ERA',52],['WHIP',54]]
-      : [['年',46],['齡',34],['球隊',120],['G',36],['PA',42],['AVG',46],['OBP',46],['SLG',46],['OPS',46],['H',40],['HR',36],['RBI',40],['SB',36],['DEF',40]];
-    let x=PAD; c.font='bold 12px monospace'; c.fillStyle=C_DIM;
-    hc.forEach(function(h){ c.fillText(h[0],x,y); x+=h[1]; }); y+=20;
-    c.font='12px monospace';
-    proLogs.forEach(function(r){ x=PAD; c.fillStyle=r.inj?C_BAD:C_TX;
-      const tmS=r.tm;
-      const s = r.st || {G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,avg:0,era:0,WHIP:0,DEF:0};
-      let cells = [];
-      if(isP){
-        const era = s.IP>0 ? (s.ER*9/s.IP).toFixed(2) : '-';
-        const whip = s.IP>0 ? ((s.H+s.BB)/s.IP).toFixed(2) : '-';
-        cells=[String(r.y), String(r.age), tmS, String(s.G), fmtIP(s.IP), String(s.W), String(s.L), String(s.SV||0), String(s.HLD||0), String(s.SO), String(s.BB||0), era, whip];
-      } else {
-        const obpN = s.PA>0 ? (s.H+s.BB)/s.PA : 0;
-        const slgN = slgOf(s);
-        const avg = s.AB>0 ? (s.H/s.AB).toFixed(3).replace(/^0/,'') : '-';
-        const obp = s.PA>0 ? obpN.toFixed(3).replace(/^0/,'') : '-';
-        const slg = s.AB>0 ? slgN.toFixed(3).replace(/^0/,'') : '-';
-        const ops = s.AB>0 ? (obpN+slgN).toFixed(3).replace(/^0/,'') : '-';
-        cells=[String(r.y), String(r.age), tmS+(r.p?'·'+r.p:''), String(s.G), String(s.PA), avg, obp, slg, ops, String(s.H), String(s.HR), String(s.RBI), String(s.SB), String(s.DEF>0?'+'+s.DEF:s.DEF||0)];
-      }
-      cells.forEach(function(cell,i){
-        let t=String(cell); const maxw=hc[i][1]-8;
-        while(c.measureText(t).width>maxw&&t.length>1)t=t.slice(0,-1);
-        c.fillText(t,x,y); x+=hc[i][1]; });
-      y+=20;
-    });
-    y+=4;
-  }
-
-  c.fillStyle=C_ACC; c.font='bold 16px sans-serif';
-  c.fillText('生涯總薪資 '+fmtMoney(Math.round(S.salary))+' 台幣',PAD,y); y+=26;
-  c.fillStyle=C_DIM; c.font='11px monospace'; c.fillText('seed: '+SEED,PAD,H-40);
-  c.textAlign='right'; c.fillText(APP_VER,W-PAD,H-40);
-  c.fillStyle=C_ACC; c.textAlign='center'; c.fillText(OFFICIAL_HOST,W/2,H-40);
+  /* measure pass on a throwaway canvas, then paint for real */
+  const mc=document.createElement('canvas'); mc.width=8; mc.height=8;
+  const yEnd=render(mc.getContext('2d'));
+  const H=yEnd+26+44;
+  const cv=document.createElement('canvas');
+  cv.width=W*scale; cv.height=H*scale;
+  const c=cv.getContext('2d'); c.scale(scale,scale);
+  c.fillStyle=C_BG; c.fillRect(0,0,W,H);
+  if(glowC){ /* 頂部 radial 光暈(以主題 --bgfx 的顏色近似橢圓) */
+    c.save(); c.translate(W/2,-30); c.scale(1,.35);
+    const g=c.createRadialGradient(0,0,0,0,0,W*.72);
+    g.addColorStop(0,glowC); g.addColorStop(1,'rgba(0,0,0,0)');
+    c.fillStyle=g; c.fillRect(-W/2,0,W,W); c.restore(); }
+  c.strokeStyle=C_EDGE; c.lineWidth=1; rr(c,.5,.5,W-1,H-1,10); c.stroke();
+  const fy=render(c)+26;
+  /* ---- 三欄頁尾 ---- */
+  c.strokeStyle=C_EDGE; c.lineWidth=1; c.beginPath(); c.moveTo(PADX,fy+.5); c.lineTo(W-PADX,fy+.5); c.stroke();
+  c.font='12px '+F_MONO; c.textBaseline='alphabetic';
+  c.fillStyle=C_DIM; c.textAlign='left'; c.fillText('seed: '+SEED,PADX,fy+23.5);
+  c.textAlign='right'; c.fillText(APP_VER,W-PADX,fy+23.5);
+  c.fillStyle=C_ACC; c.textAlign='center'; c.fillText(OFFICIAL_HOST,W/2,fy+23.5);
   c.textAlign='left';
-
   const url=cv.toDataURL('image/png');
   const fileName='棒球生涯結算_'+S.name+'.png';
   out.innerHTML=`<img src="${url}" style="width:100%;border-radius:8px" alt="結算圖">
