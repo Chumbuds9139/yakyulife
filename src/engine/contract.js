@@ -8,7 +8,8 @@ import {ovr} from './ability.js';
 import {injuryMarketStatus} from './injury.js';
 import {seasonSalaryRating, currentSalaryRating} from './season.js';
 /* temporary scaffold until flow + career are extracted */
-import {advance, finishContractYear, endGame, capTeam, traitCard, removeTrait} from '../main.js';
+import {capTeam} from './career.js';
+import {advance, finishContractYear, endGame, traitCard, removeTrait} from '../main.js';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
