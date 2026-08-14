@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#081510">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -3689,6 +3689,32 @@ function shareImage(evals,out){
   };
 }
 /* ================= 開場設定 ================= */
+/* iOS Safari zoom guards. Pinch: Safari ignores maximum-scale/user-scalable, so the
+   WebKit-only gesture events are cancelled (other browsers honor the viewport meta).
+   Double-tap: touch-action:manipulation should cover it, but iOS still zooms on fast
+   taps in places (observed on device during point allocation), so a tap landing
+   within 350ms of the previous one is swallowed and replayed as a synthetic click:
+   tapping keeps working at any speed while the zoom gesture never forms. Drags are
+   exempt (finger travel over 12px), so scrolling and flicks are unaffected. */
+['gesturestart','gesturechange'].forEach(t=>document.addEventListener(t,e=>e.preventDefault()));
+(function(){
+  let last=0,sx=0,sy=0,drag=false;
+  document.addEventListener('touchstart',e=>{ const t=e.touches[0];
+    if(e.touches.length===1&&t){ sx=t.clientX; sy=t.clientY; drag=false; } else drag=true;
+  },{passive:true});
+  document.addEventListener('touchmove',e=>{ const t=e.touches[0];
+    if(t&&(Math.abs(t.clientX-sx)>12||Math.abs(t.clientY-sy)>12))drag=true;
+  },{passive:true});
+  document.addEventListener('touchend',e=>{
+    const now=Date.now(), fast=now-last<350; last=now;
+    if(!fast||drag||e.changedTouches.length!==1||!e.cancelable)return;
+    const t=e.changedTouches[0], el=document.elementFromPoint(t.clientX,t.clientY);
+    /* form fields keep native behavior (focus/caret need the default action) */
+    if(el&&/^(INPUT|TEXTAREA|SELECT|LABEL)$/.test(el.tagName))return;
+    e.preventDefault();
+    if(el)el.click();
+  },{passive:false});
+})();
 (function(){ const t=document.getElementById('act-toggle');
   if(t)t.onclick=()=>{ document.getElementById('act').classList.toggle('collapsed');
     t.textContent=document.getElementById('act').classList.contains('collapsed')?'⌃ 展開選項':'⌄ 收合選項'; };
