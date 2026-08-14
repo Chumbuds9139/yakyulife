@@ -1,4 +1,6 @@
 import {SEED, setSeed, seedInit, R, ri, pick, chance, clamp, N0} from './core/rng.js';
+import {APP_VER, OFFICIAL_URL, OFFICIAL_HOST} from './config.js';
+import {S, setS, stepQ, nextStep, newState, playerName, blankStat, bucketOf} from './core/state.js';
 import {ABL, POS_AB, POSN, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK, GLOVE_TH} from './data/abilities.js';
 import {TEAM_COLOR, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, LV, PATHS, HS_CUPS, U_CUPS, LG_N} from './data/teams.js';
 import {TRAIT_KEYS, TRAIT_N, TRAIT_FX} from './data/traits.js';
@@ -101,9 +103,6 @@ function dposReview(cont){
     f:()=>{ S.dpos=p; card('info','守位調整',`球團季末評估後，新球季改守 <b class="hl">${DPN[p]}</b>。`); cont(); }}));
   choose(`守位會議：教練團認為你的守備已撐不住 ${DPN[S.dpos]}（${LV[S.lv].n}標準）`,opts);
 }
-const APP_VER='v1.4.5';
-const OFFICIAL_URL='https://www.yakyolife.com/';
-const OFFICIAL_HOST=OFFICIAL_URL.replace(/^https?:\/\//,'').replace(/\/$/,'');
 /* Team colours are jersey primaries, not text colours. Measured against the old #1a1a1a chip
    background, 29 of the 48 fell below 3:1 and 紐約帝國 (#0C2340) sat at 1.10:1, which is what
    players reported as too dark to read. Use the colour as the chip's background instead and
@@ -118,41 +117,6 @@ function teamChip(hex){
   const dark=(L+.05)/.05 > 1.05/(L+.05); /* black text out-contrasts white on this colour */
   return {bg:hex,fg:dark?'#000000':'#ffffff',bd:dark?'rgba(0,0,0,.4)':'rgba(255,255,255,.45)'};
 }
-/* ================= 遊戲狀態 ================= */
-let S=null, stepQ=[];
-function newState(name,jersey,pos,role){
-  const ab={}; POS_AB[pos].forEach(k=>ab[k]=ri(20,32));
-  if(pos==='P'){ab.vel+=ri(0,6);ab.brk+=ri(0,4);} else {ab.con+=ri(0,6);ab.pow+=ri(0,4);}
-  /* OOTP 式潛力天花板:洗牌後 1 項頂尖工具、1 項優質、1 項中上,其餘平庸 */
-  /* 捕手沿用一般野手的 8 項潛力分配，但以配球取代守備範圍的席位；額外的守備範圍只給低上限。 */
-  const pot={}, sh=(pos==='C'?POS_AB[pos].filter(k=>k!=='rng'):POS_AB[pos].slice());
-  for(let i=sh.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=sh[i];sh[i]=sh[j];sh[j]=t;}
-  if(pos==='P'){
-    /* 投手只有 4 項能力,天花板更集中:1 項招牌武器,其餘明顯壓低,避免動輒雙 70/四滿天賦 */
-    sh.forEach((k,i)=>{ pot[k]= i===0?ri(70,80) : i===1?ri(58,68) : i===2?ri(50,60) : ri(44,54); });
-  } else {
-    sh.forEach((k,i)=>{ pot[k]= i===0?ri(72,80) : i===1?ri(64,74) : i===2?ri(56,68) : ri(46,62); });
-    if(pos==='C')pot.rng=ri(32,40); /* 不參與頂尖工具洗牌，初始守備範圍潛力永不超過 40 */
-  }
-  /* 高中固定分級表(隱藏):T1 名門 +6 / T2 中堅 ±0 / T3 弱旅 -6 */
-  const hsMap={'平鎮高中':1,'穀保家商':1,'高苑工商':2,'北科附工':2,'普門高中':3,'東大體中':3};
-  const schools=Object.keys(hsMap);
-  const myTeam=schools[Math.floor(R()*schools.length)];
-  return {name,jersey,pos,role:pos==='P'?null:null,age:16,year:2026,stage:'HS',stageYr:1,pot,
-    hsMap,hsTier:hsMap[myTeam],team:myTeam,potSum0:Object.values(pot).reduce((a,b)=>a+b,0),
-    league:null,org:null,orgTeam:null,lastCpblTeam:null,teamTally:{CPBL:{},NPB:{},MLB:{}},
-    ab,traits:{genius:false,glass:false,iron:false,scum:false,
-      late:false,disc:false,academy:false,intlace:false,franchise:false,clutch:false,phoenix:false,combo:false,onetool:false,rubber:false,legend:false,
-      yips:false,distract:false,cancer:false,ambience:false,goldcloth:false,thief:false,mrteam:false,confidante:false,smallschool:false,grinder:false,rainbow:false,taiwan:false},
-    removed:[], /* 被覆蓋/解除的特性,結算畫刪除線 */
-    cntSave:0,cntSaveWin:0,cntSnack:0,cntBoldWin:0,cntBoldFail:0,samePick:0,samePickKey:null,teamYears:0,
-    six:0,bigInj:0,ironStreak:0,npbYears:0,
-    injNext:0,tmpInj:0,rehab:0,marketInjury:'healthy',salary:0,pool:0,seasonFactor:1,
-    stats:{CPBL:null,NPB:null,MLB:null,MINOR:null},honors:[],intlCount:0,intlLock:null,intlStat:{G:0,PA:0,AB:0,H:0,HR:0,RBI:0,IP:0,SO:0,ER:0,W:0,SV:0},intlLog:[],intlBest:null,dpos:null,dposYears:{},roleYears:{},tradeRefuse:0,champThisTeam:false,svc:0,svcOrg:null,faElig:false,tradeHeat:0,complainCount:0,demotionRefused:false,tj:0,tjCount:0,tjCrises:0,tjSecondYear:null,effort:'普通',tjSuccess:0,lastLv:null,love:{st:'single',partner:null,kids:0,caught:0,affairs:0,exes:[],dyrs:0,datedTimes:0},traits2:{},log:[],ct:null,done:false};
-}
-function playerName(){ return `${S.name} #${S.jersey}`; }
-function blankStat(){return {yr:0,G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,AS:0,DEF:0,DPG:{}};}
-function bucketOf(lv){ const l=lv&&LV[lv]; return l&&l.top?l.top:'MINOR'; } /* 業餘引退時 lv 為空,歸類 MINOR */
 function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
@@ -1010,14 +974,13 @@ function allocUI(mode,label,done){
   }
 }
 /* ================= 年度流程 ================= */
-function nextStep(){ if(S.done){ stepQ=[]; return; } /* 已引退:清空後續步驟,不再跑續約/結算 */ const f=stepQ.shift(); if(f)f(); }
 function stageLabel(){
   if(S.stage==='HS')return '高'+['一','二','三'][S.stageYr-1];
   if(S.stage==='U')return '大'+['一','二','三','四'][S.stageYr-1];
   if(S.stage==='AMA')return '業餘成棒';
   return LV[S.lv].n;
 }
-function startYear(){ stepQ=[phasePre,phaseMid,phaseEnd]; divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
+function startYear(){ stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* ---------- 季初 ---------- */
 function phasePre(){
   board(0); S.tmpInj=0; S.seasonFactor=1; S.skipMid=false; S.marketInjury='healthy'; S.prevD=S.lastD||0; S.lastD=0; S.lastPayD=0; /* 先保留上季 d 供投手定位判定 */
@@ -3375,7 +3338,7 @@ $('btn-start').onclick=()=>{
       localStorage.setItem(PLAYER_JERSEY_KEY,String(jersey));
     }catch(e){}
   }
-  S=newState(nm,jersey,selPos,null);
+  setS(newState(nm,jersey,selPos,null));
   S.teamName=function(){
     if(!this.orgTeam)return '';
     if(this.lv==='MLB')return this.orgTeam;
