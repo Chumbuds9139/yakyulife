@@ -39,3 +39,9 @@ export function playerName(){ return `${S.name} #${S.jersey}`; }
 export function blankStat(){return {yr:0,G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,AS:0,DEF:0,DPG:{}};}
 export function bucketOf(lv){ const l=lv&&LV[lv]; return l&&l.top?l.top:'MINOR'; } /* 業餘引退時 lv 為空,歸類 MINOR */
 export function nextStep(){ if(S.done){ stepQ=[]; return; } /* 已引退:清空後續步驟,不再跑續約/結算 */ const f=stepQ.shift(); if(f)f(); }
+export function stageLabel(){
+  if(S.stage==='HS')return '高'+['一','二','三'][S.stageYr-1];
+  if(S.stage==='U')return '大'+['一','二','三','四'][S.stageYr-1];
+  if(S.stage==='AMA')return '業餘成棒';
+  return LV[S.lv].n;
+}
