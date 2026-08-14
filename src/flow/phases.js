@@ -13,8 +13,7 @@ import {buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual
 import {drawEvents, removeTrait} from './events.js';
 import {loveEvent} from './love.js';
 import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js';
-/* temporary scaffold until retire flow is extracted */
-import {endGame} from '../main.js';
+import {endGame} from '../ui/retire.js';
 /* ================= 年度流程 ================= */
 export function startYear(){ stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* ---------- 季初 ---------- */

@@ -7,8 +7,7 @@ import {ovr, playerType} from './ability.js';
 import {primaryPos} from './career.js';
 import {fmtMoney, makeOffers, pickOfferUI, signTo} from './contract.js';
 import {startYear} from '../flow/phases.js';
-/* temporary scaffold until retire flow is extracted */
-import {endGame} from '../main.js';
+import {endGame} from '../ui/retire.js';
 /* ---------- 選秀與生涯路口 ---------- */
 export function runDraft(fromSchool,cb){
   const o=ovr(); const score=o+Math.max(0,22-S.age)*2+ri(-4,4);

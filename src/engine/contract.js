@@ -7,12 +7,11 @@ import {tlNote} from '../ui/timeline.js';
 import {ovr} from './ability.js';
 import {injuryMarketStatus} from './injury.js';
 import {seasonSalaryRating, currentSalaryRating} from './season.js';
-/* temporary scaffold until flow + career are extracted */
 import {capTeam} from './career.js';
 import {traitCard, removeTrait} from '../flow/events.js';
 import {advance} from './draft.js';
 import {finishContractYear} from '../flow/phases.js';
-import {endGame} from '../main.js';
+import {endGame} from '../ui/retire.js';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
