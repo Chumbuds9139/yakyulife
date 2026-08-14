@@ -3315,7 +3315,12 @@ function rpProData(proLogs){ /* team segments: a new block whenever the org chan
       ops=(obp!=null&&slg!=null)?obp+slg:null;
       txt=[s.G,s.PA,RP_F3(s.AB>0?s.H/s.AB:null),RP_F3(obp),RP_F3(slg),RP_F3(ops),s.H,s.HR,s.RBI,s.SB,(s.DEF>0?'+':'')+(s.DEF||0)];
     }
-    cur.rows.push({y:r.y,age:r.age,lvl:o.lvl,minor:o.minor,inj:!!r.inj,txt,sv:s.SV||0,era,hr:s.HR||0,ops});
+    /* level cell carries the season's role: fielding position for batters (一軍·CF),
+       SP/MR/CL for pitchers (一軍·先發). A forced-DH season reads as DH, matching how
+       dposYears/awards count it. */
+    const dp=isP?(r.role?roleN(r.role):''):(s._dh?'DH':(r.p||''));
+    cur.rows.push({y:r.y,age:r.age,lvl:o.lvl+(dp?'·'+dp:''),minor:o.minor,
+      inj:!!r.inj,txt,sv:s.SV||0,era,hr:s.HR||0,ops});
   });
   /* career-best marks: SV + ERA for pitchers, HR + OPS for batters (ties all marked);
      a single pro season has no "best" to speak of, so 2+ rows are required */
@@ -3787,8 +3792,8 @@ function shareImage(evals,picks,out){
     if(pro){
       sec('生涯年表（職業成績）');
       const defs=isP
-        ?[{t:'年',w:48,a:'l'},{t:'齡',w:34,a:'r'},{t:'球隊',w:64,a:'l',zh:true},{t:'G',w:40,a:'r'},{t:'IP',w:54,a:'r'},{t:'W-L',w:50,a:'r'},{t:'SV',w:42,a:'r'},{t:'HLD',w:46,a:'r'},{t:'SO',w:44,a:'r'},{t:'BB',w:42,a:'r'},{t:'ERA',w:52,a:'r'},{t:'WHIP',w:54,a:'r'}]
-        :[{t:'年',w:48,a:'l'},{t:'齡',w:34,a:'r'},{t:'球隊',w:64,a:'l',zh:true},{t:'G',w:38,a:'r'},{t:'PA',w:44,a:'r'},{t:'AVG',w:50,a:'r'},{t:'OBP',w:50,a:'r'},{t:'SLG',w:50,a:'r'},{t:'OPS',w:50,a:'r'},{t:'H',w:38,a:'r'},{t:'HR',w:38,a:'r'},{t:'RBI',w:42,a:'r'},{t:'SB',w:36,a:'r'},{t:'DEF',w:42,a:'r'}];
+        ?[{t:'年',w:48,a:'l'},{t:'齡',w:34,a:'r'},{t:'球隊',w:96,a:'l',zh:true},{t:'G',w:40,a:'r'},{t:'IP',w:54,a:'r'},{t:'W-L',w:50,a:'r'},{t:'SV',w:42,a:'r'},{t:'HLD',w:46,a:'r'},{t:'SO',w:44,a:'r'},{t:'BB',w:42,a:'r'},{t:'ERA',w:52,a:'r'},{t:'WHIP',w:54,a:'r'}]
+        :[{t:'年',w:48,a:'l'},{t:'齡',w:34,a:'r'},{t:'球隊',w:84,a:'l',zh:true},{t:'G',w:38,a:'r'},{t:'PA',w:44,a:'r'},{t:'AVG',w:50,a:'r'},{t:'OBP',w:50,a:'r'},{t:'SLG',w:50,a:'r'},{t:'OPS',w:50,a:'r'},{t:'H',w:38,a:'r'},{t:'HR',w:38,a:'r'},{t:'RBI',w:42,a:'r'},{t:'SB',w:36,a:'r'},{t:'DEF',w:42,a:'r'}];
       const cols=tcols(defs); thRow(cols);
       pro.blocks.forEach(b=>{
         y+=6; c.font='700 11px '+F_SANS; c.fillStyle=LGC[b.lg]||C_DIM; ls('2.2px');
