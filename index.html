@@ -248,14 +248,14 @@ body[data-theme='d'] .die.active{border-color:var(--accent);box-shadow:0 3px 10p
 .field input{width:100%;background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);color:var(--text);
   font-family:var(--sans);font-size:16px;padding:11px 14px;outline:none}
 .field input:focus{border-color:var(--accent)}
-.player-id-input{display:grid;grid-template-columns:minmax(0,1fr) clamp(82px,20%,100px);align-items:stretch;
+.player-id-input{display:grid;grid-template-columns:minmax(0,1fr) clamp(100px,25%,120px);align-items:stretch;
   background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);overflow:hidden;transition:border-color .15s}
 .player-id-input:focus-within{border-color:var(--accent)}
 .player-id-input input{min-width:0;background:transparent;border:0;border-radius:0}
 .player-id-input input:focus{border-color:transparent}
 .jersey-input{display:flex;align-items:center;justify-content:center;gap:4px;border-left:1px solid var(--edge)}
 .jersey-input span{color:var(--accent);font-family:var(--mono);font-size:15px;font-weight:700}
-.player-id-input .jersey-input input{width:3ch;padding:11px 0;text-align:left;font-family:var(--mono)}
+.player-id-input .jersey-input input{width:5ch;padding:11px 0;text-align:left;font-family:var(--mono)}
 .seg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .seg.two{grid-template-columns:repeat(2,1fr)}
 .seg button{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);color:var(--dim);
@@ -3743,8 +3743,8 @@ $('btn-start').onclick=()=>{
       $('in-name').reportValidity(); return;
     }
     $('in-name').setCustomValidity('');
-    if(!Number.isInteger(jersey)||jersey<1||jersey>99){
-      $('in-number').setCustomValidity('背號請輸入 1～99 的整數，或將姓名與背號都留空使用預設球員。');
+    if(rawNo===''||!Number.isInteger(jersey)||jersey<0||jersey>99){
+      $('in-number').setCustomValidity('背號請輸入 0～99 的整數，或將姓名與背號都留空使用預設球員。');
       $('in-number').reportValidity(); return;
     }
   }
