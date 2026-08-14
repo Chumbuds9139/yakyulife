@@ -1,4 +1,9 @@
 import {SEED, setSeed, seedInit, R, ri, pick, chance, clamp, N0} from './core/rng.js';
+import {$, _curYearBody, scrollBottom, logTarget, teamChip, modalOpen, modalClose, menuModal, restartModal, card, divider, actClear, actToggleSync, choose} from './ui/dom.js';
+import {traitName, traitTagStyle, renderTraits} from './ui/traits.js';
+import {THEME_KEY, BIG_KEY, applyTheme, applyMobileUI, isMobileLayout, applyBigText, THEME_NAMES, updDispSum, themeModal} from './ui/prefs.js';
+import {ALLOC, setAlloc, clearAlloc, allocFullOpen, allocFullClose, allocPlace} from './ui/alloc.js';
+import {teamNick} from './data/teams.js';
 import {APP_VER, OFFICIAL_URL, OFFICIAL_HOST} from './config.js';
 import {S, setS, stepQ, nextStep, newState, playerName, blankStat, bucketOf} from './core/state.js';
 import {ABL, POS_AB, POSN, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK, GLOVE_TH} from './data/abilities.js';
@@ -7,10 +12,6 @@ import {TRAIT_KEYS, TRAIT_N, TRAIT_FX} from './data/traits.js';
 import {EVENTS} from './data/events.js';
 import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN, TIER_TH, MILESTONE_DEF, FAN, RP_TICKS, RP_LV_SUF} from './data/economy.js';
 
-function scrollBottom(){ /* iOS Safari 於 iframe 內平滑滾動易觸發白畫面,改用同步滾動+rAF */
-  try{ requestAnimationFrame(function(){ window.scrollTo(0, document.body.scrollHeight); }); }
-  catch(e){ try{ window.scrollTo(0, document.body.scrollHeight); }catch(_){} }
-}
 /* ================= 靜態資料 ================= */
 /* 各守位守備分公式:依守位看重不同能力(回傳一個綜合守備分) */
 function dpScore(p){ const a=S.ab;
@@ -103,47 +104,10 @@ function dposReview(cont){
     f:()=>{ S.dpos=p; card('info','守位調整',`球團季末評估後，新球季改守 <b class="hl">${DPN[p]}</b>。`); cont(); }}));
   choose(`守位會議：教練團認為你的守備已撐不住 ${DPN[S.dpos]}（${LV[S.lv].n}標準）`,opts);
 }
-/* Team colours are jersey primaries, not text colours. Measured against the old #1a1a1a chip
-   background, 29 of the 48 fell below 3:1 and 紐約帝國 (#0C2340) sat at 1.10:1, which is what
-   players reported as too dark to read. Use the colour as the chip's background instead and
-   pick the text from its luminance: that keeps the team identity at full saturation and puts
-   every one of the 48 above 4.5:1. The border is the text colour at low alpha so a dark team
-   still reads as a chip against a dark card. */
-function teamChip(hex){
-  const h=hex.replace('#','');
-  const v=[0,2,4].map(i=>{ const c=parseInt(h.slice(i,i+2),16)/255;
-    return c<=.03928?c/12.92:Math.pow((c+.055)/1.055,2.4); });
-  const L=.2126*v[0]+.7152*v[1]+.0722*v[2];
-  const dark=(L+.05)/.05 > 1.05/(L+.05); /* black text out-contrasts white on this colour */
-  return {bg:hex,fg:dark?'#000000':'#ffffff',bd:dark?'rgba(0,0,0,.4)':'rgba(255,255,255,.45)'};
-}
 function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
     if(!S.removed.includes(label))S.removed.push(label); } }
-function traitName(k){
-  if(k==='mrteam')return (teamNick(S.mrTeamName||'')||'')+'先生';
-  if(k==='legend')return (S.legendLeague||'')+'歷史級球星';
-  if(k==='rainbow')return (S.rainbowLg||'')+'七彩球衣';
-  return TRAIT_N[k]||k; }
-function traitTagStyle(k){
-  if(TRAIT_KEYS.neg.includes(k))return 'background:#2a0f0f;border-color:#c0392b;color:#ff8b7a'; /* 負向:紅 */
-  if(k==='legend'||k==='taiwan')return 'background:#3a2c05;border-color:#ffc95c;color:#ffe08a'; /* 歷史級/挺台灣:金 */
-  if(k==='goldcloth')return 'background:#3a3505;border-color:#e8d43a;color:#fff35a'; /* 黃金聖衣:黃 */
-  if(k==='mrteam'){ const c=teamChip(TEAM_COLOR[S.mrTeamName]||'#ffc95c'); return 'background:'+c.bg+';border-color:'+c.bd+';color:'+c.fg; }
-  if(k==='genius')return 'background:#232733;border-color:#c8d0e0;color:#e8eef7'; /* 天才:銀 */
-  return ''; /* 正向:預設琥珀 */ }
-function renderTraits(){ /* desktop trait side panel (presentation only) */
-  const el=$('trait-tags'),box=$('trait-side'); if(!el||!box)return;
-  let h='';
-  if(S&&S.traits){
-    /* one row per trait: tag + inline effect text (ellipsized; full text on hover) */
-    const row=(style,name,fx)=>`<div class="trow" title="${fx}"><span class="tag" style="${style}" title="${fx}">${name}</span><span class="td">${fx}</span></div>`;
-    [...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].forEach(k=>{ if(S.traits[k])h+=row(traitTagStyle(k),traitName(k),TRAIT_FX[k]||''); });
-    (S.removed||[]).forEach(l=>h+=`<div class="trow"><span class="tag" style="text-decoration:line-through;opacity:.4;color:#8a8a8a;border-color:#4a4a4a">${l}</span><span class="td" style="opacity:.4">已解除</span></div>`);
-  }
-  el.innerHTML=h;
-  box.classList.toggle('empty',!h); }
 /* 只會這個:只吃三種角色維度——打擊(力量/Contact)、跑壘(速度)、守備(綜合) */
 function careerAllStars(){ let n=0; ['CPBL','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }
 function toolGap(){ const a=S.ab;
@@ -651,129 +615,6 @@ const salParts=w=>w<10000
   ?{v:Math.round(w).toLocaleString(),u:'萬'}
   :{v:(Math.round(w/1000)/10).toFixed(1),u:'億'};
 /* ================= UI 基礎 ================= */
-const $=id=>document.getElementById(id);
-var _curYearBody=null; /* 當前年度的內容容器 */
-var MAX_YEARS=8;         /* DOM 最多保留幾個年度區塊 */
-function logTarget(){ return _curYearBody || $('log'); }
-/* ================= 主題系統(純呈現層) ================= */
-const THEME_KEY='yakyu-theme';
-function applyTheme(t){
-  if(t!=='a'&&t!=='b'&&t!=='c'&&t!=='d')t='a';
-  document.body.dataset.theme=t;
-  try{localStorage.setItem(THEME_KEY,t);}catch(e){}
-  document.querySelectorAll('#seg-theme button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
-  /* logo wordmark tracks the theme: cream on dark themes (a/b), dark ink on light (c/d) */
-  const wm=(t==='c'||t==='d')?'assets/wordmark-dark.png':'assets/wordmark-cream.png';
-  document.querySelectorAll('.wm-img').forEach(el=>{ if(el.getAttribute('src')!==wm)el.setAttribute('src',wm); });
-  updDispSum();
-  const m=document.querySelector('meta[name="theme-color"]');
-  if(m)m.setAttribute('content',(getComputedStyle(document.body).getPropertyValue('--bg')||'#081510').trim());
-}
-/* ---------- 主題化對話框(純呈現層) ---------- */
-function modalOpen(html){ const m=$('modal'); if(!m)return; $('modal-box').innerHTML=html; m.classList.add('show'); }
-function modalClose(){ const m=$('modal'); if(m)m.classList.remove('show'); }
-function applyMobileUI(on){
-  document.body.classList.toggle('mobile-ui',!!on);
-  try{localStorage.setItem('yakyu-mobile-ui',on?'1':'0');}catch(e){}
-  document.querySelectorAll('#seg-ui button').forEach(b=>b.classList.toggle('on',(b.dataset.u==='1')===!!on));
-  updDispSum();
-  allocPlace(); /* switching layout mid-allocation must re-home the rows, not strand them */
-}
-/* The desktop layout is @media(min-width:921px) AND body:not(.mobile-ui). A phone fails
-   the media query and never carries the class, so both halves have to be tested; checking
-   the class alone would report "desktop" on every real phone. */
-const isMobileLayout=()=>!(matchMedia('(min-width:921px)').matches&&!document.body.classList.contains('mobile-ui'));
-const BIG_KEY='yakyu-big-text';
-function applyBigText(on){
-  document.body.classList.toggle('big-text',!!on);
-  try{localStorage.setItem(BIG_KEY,on?'1':'0');}catch(e){}
-  document.querySelectorAll('#seg-big button').forEach(b=>b.classList.toggle('on',(b.dataset.b==='1')===!!on));
-  updDispSum();
-  allocPlace();
-}
-function allocFullOpen(){ const f=$('alloc-full'); if(f)f.classList.add('show'); }
-function allocFullClose(){ const f=$('alloc-full'); if(f)f.classList.remove('show'); }
-/* The live allocation, so its nodes can be re-homed when a setting changes mid-way.
-   render() only ever writes into these same three nodes, which is what makes moving
-   them between the panel and the overlay safe. */
-let ALLOC=null;
-function allocPlace(){
-  if(!ALLOC)return;
-  const a=$('act'), full=document.body.classList.contains('big-text')&&isMobileLayout();
-  const s=$('act-side'); if(s)s.classList.toggle('alloc',!full);
-  if(full){
-    /* move the nodes out of #act before rewriting it, or the rewrite would destroy them */
-    const fb=$('af-body');
-    fb.appendChild(ALLOC.top); fb.appendChild(ALLOC.rows); fb.appendChild(ALLOC.btm);
-    const ft=$('af-title'); if(ft)ft.textContent=ALLOC.label;
-    a.innerHTML=`<div class="title">${ALLOC.label}</div><div class="pool" id="al-cue"></div>`;
-    /* both entry points already sit behind an explicit 分配 button, so the overlay opens
-       straight away; this one is only the way back after the player dismisses it */
-    const ob=document.createElement('button'); ob.className='btn main'; ob.id='al-open';
-    ob.style.textAlign='center'; ob.textContent='繼續分配 ▸'; ob.onclick=allocFullOpen;
-    a.appendChild(ob);
-    allocFullOpen();
-  }else{
-    const frag=document.createDocumentFragment();
-    frag.appendChild(ALLOC.top); frag.appendChild(ALLOC.rows); frag.appendChild(ALLOC.btm);
-    a.innerHTML=`<div class="title">${ALLOC.label}</div>`;
-    a.appendChild(frag);
-    allocFullClose();
-  }
-  ALLOC.render();
-}
-function menuModal(){
-  const wide=matchMedia('(min-width:921px)').matches;
-  const mob=document.body.classList.contains('mobile-ui');
-  const big=document.body.classList.contains('big-text');
-  modalOpen(`<h3>選單</h3>
-    <button class="btn" id="md-theme" style="text-align:center">切換佈景主題</button>
-    <button class="btn" id="md-big" style="text-align:center">${big?'切回標準字級':'改用大字級'}</button>
-    ${wide?`<button class="btn" id="md-ui" style="text-align:center">${mob?'切回電腦版介面':'改用手機版介面'}</button>`:''}
-    <button class="btn warn" id="md-restart0" style="text-align:center">重新開始</button>
-    <button class="btn" id="md-close" style="text-align:center;margin-top:14px">關閉</button>`);
-  $('md-theme').onclick=themeModal;
-  $('md-big').onclick=()=>{ applyBigText(!big); menuModal(); };
-  const mu=$('md-ui'); if(mu)mu.onclick=()=>{ applyMobileUI(!mob); menuModal(); };
-  $('md-restart0').onclick=restartModal;
-  $('md-close').onclick=modalClose;
-}
-function restartModal(){
-  modalOpen(`<h3>重新開始</h3><p>確定要放棄這段人生，從頭開始嗎？</p>
-    <button class="btn warn" id="md-restart" style="text-align:center">放棄這段人生，重新開始</button>
-    <button class="btn" id="md-cancel" style="text-align:center">繼續目前的生涯</button>`);
-  $('md-restart').onclick=()=>{ _allowLeave=true; location.href=location.pathname; };
-  $('md-cancel').onclick=menuModal;
-}
-/* Accidental-reload guard: pull-to-refresh / F5 / tab close mid-game triggers the
-   native leave prompt; intentional restarts set _allowLeave, finished games skip it */
-let _allowLeave=false;
-window.addEventListener('beforeunload',function(ev){
-  if(!S||S.done||_allowLeave)return;
-  ev.preventDefault(); ev.returnValue='';
-});
-const THEME_NAMES={a:'深綠記分板',b:'電子看板',c:'報紙版面',d:'現代儀表板'};
-/* Keeps the collapsed 顯示設定 line reporting the current values, so the player never has to
-   expand it just to find out what is set. Layout is left out on purpose: it is hidden below
-   921px, and naming a setting that cannot be seen would be worse than saying nothing. */
-function updDispSum(){ const el=document.getElementById('disp-sum'); if(!el)return;
-  const parts=[THEME_NAMES[document.body.dataset.theme||'a'],
-    document.body.classList.contains('big-text')?'大字':'標準'];
-  /* The layout row only exists at desktop width. Read its computed display instead of
-     repeating the 921px breakpoint here, so the summary keeps listing exactly the settings
-     the player can actually see even if that breakpoint ever moves. */
-  const ui=document.getElementById('fld-ui');
-  if(ui&&getComputedStyle(ui).display!=='none')
-    parts.push(document.body.classList.contains('mobile-ui')?'手機版':'電腦版');
-  el.textContent='\u3000'+parts.join(' · '); }
-function themeModal(){
-  const cur=document.body.dataset.theme||'a';
-  modalOpen('<h3>佈景主題</h3>'+['a','b','c','d'].map(t=>
-    `<button class="btn${t===cur?' main':''}" data-mt="${t}" style="text-align:center">${THEME_NAMES[t]}${t===cur?' ✓':''}</button>`).join('')+
-    `<button class="btn" id="md-back" style="text-align:center;margin-top:14px">返回選單</button>`);
-  $('modal-box').querySelectorAll('[data-mt]').forEach(b=>b.onclick=()=>{ applyTheme(b.dataset.mt); themeModal(); });
-  $('md-back').onclick=menuModal;
-}
 /* ================= 生涯時間軸(純呈現層,不觸碰 RNG) ================= */
 let TL=[];
 function tlStage(){
@@ -865,11 +706,6 @@ function careerTimelineCard(){ /* two-layer horizontal timeline for the career s
     `<i style="position:absolute;left:0;right:0;top:8px;height:2px;background:var(--edge)"></i>${dots}</div></div>`+
     `</div></div>`);
 }
-function card(cls,title,html){ const d=document.createElement('div'); d.className='card '+cls;
-  d.innerHTML=(title?`<h4>${title}</h4>`:'')+html; logTarget().appendChild(d);
-  renderTraits(); /* settlement-time trait unlocks emit a card without a board() refresh */
-  scrollBottom(); }
-function divider(t){ /* 每個 divider 開啟新的年度摺疊區塊 */ const log=$('log'); const blocks=log.querySelectorAll('.yr-block'); /* 替剛結束的「上一年」加上下拉箭頭標記，但保留展開（不加上 collapsed） */ const prev = blocks[blocks.length - 1]; if(prev){ const h = prev.querySelector('.yr-head'); if(h && prev.querySelector('.yr-body').children.length) h.classList.add('has-body'); } /* 找到「前年」（倒數第二個區塊）並將其摺疊起來 */ const prevPrev = blocks[blocks.length - 2]; if(prevPrev){ prevPrev.classList.add('collapsed'); } /* 建新區塊 */ const block=document.createElement('div'); block.className='yr-block'; const head=document.createElement('div'); head.className='yr-head'; head.textContent=t; const body=document.createElement('div'); body.className='yr-body'; head.onclick=()=>block.classList.toggle('collapsed'); block.appendChild(head); block.appendChild(body); log.appendChild(block); _curYearBody=body; /* 超過上限:移除最舊的年度區塊(釋放 DOM) */ const newBlocks=log.querySelectorAll('.yr-block'); if(newBlocks.length>MAX_YEARS){ for(let i=0;i<newBlocks.length-MAX_YEARS;i++)newBlocks[i].remove(); } }
 function board(phase){
   renderTraits();
   $('bd-name').innerHTML=`${S.name}<small>#${S.jersey}</small>`;
@@ -899,28 +735,6 @@ function board(phase){
     const tip=$('bd-sal-tip'); if(tip)tip.textContent=fmtMoney(sal)+' 台幣'; }
   [0,1,2].forEach(i=>$('lp'+i).classList.toggle('on',i===phase));
 }
-function actClear(){ const a=$('act'); a.innerHTML=''; a.classList.remove('collapsed');
-  const t=$('act-toggle'); if(t)t.style.display='none';
-  /* every actClear() site is a point where an allocation has ended or is restarting,
-     so this is also where the overlay is torn down and the live allocation forgotten */
-  ALLOC=null; allocFullClose(); const fb=$('af-body'); if(fb)fb.innerHTML='';
-  const s=$('act-side'); if(s)s.classList.remove('alloc'); }
-function actToggleSync(){
-  const a=$('act'), t=$('act-toggle'); if(!t)return;
-  const has=a.innerHTML.trim()!=='' && a.style.display!=='none';
-  t.style.display=has?'block':'none';
-  t.textContent=a.classList.contains('collapsed')?'⌃ 展開選項':'⌄ 收合選項';
-}
-function choose(title,opts){
-  actClear(); const a=$('act');
-  a.classList.remove('collapsed'); /* 新選項出現時自動展開 */
-  if(title)a.innerHTML=`<div class="title">${title}</div>`;
-  opts.forEach(o=>{ const b=document.createElement('button');
-    b.className='btn'+(o.main?' main':'')+(o.warn?' warn':'');
-    b.innerHTML=o.t+(o.s?`<small>${o.s}</small>`:'');
-    b.onclick=()=>{ actClear(); o.f(); }; a.appendChild(b); });
-  actToggleSync(); scrollBottom();
-}
 /* 加點介面：mode {dice:[..]} 或 {pool:n} */
 function allocUI(mode,label,done){
   actClear();
@@ -931,7 +745,7 @@ function allocUI(mode,label,done){
   const top=$('al-top'),rows=$('al-rows'),btm=$('al-btm');
   /* allocPlace() below decides panel vs overlay from the current settings, and can be
      called again by applyMobileUI / applyBigText if the player changes them mid-allocation */
-  ALLOC={top,rows,btm,label,render};
+  setAlloc({top,rows,btm,label,render});
   function remaining(){ return dice?dice.length-idx:pool; }
   function render(){
     if(dice){ top.innerHTML='<div id="dice">'+dice.map((v,i)=>`<div class="die ${i<idx?'used':''} ${i===idx?'active':''} ${v===6?'six':''}">${v}</div>`).join('')+'</div>'; }
@@ -1387,14 +1201,6 @@ function checkTraitsMid(){
   /* 更衣室毒瘤:豪賭失敗 4+ 次,或渣男 */
   if(!S.traits.cancer&&!S.traits.franchise&&!S.traits.intlace&&(S.cntBoldFail>=10||S.traits.scum)){
     traitCard('cancer','更衣室毒瘤','教練受夠了你的不可控，隊友對你的新聞指指點點。比起成績，球團現在更想清理休息室的氣氛——<b class="dn">季末被交易機率大增、續約條件惡化</b>。','bad'); }
-}
-function teamNick(team){ /* ◯◯先生的◯◯:取隊名代表詞 */
-  const map={'台中猛獁':'猛獁','府城雄獅':'雄獅','桃園金剛':'金剛','新北騎士':'騎士','台北恐龍':'恐龍','高雄神鵰':'神鵰',
-    /* 撞名處理:襪王以顏色區分;大人兩隊隊色同為橘,以城市區分 */
-    '波士頓襪王':'紅襪王','風城襪王':'白襪王','東京大人':'東京大人','灣區大人':'灣區大人',
-    /* slice(-2) 切字修正 */
-    '競技者':'競技者','沙漠眼鏡蛇':'眼鏡蛇'};
-  return map[team]||(team||'').slice(-2);
 }
 function teamChampRate(team){ /* 顯示用奪冠率:每隊每年略有波動,以隊名雜湊出基準 */
   let h=0; for(let i=0;i<team.length;i++)h=(h*31+team.charCodeAt(i))&0xffff;

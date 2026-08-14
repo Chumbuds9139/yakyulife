@@ -54,3 +54,11 @@ export const PATHS={CPBL:['CPBL2','CPBL1'],NPB:['NPB2','NPB1'],MiLB:['R','A1','A
 export const HS_CUPS=['木棒聯賽','黑豹旗','玉山盃'];
 export const U_CUPS=['大學春季聯賽','大專盃'];
 export const LG_N={CPBL:'中職',NPB:'日職',MLB:'大聯盟',MINOR:'小聯盟／二軍'};
+export function teamNick(team){ /* ◯◯先生的◯◯:取隊名代表詞 */
+  const map={'台中猛獁':'猛獁','府城雄獅':'雄獅','桃園金剛':'金剛','新北騎士':'騎士','台北恐龍':'恐龍','高雄神鵰':'神鵰',
+    /* 撞名處理:襪王以顏色區分;大人兩隊隊色同為橘,以城市區分 */
+    '波士頓襪王':'紅襪王','風城襪王':'白襪王','東京大人':'東京大人','灣區大人':'灣區大人',
+    /* slice(-2) 切字修正 */
+    '競技者':'競技者','沙漠眼鏡蛇':'眼鏡蛇'};
+  return map[team]||(team||'').slice(-2);
+}
