@@ -2,6 +2,11 @@ import {S} from '../core/state.js';
 import {renderTraits} from './traits.js';
 import {clearAlloc, allocFullClose} from './alloc.js';
 import {themeModal, applyBigText, applyMobileUI} from './prefs.js';
+import {DPN, POSN} from '../data/abilities.js';
+import {TEAM_COLOR} from '../data/teams.js';
+import {playerName} from '../core/state.js';
+/* temporary scaffold until engine modules are extracted */
+import {roleN, playerType, ovr, salParts, fmtMoney} from '../main.js';
 
 export const $=id=>document.getElementById(id);
 export let _curYearBody=null; /* 當前年度的內容容器 */
@@ -84,4 +89,33 @@ export function choose(title,opts){
     b.innerHTML=o.t+(o.s?`<small>${o.s}</small>`:'');
     b.onclick=()=>{ actClear(); o.f(); }; a.appendChild(b); });
   actToggleSync(); scrollBottom();
+}
+export function board(phase){
+  renderTraits();
+  $('bd-name').innerHTML=`${S.name}<small>#${S.jersey}</small>`;
+  $('bd-role').textContent=`${S.dpos?DPN[S.dpos]:POSN[S.pos]}${S.role?'・'+roleN(S.role):''}・${playerType()}${S.traits.genius?' ★':''}`;
+  let t;
+  if(S.stage==='HS')t=S.team+'（高'+['一','二','三'][S.stageYr-1]+'）';
+  else if(S.stage==='U')t=S.team+'（大'+['一','二','三','四'][S.stageYr-1]+'）';
+  else if(S.stage==='AMA')t=S.team+'（業餘）';
+  else t=S.teamName();
+  { const tc = (S.orgTeam && TEAM_COLOR[S.orgTeam]) || 'var(--amber)';
+    /* 判斷顏色是否為白色，避免白底白字 */
+    const isWhite = (tc.toLowerCase() === '#ffffff' || tc.toLowerCase() === '#fff');
+    
+    /* 只有進入職業且有設定代表色時，才加上白底標籤樣式 */
+    const isProColored = (S.stage === 'PRO' && TEAM_COLOR[S.orgTeam]);
+    const txtColor = isProColored ? (isWhite ? '#000000' : tc) : 'var(--amber)';
+    const bgStyle = isProColored ? 'background:#ffffff; padding:2px 8px; border-radius:6px; box-shadow:0 2px 4px rgba(0,0,0,0.4);' : '';
+    
+    const dot = isProColored ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${isWhite ? '#cccccc' : tc};margin-right:6px;vertical-align:middle;box-shadow:0 0 2px rgba(0,0,0,0.2);"></span>` : '';
+    
+    $('bd-team').innerHTML = dot + `<span style="color:${txtColor}; ${bgStyle} font-weight:900;">${t}</span>`; }
+  $('bd-age').textContent=S.age; $('bd-year').textContent=S.year;
+  $('bd-ovr').textContent=ovr(); if(S.pos==='P'){const el=$('bd-tj'); if(el)el.textContent='';}
+  { const sal=Math.round(S.salary),sp=salParts(sal),salEl=$('bd-sal'); salEl.textContent=sp.v;
+    salEl.style.fontSize='';
+    const lb=$('bd-sal-lbl'); if(lb)lb.textContent=`生涯薪(${sp.u})`;
+    const tip=$('bd-sal-tip'); if(tip)tip.textContent=fmtMoney(sal)+' 台幣'; }
+  [0,1,2].forEach(i=>$('lp'+i).classList.toggle('on',i===phase));
 }
