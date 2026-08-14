@@ -1,35 +1,14 @@
-import {SEED, setSeed, seedInit, R, ri, pick, chance, clamp, N0} from './core/rng.js';
-import {stageLabel} from './core/state.js';
-import {TL, resetTL, tlStage, tlPush, tlNote, renderTimeline, tlScrollTo, careerTimelineCard} from './ui/timeline.js';
-import {$, _curYearBody, scrollBottom, logTarget, teamChip, modalOpen, modalClose, menuModal, restartModal, card, divider, board, actClear, actToggleSync, choose} from './ui/dom.js';
-import {traitName, traitTagStyle, renderTraits} from './ui/traits.js';
-import {THEME_KEY, BIG_KEY, applyTheme, applyMobileUI, isMobileLayout, applyBigText, THEME_NAMES, updDispSum, themeModal} from './ui/prefs.js';
-import {ALLOC, setAlloc, clearAlloc, allocFullOpen, allocFullClose, allocPlace} from './ui/alloc.js';
-import {teamNick} from './data/teams.js';
-import {dpScore, posAdjLabel, dpBar, dpQual, dpList, dposReview, careerAllStars, toolGap, ovr, playerType, abCost, normalizeAbCarry, addAb, addAbStat, statBonus} from './engine/ability.js';
-import {tjAccrue, tjCap, tjGamble, tjDeltaText, tjRepeatDamage, tjBigInjury, afterGamble, injuryProb, injuryMarketStatus, rollInjury, injStatLoss} from './engine/injury.js';
-import {pitcherRole, fmtIP, roleN, isSP, scaledSteals, capSteals, simSeason, applySeasonForm, defRuns, pitcherSalaryRole, seasonSalaryRating, currentSalaryRating, normalizeBatterStats, normalizePitchingStats, accStat, statLine, slgOf, amateurSeason, proSeason, roleName3} from './engine/season.js';
-import {pitcherContractCap, hasMlbService, levelMinAnnual, salaryFor, fmtMoney, calcContractAnnual, ratingAtLevel, contractAnnual, makeContract, postingReleaseFee, controlledAnnual, salParts, teamChampRate, marketRating, contractMarketProfile, faYears, demotionAudit, offseasonTradeCheck, doTradeExec, buyoutRemaining, daibaFarewell, handleDemotion, outOfOrg, teamListOf, signTo, pickOfferUI, makeOffers, termParams, termEstimate, termChoice, extensionOffer, faFlow, marketRetirementText, retireFromMarket, homecomingAfterRejectedOffer, faMarket, ageGateUSA, ageGateJP, crossOffers} from './engine/contract.js';
-import {awardP, awards} from './engine/awards.js';
-import {intlStatLine, addIntlStat, intlMvpRate, intlFormat, maybeIntl} from './engine/intl.js';
-import {positionScore, careerScore, primaryPos, capTeam, defShare, posLegendPhrase, honorScore, tierOf, statTable, milestoneLevel, milestoneLine, careerMilestones, honorRank, honorGroups, yearRanges, honorText} from './engine/career.js';
-import {CHEER, CHEER_DEFAULT, CHEER_SAFE, datePool, affairPool, loveEvent, divorceRec, loveCaught, proposalAsk, loveCaughtDating, loveGainTxt} from './flow/love.js';
-import {traitCard, removeTrait, evOdds, drawEvents, resolveEvent, allocDone, checkTraitsMid} from './flow/events.js';
-import {allocUI} from './ui/alloc.js';
-import {startYear, phasePre, phaseMid, phaseEnd, finishContractYear, movement} from './flow/phases.js';
-import {runDraft, pathChoiceHS, pathChoiceU4, advance} from './engine/draft.js';
-import {retireScene, endGame} from './ui/retire.js';
-import {shareImage} from './ui/share-image.js';
-import {APP_VER, OFFICIAL_URL, OFFICIAL_HOST} from './config.js';
-import {S, setS, stepQ, nextStep, newState, playerName, blankStat, bucketOf} from './core/state.js';
-import {ABL, POS_AB, POSN, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK, GLOVE_TH} from './data/abilities.js';
-import {TEAM_COLOR, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, LV, PATHS, HS_CUPS, U_CUPS, LG_N} from './data/teams.js';
-import {TRAIT_KEYS, TRAIT_N, TRAIT_FX} from './data/traits.js';
-import {EVENTS} from './data/events.js';
-import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN, TIER_TH, MILESTONE_DEF, FAN, RP_TICKS, RP_LV_SUF} from './data/economy.js';
+import {SEED, setSeed, seedInit} from './core/rng.js';
+import {S, setS, newState} from './core/state.js';
+import {APP_VER} from './config.js';
+import {POSN} from './data/abilities.js';
+import {LV} from './data/teams.js';
+import {$, card, modalClose} from './ui/dom.js';
+import {THEME_KEY, BIG_KEY, applyTheme, applyMobileUI, applyBigText, updDispSum} from './ui/prefs.js';
+import {allocFullClose} from './ui/alloc.js';
+import {TL, resetTL, renderTimeline, tlScrollTo} from './ui/timeline.js';
+import {startYear} from './flow/phases.js';
 
-/* ================= 靜態資料 ================= */
-/* 各守位守備分公式:依守位看重不同能力(回傳一個綜合守備分) */
 /* ================= 開場設定 ================= */
 /* iOS Safari zoom guards. Pinch: Safari ignores maximum-scale/user-scalable, so the
    WebKit-only gesture events are cancelled (other browsers honor the viewport meta).
