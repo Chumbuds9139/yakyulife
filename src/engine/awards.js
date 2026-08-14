@@ -5,8 +5,7 @@ import {LV} from '../data/teams.js';
 import {card} from '../ui/dom.js';
 import {tlNote} from '../ui/timeline.js';
 import {isSP, slgOf} from './season.js';
-/* temporary scaffold until flow is extracted */
-import {removeTrait} from '../main.js';
+import {removeTrait} from '../flow/events.js';
 /* 獎項機率同時有硬下限與必得上限；數值越低越好的獎項（ERA）用 lower=true。 */
 export function awardP(value,hardLow,autoWin,base=25,lower=false){
   const ineligible=lower?value>hardLow:value<hardLow;
