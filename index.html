@@ -376,7 +376,7 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
   <div class="wrap">
     <div class="stitch"></div>
     <h1 id="logo-tap">YaKyoLife<br><em>棒球人生模擬器</em></h1>
-    <div id="ver-badge" style="position:fixed;top:6px;right:8px;font-size:10px;letter-spacing:1px;color:var(--dim);opacity:.55;font-family:monospace;z-index:50;pointer-events:none">v1.4.2</div>
+    <div id="ver-badge" style="position:fixed;top:6px;right:8px;font-size:10px;letter-spacing:1px;color:var(--dim);opacity:.55;font-family:monospace;z-index:50;pointer-events:none">v1.4.3</div>
     <p class="sub">高中三年養成 → 選秀・旅日・旅美 → 國際賽 → 衰退與引退。每一顆骰子都算數。</p>
     <div class="field"><label>球員姓名</label><input id="in-name" maxlength="10" value="有有子"></div>
     <div class="field"><label>背號（1～99）</label><input id="in-number" type="number" inputmode="numeric" min="1" max="99" step="1" value="11"></div>
@@ -496,7 +496,9 @@ const DP_TH={
   LF: {CPBL1:41, NPB1:47, MLB:53},
   '1B':{CPBL1:36,NPB1:42, MLB:48}};
 const DP_BAR={CPBL1:45,NPB1:54,MLB:60}; /* 保留給捕手 cOk 等舊判定 */
-const DP_MULT={SS:1.15,CF:1.15,C:1.12,'2B':1.05,'3B':1.05,RF:1.05,'1B':1.0,LF:1.0,DH:0.92};
+/* 類 WAR 守位調整（每 162 場的 runs）：薪資與生涯評價共用同一把尺。 */
+const POS_ADJ_RUNS={C:9,SS:7.5,CF:5,'2B':3,'3B':2,RF:-5,LF:-7,'1B':-10,DH:-17.5};
+function posAdjLabel(p){ const v=POS_ADJ_RUNS[p]||0; return `薪資守位調整 ${v>0?'+':''}${v}／162 場`; }
 function dpBar(){ /* 年輕球員吃潛力紅利,球團不急著拔守位 */
   const base=DP_BAR[S.lv]||0;
   const disc=S.age<=21?7:S.age<=24?5:S.age<=26?2:0;
@@ -517,7 +519,6 @@ function dpList(){ /* 依守位難度掃描:內野手守內野序、外野手守
     : ['CF','RF','LF','1B'];      /* 外野:中外野>右外野>左外野>(一壘) */
   const q=order.filter(dpQual); q.push('DH'); return q;
 }
-function dpMult(){ return (S.pos!=='P'&&S.dpos)?(DP_MULT[S.dpos]||1):1; }
 function dposReview(cont){
   if(S.stage!=='PRO'||!(S.lv==='CPBL1'||S.lv==='NPB1'||S.lv==='MLB')){ cont(); return; }
   if(S.pos==='C'){ /* 捕手容忍度高,但爛到底也會被移去一壘或DH */
@@ -527,15 +528,15 @@ function dposReview(cont){
     if(S.dpos==='C'){
       if(cOk()){ cont(); return; }
       const opts=[];
-      if(dpQual('1B'))opts.push({t:'移防 一壘手',main:true,s:'薪資係數 ×1.00',
+      if(dpQual('1B'))opts.push({t:'移防 一壘手',main:true,s:posAdjLabel('1B'),
         f:()=>{S.dpos='1B';card('info','守位調整','捕手裝備收進置物櫃——新球季改守<b class="hl">一壘</b>。');cont();}});
-      opts.push({t:'轉任 指定打擊',main:!opts.length,s:'薪資係數 ×0.92',
+      opts.push({t:'轉任 指定打擊',main:!opts.length,s:posAdjLabel('DH'),
         f:()=>{S.dpos='DH';card('info','守位調整','阻殺率成了聯盟笑話，球團決定讓你專心打擊——<b class="hl">DH</b>。');cont();}});
       choose(`守位會議：教練團已經不敢讓你蹲捕（${LV[S.lv].n}標準）`,opts); return;
     }
     if(cOk()){ /* 守備練回來了,可以回鍋蹲捕 */
       choose('守位會議：牛棚捕手回報你的接捕又行了',[
-        {t:'重披捕手裝備',main:true,s:'薪資係數 ×1.12',
+        {t:'重披捕手裝備',main:true,s:posAdjLabel('C'),
          f:()=>{S.dpos='C';card('good','守位調整','面罩戴回來——新球季重新登錄為<b class="hl">捕手</b>。');cont();}},
         {t:'維持現狀',f:()=>cont()}]); return; }
     if(S.dpos==='1B'&&!dpQual('1B')){ S.dpos='DH';
@@ -566,16 +567,16 @@ function dposReview(cont){
     const best=q[0];
     if(DP_RANK[best]<DP_RANK[S.dpos]){ /* 更高身價守位站得住了 */
       choose(`守位會議：教練團想把你推上更吃重的位置`,[
-        {t:`升防 ${DPN[best]}`,main:true,s:`薪資係數 ×${(DP_MULT[best]||1).toFixed(2)}`,
+        {t:`升防 ${DPN[best]}`,main:true,s:posAdjLabel(best),
          f:()=>{S.dpos=best;card('good','守位調整',`守備數據說服了所有人——新球季改守 <b class="hl">${DPN[best]}</b>。`);cont();}},
         {t:`留守 ${DPN[S.dpos]}`,f:()=>cont()}]); return; }
     cont(); return; }
   const opts=q.slice(0,2).map((p,i)=>({t:`移防 ${DPN[p]}`,main:i===0,
-    s:p==='DH'?'守備已無處可站｜薪資係數 ×0.92':`薪資係數 ×${(DP_MULT[p]||1).toFixed(2)}`,
+    s:p==='DH'?`守備已無處可站｜${posAdjLabel(p)}`:posAdjLabel(p),
     f:()=>{ S.dpos=p; card('info','守位調整',`球團季末評估後，新球季改守 <b class="hl">${DPN[p]}</b>。`); cont(); }}));
   choose(`守位會議：教練團認為你的守備已撐不住 ${DPN[S.dpos]}（${LV[S.lv].n}標準）`,opts);
 }
-const APP_VER='v1.4.2';
+const APP_VER='v1.4.3';
 const OFFICIAL_URL='https://www.yakyolife.com/';
 const OFFICIAL_HOST=OFFICIAL_URL.replace(/^https?:\/\//,'').replace(/\/$/,'');
 const TEAM_COLOR={
@@ -850,6 +851,7 @@ function fmtIP(ip){ /* 十進位局數轉棒球表示:小數部分 →三分之�
   return whole+'.'+outs;
 }
 function roleN(r){ return {SP:'先發',MR:'中繼',CL:'終結者'}[r]||'—'; }
+function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 function isSP(){ return S.role==='SP'; } /* 先發引擎判定 */
 function ovr(){
   const a=S.ab;
@@ -1056,6 +1058,38 @@ function defRuns(lv,overrideDp,games){
   const gw=clamp((games||0)/(L.g||1),0,1);
   return Math.round((skill-par)*posW*0.55*gw);
 }
+/* 舊年度尚未保存角色時，以數據推定；新年度直接使用 st.role。 */
+function pitcherSalaryRole(st,recordedRole){
+  if(['SP','MR','CL'].includes(recordedRole))return recordedRole;
+  if(st&&['SP','MR','CL'].includes(st.role))return st.role;
+  if(st&&(st.SV||0)>=10&&(st.SV||0)>=(st.HLD||0))return 'CL';
+  if(st&&(st.HLD||0)>=10)return 'MR';
+  if(st&&(st.G||0)>0&&(st.IP||0)/(st.G||1)>=2.5)return 'SP';
+  return S.role||'SP';
+}
+/* 薪資專用球員價值：野手計打擊、守備與守位；投手計球威、角色與實際工作量。 */
+function seasonSalaryRating(st,lv,recordedRoleOrPos){
+  if(!st||!Number.isFinite(st.d))return 0;
+  if(Number.isFinite(st.payD))return st.payD;
+  if(S.pos==='P'){
+    if(!(st.G>0))return st.d; /* 全年復健只交由傷後市場折價，不重複扣工作量。 */
+    const role=pitcherSalaryRole(st,recordedRoleOrPos), L=LV[lv]||LV[S.lv];
+    let adj=0;
+    if(role==='SP')adj=clamp(((st.IP||0)/(L.g||1)-0.75)*2,-1,0.75);
+    else if(role==='CL')adj=-2+clamp(((st.SV||0)-25)/20,-0.75,0.75);
+    else adj=-4+clamp(((st.HLD||0)-20)/20,-0.75,0.75);
+    return +(st.d+adj).toFixed(2);
+  }
+  const dp=st._dh?'DH':(recordedRoleOrPos||S.dpos||(S.pos==='C'?'C':'DH'));
+  const games=Math.max(0,Number(st.G)||0), def=dp==='DH'?0:(Number(st.DEF)||0);
+  const posRuns=(POS_ADJ_RUNS[dp]||0)*(games/162);
+  return +(st.d+(def+posRuns)/6).toFixed(2);
+}
+function currentSalaryRating(fallback){
+  if(Number.isFinite(S.lastPayD))return S.lastPayD;
+  if(S.lastSt)return seasonSalaryRating(S.lastSt,S.lastLv||S.lv,S.pos==='P'?S.role:S.dpos);
+  return Number.isFinite(fallback)?fallback:0;
+}
 /* 所有球季狀態與特質加成結束後，再做一次聯盟場次與棒球物理限制的統一校正。 */
 function normalizeBatterStats(st,lv){
   const maxG=LV[lv].g||0;
@@ -1149,7 +1183,7 @@ function salaryFor(lv,d){
 }
 const fmtMoney=w=>{ const y=Math.floor(w/10000),m=Math.round(w%10000); return (y?y+'億':'')+(m?m.toLocaleString()+'萬':(y?'':'0萬')); };
 function calcContractAnnual(lv,d,mult){
-  return Math.round(Math.max(levelMinAnnual(lv),salaryFor(lv,d)*(mult||1)*dpMult()));
+  return Math.round(Math.max(levelMinAnnual(lv),salaryFor(lv,d)*(mult||1)));
 }
 /* 成績評價 d 是「相對當時層級平均」；跨層級核薪時必須換算到目標層級，不能把二軍 +10 當成一軍 +10。 */
 function ratingAtLevel(d,fromLv,toLv){
@@ -1164,13 +1198,13 @@ function contractAnnual(){
   if(S.ct&&Number.isFinite(S.ct.annual)){
     const annual=Math.round(Math.max(floor,S.ct.annual)); S.ct.annual=annual; return annual;
   }
-  const annual=calcContractAnnual(S.lv,S.lastD||0,S.ct&&S.ct.mult||1);
+  const annual=calcContractAnnual(S.lv,currentSalaryRating(S.lastD||0),S.ct&&S.ct.mult||1);
   if(S.ct)S.ct.annual=annual; /* 舊狀態第一次讀取時鎖定，後續年度不再隨成績浮動 */
   return annual;
 }
 function makeContract(yrs,mult,lv,d,annual,extra){
   const m=mult||1,targetLv=lv||S.lv;
-  const pay=Math.round(Math.max(levelMinAnnual(targetLv),Number.isFinite(annual)?annual:calcContractAnnual(targetLv,d===undefined?(S.lastD||0):d,m)));
+  const pay=Math.round(Math.max(levelMinAnnual(targetLv),Number.isFinite(annual)?annual:calcContractAnnual(targetLv,d===undefined?currentSalaryRating(S.lastD||0):d,m)));
   return Object.assign({yrs:yrs||1,mult:m,annual:pay},extra||{});
 }
 /* 日美入札讓渡金（萬台幣）。以 1 美元＝30 台幣換算 MLB 制度的 2,500／5,000 萬美元級距。 */
@@ -1189,7 +1223,7 @@ function controlledAnnual(lv,d,healthMult){
     MLB:{rates:[0,0.08,0.12,0.35,0.60]}
   }[lv];
   if(!cfg)return calcContractAnnual(lv,d,1);
-  return Math.round(Math.max(levelMinAnnual(lv),market*cfg.rates[svc]*(healthMult||1)*dpMult()));
+  return Math.round(Math.max(levelMinAnnual(lv),market*cfg.rates[svc]*(healthMult||1)));
 }
 /* 記分板專用縮寫：未滿一億顯示萬；一億以上四捨五入到小數一位。完整金額仍由 fmtMoney 顯示。 */
 const salParts=w=>w<10000
@@ -1526,7 +1560,7 @@ function stageLabel(){
 function startYear(){ stepQ=[phasePre,phaseMid,phaseEnd]; divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* ---------- 季初 ---------- */
 function phasePre(){
-  board(0); S.tmpInj=0; S.seasonFactor=1; S.skipMid=false; S.marketInjury='healthy'; S.prevD=S.lastD||0; S.lastD=0; /* 先保留上季 d 供投手定位判定 */
+  board(0); S.tmpInj=0; S.seasonFactor=1; S.skipMid=false; S.marketInjury='healthy'; S.prevD=S.lastD||0; S.lastD=0; S.lastPayD=0; /* 先保留上季 d 供投手定位判定 */
   if(S.age>=48){ buyoutRemaining(1,true); endGame('身體已到極限，'+S.year+' 年春訓後宣布引退。'); return; }
   const declAge=S.age-(S.traits.disc?2:0); /* 自律狂:衰退曲線整體延後兩年 */
   if(declAge>=32){ const dec=declAge>=35?5+(declAge-35):2;
@@ -1954,9 +1988,9 @@ function injuryMarketStatus(){
 /* 市場不再只追逐合約年的單季高點：最近三季加權；大傷年更重視傷前履歷。 */
 function marketRating(d,targetLv,sourceLv){
   const target=targetLv||S.lv,source=sourceLv||S.lastLv||S.lv;
-  const cur=ratingAtLevel(Number.isFinite(d)?d:0,source,target), status=injuryMarketStatus();
+  const cur=ratingAtLevel(currentSalaryRating(d),source,target), status=injuryMarketStatus();
   const prior=(S.log||[]).filter(r=>r.y!==S.year&&r.st&&Number.isFinite(r.st.d)).slice(-2).reverse()
-    .map(r=>ratingAtLevel(r.st.d,r.lv||source,target));
+    .map(r=>ratingAtLevel(seasonSalaryRating(r.st,r.lv||source,S.pos==='P'?r.role:r.p),r.lv||source,target));
   const weights=status==='rehab'?[0.20,0.50,0.30]:status==='major'?[0.35,0.40,0.25]:status==='minor'?[0.55,0.30,0.15]:[0.65,0.25,0.10];
   const vals=[cur].concat(prior); let sum=0,ws=0;
   vals.forEach((v,i)=>{sum+=v*weights[i];ws+=weights[i];});
@@ -1966,7 +2000,7 @@ function contractMarketProfile(d,targetLv,sourceLv){
   const target=targetLv||S.lv,source=sourceLv||S.lastLv||S.lv;
   const status=injuryMarketStatus(), rating=marketRating(d,target,source);
   const prior=(S.log||[]).filter(r=>r.y!==S.year&&r.st&&Number.isFinite(r.st.d)).slice(-2)
-    .map(r=>ratingAtLevel(r.st.d,r.lv||source,target));
+    .map(r=>ratingAtLevel(seasonSalaryRating(r.st,r.lv||source,S.pos==='P'?r.role:r.p),r.lv||source,target));
   const reputation=prior.length?prior.reduce((a,b)=>a+b,0)/prior.length:rating;
   const star=reputation>=7;
   const map={
@@ -2141,6 +2175,10 @@ function proSeason(){
     normalizeBatterStats(st,seasonLv);
     st.DEF=defRuns(seasonLv,st._dh?'DH':null,st.G);
   }
+  S.lastD=st.d;
+  if(S.pos==='P')st.role=S.role;
+  st.payD=seasonSalaryRating(st,seasonLv,S.pos==='P'?S.role:S.dpos);
+  S.lastPayD=st.payD;
   const bucket=bucketOf(S.lv); accStat(bucket,st);
   if(S.seasonFactor===0){ card('bad','球季數據','（傷缺，本季無出賽紀錄）'); }
   else card('','球季數據',`<span class="tag">${S.teamName()}${S.dpos?'｜'+S.dpos:''}</span><div class="statline">${statLine(st)}</div>`);
@@ -2152,7 +2190,7 @@ function proSeason(){
     else card('gold','生涯年','投來的每顆球看起來都像籃球一樣大，你看得到縫線、球的轉動，就和駭客任務的子彈一樣慢了下來，而你每一顆擊中甜蜜點的球，都往全壘打牆奔去。');
   }
   const isInj = S.seasonFactor <= 0.45; /* 判斷是否為大傷報廢年 */
-  S.log.push({y:S.year,age:S.age,tm:S.teamName(),lv:seasonLv,p:S.dpos||'',line:S.seasonFactor===0?'傷缺全季':statLine(st), inj: isInj, st: st});
+  S.log.push({y:S.year,age:S.age,tm:S.teamName(),lv:seasonLv,p:S.dpos||'',role:S.pos==='P'?S.role:null,line:S.seasonFactor===0?'傷缺全季':statLine(st), inj: isInj, st: st});
   /* 鐵人累計 */
   const healthy=S.seasonFactor>=0.95&&(S.pos==='P'?(isSP()?st.IP>=120:st.G>=42):st.G>=LV[S.lv].g*0.8);
   if(healthy){ S.ironStreak++;
@@ -2399,7 +2437,7 @@ function maybeIntl(done){
 function phaseEnd(){
   board(2);
   if(S.stage==='PRO'){
-    if(!S.ct)S.ct=makeContract(1,1,S.lv,S.lastD||0);
+    if(!S.ct)S.ct=makeContract(1,1,S.lv,currentSalaryRating(S.lastD||0));
     const sal=contractAnnual(); /* 合約保證年薪：不因本季表現、受傷或能力變動而重算 */
     S.salary+=sal;
     let extra='';
@@ -2427,7 +2465,7 @@ function phaseEnd(){
 }
 /* ---------- 升降級與去向 ---------- */
 function finishContractYear(o){
-  if(!S.ct)S.ct=makeContract(2,1,S.lv,S.lastD||0);
+  if(!S.ct)S.ct=makeContract(2,1,S.lv,currentSalaryRating(S.lastD||0));
   S.ct.yrs--;
   if(S.ct.annualSchedule&&S.ct.annualSchedule.length)S.ct.annualSchedule.shift();
   /* 母隊延長/換約時機:多年約跑到倒數第二年、或最後一張約剩1年,可談延長 */
@@ -2441,7 +2479,7 @@ function finishContractYear(o){
       const renewalProfile=contractMarketProfile(S.lastD||0), renewalD=renewalProfile.rating, renewalAnnual=controlledAnnual(S.lv,renewalD,renewalProfile.aav);
       S.ct=makeContract(ri(1,2),1,S.lv,renewalD,renewalAnnual,{extOffered:false,controlled:true});
       card('info','球團續約',`你仍在選秀球隊掌控期（服務 ${S.svc}/5 年），球團依服務年資與近年表現行使續約權——固定年薪 <b class="hl">${fmtMoney(S.ct.annual)}</b> × <b class="hl">${S.ct.yrs} 年</b>，合約總額 <b class="hl">${fmtMoney(S.ct.annual*S.ct.yrs)}</b>。`); board(1);
-    } else { S.ct=makeContract(ri(1,2),1,S.lv,S.lastD||0); } /* 非頂級層級 */
+    } else { S.ct=makeContract(ri(1,2),1,S.lv,currentSalaryRating(S.lastD||0)); } /* 非頂級層級 */
   }
   crossOffers(o);
 }
@@ -2607,7 +2645,7 @@ function outOfOrg(o){
 }
 function teamListOf(org){ return org==='CPBL'?CPBL_TEAMS:org==='NPB'?NPB_TEAMS:MLB_TEAMS; }
 function signTo(org,lv,team,yrs,mult,annual){
-  const sourceLv=S.lastLv||S.lv,contractD=ratingAtLevel(S.lastD||0,sourceLv,lv);
+  const sourceLv=S.lastLv||S.lv,contractD=ratingAtLevel(currentSalaryRating(S.lastD||0),sourceLv,lv);
   S.org=org; S.lv=lv;
   /* 【修正】先決定新球隊是誰，比對不一樣才把年資歸零，最後再蓋掉 S.orgTeam */
   const newTeam = team || pick(teamListOf(org));
@@ -2620,7 +2658,7 @@ function signTo(org,lv,team,yrs,mult,annual){
 }
 /* 多隊報價選擇:opts=[{team,bonus,yrs,mult,lv}] */
 function pickOfferUI(title,org,offers,after){
-  choose(title,offers.map(of=>{ const lv=of.lv||S.lv, offerD=ratingAtLevel(S.lastD||0,S.lastLv||S.lv,lv), annual=calcContractAnnual(lv,offerD,of.mult||1);
+  choose(title,offers.map(of=>{ const lv=of.lv||S.lv, offerD=ratingAtLevel(currentSalaryRating(S.lastD||0),S.lastLv||S.lv,lv), annual=calcContractAnnual(lv,offerD,of.mult||1);
     return {
       t:of.team+(of.lv?`（${LV[of.lv].n}）`:''),
       s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(annual)} × ${of.yrs} 年｜合約薪資總額 ${fmtMoney(annual*of.yrs)}`,
@@ -2639,7 +2677,7 @@ function makeOffers(org,n,bonusBase,yrsLo,yrsHi,lv,exclude){
 /* ---------- 長約/短約 選擇器 ---------- */
 function termParams(d,lv,profile){ /* 長約 >2 年、短約 1-2 年；大傷／復健年只提供證明約 */
   const mp=profile||contractMarketProfile(d);
-  const cap=S.pos==='P'?7:15;
+  const cap=S.pos==='P'?pitcherContractCap():15;
   const maxY=faYears(mp.rating,cap,mp);    /* 已含年齡與健康上限 */
   const longEligible = !mp.proveIt && maxY>2 && mp.rating>=0;
   const longY=Math.max(3,maxY);           /* 長約至少 3 年 */
@@ -2735,7 +2773,7 @@ function faMarket(o,d,settings){
   const org=S.org, lv=S.lv, offers=[];
   const cold=!!(settings&&settings.cold),oldTeam=(settings&&settings.oldTeam)||S.orgTeam;
   const mp=contractMarketProfile(d), value=mp.rating;
-  const cap=S.pos==='P'?7:15;
+  const cap=S.pos==='P'?pitcherContractCap():15;
   if(cold){
     const team=pick(teamListOf(org).filter(t=>t!==oldTeam)),mult=+(0.90*mp.aav).toFixed(2);
     const annual=calcContractAnnual(lv,mp.rating,mult);
@@ -2936,8 +2974,6 @@ function advance(){
 /* ================= 生涯終章 ================= */
 const TIER_TH={CPBL:[12000,7000,4300,2100],NPB:[8500,6200,3000,1900],MLB:[7500,6200,3500,1900]}; /* M2:五帶金字塔校準(擬真玩家尺)——成功稀有化、浮沉為大宗、失敗有感 */
 const LG_N={CPBL:'中職',NPB:'日職',MLB:'大聯盟',MINOR:'小聯盟／二軍'};
-/* 類 WAR 守位調整（每 162 場的 runs）：同樣打擊下，稀缺守位應明顯高於一壘／DH。 */
-const POS_ADJ_RUNS={C:9.2,SS:7.5,'2B':2.5,'3B':2.5,CF:2.5,RF:-7.5,LF:-7.5,'1B':-9.5,DH:-17.5};
 function positionScore(st){
   if(!st||!st.DPG)return 0;
   let runs=0; Object.entries(st.DPG).forEach(([dp,g])=>{ runs+=(POS_ADJ_RUNS[dp]||0)*(g/162); });
