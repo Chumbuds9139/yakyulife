@@ -3704,6 +3704,14 @@ function shareImage(evals,out){
   document.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ modalClose(); allocFullClose(); } });
 })();
 let selPos='P';
+const DEFAULT_PLAYERS={P:{name:'有有子',jersey:11},IF:{name:'抹茶多',jersey:13}};
+const DEFAULT_PLAYER_PAIRS=[
+  DEFAULT_PLAYERS.P,DEFAULT_PLAYERS.IF,{name:'藥帝士',jersey:23},{name:'黃鎖頭',jersey:22}
+];
+function defaultPlayer(pos){
+  if(DEFAULT_PLAYERS[pos])return DEFAULT_PLAYERS[pos];
+  return DEFAULT_PLAYER_PAIRS[2+Math.floor(Math.random()*2)];
+}
 const PLAYER_NAME_KEY='yakyu-player-name';
 const PLAYER_JERSEY_KEY='yakyu-player-jersey';
 /* 第一次進入保持空白；玩家開始過生涯後，重新整理或重新開始時帶回上次輸入。 */
@@ -3721,23 +3729,33 @@ $('btn-start').onclick=()=>{
   const sv=$('seed-show').value.trim(); if(sv)SEED=sv; /* 玩家可直接輸入流水碼 */
   history.replaceState(null,'','?seed='+encodeURIComponent(SEED));
   seedInit(SEED);
-  const nm=$('in-name').value.trim();
+  const enteredName=$('in-name').value.trim();
   const rawNo=$('in-number').value.trim();
-  const jersey=Number(rawNo);
-  if(!nm){
-    $('in-name').setCustomValidity('請輸入球員姓名。');
-    $('in-name').reportValidity(); return;
+  const useDefault=!enteredName&&!rawNo;
+  let nm=enteredName,jersey=Number(rawNo);
+  if(useDefault){
+    const def=defaultPlayer(selPos);
+    nm=def.name; jersey=def.jersey;
+  }else{
+    /* 只填其中一欄仍視為資料不完整，避免自訂姓名配到系統背號或反過來。 */
+    if(!nm){
+      $('in-name').setCustomValidity('請輸入球員姓名，或將姓名與背號都留空使用預設球員。');
+      $('in-name').reportValidity(); return;
+    }
+    $('in-name').setCustomValidity('');
+    if(!Number.isInteger(jersey)||jersey<1||jersey>99){
+      $('in-number').setCustomValidity('背號請輸入 1～99 的整數，或將姓名與背號都留空使用預設球員。');
+      $('in-number').reportValidity(); return;
+    }
   }
   $('in-name').setCustomValidity('');
-  if(!Number.isInteger(jersey)||jersey<1||jersey>99){
-    $('in-number').setCustomValidity('背號請輸入 1～99 的整數。');
-    $('in-number').reportValidity(); return;
-  }
   $('in-number').setCustomValidity('');
-  try{
-    localStorage.setItem(PLAYER_NAME_KEY,nm);
-    localStorage.setItem(PLAYER_JERSEY_KEY,String(jersey));
-  }catch(e){}
+  if(!useDefault){
+    try{
+      localStorage.setItem(PLAYER_NAME_KEY,nm);
+      localStorage.setItem(PLAYER_JERSEY_KEY,String(jersey));
+    }catch(e){}
+  }
   S=newState(nm,jersey,selPos,null);
   S.teamName=function(){
     if(!this.orgTeam)return '';
