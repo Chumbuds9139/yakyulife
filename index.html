@@ -839,8 +839,8 @@ function tjBigInjury(cont){
 }
 function afterGamble(kind,cont){
   if(kind==='inject'){ S.tjSuccess++;
-    if(S.tjSuccess>=2&&!S.traits.rubber){ S.traits.rubber=true;
-      card('gold','隱藏屬性解鎖：橡膠手臂','連續兩次靠打針硬撐挺過手肘危機、完全不進手術室——你的韌帶像橡膠一樣柔韌。<b class="hl">TJ 量表上限翻倍、打針成功率提升至 85%</b>。'); board(1); } }
+    if(S.tjSuccess>=2&&!S.traits.rubber){ S.traits.rubber=true; S.tj=0;
+      card('gold','隱藏屬性解鎖：橡膠手臂','連續兩次靠打針硬撐挺過手肘危機、完全不進手術室——你的韌帶像橡膠一樣柔韌。<b class="hl">現有 TJ 量表歸零、上限翻倍，打針成功率提升至 85%</b>。'); board(1); } }
   else if(kind==='surgery'){ S.tjSuccess=0; /* 開刀重置連續 */
     if(S.traits.rubber){ removeTrait('rubber','橡膠手臂');
       card('bad','橡膠不再','終究還是進了手術室——那雙被稱為橡膠的手臂，也有極限。<b class="dn">橡膠手臂失效</b>。'); board(1); } }
