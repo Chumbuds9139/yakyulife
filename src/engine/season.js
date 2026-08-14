@@ -6,7 +6,8 @@ import {card, board} from '../ui/dom.js';
 import {ovr, careerAllStars, toolGap} from './ability.js';
 import {tjAccrue, tjGamble} from './injury.js';
 /* temporary scaffold until awards/intl/contract/flow are extracted */
-import {awards, maybeIntl, demotionAudit, traitCard, removeTrait} from '../main.js';
+import {demotionAudit} from './contract.js';
+import {awards, maybeIntl, traitCard, removeTrait} from '../main.js';
 export function pitcherRole(){ /* 體力 >=52 先發;否則牛棚,牛棚內看表現升終結者 */
   if(S.ab.sta>=52)return 'SP';
   /* 牛棚:讀「上一季」的 d(prevD,因為 lastD 已被 phasePre 清空);頂尖 → 終結者 */

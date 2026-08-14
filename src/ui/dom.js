@@ -5,8 +5,7 @@ import {themeModal, applyBigText, applyMobileUI} from './prefs.js';
 import {DPN, POSN} from '../data/abilities.js';
 import {TEAM_COLOR} from '../data/teams.js';
 import {playerName} from '../core/state.js';
-/* temporary scaffold until engine modules are extracted */
-import {salParts, fmtMoney} from '../main.js';
+import {salParts, fmtMoney} from '../engine/contract.js';
 import {roleN} from '../engine/season.js';
 import {playerType, ovr} from '../engine/ability.js';
 
