@@ -48,17 +48,16 @@ a{color:var(--info)}
 #bd-brand .sub{color:var(--dim);font-size:10px;letter-spacing:.2em;line-height:1;
   border-left:1px solid var(--edge);padding-left:8px;white-space:nowrap}
 @media(max-width:379px){#bd-brand .sub{display:none}} /* 極簡版: drop the Chinese sub first */
-/* Identity row (1A handoff): number plate + name/chips + affiliation + hamburger.
-   Mobile gives the affiliation its own full-width row so the longest pairing the game
-   can produce (5-char team name + 4-char level badge) never competes with the name. */
-#bd-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:'num id menu' 'team team team';
-  align-items:center;column-gap:11px;row-gap:9px}
-#bd-num{grid-area:num;flex:none;width:42px;height:42px;background:var(--row);border-radius:min(var(--r),8px);
+/* Identity row: number plate + name/chips + affiliation + hamburger, one row in both layouts
+   (author's call 2026-08-15: the phone should read like the desktop). Only #bd-id can shrink,
+   so a long name ellipsizes before the team name does. */
+#bd-top{display:flex;align-items:center;gap:11px}
+#bd-num{flex:none;width:42px;height:42px;background:var(--row);border-radius:min(var(--r),8px);
   border:1.5px solid color-mix(in srgb,var(--accent) 47%,transparent);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
 #bd-num span{font-size:7px;color:var(--dim);letter-spacing:.22em;line-height:1}
 #bd-num b{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);line-height:1;text-shadow:var(--glow)}
-#bd-id{grid-area:id;min-width:0;display:flex;flex-direction:column;gap:4px}
+#bd-id{flex:0 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px}
 #bd-name{min-width:0;font-family:var(--head);font-weight:900;font-size:18px;line-height:1;
   letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #bd-role{min-width:0;display:flex;gap:5px}
@@ -66,23 +65,22 @@ a{color:var(--info)}
   min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bd-chip.pos{background:var(--panel2);border:1px solid var(--edge);color:var(--text)}
 .bd-chip.typ{border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)}
-#bd-team{grid-area:team;min-width:0;display:flex;align-items:center;gap:8px;
-  background:var(--row);border:1px solid var(--edge);border-radius:min(var(--r),7px);padding:6px 10px}
-.bt-lbl{flex:none;font-size:9px;color:var(--dim);letter-spacing:.3em}
+#bd-team{flex:none;min-width:0;margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.bt-lbl{flex:none;white-space:nowrap;font-size:9px;color:var(--dim);letter-spacing:.3em}
 .bt-lbl i,.bt-lbl em{font-style:normal}
-.bt-row{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+.bt-row{flex:none;min-width:0;display:flex;align-items:center;gap:8px}
 .bt-dot{flex:none;width:8px;height:8px;border-radius:50%;box-shadow:0 0 2px rgba(0,0,0,.2)}
 .bt-name{min-width:0;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bt-name.plain{color:var(--accent);font-size:14px;font-weight:700;letter-spacing:.05em}
 /* pro clubs keep the existing white-label treatment: the team colour is the jersey
    primary and only reads at full saturation against white (see teamChip() rationale) */
 .bt-name.chip{background:#ffffff;padding:1px 7px;border-radius:6px;box-shadow:0 2px 4px rgba(0,0,0,.4);font-size:12.5px}
-.bt-badge{flex:none;margin-left:auto;font-size:10.5px;font-weight:700;padding:1px 8px;
+.bt-badge{flex:none;font-size:10.5px;font-weight:700;padding:1px 8px;
   border-radius:min(var(--r),4px);white-space:nowrap}
 .bt-badge.top{background:var(--accent);color:var(--bg)} /* 一軍／大聯盟／學生年級:實心 */
 .bt-badge.sub{border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)} /* 還沒上去:描邊 */
 #bd-tj{display:none}
-#btn-menu{grid-area:menu;align-self:center}
+#btn-menu{flex:none;align-self:center}
 #bd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:9px}
 .bd-cell{position:relative;background:var(--panel2);border:1px solid var(--edge);border-radius:var(--r);padding:4px 6px 3px;text-align:center}
 .bd-cell b{display:block;font-family:var(--disp);font-size:17px;font-weight:700;color:var(--accent);
@@ -474,22 +472,17 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
    body:not(.mobile-ui) still guards it: below 921px the toggle leaves #app uncapped, so the
    container could be wide while the player has asked for the phone layout. */
 @container (min-width:600px){
-  body:not(.mobile-ui) #bd-top{display:flex;align-items:center;gap:14px}
+  body:not(.mobile-ui) #bd-top{gap:14px}
   body:not(.mobile-ui) #bd-num{width:48px;height:48px;gap:2px;border-radius:min(var(--r),9px)}
   body:not(.mobile-ui) #bd-num span{font-size:8px;letter-spacing:.25em}
   body:not(.mobile-ui) #bd-num b{font-size:21px}
-  body:not(.mobile-ui) #bd-id{flex:0 1 auto;gap:5px}
+  body:not(.mobile-ui) #bd-id{gap:5px}
   body:not(.mobile-ui) #bd-name{font-size:21px}
   body:not(.mobile-ui) #bd-role{gap:6px}
   body:not(.mobile-ui) .bd-chip{font-size:11px;padding:1px 8px}
-  /* the affiliation stacks label-over-value at the right end instead of taking its own row;
-     flex:none so a long player name is what ellipsizes when the column is tight, not the team */
-  body:not(.mobile-ui) #bd-team{flex:none;flex-direction:column;align-items:flex-end;gap:4px;
-    margin-left:auto;background:none;border:0;padding:0}
-  body:not(.mobile-ui) .bt-row{flex:none}
   body:not(.mobile-ui) .bt-name.plain{font-size:15px;letter-spacing:.06em}
   body:not(.mobile-ui) .bt-name.chip{font-size:14px;padding:2px 8px}
-  body:not(.mobile-ui) .bt-badge{margin-left:0;font-size:11px}
+  body:not(.mobile-ui) .bt-badge{font-size:11px}
   body:not(.mobile-ui) #btn-menu{width:38px;height:38px;gap:3.5px;margin-left:6px}
   body:not(.mobile-ui) #btn-menu i{width:15px}
   body:not(.mobile-ui) #bd-grid{grid-template-columns:repeat(4,1fr) 62px;gap:6px;margin-top:12px}
@@ -542,6 +535,18 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
      keyboard and AT and shows itself when focused. */
   #bd-more{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}
   #bd-more:focus-visible{position:static;width:auto;height:auto;padding:2px 8px;clip-path:none}
+  /* A phone cannot hold the desktop row whole: 390px leaves the identity block 112px and the
+     two chips want 159. The 稱號 chip is the one the author never asked to see there, so it
+     moves to the panel's first line and 守位 keeps its place beside the name. Below ~360px the
+     team name is what gives next, by ellipsis, so the 守位 chip still reads. */
+  #bd-role{flex:none}
+  #bd-role .bd-chip.typ{display:none}
+  /* when it is still tight the team name is what gives, not the 守位 chip: the club is named
+     again in the log a line below, the 守位 is not written anywhere else on screen */
+  /* min-width:auto, not 0: the block must not shrink past its own content, or the label
+     wraps one character per line and the row spills out of it (measured at 320px) */
+  #bd-team{flex:0 6 auto;min-width:auto}
+  .bt-row{flex:0 1 auto}
   /* 一軍／大聯盟 carry no badge here: the club's own label already says which league it is,
      so a badge is only worth its width while the player is still below the top. */
   .bt-badge.nomob{display:none}
@@ -551,14 +556,19 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
   #bd-hint svg{transition:transform .18s}
   #board.detail-open #bd-hint svg{transform:rotate(180deg)}
   #tl-strip{margin-top:8px;padding-bottom:0} /* the strip joins the same 8px rhythm as the rows */
+  /* Under ~360px even the 守位 chip has nowhere to go: 320px leaves the identity block 41px
+     against the chip's 79. Drop the chips from the bar there; the panel's first row has both. */
+  @container (max-width:359px){ #bd-role{display:none} }
   /* the panel hangs over the log instead of pushing it down */
   #board.detail-open #bd-detail{position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:5;
     margin:0;border-left:0;border-right:0;border-radius:0 0 min(var(--r),10px) min(var(--r),10px);
     box-shadow:0 12px 28px var(--shadow);max-height:min(60vh,420px)}
-  /* first row of the panel: the season the bar no longer shows */
-  #bd-detail .bd-idrow{display:flex;align-items:center;gap:6px;margin-bottom:9px;
-    padding-bottom:9px;border-bottom:1px solid var(--edge);
+  /* first row of the panel: what the bar had to leave out, the season and the 稱號 */
+  #bd-detail .bd-idrow{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-bottom:9px;
+    padding-bottom:9px;border-bottom:1px solid var(--edge)}
+  #bd-detail .bd-ph{display:flex;align-items:center;gap:6px;
     font-size:11.5px;color:var(--text);letter-spacing:.12em}
-  #bd-detail .bd-idrow i{width:9px;height:9px;border-radius:50%;background:var(--accent);
+  #bd-detail .bd-ph i{width:9px;height:9px;border-radius:50%;background:var(--accent);
     box-shadow:var(--glow);flex:none}
+  #bd-detail .bd-idrow .bd-chip.typ{display:inline-block}
 }

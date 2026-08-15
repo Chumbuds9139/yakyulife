@@ -241,9 +241,13 @@ export function detailSync(){
   if(!S||!bd||!d||!bd.classList.contains('detail-open'))return;
   const cur=d.dataset.tab||'h', sc=d.scrollTop;
   const prevY=d.querySelector('.sec-y'), yTop=prevY?prevY.scrollTop:null;
-  /* the phone bar drops the lamp row for the year strip, so the season lives here */
+  /* the phone bar drops the lamp row for the year strip and has no room for the 稱號 chip;
+     both come back on the panel's first line */
   const lamps=$('lamps'), on=lamps&&lamps.querySelector('.lamp.on');
-  const idrow=(isCompact()&&on)?`<div class="bd-idrow"><i></i>${on.textContent}</div>`:'';
+  const idrow=isCompact()
+    ? `<div class="bd-idrow">${on?`<span class="bd-ph"><i></i>${on.textContent}</span>`:''}`+
+      `${chipsHTML()}</div>`
+    : '';
   d.innerHTML=idrow+'<div class="bd-tabs">'+DTABS.map(([k,n])=>
       `<button type="button" class="bd-tab${k===cur?' on':''}" data-t="${k}">${n}</button>`).join('')+'</div>'+
     secHonors()+secSalary()+secTraits()+secLog();
@@ -278,7 +282,9 @@ if(typeof document!=='undefined'){
     /* a target that is no longer in the document was removed by its own handler, which means
        something inside the bar already answered this click */
     if(t.isConnected===false)return;
-    if(t.closest&&t.closest('#btn-menu,#bd-detail,#tl-strip'))return;
+    /* 生涯薪 cell has its own tap (reveal the exact amount), the hamburger opens the menu,
+       the panel and the year strip are live controls: none of them are a tap on the bar */
+    if(t.closest&&t.closest('#btn-menu,#bd-detail,#tl-strip,#bd-sal-cell'))return;
     detailToggle();
   });
 }
