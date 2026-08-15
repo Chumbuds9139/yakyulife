@@ -111,12 +111,17 @@ export function choose(title,opts){
    隊名在職業階段沿用原本的隊色圓點＋白底標籤，非職業維持琥珀色文字；層級徽章文案就是
    stageLabel()，站上該條路的頂端(學生年級／中職一軍／日職一軍／大聯盟)填實心金底，
    還沒上去的(業餘、二軍、小聯盟)只描邊。 */
+const LV_SHORT={CPBL2:'二軍',NPB2:'二軍',R:'新人'}; /* 手機版:聯盟由隊名交代,徽章只留層級 */
 function affiliationHTML(){
   const student=(S.stage==='HS'||S.stage==='U');
   const proTeam=(S.stage==='PRO'&&S.orgTeam)?S.orgTeam:'';
   const lvOk=S.stage!=='PRO'||!!(S.lv&&LV[S.lv]);
   const badge=lvOk?stageLabel():'';
   const top=student?true:S.stage==='AMA'?false:!!(S.lv&&LV[S.lv]&&LV[S.lv].top);
+  /* 手機版寫法:三個聯盟的頂級層級不掛徽章,二軍就寫二軍,美國新人聯盟寫新人,1A~3A 不變。
+     學生年級與業餘成棒兩邊都寫全稱——沒有隊名可以交代那是高幾。 */
+  const short=(S.stage==='PRO'&&S.lv&&LV[S.lv])
+    ? (LV[S.lv].top?'':(LV_SHORT[S.lv]||LV[S.lv].n)) : badge;
   const tc=proTeam&&TEAM_COLOR[proTeam];
   let name;
   if(tc){ /* 判斷顏色是否為白色，避免白底白字 */
@@ -124,17 +129,18 @@ function affiliationHTML(){
     name=`<span class="bt-dot" style="background:${isWhite?'#cccccc':tc}"></span>`+
       `<span class="bt-name chip" style="color:${isWhite?'#000000':tc}">${proTeam}</span>`;
   } else name=`<span class="bt-name plain">${proTeam||S.team||''}</span>`;
+  let bhtml='';
+  if(badge){ const cls=`bt-badge ${top?'top':'sub'}${short?'':' nomob'}`;
+    const txt=short===badge?badge:`<i class="lw">${badge}</i><i class="lc">${short}</i>`;
+    bhtml=`<span class="${cls}">${txt}</span>`; }
   return `<span class="bt-lbl"><i>所屬</i><em>${student?'學校':'球隊'}</em></span>`+
-    `<span class="bt-row">${name}${badge?`<span class="bt-badge ${top?'top':'sub'}">${badge}</span>`:''}</span>`;
+    `<span class="bt-row">${name}${bhtml}</span>`;
 }
-/* 守位晶片(實底)＋稱號晶片(金描邊)。守位拆成「位置」與「・分工」兩段:緊湊列只留位置,
-   分工與稱號改由詳情面板首行補上(見 CSS 的 #bd-role .bd-chip.pos em)。 */
+/* 守位晶片(實底)＋稱號晶片(金描邊) */
 function chipsHTML(){
-  const pos=S.dpos?DPN[S.dpos]:POSN[S.pos];
-  const role=S.role?'・'+roleN(S.role):'';
+  const pos=(S.dpos?DPN[S.dpos]:POSN[S.pos])+(S.role?'・'+roleN(S.role):'');
   const typ=playerType()+(S.traits.genius?' ★':'');
-  return `<span class="bd-chip pos"><i>${pos}</i><em>${role}</em></span>`+
-    `<span class="bd-chip typ">${typ}</span>`;
+  return `<span class="bd-chip pos">${pos}</span><span class="bd-chip typ">${typ}</span>`;
 }
 export function board(phase){
   renderTraits();
@@ -148,14 +154,9 @@ export function board(phase){
   $('bd-ovr').textContent=ovr(); if(S.pos==='P'){const el=$('bd-tj'); if(el)el.textContent='';}
   { const sal=Math.round(S.salary),sp=salParts(sal),salEl=$('bd-sal'); salEl.textContent=sp.v;
     salEl.style.fontSize='';
-    const lb=$('bd-sal-lbl');
-    if(lb)lb.innerHTML=`<i class="lw">生涯薪(${sp.u})</i><i class="lc">薪(${sp.u})</i>`;
+    const lb=$('bd-sal-lbl'); if(lb)lb.textContent=`生涯薪(${sp.u})`;
     const tip=$('bd-sal-tip'); if(tip)tip.textContent=fmtMoney(sal)+' 台幣'; }
   [0,1,2].forEach(i=>$('lp'+i).classList.toggle('on',i===phase));
-  /* read the season back off the lamps so the two never disagree about the phase */
-  { const se=$('bd-season'); if(se){ const on=$('lamps').querySelector('.lamp.on');
-      se.querySelector('b').textContent=on?on.textContent:'';
-      se.style.visibility=on?'':'hidden'; } }
   detailSync();
 }
 /* the compact bar is a CSS state, so ask the layout rather than re-deriving the breakpoint */
@@ -240,8 +241,9 @@ export function detailSync(){
   if(!S||!bd||!d||!bd.classList.contains('detail-open'))return;
   const cur=d.dataset.tab||'h', sc=d.scrollTop;
   const prevY=d.querySelector('.sec-y'), yTop=prevY?prevY.scrollTop:null;
-  /* the compact bar shows the position but not the 分工 or the 稱號; give them back here */
-  const idrow=isCompact()?`<div class="bd-idrow">${chipsHTML()}</div>`:'';
+  /* the phone bar drops the lamp row for the year strip, so the season lives here */
+  const lamps=$('lamps'), on=lamps&&lamps.querySelector('.lamp.on');
+  const idrow=(isCompact()&&on)?`<div class="bd-idrow"><i></i>${on.textContent}</div>`:'';
   d.innerHTML=idrow+'<div class="bd-tabs">'+DTABS.map(([k,n])=>
       `<button type="button" class="bd-tab${k===cur?' on':''}" data-t="${k}">${n}</button>`).join('')+'</div>'+
     secHonors()+secSalary()+secTraits()+secLog();

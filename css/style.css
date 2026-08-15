@@ -64,14 +64,12 @@ a{color:var(--info)}
 #bd-role{min-width:0;display:flex;gap:5px}
 .bd-chip{font-size:10.5px;line-height:1.55;padding:1px 7px;border-radius:min(var(--r),5px);
   min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bd-chip i,.bd-chip em{font-style:normal} /* the two halves of the 守位 chip are split, not emphasised */
 .bd-chip.pos{background:var(--panel2);border:1px solid var(--edge);color:var(--text)}
 .bd-chip.typ{border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)}
 #bd-team{grid-area:team;min-width:0;display:flex;align-items:center;gap:8px;
   background:var(--row);border:1px solid var(--edge);border-radius:min(var(--r),7px);padding:6px 10px}
 .bt-lbl{flex:none;font-size:9px;color:var(--dim);letter-spacing:.3em}
 .bt-lbl i,.bt-lbl em{font-style:normal}
-.bt-lbl em{display:none} /* 手機縮為「所屬」;桌面補回「學校／球隊」 */
 .bt-row{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
 .bt-dot{flex:none;width:8px;height:8px;border-radius:50%;box-shadow:0 0 2px rgba(0,0,0,.2)}
 .bt-name{min-width:0;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -85,16 +83,14 @@ a{color:var(--info)}
 .bt-badge.sub{border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)} /* 還沒上去:描邊 */
 #bd-tj{display:none}
 #btn-menu{grid-area:menu;align-self:center}
-#bd-grid{display:grid;grid-template-columns:repeat(4,1fr) 46px;gap:5px;margin-top:9px}
-/* 320px has no slack once the 詳情 cell joins the row; shed the arrow's width first */
-@media(max-width:359px){#bd-grid{grid-template-columns:repeat(4,1fr) 38px}}
+#bd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:9px}
 .bd-cell{position:relative;background:var(--panel2);border:1px solid var(--edge);border-radius:var(--r);padding:4px 6px 3px;text-align:center}
 .bd-cell b{display:block;font-family:var(--disp);font-size:17px;font-weight:700;color:var(--accent);
   text-shadow:var(--glow);line-height:1.2}
 .bd-cell span{font-size:10px;color:var(--dim);letter-spacing:.15em}
-.bd-cell span i{font-style:normal}
-.lc{display:none} /* compact-bar wording for the stat labels; .lw is the roomy one */
-#bd-season,#bd-hint{display:none} /* compact bar only */
+.bt-badge i{font-style:normal}
+.bt-badge .lc{display:none} /* the phone's shorter level wording; .lw is the full stageLabel() */
+#bd-hint{display:none} /* phone bar only */
 /* 記分板維持緊湊的萬／億縮寫；完整精確金額顯示在點擊提示與引退結算。 */
 #bd-sal,#bd-sal-lbl{white-space:nowrap}
 #bd-sal-cell{cursor:pointer;outline:none}
@@ -491,7 +487,6 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
   body:not(.mobile-ui) #bd-team{flex:none;flex-direction:column;align-items:flex-end;gap:4px;
     margin-left:auto;background:none;border:0;padding:0}
   body:not(.mobile-ui) .bt-row{flex:none}
-  body:not(.mobile-ui) .bt-lbl em{display:inline}
   body:not(.mobile-ui) .bt-name.plain{font-size:15px;letter-spacing:.06em}
   body:not(.mobile-ui) .bt-name.chip{font-size:14px;padding:2px 8px}
   body:not(.mobile-ui) .bt-badge{margin-left:0;font-size:11px}
@@ -530,78 +525,40 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
   body:not(.mobile-ui) .bd-yr .n{width:48px}
   body:not(.mobile-ui) .bd-yr .opt{display:block}
 }
-/* ================= 手機緊湊頂部欄(8B 定稿, 第 8/9 輪) =================
-   Measured motive: the roomy bar costs ~200px on a phone, and with the browser chrome on top
-   the log barely gets a screen. 8B is two rows plus a hint at ~96px.
+/* ================= 手機頂部欄:與桌面同版型 =================
+   Author's call (2026-08-15), superseding the handoff's 8B two-row bar: the phone should look
+   like the desktop, minus the 詳情 cell, with the year strip standing in for the lamp row and
+   an expand chevron added. The cost is height, 130px back up to ~218px, which is the whole
+   motive of handoff §6; the owner confirmed the trade.
 
    Scoped with a CONTAINER query, not a viewport media query, because the two things that make
-   the bar narrow are different: a phone (viewport) and the 手機版介面 toggle, which caps #app
-   at 560px on a wide screen (body.mobile-ui). Both show up as "#mid is under 600px wide", so
-   that is what the rule asks. Desktop keeps the 1A spec untouched. */
+   the bar narrow differ: a phone (viewport) and the 手機版介面 toggle, which caps #app at 560px
+   on a wide screen (body.mobile-ui). Both read as "#mid is under 600px wide". */
 #mid{container-type:inline-size}
 @container (max-width:599px){
-  #bd-brand{display:none} /* the brand belongs to the start screen; in-game the space is the log's */
-  /* #board#board so this beats the page layout's body:not(.mobile-ui) #board padding, which is
-     viewport-driven and cannot know the middle column has gone phone-width */
-  #board#board{padding:9px 12px 8px;padding-top:calc(9px + env(safe-area-inset-top,0px));cursor:pointer}
-  /* ---- row 1: 背號 / 姓名 / 守位 / 所屬 / hamburger ---- */
-  #bd-top{display:flex;align-items:center;gap:8px}
-  #bd-id{display:contents} /* name and chips join row 1 as siblings instead of stacking */
-  #bd-num{width:auto;height:auto;flex-direction:row;gap:0;padding:1px 7px;background:none;
-    border-radius:min(var(--r),6px);border-width:1.5px;
-    border-color:color-mix(in srgb,var(--accent) 53%,transparent)}
-  #bd-num span{display:none} /* the pill is digits only at this size */
-  #bd-num b{font-size:12.5px}
-  #bd-name{flex:none;font-size:16px;letter-spacing:.03em}
-  #bd-role{flex:none}
-  /* 分工(・先發) and 稱號 move into the panel's first row; the 守位 itself stays visible */
-  #bd-role .bd-chip.pos em{display:none}
-  #bd-role .bd-chip.typ{display:none}
-  #bd-team{flex:0 1 auto;min-width:0;gap:6px;padding:2px 8px;border-radius:min(var(--r),6px)}
-  #bd-team.pro{background:none;border:0;padding:0;gap:5px} /* pro clubs carry their own label */
-  .bt-lbl{display:none}
-  .bt-row{flex:0 1 auto;min-width:0;gap:5px}
-  .bt-dot{width:7px;height:7px}
-  .bt-name.plain{font-size:12.5px;letter-spacing:0}
-  .bt-name.chip{font-size:11.5px;padding:1px 6px;border-radius:5px}
-  .bt-badge{margin-left:0;font-size:10px;padding:0 6px}
-  #btn-menu{margin-left:auto;width:36px;height:36px;gap:4px;background:none;border:0}
-  #btn-menu i{width:20px;border-radius:2px}
-  /* ---- row 2: the four numbers inline, plus the season actually running ---- */
-  #bd-grid{display:flex;align-items:baseline;gap:10px;margin-top:8px}
-  .bd-cell{display:flex;align-items:baseline;gap:3px;white-space:nowrap;
-    background:none;border:0;border-radius:0;padding:0;text-align:left}
-  .bd-cell b{display:inline;font-size:15px}
-  .bd-cell span{font-size:9.5px;letter-spacing:0}
-  .lw{display:none} .lc{display:inline}
-  /* the panel now opens from anywhere on the bar, so the 詳情 cell has no visual job left;
-     it stays in the tab order for keyboard and AT and shows itself when focused */
+  #bd-brand{display:none} /* the desktop carries the brand in the sidebar; in-game the space is the log's */
+  #board{cursor:pointer}
+  /* the whole bar is the toggle, so the 詳情 cell is not drawn. It stays in the tab order for
+     keyboard and AT and shows itself when focused. */
   #bd-more{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%)}
   #bd-more:focus-visible{position:static;width:auto;height:auto;padding:2px 8px;clip-path:none}
-  #bd-sal-cell{cursor:inherit}
-  .bd-tip{display:none} /* the full amount is one tap away in the panel's 薪資 block */
-  #bd-season{display:flex;align-self:center;align-items:center;gap:4px;margin-left:auto;
-    font-size:10.5px;color:var(--text);white-space:nowrap}
-  #bd-season i{width:7px;height:7px;border-radius:50%;background:var(--accent);
-    box-shadow:0 0 6px color-mix(in srgb,var(--accent) 53%,transparent)}
-  #lamps{display:none} /* replaced by #bd-season above */
-  /* ---- row 3: the expand hint ---- */
-  /* the hint carries the row gap on its own top edge so the rhythm holds whether or not the
-     year strip is between it and the numbers (the desktop column hides the strip) */
+  /* 一軍／大聯盟 carry no badge here: the club's own label already says which league it is,
+     so a badge is only worth its width while the player is still below the top. */
+  .bt-badge.nomob{display:none}
+  .bt-badge .lw{display:none} .bt-badge .lc{display:inline}
+  #lamps{display:none} /* the season moves into the panel; this row becomes the year strip */
   #bd-hint{display:flex;justify-content:center;padding-top:8px;color:var(--dim);opacity:.55}
   #bd-hint svg{transition:transform .18s}
   #board.detail-open #bd-hint svg{transform:rotate(180deg)}
-  /* ---- the panel hangs over the log instead of pushing it down ---- */
+  #tl-strip{margin-top:8px;padding-bottom:0} /* the strip joins the same 8px rhythm as the rows */
+  /* the panel hangs over the log instead of pushing it down */
   #board.detail-open #bd-detail{position:absolute;left:0;right:0;top:calc(100% + 2px);z-index:5;
     margin:0;border-left:0;border-right:0;border-radius:0 0 min(var(--r),10px) min(var(--r),10px);
     box-shadow:0 12px 28px var(--shadow);max-height:min(60vh,420px)}
-  #bd-detail .bd-idrow{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px;
-    padding-bottom:9px;border-bottom:1px solid var(--edge)}
-  /* the handoff never drew the year strip, so it joins the same 8px rhythm as the two rows;
-     its 2px scrollbar gutter is dead weight on a phone, where the strip scrolls without one */
-  #tl-strip{margin-top:8px;padding-bottom:0}
-  /* Under ~360px row 1 is ~24px short even at the amateur stage, and the flex shrink lands on
-     the team name: 美麗珊瑚 collapsed to 美…. Drop the 守位 chip instead, which the panel's
-     first row still carries, and the name and its badge both stay whole. */
-  @container (max-width:359px){ #bd-role{display:none} }
+  /* first row of the panel: the season the bar no longer shows */
+  #bd-detail .bd-idrow{display:flex;align-items:center;gap:6px;margin-bottom:9px;
+    padding-bottom:9px;border-bottom:1px solid var(--edge);
+    font-size:11.5px;color:var(--text);letter-spacing:.12em}
+  #bd-detail .bd-idrow i{width:9px;height:9px;border-radius:50%;background:var(--accent);
+    box-shadow:var(--glow);flex:none}
 }
