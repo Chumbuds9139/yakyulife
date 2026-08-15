@@ -1,4 +1,5 @@
 import {S} from '../core/state.js';
+import {APP_VER} from '../config.js';
 import {renderTraits, traitName} from './traits.js';
 import {clearAlloc, allocFullClose} from './alloc.js';
 import {themeModal, applyBigText, applyMobileUI} from './prefs.js';
@@ -40,7 +41,8 @@ export function modalClose(){ const m=$('modal'); if(m)m.classList.remove('show'
 export function brandHTML(){
   const wm=document.querySelector('.wm-img');
   const src=wm?wm.getAttribute('src'):'assets/wordmark-cream.png';
-  return `<img class="wm-img" src="${src}" alt="YaKyoLife"><span class="sub">棒球人生模擬器</span>`;
+  return `<img class="wm-img" src="${src}" alt="YaKyoLife"><span class="sub">棒球人生模擬器</span>`+
+    `<span class="ver">${APP_VER}</span>`;
 }
 export function menuModal(){
   const wide=matchMedia('(min-width:921px)').matches;
