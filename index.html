@@ -114,10 +114,12 @@
         <span class="lamp" id="lp1"><i></i>賽季中</span>
         <span class="lamp" id="lp2"><i></i>季末</span>
       </div>
-      <div id="tl-strip"></div>
       <!-- compact bar only: a hint that the whole bar opens the detail panel, not a control
-           of its own (the tap target is the bar; #bd-more stays for keyboard and AT) -->
+           of its own (the tap target is the bar; #bd-more stays for keyboard and AT).
+           It sits directly under the two rows it belongs to and above the year strip, which
+           is separate navigation and is deliberately outside the bar's tap area. -->
       <div id="bd-hint" aria-hidden="true"><svg width="14" height="7" viewBox="0 0 14 7"><path d="M1 1l6 5 6-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <div id="tl-strip"></div>
     </header>
     <main id="log"></main>
   </div>
