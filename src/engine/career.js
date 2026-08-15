@@ -9,8 +9,20 @@ export function positionScore(st){
   let runs=0; Object.entries(st.DPG).forEach(([dp,g])=>{ runs+=(POS_ADJ_RUNS[dp]||0)*(g/162); });
   return runs*6; /* 與 DEF 每 1 defensive run = 6 分使用同一尺度 */
 }
+/* 後援名人堂校準：300 救援接近候選、400 救援具入選實力、500 救援可挑戰最高門檻。 */
+export function reliefMilestoneScore(st){
+  const sv=st&&st.SV||0;
+  if(sv>=500)return 1800;
+  if(sv>=400)return 1200;
+  if(sv>=300)return 800;
+  if(sv>=200)return 350;
+  return 0;
+}
+export function pitcherCareerScore(st){
+  return st.W*13+(st.SV||0)*8+(st.HLD||0)*3+st.SO*0.9+st.IP*0.35+reliefMilestoneScore(st);
+}
 export function careerScore(st){
-  if(S.pos==='P')return st.W*13+st.SV*4+st.HLD*2+st.SO*0.9+st.IP*0.35;
+  if(S.pos==='P')return pitcherCareerScore(st);
   return st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3+(st.DEF||0)*6+positionScore(st);
 }
 export function primaryPos(){ /* 生涯主守位:過半→該位;無過半→工具人/搖擺人(年數降序) */
@@ -65,6 +77,8 @@ export function honorScore(bucket){
     else if(h.includes('新人王'))sc+=140;
     else if(h.includes('金手套')){sc+=300;king++;}
     else if(h.includes('守備聖經')){sc+=220;king++;}
+    else if(h.includes('救援王')){sc+=280;king++;}
+    else if(h.includes('中繼王')){sc+=210;king++;}
     else if(h.includes('王')){sc+=160;king++;}
     else if(h.includes('明星賽'))sc+=(S.pos==='P'?70:40);
   });
