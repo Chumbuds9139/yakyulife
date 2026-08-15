@@ -23,7 +23,7 @@ export function rookieAwardGuaranteed(honors,year,leagueName){
 }
 export function pitcherAwardName(bucket){
   const leagueName={CPBL:'中職',NPB:'日職',MLB:'大聯盟'}[bucket];
-  return bucket==='MLB'?`${leagueName}最佳投手`:`${leagueName}年度最佳投手`;
+  return `${leagueName}年度最佳投手`;
 }
 export function relieverAceChance(st,role){
   const era=Number(st&&st.era);
