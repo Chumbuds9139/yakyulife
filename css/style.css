@@ -559,6 +559,11 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
   .bt-badge .lw{display:none} .bt-badge .lc{display:inline}
   #lamps{display:none} /* the season moves into the panel; this row becomes the year strip */
   #bd-hint{display:flex;justify-content:center;padding-top:8px;color:var(--dim);opacity:.55}
+  /* same affordance as #act-toggle:hover at the other end of the screen: wherever the bar
+     itself is the tap target, hovering lights the chevron. The live controls inside the bar
+     (menu, panel, year strip, salary cell) are not bar taps — same exclusion list as the
+     click handler in dom.js — so hovering them keeps the hint quiet. */
+  #board:hover:not(:has(#btn-menu:hover,#bd-detail:hover,#tl-strip:hover,#bd-sal-cell:hover)) #bd-hint{color:var(--accent);opacity:1}
   #board.detail-open #bd-hint .chev{transform:rotate(180deg)}
   #tl-strip{margin-top:8px;padding-bottom:0} /* the strip joins the same 8px rhythm as the rows */
   /* Under ~360px even the 守位 chip has nowhere to go: 320px leaves the identity block 41px
