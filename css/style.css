@@ -48,17 +48,45 @@ a{color:var(--info)}
 #bd-brand .sub{color:var(--dim);font-size:10px;letter-spacing:.2em;line-height:1;
   border-left:1px solid var(--edge);padding-left:8px;white-space:nowrap}
 @media(max-width:379px){#bd-brand .sub{display:none}} /* 極簡版: drop the Chinese sub first */
-#bd-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:'name role menu' 'team team menu';
-  align-items:center;column-gap:6px;row-gap:3px}
-#bd-name{grid-area:name;min-width:0;font-family:var(--head);font-weight:900;font-size:17px;line-height:1.3;
-  letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:baseline}
-#bd-name small{color:var(--accent);font-weight:700;font-size:12px;line-height:1.3;margin-left:5px;font-family:var(--sans);letter-spacing:0}
-#bd-role{grid-area:role;min-width:0;color:var(--dim);font-weight:500;font-size:12px;line-height:1.3;font-family:var(--sans);align-self:baseline;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#bd-team{grid-area:team;justify-self:start;color:var(--accent);font-size:12.5px;font-weight:700;letter-spacing:.06em;white-space:nowrap}
+/* Identity row (1A handoff): number plate + name/chips + affiliation + hamburger.
+   Mobile gives the affiliation its own full-width row so the longest pairing the game
+   can produce (5-char team name + 4-char level badge) never competes with the name. */
+#bd-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:'num id menu' 'team team team';
+  align-items:center;column-gap:11px;row-gap:9px}
+#bd-num{grid-area:num;flex:none;width:42px;height:42px;background:var(--row);border-radius:min(var(--r),8px);
+  border:1.5px solid color-mix(in srgb,var(--accent) 47%,transparent);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+#bd-num span{font-size:7px;color:var(--dim);letter-spacing:.22em;line-height:1}
+#bd-num b{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);line-height:1;text-shadow:var(--glow)}
+#bd-id{grid-area:id;min-width:0;display:flex;flex-direction:column;gap:4px}
+#bd-name{min-width:0;font-family:var(--head);font-weight:900;font-size:18px;line-height:1;
+  letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#bd-role{min-width:0;display:flex;gap:5px}
+.bd-chip{font-size:10.5px;line-height:1.55;padding:1px 7px;border-radius:min(var(--r),5px);
+  min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bd-chip.pos{background:var(--panel2);border:1px solid var(--edge);color:var(--text)}
+.bd-chip.typ{border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)}
+#bd-team{grid-area:team;min-width:0;display:flex;align-items:center;gap:8px;
+  background:var(--row);border:1px solid var(--edge);border-radius:min(var(--r),7px);padding:6px 10px}
+.bt-lbl{flex:none;font-size:9px;color:var(--dim);letter-spacing:.3em}
+.bt-lbl i,.bt-lbl em{font-style:normal}
+.bt-lbl em{display:none} /* 手機縮為「所屬」;桌面補回「學校／球隊」 */
+.bt-row{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+.bt-dot{flex:none;width:8px;height:8px;border-radius:50%;box-shadow:0 0 2px rgba(0,0,0,.2)}
+.bt-name{min-width:0;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bt-name.plain{color:var(--accent);font-size:14px;font-weight:700;letter-spacing:.05em}
+/* pro clubs keep the existing white-label treatment: the team colour is the jersey
+   primary and only reads at full saturation against white (see teamChip() rationale) */
+.bt-name.chip{background:#ffffff;padding:1px 7px;border-radius:6px;box-shadow:0 2px 4px rgba(0,0,0,.4);font-size:12.5px}
+.bt-badge{flex:none;margin-left:auto;font-size:10.5px;font-weight:700;padding:1px 8px;
+  border-radius:min(var(--r),4px);white-space:nowrap}
+.bt-badge.top{background:var(--accent);color:var(--bg)} /* 一軍／大聯盟／學生年級:實心 */
+.bt-badge.sub{border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)} /* 還沒上去:描邊 */
 #bd-tj{display:none}
 #btn-menu{grid-area:menu;align-self:center}
-#bd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+#bd-grid{display:grid;grid-template-columns:repeat(4,1fr) 46px;gap:5px;margin-top:9px}
+/* 320px has no slack once the 詳情 cell joins the row; shed the arrow's width first */
+@media(max-width:359px){#bd-grid{grid-template-columns:repeat(4,1fr) 38px}}
 .bd-cell{position:relative;background:var(--panel2);border:1px solid var(--edge);border-radius:var(--r);padding:4px 6px 3px;text-align:center}
 .bd-cell b{display:block;font-family:var(--disp);font-size:17px;font-weight:700;color:var(--accent);
   text-shadow:var(--glow);line-height:1.2}
@@ -74,6 +102,70 @@ a{color:var(--info)}
 /* gate hover so a touch tap does not latch :hover and leave the tip stuck open */
 @media (hover:hover){ #bd-sal-cell:hover .bd-tip{opacity:1} }
 #bd-sal-cell.show .bd-tip,#bd-sal-cell:focus-visible .bd-tip{opacity:1}
+/* ---------- 詳情:第 5 格切換鈕＋展開面板 ---------- */
+#bd-more{background:var(--row);border:1px dashed var(--btnedge);border-radius:var(--r);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  font-family:inherit;padding:0;cursor:pointer}
+#bd-more .lb{font-size:8.5px;color:var(--dim);letter-spacing:.08em}
+#bd-more .ar{font-size:9px;color:var(--accent);line-height:1}
+#bd-more .ar::before{content:'▾'}
+#bd-more:hover{border-color:var(--accent)}
+#bd-more[aria-expanded='true']{border-style:solid;border-color:var(--accent)}
+#bd-more[aria-expanded='true'] .lb{color:var(--accent)}
+#bd-more[aria-expanded='true'] .ar::before{content:'▴'}
+/* The board is position:sticky, so an unbounded panel would push the log off-screen on a
+   long career (33 seasons of 逐年). Cap it and scroll inside instead. */
+#bd-detail{display:none;margin-top:8px;background:var(--row);border:1px solid var(--edge);
+  border-radius:min(var(--r),8px);padding:11px 12px;max-height:44vh;overflow-y:auto;
+  -webkit-overflow-scrolling:touch}
+#board.detail-open #bd-detail{display:block}
+.bd-tabs{display:flex;gap:6px;margin-bottom:10px}
+.bd-tab{flex:none;background:none;border:1px solid var(--edge);border-radius:999px;color:var(--dim);
+  font-family:inherit;font-size:11px;padding:3px 11px;white-space:nowrap;cursor:pointer}
+.bd-tab:hover{color:var(--accent);border-color:var(--accent)}
+.bd-tab.on{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:700}
+.bd-sec{display:none;min-width:0}
+#bd-detail[data-tab='h'] .sec-h,#bd-detail[data-tab='s'] .sec-s,
+#bd-detail[data-tab='t'] .sec-t,#bd-detail[data-tab='y'] .sec-y{display:block}
+.bd-sh{display:none;align-items:center;gap:7px;font-size:11px;letter-spacing:.25em;
+  color:var(--dim);font-weight:700;margin-bottom:7px} /* tabs replace the headings on mobile */
+.bd-sh::before{content:'■';font-size:8px;line-height:1;color:var(--accent)}
+.bd-none{font-size:12px;color:var(--dim);padding:2px 0}
+/* 成就 */
+.bd-hr{display:flex;gap:9px;font-size:12.5px;padding:3px 0}
+.bd-hr .y{flex:none;width:82px;font-family:var(--mono);font-size:11px;color:var(--dim)}
+.bd-hr .n b{color:var(--accent)}
+/* 薪資 */
+.bd-sr{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:3px 0}
+.bd-sr .k{flex:none;color:var(--dim)}
+.bd-sr .v{font-family:var(--mono);text-align:right;min-width:0;overflow-wrap:anywhere}
+.bd-sr.tot{align-items:baseline;border-top:1px dashed var(--edge);margin-top:4px;padding-top:5px}
+.bd-sr.tot .v{font-size:16px;font-weight:700;color:var(--accent);text-shadow:var(--glow)}
+/* 隱藏屬性 */
+.bd-tw{display:flex;flex-wrap:wrap;gap:7px}
+.bd-tc{display:flex;align-items:baseline;gap:8px;min-width:0;background:var(--panel2);
+  border:1px solid var(--edge);border-radius:min(var(--r),6px);padding:5px 10px}
+.bd-tc .n{flex:none;font-family:var(--mono);font-size:12px;color:var(--accent);white-space:nowrap}
+.bd-tc .f{font-size:11px;color:var(--dim)}
+.bd-tc.neg .n{color:var(--bad)}
+.bd-tc.off{opacity:.45}
+.bd-tc.off .n{color:var(--dim);text-decoration:line-through}
+/* 逐年成績 */
+.sec-y{overflow-x:auto}
+.bd-yg{font-size:10px;color:var(--dim);letter-spacing:.2em;margin:2px 0 3px}
+.bd-yg~.bd-yg{margin-top:8px}
+.bd-yr{display:flex;font-family:var(--mono);font-size:11.5px;padding:3px 0;
+  border-bottom:1px solid color-mix(in srgb,var(--edge) 55%,transparent)}
+.bd-yr.hd{font-size:10.5px;color:var(--dim);padding:2px 0;border-bottom:1px solid var(--edge)}
+.bd-yr.inj{color:var(--bad);font-weight:700}
+.bd-yr .y{flex:none;width:42px}
+.bd-yr .a{flex:none;width:30px;color:var(--dim)}
+.bd-yr.inj .a{color:inherit}
+.bd-yr .tm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bd-yr .ln{flex:2;min-width:0;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bd-yr.inj .ln{color:inherit}
+.bd-yr .n{flex:none;width:44px;text-align:right}
+.bd-yr .opt{display:none} /* 齡 and the wider stat columns return on desktop */
 #lamps{display:flex;gap:14px;justify-content:center;margin-top:7px}
 .lamp{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--dim);letter-spacing:.12em}
 .lamp i{width:9px;height:9px;border-radius:50%;background:var(--panel2);border:1px solid var(--edge);display:inline-block}
@@ -279,10 +371,13 @@ body[data-theme='c'] .lockup-sub em,body[data-theme='d'] .lockup-sub em{text-sha
   border-radius:min(var(--r),6px);padding:2px 6px;font-family:inherit;font-size:12px;text-align:center}
 /* logo wordmark image (handoff assets): height is set per context; applyTheme swaps cream/dark src */
 .wm-img{width:auto;display:block}
-#btn-menu{background:var(--panel2);border:1px solid var(--edge);color:var(--text);border-radius:min(var(--r),8px);
- font-family:var(--sans);font-size:14px;font-weight:700;line-height:1;padding:9px 15px;margin-left:8px;
- cursor:pointer;flex:none;white-space:nowrap}
-#btn-menu:hover{color:var(--accent);border-color:var(--accent)}
+/* three-line icon button (1A handoff), replacing the 「選單」 text button */
+#btn-menu{width:36px;height:36px;flex:none;background:none;border:1px solid var(--edge);
+ border-radius:min(var(--r),8px);padding:0;cursor:pointer;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+#btn-menu i{width:14px;height:2px;border-radius:1px;background:var(--dim);transition:background .15s}
+#btn-menu:hover{border-color:var(--accent)}
+#btn-menu:hover i{background:var(--accent)}
 /* ---------- 主題化對話框(取代原生 confirm) ---------- */
 #modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:22px}
 #modal.show{display:flex}
@@ -312,6 +407,16 @@ body.big-text .abrow{padding:10px}
 body.big-text .abrow .nm{font-size:19.6px;width:107px}
 body.big-text .abrow .val{font-size:20.3px;width:90px}
 body.big-text #modal-box p{font-size:20.3px}
+/* 詳情面板:prose blocks follow the big-text tier; the 逐年 table keeps its own scale
+   because its columns are already fixed-width and would clip rather than reflow. */
+body.big-text .bd-tab{font-size:13px}
+body.big-text .bd-none{font-size:15px}
+body.big-text .bd-hr{font-size:16px}
+body.big-text .bd-hr .y{width:auto;min-width:104px;font-size:14px}
+body.big-text .bd-sr{font-size:16px}
+body.big-text .bd-sr.tot .v{font-size:19px}
+body.big-text .bd-tc .n{font-size:14px}
+body.big-text .bd-tc .f{font-size:13px}
 /* full-screen allocation, mobile layout only, opened from the bottom panel.
    The backdrop is viewport-anchored but the panel inside it has to track the mobile-UI
    content column: at >=921px with the mobile layout forced on, #app is a 560px centred
@@ -340,10 +445,6 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
   body:not(.mobile-ui) #tl-strip{display:none}
   body:not(.mobile-ui) #bd-brand{display:none} /* desktop carries the brand in the sidebar */
   body:not(.mobile-ui) #board{padding:14px 26px 12px;padding-top:calc(14px + env(safe-area-inset-top,0px))}
-  body:not(.mobile-ui) #bd-top{display:flex;align-items:baseline;gap:8px}
-  body:not(.mobile-ui) #bd-role{white-space:nowrap}
-  body:not(.mobile-ui) #bd-team{margin-left:auto}
-  body:not(.mobile-ui) .bd-cell b{font-size:19px}
   body:not(.mobile-ui) #log{padding:18px 26px 26px}
   /* the right column is a viewport-pinned full-height flex column (like the left
      timeline column): traits stay at the top, actions stick to the bottom so the
@@ -360,4 +461,59 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
   /* keep the allocation panel on the same column as #app above; these two must match */
   body.mobile-ui #af-inner{max-width:560px}
   #fld-ui{display:block} /* unguarded: visible in both layouts so it can switch back */
+}
+/* ---------- 頂部欄的桌面版型(>1099px) ----------
+   Deliberately NOT at the 921px page breakpoint. Between 921 and 1099 the three-column grid
+   leaves the middle column only ~280-380px of usable width, and measurement there showed the
+   single-line identity row overflowing by 29px, the five-cell scoreboard by 13px and the 逐年
+   table by 121px. Below 1100 the top bar therefore keeps the compact treatment (affiliation
+   on its own row, tabbed detail panel) inside the desktop page layout. */
+@media(min-width:1100px){
+  body:not(.mobile-ui) #bd-top{display:flex;align-items:center;gap:14px}
+  body:not(.mobile-ui) #bd-num{width:48px;height:48px;gap:2px;border-radius:min(var(--r),9px)}
+  body:not(.mobile-ui) #bd-num span{font-size:8px;letter-spacing:.25em}
+  body:not(.mobile-ui) #bd-num b{font-size:21px}
+  body:not(.mobile-ui) #bd-id{flex:0 1 auto;gap:5px}
+  body:not(.mobile-ui) #bd-name{font-size:21px}
+  body:not(.mobile-ui) #bd-role{gap:6px}
+  body:not(.mobile-ui) .bd-chip{font-size:11px;padding:1px 8px}
+  /* the affiliation stacks label-over-value at the right end instead of taking its own row;
+     flex:none so a long player name is what ellipsizes when the column is tight, not the team */
+  body:not(.mobile-ui) #bd-team{flex:none;flex-direction:column;align-items:flex-end;gap:4px;
+    margin-left:auto;background:none;border:0;padding:0}
+  body:not(.mobile-ui) .bt-row{flex:none}
+  body:not(.mobile-ui) .bt-lbl em{display:inline}
+  body:not(.mobile-ui) .bt-name.plain{font-size:15px;letter-spacing:.06em}
+  body:not(.mobile-ui) .bt-name.chip{font-size:14px;padding:2px 8px}
+  body:not(.mobile-ui) .bt-badge{margin-left:0;font-size:11px}
+  body:not(.mobile-ui) #btn-menu{width:38px;height:38px;gap:3.5px;margin-left:6px}
+  body:not(.mobile-ui) #btn-menu i{width:15px}
+  body:not(.mobile-ui) #bd-grid{grid-template-columns:repeat(4,1fr) 62px;gap:6px;margin-top:12px}
+  body:not(.mobile-ui) #bd-more .lb{font-size:10px;letter-spacing:.15em}
+  body:not(.mobile-ui) #bd-more .ar{font-size:10px}
+  body:not(.mobile-ui) .bd-cell b{font-size:19px}
+  /* all four blocks are on screen at once, so the tab strip is a compact-layout affordance */
+  /* no cap on the panel itself here: the per-block caps below already bound its height, and
+     an outer cap on top of them clips the bottom of a block that is scrolled to its end */
+  body:not(.mobile-ui) #bd-detail{padding:14px 16px;max-height:none}
+  body:not(.mobile-ui) #board.detail-open #bd-detail{display:grid;grid-template-columns:1fr 1fr;gap:16px 28px}
+  body:not(.mobile-ui) .bd-tabs{display:none}
+  /* each open-ended list scrolls inside its own box rather than letting one long career
+     (30 seasons, 20 honours) crowd the other three blocks out; 薪資 is always 3 rows, and
+     逐年 gets the most room because it is the block with the most to say */
+  body:not(.mobile-ui) .bd-sec{display:block;overflow-y:auto}
+  body:not(.mobile-ui) .sec-h,body:not(.mobile-ui) .sec-t{max-height:14vh}
+  body:not(.mobile-ui) .sec-y{max-height:22vh}
+  body:not(.mobile-ui) .sec-t,body:not(.mobile-ui) .sec-y{grid-column:1/-1}
+  /* padding, not margin, so the sticky heading's background covers the row scrolling under it */
+  body:not(.mobile-ui) .bd-sh{display:flex;position:sticky;top:0;z-index:1;
+    background:var(--row);margin-bottom:0;padding-bottom:7px}
+  body:not(.mobile-ui) .bd-hr{gap:10px;font-size:13px;padding:2px 0}
+  body:not(.mobile-ui) .bd-hr .y{width:96px;font-size:12px}
+  body:not(.mobile-ui) .bd-sr{font-size:13px;padding:2px 0}
+  body:not(.mobile-ui) .bd-yr{font-size:12px}
+  body:not(.mobile-ui) .bd-yr.hd{font-size:11px}
+  body:not(.mobile-ui) .bd-yr .y{width:46px}
+  body:not(.mobile-ui) .bd-yr .n{width:48px}
+  body:not(.mobile-ui) .bd-yr .opt{display:block}
 }
