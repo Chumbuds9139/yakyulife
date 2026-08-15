@@ -511,6 +511,10 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
   body:not(.mobile-ui) .bd-hr{gap:10px;font-size:13px;padding:2px 0}
   body:not(.mobile-ui) .bd-hr .y{width:96px;font-size:12px}
   body:not(.mobile-ui) .bd-sr{font-size:13px;padding:2px 0}
+  /* names only, effect on hover (owner call): four blocks share this row, and the effect
+     strings run long enough to push 隱藏屬性 past its share of it. 已解除 stays, it is state */
+  body:not(.mobile-ui) .bd-tc:not(.off) .f{display:none}
+  body:not(.mobile-ui) .bd-tc{cursor:help}
   body:not(.mobile-ui) .bd-yr{font-size:12px}
   body:not(.mobile-ui) .bd-yr.hd{font-size:11px}
   body:not(.mobile-ui) .bd-yr .y{width:46px}

@@ -180,11 +180,14 @@ function secSalary(){
 }
 function secTraits(){
   const out=[];
+  /* the effect text is carried on title as well as inline: the wide layout shows names only
+     (see the .bd-tc .f rule) and surfaces the effect on hover, the way #trait-side already does */
   [...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].forEach(k=>{ if(!S.traits||!S.traits[k])return;
-    out.push(`<div class="bd-tc${TRAIT_KEYS.neg.includes(k)?' neg':''}">`+
-      `<span class="n">${traitName(k)}</span><span class="f">${TRAIT_FX[k]||''}</span></div>`); });
+    const fx=TRAIT_FX[k]||'';
+    out.push(`<div class="bd-tc${TRAIT_KEYS.neg.includes(k)?' neg':''}" title="${esc(fx)}">`+
+      `<span class="n">${traitName(k)}</span><span class="f">${fx}</span></div>`); });
   (S.removed||[]).forEach(l=>out.push(
-    `<div class="bd-tc off"><span class="n">${l}</span><span class="f">已解除</span></div>`));
+    `<div class="bd-tc off" title="已解除"><span class="n">${l}</span><span class="f">已解除</span></div>`));
   return `<div class="bd-sec sec-t"><div class="bd-sh">隱藏屬性</div>`+
     (out.length?`<div class="bd-tw">${out.join('')}</div>`
                :'<div class="bd-none">還沒有覺醒任何隱藏屬性。</div>')+`</div>`;
