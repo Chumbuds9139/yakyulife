@@ -7,7 +7,7 @@ import {TRAIT_KEYS} from '../data/traits.js';
 import {$, card, choose, divider, board, actClear} from './dom.js';
 import {careerTimelineCard, tlNote} from './timeline.js';
 import {traitNames, traitTagStyle} from './traits.js';
-import {roleN, fmtIP, slgOf} from '../engine/season.js';
+import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js';
 import {playerType} from '../engine/ability.js';
 import {fmtMoney} from '../engine/contract.js';
 import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js';
@@ -62,8 +62,8 @@ export function rpIntlData(){
   if(isP){
     return {hd:['G','IP','W','SV','SO','ERA'],
       rows:il.map(r=>{ const st=r.st; return {year:r.year,name:r.name,rank:r.rank,
-        txt:[st.G,fmtIP(st.IP),st.W,st.SV,st.SO,RP_F2(st.IP>0?st.ER*9/st.IP:null)]}; }),
-      tot:[IS.G,fmtIP(IS.IP),IS.W,IS.SV,IS.SO,RP_F2(IS.IP>0?IS.ER*9/IS.IP:null)]};
+        txt:[st.G,fmtIP(st.IP),st.W,st.SV,st.SO,RP_F2(baseballERA(st))]}; }),
+      tot:[IS.G,fmtIP(IS.IP),IS.W,IS.SV,IS.SO,RP_F2(baseballERA(IS))]};
   }
   return {hd:['G','PA','AVG','H','HR','RBI'],
     rows:il.map(r=>{ const st=r.st; return {year:r.year,name:r.name,rank:r.rank,
@@ -259,8 +259,8 @@ export function endGame(reason){
   if(S.intlCount>0){ const IS=S.intlStat;
     const il=S.intlLog||[];
     if(S.pos==='P'){
-      const rows=il.map(r=>{ const st=r.st, era=st.IP>0?(st.ER*9/st.IP).toFixed(2):'-'; return `<tr><td>${r.year}</td><td style="text-align:left;white-space:nowrap">${r.name}</td><td>${r.rank}</td><td>${st.G}</td><td>${fmtIP(st.IP)}</td><td>${st.W}</td><td>${st.SV}</td><td>${st.SO}</td><td>${era}</td></tr>`; }).join('');
-      const era=IS.IP>0?(IS.ER*9/IS.IP).toFixed(2):'-';
+      const rows=il.map(r=>{ const st=r.st, era=RP_F2(baseballERA(st)); return `<tr><td>${r.year}</td><td style="text-align:left;white-space:nowrap">${r.name}</td><td>${r.rank}</td><td>${st.G}</td><td>${fmtIP(st.IP)}</td><td>${st.W}</td><td>${st.SV}</td><td>${st.SO}</td><td>${era}</td></tr>`; }).join('');
+      const era=RP_F2(baseballERA(IS));
       intlTable=`<h4 style="margin:12px 0 4px">國際賽逐屆成績（中華隊 ${S.intlCount} 屆）</h4><table class="fin"><tr><th>年度</th><th>賽事</th><th>結果</th><th>G</th><th>IP</th><th>W</th><th>SV</th><th>SO</th><th>ERA</th></tr>${rows}<tr><th colspan="3">國際賽通算</th><td>${IS.G}</td><td>${fmtIP(IS.IP)}</td><td>${IS.W}</td><td>${IS.SV}</td><td>${IS.SO}</td><td>${era}</td></tr></table>`;
     } else {
       const rows=il.map(r=>{ const st=r.st, avg=st.AB>0?(st.H/st.AB).toFixed(3).replace(/^0/,''):'-'; return `<tr><td>${r.year}</td><td style="text-align:left;white-space:nowrap">${r.name}</td><td>${r.rank}</td><td>${st.G}</td><td>${st.PA}</td><td>${avg}</td><td>${st.H}</td><td>${st.HR}</td><td>${st.RBI}</td></tr>`; }).join('');

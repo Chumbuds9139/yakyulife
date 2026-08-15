@@ -18,12 +18,22 @@ export function pitcherRole(){ /* 體力 >=52 先發;否則牛棚,牛棚內看�
   if(S.role==='CL')return d>=1?'CL':'MR';   /* 終結者崩盤才降中繼 */
   return d>=3?'CL':'MR';                     /* 中繼打出頂尖成績升終結者 */
 }
-export function fmtIP(ip){ /* 十進位局數轉棒球表示:小數部分 →三分之幾(出局數) */
-  if(ip==null)return '0.0';
-  const whole=Math.floor(ip); const frac=ip-whole;
-  const outs=Math.round(frac*3); /* 0/1/2/3 */
-  if(outs>=3)return (whole+1)+'.0';
-  return whole+'.'+outs;
+export function outsFromIP(ip){ /* 模擬用十進位局數統一量化為實際出局數 */
+  return Math.max(0,Math.round((Number(ip)||0)*3));
+}
+export function ipFromOuts(outs){
+  return Math.max(0,Math.round(Number(outs)||0))/3;
+}
+export function normalizeIP(ip){
+  return ipFromOuts(outsFromIP(ip));
+}
+export function baseballERA(st){
+  const ip=normalizeIP(st&&st.IP);
+  return ip>0?(Number(st&&st.ER)||0)*9/ip:null;
+}
+export function fmtIP(ip){ /* 以出局數顯示棒球局數：1/3 局=.1、2/3 局=.2 */
+  const outs=outsFromIP(ip);
+  return Math.floor(outs/3)+'.'+(outs%3);
 }
 export function roleN(r){ return {SP:'先發',MR:'中繼',CL:'終結者'}[r]||'—'; }
 export function isSP(){ return S.role==='SP'; } /* 先發引擎判定 */
