@@ -127,23 +127,39 @@ function affiliationHTML(){
   return `<span class="bt-lbl"><i>所屬</i><em>${student?'學校':'球隊'}</em></span>`+
     `<span class="bt-row">${name}${badge?`<span class="bt-badge ${top?'top':'sub'}">${badge}</span>`:''}</span>`;
 }
+/* 守位晶片(實底)＋稱號晶片(金描邊)。守位拆成「位置」與「・分工」兩段:緊湊列只留位置,
+   分工與稱號改由詳情面板首行補上(見 CSS 的 #bd-role .bd-chip.pos em)。 */
+function chipsHTML(){
+  const pos=S.dpos?DPN[S.dpos]:POSN[S.pos];
+  const role=S.role?'・'+roleN(S.role):'';
+  const typ=playerType()+(S.traits.genius?' ★':'');
+  return `<span class="bd-chip pos"><i>${pos}</i><em>${role}</em></span>`+
+    `<span class="bd-chip typ">${typ}</span>`;
+}
 export function board(phase){
   renderTraits();
   $('bd-jersey').textContent=S.jersey;
   $('bd-name').textContent=S.name;
-  { const pos=(S.dpos?DPN[S.dpos]:POSN[S.pos])+(S.role?'・'+roleN(S.role):'');
-    const typ=playerType()+(S.traits.genius?' ★':'');
-    $('bd-role').innerHTML=`<span class="bd-chip pos">${pos}</span><span class="bd-chip typ">${typ}</span>`; }
-  $('bd-team').innerHTML=affiliationHTML();
+  $('bd-role').innerHTML=chipsHTML();
+  { const t=$('bd-team'); t.innerHTML=affiliationHTML();
+    /* the compact bar drops the pill around a pro club: its white label is its own frame */
+    t.classList.toggle('pro',!!(S.stage==='PRO'&&S.orgTeam&&TEAM_COLOR[S.orgTeam])); }
   $('bd-age').textContent=S.age; $('bd-year').textContent=S.year;
   $('bd-ovr').textContent=ovr(); if(S.pos==='P'){const el=$('bd-tj'); if(el)el.textContent='';}
   { const sal=Math.round(S.salary),sp=salParts(sal),salEl=$('bd-sal'); salEl.textContent=sp.v;
     salEl.style.fontSize='';
-    const lb=$('bd-sal-lbl'); if(lb)lb.textContent=`生涯薪(${sp.u})`;
+    const lb=$('bd-sal-lbl');
+    if(lb)lb.innerHTML=`<i class="lw">生涯薪(${sp.u})</i><i class="lc">薪(${sp.u})</i>`;
     const tip=$('bd-sal-tip'); if(tip)tip.textContent=fmtMoney(sal)+' 台幣'; }
-  detailSync();
   [0,1,2].forEach(i=>$('lp'+i).classList.toggle('on',i===phase));
+  /* read the season back off the lamps so the two never disagree about the phase */
+  { const se=$('bd-season'); if(se){ const on=$('lamps').querySelector('.lamp.on');
+      se.querySelector('b').textContent=on?on.textContent:'';
+      se.style.visibility=on?'':'hidden'; } }
+  detailSync();
 }
+/* the compact bar is a CSS state, so ask the layout rather than re-deriving the breakpoint */
+function isCompact(){ const h=$('bd-hint'); return !!h && getComputedStyle(h).display!=='none'; }
 /* ---------- 「詳情」展開面板 ----------
    Four blocks over data the game already keeps: S.honors / S.ct + S.salary / S.traits +
    S.removed / S.log. Desktop lays all four out at once, mobile switches them with the tab
@@ -224,7 +240,9 @@ export function detailSync(){
   if(!S||!bd||!d||!bd.classList.contains('detail-open'))return;
   const cur=d.dataset.tab||'h', sc=d.scrollTop;
   const prevY=d.querySelector('.sec-y'), yTop=prevY?prevY.scrollTop:null;
-  d.innerHTML='<div class="bd-tabs">'+DTABS.map(([k,n])=>
+  /* the compact bar shows the position but not the 分工 or the 稱號; give them back here */
+  const idrow=isCompact()?`<div class="bd-idrow">${chipsHTML()}</div>`:'';
+  d.innerHTML=idrow+'<div class="bd-tabs">'+DTABS.map(([k,n])=>
       `<button type="button" class="bd-tab${k===cur?' on':''}" data-t="${k}">${n}</button>`).join('')+'</div>'+
     secHonors()+secSalary()+secTraits()+secLog();
   d.querySelectorAll('.bd-tab').forEach(b=>b.onclick=()=>{ d.dataset.tab=b.dataset.t; detailSync(); });
@@ -243,5 +261,14 @@ function detailToggle(){
   const y=d.querySelector('.sec-y'); if(y)y.scrollTop=y.scrollHeight;
 }
 if(typeof document!=='undefined'){
-  const more=document.getElementById('bd-more'); if(more)more.onclick=detailToggle;
+  const more=document.getElementById('bd-more');
+  if(more)more.onclick=e=>{ e.stopPropagation(); detailToggle(); };
+  /* Compact bar: the whole thing is the toggle (8B). The hamburger, the panel itself and the
+     year strip are live controls inside it, so a click that started there is not a bar tap. */
+  const bd=document.getElementById('board');
+  if(bd)bd.addEventListener('click',function(e){
+    if(!isCompact())return;
+    if(e.target.closest&&e.target.closest('#btn-menu,#bd-detail,#tl-strip'))return;
+    detailToggle();
+  });
 }

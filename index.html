@@ -100,11 +100,13 @@
         <button id="btn-menu" title="選單" aria-label="選單"><i></i><i></i><i></i></button>
       </div>
       <div id="bd-grid">
-        <div class="bd-cell"><b id="bd-age">16</b><span>年齡</span></div>
-        <div class="bd-cell"><b id="bd-year">2026</b><span>年份</span></div>
+        <div class="bd-cell"><b id="bd-age">16</b><span><i class="lw">年齡</i><i class="lc">歲</i></span></div>
+        <div class="bd-cell"><b id="bd-year">2026</b><span><i class="lw">年份</i><i class="lc">年</i></span></div>
         <div class="bd-cell"><b id="bd-ovr">30</b><span>綜合</span></div>
         <div class="bd-cell" id="bd-sal-cell" tabindex="0"><b id="bd-sal">0</b><span id="bd-sal-lbl">生涯薪(萬)</span><i class="bd-tip" id="bd-sal-tip"></i></div>
         <button id="bd-more" aria-expanded="false" aria-controls="bd-detail" title="詳情"><span class="lb">詳情</span><span class="ar"></span></button>
+        <!-- compact bar only: the three-lamp row collapses to the season actually running -->
+        <span id="bd-season"><i></i><b></b></span>
       </div>
       <div id="bd-detail" data-tab="h"></div>
       <div id="lamps">
@@ -113,6 +115,9 @@
         <span class="lamp" id="lp2"><i></i>季末</span>
       </div>
       <div id="tl-strip"></div>
+      <!-- compact bar only: a hint that the whole bar opens the detail panel, not a control
+           of its own (the tap target is the bar; #bd-more stays for keyboard and AT) -->
+      <div id="bd-hint" aria-hidden="true"><svg width="14" height="7" viewBox="0 0 14 7"><path d="M1 1l6 5 6-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
     </header>
     <main id="log"></main>
   </div>
