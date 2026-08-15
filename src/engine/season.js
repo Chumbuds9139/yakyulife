@@ -14,7 +14,11 @@ export function pitcherRole(){ /* 體力 >=52 先發;否則牛棚,牛棚內看�
   if(S.ab.sta>=52)return 'SP';
   /* 牛棚:讀「上一季」的 d(prevD,因為 lastD 已被 phasePre 清空);頂尖 → 終結者 */
   const pd=(S.prevD!==undefined?S.prevD:(S.lastD||0));
-  const d=(S.role&&S.role!=='SP')?pd:-99;
+  /* 只有上一季已在相同頂級聯盟投牛棚，該季成績才可用於終結者升降。
+     二軍升一軍、跨聯盟或舊存檔缺少 lastLv 時，第一季一律先從中繼開始。 */
+  const currentTop=LV[S.lv]&&LV[S.lv].top, previousTop=LV[S.lastLv]&&LV[S.lastLv].top;
+  const sameTopLeague=!!currentTop&&previousTop===currentTop;
+  const d=(sameTopLeague&&S.role&&S.role!=='SP')?pd:-99;
   if(S.role==='CL')return d>=1?'CL':'MR';   /* 終結者崩盤才降中繼 */
   return d>=3?'CL':'MR';                     /* 中繼打出頂尖成績升終結者 */
 }
