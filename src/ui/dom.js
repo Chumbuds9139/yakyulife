@@ -35,11 +35,18 @@ export function teamChip(hex){
 /* ---------- 主題化對話框(純呈現層) ---------- */
 export function modalOpen(html){ const m=$('modal'); if(!m)return; $('modal-box').innerHTML=html; m.classList.add('show'); }
 export function modalClose(){ const m=$('modal'); if(m)m.classList.remove('show'); }
+/* the wordmark tracks the theme (applyTheme rewrites every .wm-img src), so read the source
+   off one that is already in the document rather than hardcoding a file here */
+export function brandHTML(){
+  const wm=document.querySelector('.wm-img');
+  const src=wm?wm.getAttribute('src'):'assets/wordmark-cream.png';
+  return `<img class="wm-img" src="${src}" alt="YaKyoLife"><span class="sub">棒球人生模擬器</span>`;
+}
 export function menuModal(){
   const wide=matchMedia('(min-width:921px)').matches;
   const mob=document.body.classList.contains('mobile-ui');
   const big=document.body.classList.contains('big-text');
-  modalOpen(`<h3>選單</h3>
+  modalOpen(`<div class="md-brand">${brandHTML()}</div>
     <button class="btn" id="md-theme" style="text-align:center">切換佈景主題</button>
     <button class="btn" id="md-big" style="text-align:center">${big?'切回標準字級':'改用大字級'}</button>
     ${wide?`<button class="btn" id="md-ui" style="text-align:center">${mob?'切回電腦版介面':'改用手機版介面'}</button>`:''}
@@ -94,8 +101,15 @@ export function actClear(){ const a=$('act'); a.innerHTML=''; a.classList.remove
 export function actToggleSync(){
   const a=$('act'), t=$('act-toggle'); if(!t)return;
   const has=a.innerHTML.trim()!=='' && a.style.display!=='none';
-  t.style.display=has?'block':'none';
-  t.textContent=a.classList.contains('collapsed')?'⌃ 展開選項':'⌄ 收合選項';
+  t.style.display=has?'flex':'none';
+  /* same chevron as the top bar's hint; it points up while the options are folded away,
+     which is the direction they come back from at the bottom of the screen */
+  const collapsed=a.classList.contains('collapsed');
+  if(!t.querySelector('.chev'))t.innerHTML='<i class="chev"></i>';
+  t.querySelector('.chev').classList.toggle('up',collapsed);
+  t.setAttribute('aria-expanded',String(!collapsed));
+  const lbl=collapsed?'展開選項':'收合選項';
+  t.setAttribute('aria-label',lbl); t.title=lbl;
 }
 export function choose(title,opts){
   actClear(); const a=$('act');
@@ -250,7 +264,8 @@ export function detailSync(){
     : '';
   d.innerHTML=idrow+'<div class="bd-tabs">'+DTABS.map(([k,n])=>
       `<button type="button" class="bd-tab${k===cur?' on':''}" data-t="${k}">${n}</button>`).join('')+'</div>'+
-    secHonors()+secSalary()+secTraits()+secLog();
+    secHonors()+secSalary()+secTraits()+secLog()+
+    (isCompact()?`<div class="bd-mark">${brandHTML()}</div>`:'');
   /* stopPropagation, not just the #bd-detail guard on the board listener: this handler
      replaces the panel's innerHTML, so by the time the click bubbles up the button is
      detached and closest() can no longer tell the board the click came from inside */
