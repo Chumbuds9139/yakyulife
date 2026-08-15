@@ -67,12 +67,12 @@ export function posLegendPhrase(bucket){ /* 依守備占比與獎項決定守位
 export function honorScore(bucket){
   const lg={CPBL:'中職',NPB:'日職',MLB:'大聯盟'}[bucket];
   const champ={CPBL:'中職總冠軍',NPB:'日本一',MLB:'世界大賽冠軍'}[bucket];
-  const ace='年度最佳投手';
+  const isAce=h=>h.includes('最佳投手')||h.includes('賽揚');
   let sc=0,mvp=0,aceN=0,king=0;
   S.honors.forEach(h=>{
     if(h.includes(champ)){sc+=90;return;}
     if(!h.includes(lg))return;
-    if(h.includes(ace)){sc+=460;aceN++;return;}
+    if(isAce(h)){sc+=460;aceN++;return;}
     if(h.includes('年度MVP')){sc+=420;mvp++;}
     else if(h.includes('新人王'))sc+=140;
     else if(h.includes('金手套')){sc+=300;king++;}
@@ -151,7 +151,7 @@ export function honorRank(awd){
   const intl=/經典賽|12強|奧運|亞運|國家隊/.test(awd);
   const league=intl?0:(/大聯盟|世界大賽/.test(awd)?1:(/日職|日本一/.test(awd)?2:(/中職/.test(awd)?3:4)));
   const kind=/總冠軍|世界大賽冠軍|日本一$/.test(awd)?0:/年度MVP/.test(awd)?1:/MVP/.test(awd)?2:
-    /年度最佳投手/.test(awd)?3:/金手套/.test(awd)?4:/守備聖經/.test(awd)?5:/王/.test(awd)?6:/明星賽/.test(awd)?8:7;
+    /最佳投手|賽揚/.test(awd)?3:/金手套/.test(awd)?4:/守備聖經/.test(awd)?5:/王/.test(awd)?6:/明星賽/.test(awd)?8:7;
   return league*10+kind;
 }
 export function honorGroups(){
