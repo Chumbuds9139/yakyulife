@@ -245,7 +245,11 @@ export function detailSync(){
   d.innerHTML=idrow+'<div class="bd-tabs">'+DTABS.map(([k,n])=>
       `<button type="button" class="bd-tab${k===cur?' on':''}" data-t="${k}">${n}</button>`).join('')+'</div>'+
     secHonors()+secSalary()+secTraits()+secLog();
-  d.querySelectorAll('.bd-tab').forEach(b=>b.onclick=()=>{ d.dataset.tab=b.dataset.t; detailSync(); });
+  /* stopPropagation, not just the #bd-detail guard on the board listener: this handler
+     replaces the panel's innerHTML, so by the time the click bubbles up the button is
+     detached and closest() can no longer tell the board the click came from inside */
+  d.querySelectorAll('.bd-tab').forEach(b=>b.onclick=e=>{
+    e.stopPropagation(); d.dataset.tab=b.dataset.t; detailSync(); });
   d.scrollTop=sc;
   /* a board() refresh must not yank the 逐年 list back to the player's rookie year */
   const y=d.querySelector('.sec-y'); if(y&&yTop!=null)y.scrollTop=yTop;
@@ -268,7 +272,11 @@ if(typeof document!=='undefined'){
   const bd=document.getElementById('board');
   if(bd)bd.addEventListener('click',function(e){
     if(!isCompact())return;
-    if(e.target.closest&&e.target.closest('#btn-menu,#bd-detail,#tl-strip'))return;
+    const t=e.target;
+    /* a target that is no longer in the document was removed by its own handler, which means
+       something inside the bar already answered this click */
+    if(t.isConnected===false)return;
+    if(t.closest&&t.closest('#btn-menu,#bd-detail,#tl-strip'))return;
     detailToggle();
   });
 }

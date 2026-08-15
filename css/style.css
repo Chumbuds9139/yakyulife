@@ -64,6 +64,7 @@ a{color:var(--info)}
 #bd-role{min-width:0;display:flex;gap:5px}
 .bd-chip{font-size:10.5px;line-height:1.55;padding:1px 7px;border-radius:min(var(--r),5px);
   min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bd-chip i,.bd-chip em{font-style:normal} /* the two halves of the 守位 chip are split, not emphasised */
 .bd-chip.pos{background:var(--panel2);border:1px solid var(--edge);color:var(--text)}
 .bd-chip.typ{border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)}
 #bd-team{grid-area:team;min-width:0;display:flex;align-items:center;gap:8px;
@@ -585,7 +586,9 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
     box-shadow:0 0 6px color-mix(in srgb,var(--accent) 53%,transparent)}
   #lamps{display:none} /* replaced by #bd-season above */
   /* ---- row 3: the expand hint ---- */
-  #bd-hint{display:flex;justify-content:center;padding-top:1px;color:var(--dim);opacity:.55}
+  /* the hint carries the row gap on its own top edge so the rhythm holds whether or not the
+     year strip is between it and the numbers (the desktop column hides the strip) */
+  #bd-hint{display:flex;justify-content:center;padding-top:8px;color:var(--dim);opacity:.55}
   #bd-hint svg{transition:transform .18s}
   #board.detail-open #bd-hint svg{transform:rotate(180deg)}
   /* ---- the panel hangs over the log instead of pushing it down ---- */
@@ -594,7 +597,9 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
     box-shadow:0 12px 28px var(--shadow);max-height:min(60vh,420px)}
   #bd-detail .bd-idrow{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px;
     padding-bottom:9px;border-bottom:1px solid var(--edge)}
-  #tl-strip{margin-top:8px}
+  /* the handoff never drew the year strip, so it joins the same 8px rhythm as the two rows;
+     its 2px scrollbar gutter is dead weight on a phone, where the strip scrolls without one */
+  #tl-strip{margin-top:8px;padding-bottom:0}
   /* Under ~360px row 1 is ~24px short even at the amateur stage, and the flex shrink lands on
      the team name: 美麗珊瑚 collapsed to 美…. Drop the 守位 chip instead, which the panel's
      first row still carries, and the name and its badge both stay whole. */
