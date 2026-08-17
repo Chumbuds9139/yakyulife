@@ -359,4 +359,3 @@ export function endGame(reason){
     for(const h of heads){ if(h.textContent==='生涯終幕'){ h.scrollIntoView({behavior:'auto',block:'start'}); break; } }
   }catch(e){} }, 250);
 }
-
