@@ -1,15 +1,15 @@
-import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.5.0-r3';
-import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.0-r3';
-import {POS_ADJ_RUNS} from '../data/abilities.js?v=1.5.0-r3';
-import {LV, HS_CUPS, U_CUPS} from '../data/teams.js?v=1.5.0-r3';
-import {card, board} from '../ui/dom.js?v=1.5.0-r3';
-import {ovr, careerAllStars, toolGap} from './ability.js?v=1.5.0-r3';
-import {tjAccrue, tjGamble} from './injury.js?v=1.5.0-r3';
+import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.5.0-r4';
+import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.0-r4';
+import {POS_ADJ_RUNS} from '../data/abilities.js?v=1.5.0-r4';
+import {LV, HS_CUPS, U_CUPS} from '../data/teams.js?v=1.5.0-r4';
+import {card, board} from '../ui/dom.js?v=1.5.0-r4';
+import {ovr, careerAllStars, toolGap} from './ability.js?v=1.5.0-r4';
+import {tjAccrue, tjGamble} from './injury.js?v=1.5.0-r4';
 /* temporary scaffold until awards/intl/contract/flow are extracted */
-import {demotionAudit} from './contract.js?v=1.5.0-r3';
-import {awards} from './awards.js?v=1.5.0-r3';
-import {maybeIntl} from './intl.js?v=1.5.0-r3';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.0-r3';
+import {demotionAudit} from './contract.js?v=1.5.0-r4';
+import {awards} from './awards.js?v=1.5.0-r4';
+import {maybeIntl} from './intl.js?v=1.5.0-r4';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.0-r4';
 export function pitcherRole(){ /* 體力 >=52 先發;否則牛棚,牛棚內看表現升終結者 */
   if(S.ab.sta>=52)return 'SP';
   /* 牛棚:讀「上一季」的 d(prevD,因為 lastD 已被 phasePre 清空);頂尖 → 終結者 */

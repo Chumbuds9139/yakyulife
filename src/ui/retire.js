@@ -1,17 +1,17 @@
-import {S, blankStat, bucketOf} from '../core/state.js?v=1.5.0-r3';
-import {R, ri, SEED} from '../core/rng.js?v=1.5.0-r3';
-import {OFFICIAL_URL} from '../config.js?v=1.5.0-r3';
-import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, teamNick} from '../data/teams.js?v=1.5.0-r3';
-import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.0-r3';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.5.0-r3';
-import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.0-r3';
-import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.0-r3';
-import {traitNames, traitTagStyle} from './traits.js?v=1.5.0-r3';
-import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.0-r3';
-import {playerType} from '../engine/ability.js?v=1.5.0-r3';
-import {fmtMoney} from '../engine/contract.js?v=1.5.0-r3';
-import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.0-r3';
-import {shareImage} from './share-image.js?v=1.5.0-r3';
+import {S, blankStat, bucketOf} from '../core/state.js?v=1.5.0-r4';
+import {R, ri, SEED} from '../core/rng.js?v=1.5.0-r4';
+import {OFFICIAL_URL} from '../config.js?v=1.5.0-r4';
+import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, teamNick} from '../data/teams.js?v=1.5.0-r4';
+import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.0-r4';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.5.0-r4';
+import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.0-r4';
+import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.0-r4';
+import {traitNames, traitTagStyle} from './traits.js?v=1.5.0-r4';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.0-r4';
+import {playerType} from '../engine/ability.js?v=1.5.0-r4';
+import {fmtMoney} from '../engine/contract.js?v=1.5.0-r4';
+import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.0-r4';
+import {shareImage} from './share-image.js?v=1.5.0-r4';
 /* ================= 結算圖資料建構 =================
    Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
    All values come from S.*; the in-game settlement cards are untouched. */
@@ -122,7 +122,7 @@ export function rpProData(proLogs){ /* team segments: a new block whenever the o
   return {hd,blocks};
 }
 export const POST_CAREER_ENDINGS={
-  coach:{title:'還在同一片草皮上',body:`球棒掛上牆的那天，你以為告別就此完成。<br><br>隔年春訓，你卻換了一件寫著自己名字、卻沒有背號意義的球衣，重新走進熟悉的休息區。手套換成了記事本，揮棒換成了一句句在耳邊的提醒。<br><br>你會在深夜看完三十球的慢動作重播，只為了告訴某個菜鳥：「你的前腳，早了0.2秒。」<br><br>有人說教練是站在光後面的人。但當你看著那個曾經笨拙的孩子，在滿場歡聲中繞過本壘，你忽然明白——<br><br>你從來沒有離開過球場，只是換了一種方式，繼續打球。`},
+  coach:{title:'還在同一片草皮上',body:`球具掛上牆的那天，你以為告別就此完成。<br><br>隔年春訓，你卻換了一件寫著自己名字、卻沒有背號意義的球衣，重新走進熟悉的休息區。手套換成了記事本，揮棒換成了一句句在耳邊的提醒。<br><br>你會在深夜看完三十球的慢動作重播，只為了告訴某個菜鳥：「你的前腳，早了0.2秒。」<br><br>有人說教練是站在光後面的人。但當你看著那個曾經笨拙的孩子，在滿場歡聲中繞過本壘，你忽然明白——<br><br>你從來沒有離開過球場，只是換了一種方式，繼續打球。`},
   scout:{title:'在無人的看台上',body:`你的辦公室，是一張又一張空蕩蕩的鐵椅。<br><br>高中球場、乙組聯賽、鄉下的紅土球場。你帶著測速槍與一本翻爛的筆記本，跑遍那些沒有轉播、沒有掌聲的角落。<br><br>大多數時候，你什麼也沒找到。但偶爾，在某個午後的第七局，會有一顆球從陌生少年的手中飛出，讓你在筆記本上重重畫下一個圈。<br><br>沒有人會記得球探的名字。若干年後，當那個少年站上一軍投手丘，鏡頭只會拍到他。<br><br>但你會坐在電視機前，安靜地笑一下。<br><br>有些人負責發光，有些人負責——在天亮以前，先看見光。`},
   grassroots:{title:'紅土上的第一步',body:`你回到了故鄉的小學。<br><br>球隊只有十四個人，手套是別人捐的，午餐要靠家長輪流準備。你教他們的第一件事，不是揮棒，是把球具排整齊。<br><br>這裡不會有選秀，不會有合約，不會有滿場的加油聲。有的只是每天放學後那兩個小時，和一整片被夕陽曬得溫熱的紅土。<br><br>有些孩子會走得很遠，有些孩子明年就不打了。你都送到路口為止。<br><br>多年後，某個穿著職業球衣的年輕人，在採訪中被問到誰影響他最深。<br><br>他想了想，說出了一個沒有人聽過的名字。<br><br>那是你，還有那片，永遠等著下一批孩子的紅土。`}
 };
