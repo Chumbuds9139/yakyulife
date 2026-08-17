@@ -9,7 +9,7 @@ import {allocUI} from '../ui/alloc.js';
 import {addAb, ovr, dposReview} from '../engine/ability.js';
 import {rollInjury, tjCap} from '../engine/injury.js';
 import {isMrTeamEligible} from '../engine/tenure.js';
-import {amateurSeason, proSeason, slgOf, currentSalaryRating} from '../engine/season.js';
+import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP} from '../engine/season.js';
 import {buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, signTo, teamChampRate} from '../engine/contract.js';
 import {drawEvents, removeTrait} from './events.js';
 import {loveEvent} from './love.js';
@@ -22,9 +22,12 @@ export function phasePre(){
   board(0); S.tmpInj=0; S.seasonFactor=1; S.skipMid=false; S.marketInjury='healthy'; S.prevD=S.lastD||0; S.lastD=0; S.lastPayD=0; /* 先保留上季 d 供投手定位判定 */
   if(S.age>=48){ buyoutRemaining(1,true); endGame('身體已到極限，'+S.year+' 年春訓後宣布引退。'); return; }
   const declAge=S.age-(S.traits.disc?2:0); /* 自律狂:衰退曲線整體延後兩年 */
-  if(declAge>=32){ const dec=declAge>=35?5+(declAge-35):2;
+  if(declAge>=32){ const baseDec=declAge>=35?5+(declAge-35):2;
+    const oldGhostActive=!!(S.oldGhostPending&&!S.oldGhostUsed);
+    const dec=oldGhostActive?Math.max(1,Math.round(baseDec*0.5)):baseDec;
     POS_AB[S.pos].forEach(k=>S.ab[k]=clamp(S.ab[k]-dec,1,80));
-    card('bad','歲月不饒人',`${declAge>=35?'第二階段（逐年加劇）':'第一階段'}衰退：所有能力 <b class="dn">−${dec}</b>${S.traits.disc?'（自律狂：生涯延後兩年）':''}。訓練加點照常，但身體回不去了。`); board(0); }
+    if(oldGhostActive){ S.oldGhostPending=false; S.oldGhostUsed=true; }
+    card('bad','歲月不饒人',`${declAge>=35?'第二階段（逐年加劇）':'第一階段'}衰退：所有能力 <b class="dn">−${dec}</b>${S.traits.disc?'（自律狂：生涯延後兩年）':''}${oldGhostActive?`（老鬼：原衰退 −${baseDec}，本年減緩 50%）`:''}。訓練加點照常，但身體回不去了。`); board(0); }
   if(S.rehab>0){ S.rehab--; S.skipMid=true; S.seasonFactor=0; S.marketInjury='rehab';
     card('bad','復健年',`大傷尚未痊癒，本季確定<b class="dn">全年報銷</b>，只能在復健室度過。（擲骰減為 2 顆）`);
     const dummySt = {G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,avg:0,era:0,WHIP:0,DEF:0};
@@ -254,7 +257,7 @@ export function movement(){
   { const st=S.lastSt;
     if(st&&S.seasonFactor>=0.5){
       if(S.pos==='P'){
-        const era=st.IP>0?st.ER*9/st.IP:99, whip=st.IP>0?(st.H+st.BB)/st.IP:99;
+        const era=baseballERA(st)??99, whip=baseballWHIP(st)??99;
         /* 投手:ERA 或 WHIP 達聯盟一線水準,或有一定救援/中繼產能 */
         if(era<=4.20||whip<=1.35||(st.SV||0)>=15||(st.HLD||0)>=15)goodReal=true;
       }else{

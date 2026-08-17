@@ -7,7 +7,7 @@ import {TEAM_COLOR, LV} from '../data/teams.js';
 import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js';
 import {playerName, stageLabel} from '../core/state.js';
 import {salParts, fmtMoney} from '../engine/contract.js';
-import {roleN, fmtIP, slgOf} from '../engine/season.js';
+import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js';
 import {honorGroups, yearRanges} from '../engine/career.js';
 import {playerType, ovr} from '../engine/ability.js';
 
@@ -242,7 +242,7 @@ function secLog(){
       `<div class="bd-yr hd"><span class="y">年</span><span class="a opt">齡</span>`+
       `<span class="tm">球隊</span>${cells(hd)}</div>`;
     pro.forEach(r=>{ const s=r.st; let v;
-      if(isP){ const era=s.IP>0?s.ER*9/s.IP:null;
+      if(isP){ const era=baseballERA(s);
         v=[s.G,fmtIP(s.IP),`${s.W}-${s.L}`,s.SV||0,s.SO,F2(era)];
       } else { const obp=s.PA>0?(s.H+s.BB)/s.PA:null, slg=s.AB>0?slgOf(s):null;
         v=[s.G,s.PA,F3(s.AB>0?s.H/s.AB:null),s.HR,s.RBI,F3((obp!=null&&slg!=null)?obp+slg:null)]; }

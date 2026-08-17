@@ -45,7 +45,8 @@ function eventTarget(ev){ return ev.target in S.ab?ev.target:pick(POS_AB[S.pos])
 function targetLabel(ev){ return ev.target in S.ab?ABL[ev.target]:'隨機主能力'; }
 function eventCash(mode){
   const base={CPBL2:5,CPBL1:20,NPB2:10,NPB1:50,R:5,A1:7,A2:10,A3:15,MLB:100}[S.lv]||5;
-  return Math.max(1,Math.round(base*({bold:1.5,norm:1,safe:.5}[mode]||1)));
+  const traitBonus=S.traits.adking?1.1:1;
+  return Math.max(1,Math.round(base*({bold:1.5,norm:1,safe:.5}[mode]||1)*traitBonus));
 }
 export function recordOutsideIncome(value){
   const cash=Math.max(0,Math.round(Number(value)||0));
@@ -94,7 +95,22 @@ function runEventSequence(sequence,done,index){
   const after=()=>{ board(1); runEventSequence(sequence,done,i+1); };
   showEvent(pick(pool.length?pool:EVENTS.filter(ev=>ev.category===category)),after);
 }
+function runEventCards(cards,done,index){
+  const i=index||0;
+  if(i>=cards.length){ done(); return; }
+  const after=()=>{ board(1); runEventCards(cards,done,i+1); };
+  showEvent(cards[i],after);
+}
+export function amateurEventPool(state){
+  const s=state||S;
+  return EVENTS.filter(ev=>ev.category!=='endorsement'&&eventEligible(ev,s));
+}
 export function drawEvents(done){
+  /* 高中與大學沒有代言，也不選事件組成：通用卡與該階段限定卡混池後抽兩張。 */
+  if(S.stage==='HS'||S.stage==='U'){
+    runEventCards(shuffled(amateurEventPool(S)).slice(0,2),done,0);
+    return;
+  }
   const combos=eventCombinationOptions(S);
   choose('請決定今年的事件組成',combos.map(combo=>({
     t:combo.map(category=>EVENT_CATEGORY_NAMES[category]).join('・'),main:true,
@@ -109,7 +125,8 @@ export function resolveEvent(ev,mode,done){
   let good,tag;
   if(mode==='safe'){ good=chance(od.safe); tag='保守應對'; }
   else if(mode==='bold'){ good=chance(od.bold); tag='全力一搏';
-    if(good)S.cntBoldWin++; else S.cntBoldFail++; }
+    if(good){ S.cntBoldWin++; if(ev.category==='endorsement')S.cntEndorseBoldWin=(S.cntEndorseBoldWin||0)+1; }
+    else S.cntBoldFail++; }
   else { good=chance(od.norm); tag=''; }
   if(mode==='safe'&&good)S.cntSaveWin=(S.cntSaveWin||0)+1; /* 自律狂:保守成功才算 */
   if((ev.n==='宵夜文化'||ev.n==='場外代言邀約')&&mode!=='safe'&&!good)S.cntSnack++;
@@ -159,6 +176,8 @@ export function allocDone(touched,isDice){
     board(1); }
 }
 export function checkTraitsMid(){
+  if(!S.traits.adking&&(S.cntEndorseBoldWin||0)>=5){
+    traitCard('adking','業配王','你在廣告上的時間，比明星還多，從此代言取得金額多10%'); }
   /* 自律狂:25 歲前累積保守「成功」15 次 + 從未外遇被抓 + 宵夜 <5 次 */
   if(!S.traits.disc&&S.age<25&&(S.cntSaveWin||0)>=15&&S.love.caught===0&&S.cntSnack<5){
     traitCard('disc','自律狂','你見過凌晨四點的洛杉磯嗎？——年紀輕輕就把身體當成聖殿經營，沒有派對、沒有酒精，只有重訓室的鐵片聲：<b class="hl">整條衰退曲線延後兩年</b>，你的巔峰比同梯更長。'); }
