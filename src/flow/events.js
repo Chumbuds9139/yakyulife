@@ -23,8 +23,8 @@ export function eventEligible(ev,state){
   if(ev.role==='B'&&(s.pos==='P'||s.pos==='C'))return false;
   if(ev.scope!=='*'&&s.org!==ev.scope)return false;
   if(ev.times.includes('ALL'))return true;
-  if(ev.times.includes(s.stage))return true;
-  return ev.times.includes('MINOR')&&s.stage==='PRO'&&!(LV[s.lv]&&LV[s.lv].top);
+  if(s.stage==='PRO')return ev.times.includes(LV[s.lv]&&LV[s.lv].top?'PRO':'MINOR');
+  return ev.times.includes(s.stage);
 }
 export function eventPool(category,state){ return EVENTS.filter(ev=>ev.category===category&&eventEligible(ev,state)); }
 function shuffled(list){ const out=list.slice(); for(let i=out.length-1;i>0;i--){ const j=Math.floor(R()*(i+1)); [out[i],out[j]]=[out[j],out[i]]; } return out; }

@@ -551,7 +551,8 @@ export const EVENTS=[
     "id": 20,
     "n": "教練團關注",
     "times": [
-      "ALL"
+      "MINOR",
+      "PRO"
     ],
     "scope": "*",
     "role": "*",
@@ -1032,6 +1033,7 @@ export const EVENTS=[
     "id": 36,
     "n": "場外代言邀約",
     "times": [
+      "MINOR",
       "PRO"
     ],
     "scope": "*",
@@ -1062,6 +1064,7 @@ export const EVENTS=[
     "id": 37,
     "n": "媒體專訪",
     "times": [
+      "MINOR",
       "PRO"
     ],
     "scope": "*",
@@ -2592,7 +2595,7 @@ export const EVENTS=[
     "id": 88,
     "n": "室內練習場加班",
     "times": [
-      "ALL"
+      "PRO"
     ],
     "scope": "NPB",
     "role": "P",
@@ -2622,7 +2625,7 @@ export const EVENTS=[
     "id": 89,
     "n": "球場風向資料課",
     "times": [
-      "ALL"
+      "PRO"
     ],
     "scope": "MiLB",
     "role": "*",
@@ -2652,7 +2655,7 @@ export const EVENTS=[
     "id": 90,
     "n": "社區棒球教室",
     "times": [
-      "ALL"
+      "PRO"
     ],
     "scope": "MiLB",
     "role": "P",
@@ -2712,7 +2715,7 @@ export const EVENTS=[
     "id": 92,
     "n": "上Podcast接受訪談",
     "times": [
-      "ALL"
+      "PRO"
     ],
     "scope": "*",
     "role": "*",
