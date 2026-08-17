@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.0';
-import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.0';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.0';
-import {LV} from '../data/teams.js?v=1.5.0';
-import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS} from '../data/events.js?v=1.5.0';
-import {card, choose, board} from '../ui/dom.js?v=1.5.0';
-import {addAb, ovr} from '../engine/ability.js?v=1.5.0';
-import {majorChampionshipCount} from '../engine/championship.js?v=1.5.0';
+import {S} from '../core/state.js?v=1.5.0-r2';
+import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.0-r2';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.0-r2';
+import {LV} from '../data/teams.js?v=1.5.0-r2';
+import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS} from '../data/events.js?v=1.5.0-r2';
+import {card, choose, board} from '../ui/dom.js?v=1.5.0-r2';
+import {addAb, ovr} from '../engine/ability.js?v=1.5.0-r2';
+import {majorChampionshipCount} from '../engine/championship.js?v=1.5.0-r2';
 export function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 export function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
@@ -110,14 +110,25 @@ function runEventCards(cards,done,index){
   const after=()=>{ board(1); runEventCards(cards,done,i+1); };
   showEvent(cards[i],after);
 }
+export function isAmateurEventStage(state){
+  const s=state||S;
+  return s.stage==='HS'||s.stage==='U'||s.stage==='AMA';
+}
 export function amateurEventPool(state){
   const s=state||S;
-  return EVENTS.filter(ev=>ev.category!=='endorsement'&&eventEligible(ev,s));
+  return EVENTS
+    .filter(ev=>(ev.category==='training'||ev.category==='encounter')&&eventEligible(ev,s))
+    /* 業餘沒有可承接的球季成績數值：保留遭遇故事，但一律視為訓練卡，
+       讓顯示、成功/失敗點數與結算都改走能力成長。原始職業卡池不受影響。 */
+    .map(ev=>ev.category==='encounter'?{...ev,category:'training'}:ev);
 }
 export function drawEvents(done){
-  /* 高中與大學沒有代言，也不選事件組成：通用卡與該階段限定卡混池後抽兩張。 */
-  if(S.stage==='HS'||S.stage==='U'){
-    runEventCards(shuffled(amateurEventPool(S)).slice(0,2),done,0);
+  /* 高中、大學與業餘沒有代言或成績加成，也不選事件組成：
+     通用卡與該階段限定卡混池後，全部以訓練卡抽取；高中/大學維持兩張，
+     業餘維持既有三張，避免改動每年事件總點數。 */
+  if(isAmateurEventStage(S)){
+    const count=S.stage==='AMA'?3:2;
+    runEventCards(shuffled(amateurEventPool(S)).slice(0,count),done,0);
     return;
   }
   const combos=eventCombinationOptions(S);
