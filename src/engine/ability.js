@@ -45,11 +45,15 @@ export function dposReview(cont){
       return a.fld>=bar-6 && a.cat>=bar-4 && a.arm>=bar-2; };
     if(S.dpos==='C'){
       if(cOk()){ cont(); return; }
+      const a=S.ab;
+      /* 依接球、配球、臂力的當下能力值，顯示數值最低的一環。 */
+      const issue=[['漏球',a.fld],['配球',a.cat],['阻殺率',a.arm]]
+        .sort((x,y)=>x[1]-y[1])[0][0];
       const opts=[];
       if(dpQual('1B'))opts.push({t:'移防 一壘手',main:true,s:posAdjLabel('1B'),
         f:()=>{S.dpos='1B';card('info','守位調整','捕手裝備收進置物櫃——新球季改守<b class="hl">一壘</b>。');cont();}});
       opts.push({t:'轉任 指定打擊',main:!opts.length,s:posAdjLabel('DH'),
-        f:()=>{S.dpos='DH';card('info','守位調整','阻殺率成了聯盟笑話，球團決定讓你專心打擊——<b class="hl">DH</b>。');cont();}});
+        f:()=>{S.dpos='DH';card('info','守位調整',`${issue}成了聯盟笑話，球團決定讓你專心打擊——<b class="hl">DH</b>。`);cont();}});
       choose(`守位會議：教練團已經不敢讓你蹲捕（${LV[S.lv].n}標準）`,opts); return;
     }
     if(cOk()){ /* 守備練回來了,可以回鍋蹲捕 */
@@ -73,7 +77,9 @@ export function dposReview(cont){
     }
     S.role=nr;
     if(old&&old!==nr){
-      card('info','定位調整',`球團季末評估你的體力狀況，新球季將你的角色調整為 <b class="hl">${roleN(nr)}</b>。`); }
+      /* 中繼與終結者互換看球季成績；先發與牛棚間的調整才看體力。 */
+      const basis=old!=='SP'&&nr!=='SP'?'成績':'體力狀況';
+      card('info','定位調整',`球團季末評估你的${basis}，新球季將你的角色調整為 <b class="hl">${roleN(nr)}</b>。`); }
     else if(!old){
       card('info','投手定位',`教練團評估你的體力，將你登錄為 <b class="hl">${roleN(nr)}</b>。`); }
     cont(); return;

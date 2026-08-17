@@ -111,7 +111,7 @@ export function phasePre(){
     /* 旅外老將(衰退期):放棄現有合約,落葉歸根返台;ovr<30(真的打不動)不給 */
     if(S.org!=='CPBL'&&ovr()>=LV.CPBL2.min){
       oldOpts.push({t:'放棄合約，落葉歸根',s:'狀態不再，仍想把最後的球打給家鄉看',f:()=>{
-        card('good','落葉歸根',`狀態早已不在巔峰。但家鄉球隊仍然向你招手——他們要的不是現在的數據，是你這個名字陪著大家走過的那些年。你決定放棄合約，回家，把最後的球打給臺灣的球迷看。`);
+        card('good','落葉歸根',`狀態雖然已經不在巔峰，但家鄉球隊仍然向你招手——他們要的不是你的實力，是你在國際賽、在海外聯賽建立起的回憶。你決定放棄合約，回家，把職業生涯最後幾年奉獻給大家。`);
         signTo('CPBL','CPBL1'); tlRestage(); afterAsk(); /* spring move: this season is already CPBL */
       }});
     }
@@ -141,12 +141,12 @@ export function updateTeamTenureTraits(){
 
   if(!S.traits.goldcloth&&S.orgTeam==='台中猛獁'&&(S.teamTally.CPBL&&S.teamTally.CPBL['台中猛獁']>=10)){
     S.traits.goldcloth=true;
-    card('gold','隱藏屬性解鎖：黃金聖衣','效力 台中猛獁 滿十年，你已是這支球隊的象徵。披上那件黃金戰袍，你就是主場的信仰。'); board(1);
+    card('gold','隱藏屬性解鎖：黃金聖衣','效力 台中猛獁 滿十年，你愛猛獁，不離不棄。'); board(1);
   }
 
   if(!S.traits.franchise&&S.teamYears>=7&&S.champThisTeam&&S.champTeam===S.orgTeam){
     S.traits.franchise=true; S.franchiseActive=true; S.franchiseTeamName=S.orgTeam;
-    card('gold','隱藏屬性解鎖：神主牌','這座城市的球迷看著你長大。球團高層很清楚，放你走球迷會把主場拆了——<b class="hl">效力本隊期間享有交易保護與 4% 招牌球星溢價；引退評價永久 +200</b>。'); board(1);
+    card('gold','隱藏屬性解鎖：神主牌','小孩指著你說：「我媽媽從小就看你打球。」球團高層很清楚，放你走球迷會把主場拆了——<b class="hl">效力本隊期間享有交易保護與 4% 招牌球星溢價；引退評價永久 +200</b>。'); board(1);
   }else if(S.traits.franchise&&!S.franchiseActive&&S.teamYears>=7){
     S.franchiseActive=true; S.franchiseTeamName=S.orgTeam;
     card('gold','神主牌效果恢復',`來到 <b class="hl">${S.orgTeam}</b> 的第七個頂級球季，你再一次成為城市無法割捨的招牌——<b class="hl">交易保護與 4% 合約溢價重新生效</b>。`); board(1);
@@ -283,6 +283,6 @@ export function movement(){
         card('info','升級薪資保障',`原合約固定年薪 <b>${fmtMoney(oldAnnual)}</b> 低於 ${LV[to].n}保障標準；自下季起調整為 <b class="hl">${fmtMoney(raised)}</b>，後續即使下放也不會再降回原薪。`);
       }
       if(LV[to].top)tlNote(2,'升上'+LV[to].n);
-      if(S.traits.yips){ removeTrait('yips','失憶症'); card('good','走出陰影','重回上一層舞台，你終於找回了節奏——<b class="hl">失憶症痊癒</b>。'); } } }
+      if(S.traits.yips){ removeTrait('yips','失憶症'); card('good','走出陰影','將身體與心靈重新來過，終於爬回了原本的高度——<b class="hl">失憶症痊癒</b>。'); } } }
   finishContractYear(o);
 }

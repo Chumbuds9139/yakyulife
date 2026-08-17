@@ -67,7 +67,7 @@ export function tjBigInjury(cont){
   S.tjCount++; S.rehab=1; S.tj=0; S.marketInjury='major';
   /* 5% 肩膀報廢 */
   if(chance(5)){ S.ab.vel=10; S.ab.brk=10; S.pot.vel=20; S.pot.brk=20;
-    card('bad','最壞的結果',`長期閃避手肘的痛處，你的姿勢逐漸變形，雖然表現看起來沒有下滑，但你清楚知道發力的地方已經跟巔峰時完全不一樣了。終於在投出其中一球後，有一股劇痛從長期代償的肩膀傳來，悔恨的眼淚流了下來，你的投手生涯即將走向終點。<br><b class="dn">肩膀報廢：球速與變化球降至 10，潛力上限降至 20。</b>`);
+    card('bad','最壞的結果',`長期閃避手肘的痛處，你的姿勢逐漸變形，投球姿勢彷彿在推鉛球。突然一陣劇痛，你發現自己的手已經抬不起來了。<br><b class="dn">肩膀報廢：球速與變化球降至 10，潛力上限降至 20。</b>`);
     board(1); afterGamble('fail',cont); return; }
 
   /* 韌帶斷裂的懲罰 (-5) 以及手術後的回春 (+3~+10) */
