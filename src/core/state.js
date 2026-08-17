@@ -28,7 +28,7 @@ export function newState(name,jersey,pos,role){
     league:null,org:null,orgTeam:null,lastCpblTeam:null,teamTally:{CPBL:{},NPB:{},MLB:{}},
     ab,traits:{genius:false,glass:false,iron:false,scum:false,
       late:false,disc:false,academy:false,intlace:false,franchise:false,clutch:false,phoenix:false,combo:false,onetool:false,rubber:false,legend:false,
-      oldghost:false,adking:false,miraclegen:false,strongpitch:false,stronghit:false,
+      oldghost:false,adking:false,miraclegen:false,strongpitch:false,stronghit:false,championmaker:false,
       yips:false,distract:false,cancer:false,ambience:false,goldcloth:false,thief:false,mrteam:false,confidante:false,smallschool:false,grinder:false,rainbow:false,taiwan:false},
     removed:[], /* 被覆蓋/解除的特性,結算畫刪除線 */
     cntSave:0,cntSaveWin:0,cntSnack:0,cntBoldWin:0,cntBoldFail:0,cntSocialBoldFail:0,cntEndorseBoldWin:0,

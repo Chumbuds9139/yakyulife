@@ -314,6 +314,7 @@ export function endGame(reason){
   if(S.traits.phoenix)picks.push('從手術台爬回來還能拿獎，這種心臟是鈦合金做的吧');
   if(S.traits.onetool&&S.toolRole)picks.push(`那招${S.toolRole}真的無解，關鍵時刻換他上場就對了`);
   if(S.traits.clutch)picks.push('大場面先生，越關鍵的時刻越信任他');
+  if(S.traits.championmaker)picks.push('他走到哪裡就贏到哪裡，優勝請負人真的不是叫假的');
   if(S.love.st==='married'&&S.love.kids>=2)picks.push('引退後好好陪家人吧，孩子們等你很久了');
   card('info','球迷看板・引退串',picks.map(p=>'「'+p.replace(/{n}/g,S.name)+'」').join('<br>'));
   const ending=postCareerEnding(tiersByLg);

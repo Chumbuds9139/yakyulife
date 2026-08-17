@@ -10,8 +10,9 @@ import {addAb, ovr, dposReview} from '../engine/ability.js';
 import {rollInjury, tjCap} from '../engine/injury.js';
 import {isMrTeamEligible} from '../engine/tenure.js';
 import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP} from '../engine/season.js';
+import {championshipChance} from '../engine/championship.js';
 import {buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, signTo, teamChampRate} from '../engine/contract.js';
-import {drawEvents, removeTrait} from './events.js';
+import {drawEvents, removeTrait, checkChampionTrait} from './events.js';
 import {loveEvent} from './love.js';
 import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js';
 import {endGame} from '../ui/retire.js';
@@ -20,6 +21,7 @@ export function startYear(){ S.yearOutsideIncome=0; stepQ.length=0; stepQ.push(p
 /* ---------- 季初 ---------- */
 export function phasePre(){
   board(0); S.tmpInj=0; S.seasonFactor=1; S.skipMid=false; S.marketInjury='healthy'; S.prevD=S.lastD||0; S.lastD=0; S.lastPayD=0; /* 先保留上季 d 供投手定位判定 */
+  checkChampionTrait(); /* 舊存檔已有五冠時也會補解鎖。 */
   if(S.age>=48){ buyoutRemaining(1,true); endGame('身體已到極限，'+S.year+' 年春訓後宣布引退。'); return; }
   const declAge=S.age-(S.traits.disc?2:0); /* 自律狂:衰退曲線整體延後兩年 */
   if(declAge>=32){ const baseDec=declAge>=35?5+(declAge-35):2;
@@ -188,8 +190,9 @@ export function phaseEnd(){
       const pc=teamChampRate(S.orgTeam,S.year);
       let pcc=pc;
       if(S.tradeRefuse>0){ pcc*=0.75; } /* 否決交易:戰力略受影響(成本已降) */
+      pcc=championshipChance(pcc,!!S.traits.championmaker);
       if(chance(pcc)){ const cN={CPBL:'中職總冠軍',NPB:'日本一',MLB:'世界大賽冠軍'}[LV[S.lv].top];
-        S.honors.push(`${S.year} ${cN}`); S.wonChamp=true; S.champThisTeam=true; S.champTeam=S.orgTeam; extra=`<br>球隊奪下 <b class="hl">${cN}</b>，全城陷入瘋狂！`; } }
+        S.honors.push(`${S.year} ${cN}`); S.wonChamp=true; S.champThisTeam=true; S.champTeam=S.orgTeam; checkChampionTrait(); extra=`<br>球隊奪下 <b class="hl">${cN}</b>，全城陷入瘋狂！`; } }
     if(S.tradeRefuse>0)S.tradeRefuse--;
     if(S.tradeHeat>0)S.tradeHeat=Math.max(0,S.tradeHeat-5);
     card('','季末結算',`本年度薪資：<b class="hl">${fmtMoney(sal)}</b>（生涯累計 ${fmtMoney(Math.round(S.salary))}）${S.ct?`｜合約剩 ${Math.max(0,S.ct.yrs-1)} 年`:''}${outsideText}${extra}`);

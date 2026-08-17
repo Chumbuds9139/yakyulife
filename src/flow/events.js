@@ -5,10 +5,19 @@ import {LV} from '../data/teams.js';
 import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS} from '../data/events.js';
 import {card, choose, board} from '../ui/dom.js';
 import {addAb, ovr} from '../engine/ability.js';
+import {majorChampionshipCount} from '../engine/championship.js';
 export function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 export function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
     if(!S.removed.includes(label))S.removed.push(label); } }
+export function checkChampionTrait(){
+  const count=majorChampionshipCount(S.honors);
+  if(!S.traits.championmaker&&count>=5){
+    traitCard('championmaker','優勝請負人','你是掌握勝利的神，只要擁有你，球隊奪冠機率大增。國家隊與職業隊奪冠率提升5%。');
+    return true;
+  }
+  return false;
+}
 export function evOdds(){ /* 事件卡成功率:顯示與擲骰共用同一來源 */
   let base=(S.traits.genius||S.traits.late||S.traits.clutch)?70:50; /* 天才/大器晚成/大心臟 70 */
   if(S.traits.thief)base-=10; /* 薪水小倫 -10 */
