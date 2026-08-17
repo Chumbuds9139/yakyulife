@@ -1,11 +1,11 @@
-import {S} from '../core/state.js';
-import {R, pick, chance, clamp} from '../core/rng.js';
-import {ABL, POS_AB} from '../data/abilities.js';
-import {LV} from '../data/teams.js';
-import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS} from '../data/events.js';
-import {card, choose, board} from '../ui/dom.js';
-import {addAb, ovr} from '../engine/ability.js';
-import {majorChampionshipCount} from '../engine/championship.js';
+import {S} from '../core/state.js?v=1.5.0';
+import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.0';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.0';
+import {LV} from '../data/teams.js?v=1.5.0';
+import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS} from '../data/events.js?v=1.5.0';
+import {card, choose, board} from '../ui/dom.js?v=1.5.0';
+import {addAb, ovr} from '../engine/ability.js?v=1.5.0';
+import {majorChampionshipCount} from '../engine/championship.js?v=1.5.0';
 export function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 export function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
