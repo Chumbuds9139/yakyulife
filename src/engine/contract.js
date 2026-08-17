@@ -1,18 +1,18 @@
-import {S} from '../core/state.js?v=1.5.0-r4';
-import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.0-r4';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS} from '../data/teams.js?v=1.5.0-r4';
-import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.0-r4';
-import {card, choose, board} from '../ui/dom.js?v=1.5.0-r4';
-import {tlNote} from '../ui/timeline.js?v=1.5.0-r4';
-import {ovr} from './ability.js?v=1.5.0-r4';
-import {injuryMarketStatus} from './injury.js?v=1.5.0-r4';
-import {hasActiveFranchise} from './tenure.js?v=1.5.0-r4';
-import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.0-r4';
-import {capTeam} from './career.js?v=1.5.0-r4';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.0-r4';
-import {advance} from './draft.js?v=1.5.0-r4';
-import {finishContractYear} from '../flow/phases.js?v=1.5.0-r4';
-import {endGame} from '../ui/retire.js?v=1.5.0-r4';
+import {S} from '../core/state.js?v=1.5.0-r5';
+import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.0-r5';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS} from '../data/teams.js?v=1.5.0-r5';
+import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.0-r5';
+import {card, choose, board} from '../ui/dom.js?v=1.5.0-r5';
+import {tlNote} from '../ui/timeline.js?v=1.5.0-r5';
+import {ovr} from './ability.js?v=1.5.0-r5';
+import {injuryMarketStatus} from './injury.js?v=1.5.0-r5';
+import {hasActiveFranchise} from './tenure.js?v=1.5.0-r5';
+import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.0-r5';
+import {capTeam} from './career.js?v=1.5.0-r5';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.0-r5';
+import {advance} from './draft.js?v=1.5.0-r5';
+import {finishContractYear} from '../flow/phases.js?v=1.5.0-r5';
+import {endGame} from '../ui/retire.js?v=1.5.0-r5';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
@@ -86,24 +86,46 @@ function champHash(text){
   return (h>>>0)/4294967295;
 }
 function champLeague(team){
-  if(CPBL_TEAMS.includes(team))return CPBL_TEAMS;
-  if(NPB_TEAMS.includes(team))return NPB_TEAMS;
-  if(MLB_TEAMS.includes(team))return MLB_TEAMS;
-  return [];
+  if(CPBL_TEAMS.includes(team))return {key:'CPBL',teams:CPBL_TEAMS};
+  if(NPB_TEAMS.includes(team))return {key:'NPB',teams:NPB_TEAMS};
+  if(MLB_TEAMS.includes(team))return {key:'MLB',teams:MLB_TEAMS};
+  return {key:null,teams:[]};
 }
-/* 每年依聯盟內相對強弱重新分配 100% 奪冠機率。
-   球隊長期底蘊較穩定、年度狀態波動較大；同種子同年度查詢結果固定。 */
-export function teamChampRates(team,year){
-  const teams=champLeague(team), y=Number.isFinite(year)?year:(S&&S.year)||2026;
-  if(!teams.length)return {};
-  const weights=teams.map(t=>{
-    const foundation=(champHash('club|'+t)-0.5)*0.7;
-    const form=(champHash(`${SEED}|season|${y}|${t}`)-0.5)*1.3;
-    const carry=(champHash(`${SEED}|season|${y-1}|${t}`)-0.5)*0.3;
-    return Math.exp(foundation+form+carry);
+/* 各聯盟的年度戰力級距。share 是該級所有球隊合計的 100% 奪冠率配額：
+   中職 6 隊分 3 級、日職 12 隊分 4 級、大聯盟 30 隊分 5 級。
+   大聯盟最強 3 隊合計 36%，確保真正的頂級強權能自然突破單隊 10%。 */
+export const TEAM_CHAMP_TIERS={
+  CPBL:[{count:2,share:58},{count:2,share:28},{count:2,share:14}],
+  NPB:[{count:2,share:42},{count:4,share:30},{count:4,share:22},{count:2,share:6}],
+  MLB:[{count:3,share:36},{count:6,share:32},{count:9,share:22},{count:8,share:8},{count:4,share:2}],
+};
+function champStrength(team,year){
+  const foundation=(champHash('club|'+team)-0.5)*0.7;
+  const form=(champHash(`${SEED}|season|${year}|${team}`)-0.5)*1.3;
+  const carry=(champHash(`${SEED}|season|${year-1}|${team}`)-0.5)*0.3;
+  return foundation+form+carry;
+}
+function tieredChampRates(key,teams,year){
+  const tiers=TEAM_CHAMP_TIERS[key]||[], ranked=teams
+    .map(team=>({team,strength:champStrength(team,year)}))
+    .sort((a,b)=>b.strength-a.strength||a.team.localeCompare(b.team));
+  const rates={}; let offset=0;
+  tiers.forEach(tier=>{
+    const group=ranked.slice(offset,offset+tier.count), n=group.length;
+    /* 同級內仍保留排名差：首尾權重為 1.12／0.88，避免每隊完全同率。 */
+    const weights=group.map((_,i)=>n<=1?1:1.12-i*(0.24/(n-1)));
+    const total=weights.reduce((a,b)=>a+b,0)||1;
+    group.forEach((entry,i)=>{ rates[entry.team]=tier.share*weights[i]/total; });
+    offset+=tier.count;
   });
-  const total=weights.reduce((a,b)=>a+b,0), rates={};
-  teams.forEach((t,i)=>rates[t]=weights[i]/total*100);
+  return rates;
+}
+/* 每年先依球隊底蘊、當季狀態與前季延續性重新排名，再套用聯盟級距分配 100%。
+   同種子同年度查詢結果固定，但球隊可以隨年度在各級之間升降。 */
+export function teamChampRates(team,year){
+  const league=champLeague(team), teams=league.teams, y=Number.isFinite(year)?year:(S&&S.year)||2026;
+  if(!teams.length)return {};
+  const rates=tieredChampRates(league.key,teams,y);
   const playerTeam=S&&S.stage==='PRO'&&LV[S.lv]&&LV[S.lv].top&&teams.includes(S.orgTeam)?S.orgTeam:null;
   if(playerTeam){
     const base=rates[playerTeam], delta=ovr()-LV[S.lv].par;
