@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.1';
-import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.1';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.1';
-import {LV} from '../data/teams.js?v=1.5.1';
-import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS} from '../data/events.js?v=1.5.1';
-import {card, choose, board} from '../ui/dom.js?v=1.5.1';
-import {addAb, statBonus, ovr} from '../engine/ability.js?v=1.5.1';
-import {majorChampionshipCount} from '../engine/championship.js?v=1.5.1';
+import {S} from '../core/state.js?v=1.5.1-r1';
+import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.1-r1';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.1-r1';
+import {LV} from '../data/teams.js?v=1.5.1-r1';
+import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS} from '../data/events.js?v=1.5.1-r1';
+import {card, choose, board} from '../ui/dom.js?v=1.5.1-r1';
+import {addAb, statBonus, ovr} from '../engine/ability.js?v=1.5.1-r1';
+import {majorChampionshipCount} from '../engine/championship.js?v=1.5.1-r1';
 export function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 export function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
@@ -67,7 +67,9 @@ export function recordOutsideIncome(value){
 const fmtEventMoney=value=>Number(value).toLocaleString()+'萬';
 export function eventPlan(category,mode,good,clutch){
   if(category==='training'){
-    const points=mode==='safe'?1:mode==='norm'?(good?1:2):(good?(clutch?3:2):(clutch?2:3));
+    /* 訓練的成功報酬與失敗風險都隨選擇強度遞增：保守 1、普通 2、全力 3。
+       大心臟維持全力成功 +3，但把失敗懲罰從 -3 降為 -2。 */
+    const points=mode==='safe'?1:mode==='norm'?2:(good?3:(clutch?2:3));
     return {ability:good?points:-points,stat:0,cash:false};
   }
   if(category==='encounter'){
