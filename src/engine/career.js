@@ -2,7 +2,7 @@ import {S} from '../core/state.js';
 import {DPN, POSN, POS_ADJ_RUNS} from '../data/abilities.js';
 import {LG_N} from '../data/teams.js';
 import {TIER_TH, MILESTONE_DEF} from '../data/economy.js';
-import {fmtIP, slgOf, roleName3} from './season.js';
+import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js';
 /* ================= 生涯終章 ================= */
 export function positionScore(st){
   if(!st||!st.DPG)return 0;
@@ -99,8 +99,8 @@ export function statTable(bucket){
   const st=S.stats[bucket]; if(!st)return '';
   let rows;
   if(S.pos==='P'){
-    const era=st.IP>0?(st.ER*9/st.IP).toFixed(2):'-';
-    const whip=st.IP>0?((st.H+st.BB)/st.IP).toFixed(2):'-';
+    const era=st.IP>0?baseballERA(st).toFixed(2):'-';
+    const whip=st.IP>0?baseballWHIP(st).toFixed(2):'-';
     rows=`<tr><th>Yrs</th><th>G</th><th>IP</th><th>W</th><th>L</th><th>SV</th><th>HLD</th><th>SO</th><th>BB</th><th>ERA</th><th>WHIP</th></tr>
     <tr><td>${st.yr}</td><td>${st.G}</td><td>${fmtIP(st.IP)}</td><td>${st.W}</td><td>${st.L}</td><td>${st.SV||0}</td><td>${st.HLD||0}</td><td>${st.SO}</td><td>${st.BB||0}</td><td>${era}</td><td>${whip}</td></tr>`;
   }else{

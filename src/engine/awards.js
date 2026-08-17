@@ -4,8 +4,8 @@ import {DPN, GLOVE_TH} from '../data/abilities.js';
 import {LV} from '../data/teams.js';
 import {card} from '../ui/dom.js';
 import {tlNote} from '../ui/timeline.js';
-import {isSP, slgOf} from './season.js';
-import {removeTrait} from '../flow/events.js';
+import {isSP, slgOf, baseballERA} from './season.js';
+import {traitCard, removeTrait} from '../flow/events.js';
 /* 獎項機率同時有硬下限與必得上限；數值越低越好的獎項（ERA）用 lower=true。 */
 export function awardP(value,hardLow,autoWin,base=25,lower=false){
   const ineligible=lower?value>hardLow:value<hardLow;
@@ -56,7 +56,7 @@ export function awards(bucket,st){
       : st.PA>=Math.round(LV[S.lv].g*1.7);
     let performanceOK=false;
     if(S.pos==='P'){
-      const era=st.IP>0?st.ER*9/st.IP:99;
+      const era=baseballERA(st)??99;
       performanceOK=isSP()
         ? st.IP>=80&&era<=4.00
         : st.G>=30&&era<=3.80&&((st.SV||0)>=10||(st.HLD||0)>=10||d>=2);
@@ -182,6 +182,15 @@ export function awards(bucket,st){
     if(S.traits.glass&&!S.traits.phoenix){ const big=added.some(x=>/MVP|最佳投手|打擊王|全壘打王|新人王/.test(x));
       if(big){ S.traits.phoenix=true; removeTrait('glass','玻璃人');
         S.pool+=8;
-        card('gold','隱藏屬性解鎖：浴火重生','那些殺不死你的，真的讓你更強大了。撕裂的韌帶長成更堅韌的形狀——<b class="hl">玻璃人懲罰解除，受傷率恢復正常，並獲得一大筆能力點</b>。'); } }
+        card('gold','隱藏屬性解鎖：浴火重生','那些殺不死你的，真的讓你更強大了。受傷的地方逐漸痊癒，長成了更強壯的形狀。——<b class="hl">玻璃人懲罰解除，受傷率恢復正常，並獲得一大筆能力點</b>。'); } }
+    const annualMvp=added.some(x=>/年度MVP/.test(x));
+    if(annualMvp&&S.age>=35&&!S.traits.oldghost&&!S.oldGhostUsed){
+      S.oldGhostPending=true;
+      traitCard('oldghost','老鬼','別人正在衰退，而你再一次抵達頂點。時間在你身上彷彿未留下痕跡，球迷們開始叫你老鬼，因為你用成績告訴年輕選手，過去是你的，現在是你的，未來也會是你的。下一年衰退減緩50%。');
+    }
+    if(annualMvp&&S.age<24&&(bucket==='NPB'||bucket==='MLB')){
+      const key=S.pos==='P'?'strongpitch':'stronghit',name=S.pos==='P'?'強投少年':'強打少年';
+      if(!S.traits[key])traitCard(key,name,'天空才是你的極限，怪物的成績，不過是你傳奇生涯的起點');
+    }
   }
 }

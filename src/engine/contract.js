@@ -1,5 +1,5 @@
 import {S} from '../core/state.js';
-import {R, ri, pick, chance, clamp} from '../core/rng.js';
+import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js';
 import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS} from '../data/teams.js';
 import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js';
 import {card, choose, board} from '../ui/dom.js';
@@ -80,10 +80,43 @@ export function controlledAnnual(lv,d,healthMult){
 export const salParts=w=>w<10000
   ?{v:Math.round(w).toLocaleString(),u:'萬'}
   :{v:(Math.round(w/1000)/10).toFixed(1),u:'億'};
-export function teamChampRate(team){ /* 顯示用奪冠率:每隊每年略有波動,以隊名雜湊出基準 */
-  let h=0; for(let i=0;i<team.length;i++)h=(h*31+team.charCodeAt(i))&0xffff;
-  const base=8+(h%22); /* 8~29% */
-  return Math.round(base);
+function champHash(text){
+  let h=2166136261;
+  for(let i=0;i<text.length;i++){ h^=text.charCodeAt(i); h=Math.imul(h,16777619); }
+  return (h>>>0)/4294967295;
+}
+function champLeague(team){
+  if(CPBL_TEAMS.includes(team))return CPBL_TEAMS;
+  if(NPB_TEAMS.includes(team))return NPB_TEAMS;
+  if(MLB_TEAMS.includes(team))return MLB_TEAMS;
+  return [];
+}
+/* 每年依聯盟內相對強弱重新分配 100% 奪冠機率。
+   球隊長期底蘊較穩定、年度狀態波動較大；同種子同年度查詢結果固定。 */
+export function teamChampRates(team,year){
+  const teams=champLeague(team), y=Number.isFinite(year)?year:(S&&S.year)||2026;
+  if(!teams.length)return {};
+  const weights=teams.map(t=>{
+    const foundation=(champHash('club|'+t)-0.5)*0.7;
+    const form=(champHash(`${SEED}|season|${y}|${t}`)-0.5)*1.3;
+    const carry=(champHash(`${SEED}|season|${y-1}|${t}`)-0.5)*0.3;
+    return Math.exp(foundation+form+carry);
+  });
+  const total=weights.reduce((a,b)=>a+b,0), rates={};
+  teams.forEach((t,i)=>rates[t]=weights[i]/total*100);
+  const playerTeam=S&&S.stage==='PRO'&&LV[S.lv]&&LV[S.lv].top&&teams.includes(S.orgTeam)?S.orgTeam:null;
+  if(playerTeam){
+    const base=rates[playerTeam], delta=ovr()-LV[S.lv].par;
+    /* 高於聯盟平均最多增加 5 個百分點；低於平均不設固定扣分下限，可一路壓到接近 0。 */
+    const shift=delta>=0?Math.min(5,delta*0.5):delta*0.8;
+    const target=clamp(base+shift,0.2,85), scale=(100-target)/(100-base);
+    teams.forEach(t=>{ rates[t]=t===playerTeam?target:rates[t]*scale; });
+  }
+  return rates;
+}
+export function teamChampRate(team,year){
+  const rate=teamChampRates(team,year)[team];
+  return Number.isFinite(rate)?Number(rate.toFixed(1)):0;
 }
 export function marketRating(d,targetLv,sourceLv){
   const target=targetLv||S.lv,source=sourceLv||S.lastLv||S.lv;
@@ -196,7 +229,7 @@ export function buyoutRemaining(rate,includeCurrent){ /* 合約剩餘年數給�
 /* 引退時若沒回中職,補一場大巨蛋開球告別 */
 export function daibaFarewell(cont){
   if(S.stage==='PRO'&&S.org!=='CPBL'&&!S._daiba){ S._daiba=true;
-    card('gold','最後一球',`雖然沒能回到主場獻技，你還是接受了邀請，回到 <b class="hl">臺北大巨蛋</b> 當一日中職球員。開球儀式上，四萬人的注視下，你投出了生涯的最後一球——不為勝負，只為那個曾經在紅土上作夢的自己。`);
+    card('gold','最後一球',`雖然沒能回到家鄉獻技，你還是接受了邀請，回到 <b class="hl">臺北大巨蛋</b> 當一日中職球員。開球儀式上，四萬人的注視下，你投出了生涯的最後一球——不為勝負，只為那個曾經在紅土上作夢的自己。`);
   }
   cont();
 }
@@ -464,26 +497,41 @@ export function ageGateJP(){ /* 旅日:窗口寬,31 歲(衰退前)都還有機�
   if(age<=31)return 0.25;
   return 0; /* 32 歲起(進入衰退)關窗 */
 }
+export function rollCpblCrossOffers(o,d,rollJP,rollUSA){
+  /* 先獨立完成兩國判定，再組合畫面；日職抽中不再阻斷旅美判定。 */
+  const jp=o>=53&&d>=1&&!!rollJP();
+  const usa=o>=57&&d>=2&&!!rollUSA();
+  return {jp,usa};
+}
 export function crossOffers(o){
   const fin=()=>advance();
   const mp=contractMarketProfile(S.lastD||0);
   if((mp.status==='major'||mp.status==='rehab')&&(!mp.star||!chance(mp.status==='major'?35:20))){ fin(); return; }
   const priceBid=(of,lv)=>{ const target=contractMarketProfile(S.lastD||0,lv);
     of.bonus=Math.round(of.bonus*target.bonus); of.annual=calcContractAnnual(lv,target.rating,+(target.aav*(0.97+R()*0.08)).toFixed(2)); return of; };
-  if(S.lv==='CPBL1'&&o>=53&&(S.lastD||0)>=1&&chance(Math.round(35*ageGateJP()))){
-    const jl=o>=51?'NPB1':'NPB2';
-    const bids=makeOffers('NPB',2,1200,2,3,jl,null).map(of=>priceBid(of,jl));
-    choose('日職球團開出旅外合約',[...bids.map(of=>({
-      t:of.team+`（${LV[jl].n}）`,s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(of.annual)} × ${of.yrs} 年｜總額 ${fmtMoney(of.annual*of.yrs)}`,
-      f:()=>{S.salary+=of.bonus;signTo('NPB',jl,of.team,of.yrs,1,of.annual);fin();}})),
-      {t:'留在中職',main:true,f:fin}]); return; }
-  if(S.lv==='CPBL1'&&o>=57&&(S.lastD||0)>=2&&chance(Math.round(30*ageGateUSA(o,57)))){
-    const ml=o>=60?'MLB':'A3';
-    const bids=makeOffers('MiLB',2,2000,2,4,ml,null).map(of=>priceBid(of,ml));
-    choose('大聯盟球探遞出合約',[...bids.map(of=>({
-      t:of.team+`（${LV[ml].n}）`,s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(of.annual)} × ${of.yrs} 年｜總額 ${fmtMoney(of.annual*of.yrs)}`,
-      f:()=>{S.salary+=of.bonus;signTo('MiLB',ml,of.team,of.yrs,1,of.annual);fin();}})),
-      {t:'留在中職',main:true,f:fin}]); return; }
+  if(S.lv==='CPBL1'){
+    const jpP=Math.round(35*ageGateJP()),usaP=Math.round(30*ageGateUSA(o,57));
+    const hits=rollCpblCrossOffers(o,S.lastD||0,
+      ()=>jpP>0&&chance(jpP),
+      ()=>usaP>0&&chance(usaP));
+    const opts=[],both=hits.jp&&hits.usa;
+    if(hits.jp){
+      const jl=o>=51?'NPB1':'NPB2';
+      makeOffers('NPB',2,1200,2,3,jl,null).map(of=>priceBid(of,jl)).forEach(of=>opts.push({
+        t:(both?'🇯🇵 ':'')+of.team+`（${LV[jl].n}）`,s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(of.annual)} × ${of.yrs} 年｜總額 ${fmtMoney(of.annual*of.yrs)}`,
+        f:()=>{S.salary+=of.bonus;signTo('NPB',jl,of.team,of.yrs,1,of.annual);fin();}}));
+    }
+    if(hits.usa){
+      const ml=o>=60?'MLB':'A3';
+      makeOffers('MiLB',2,2000,2,4,ml,null).map(of=>priceBid(of,ml)).forEach(of=>opts.push({
+        t:(both?'🇺🇸 ':'')+of.team+`（${LV[ml].n}）`,s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(of.annual)} × ${of.yrs} 年｜總額 ${fmtMoney(of.annual*of.yrs)}`,
+        f:()=>{S.salary+=of.bonus;signTo('MiLB',ml,of.team,of.yrs,1,of.annual);fin();}}));
+    }
+    if(opts.length){
+      const title=both?'日、美球團同時開出旅外合約':hits.jp?'日職球團開出旅外合約':'大聯盟球探遞出合約';
+      choose(title,[...opts,{t:'留在中職',main:true,f:fin}]); return;
+    }
+  }
   if(S.lv==='NPB1'&&o>=60&&(S.lastD||0)>=2&&chance(Math.round(30*ageGateUSA(o,60)))){
     const bids=makeOffers('MiLB',ri(2,3),0,3,6,'MLB',null).map(of=>({...of,mult:+(0.97+R()*0.08).toFixed(2)}));
     const formerTeam=S.teamName();

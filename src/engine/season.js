@@ -35,6 +35,10 @@ export function baseballERA(st){
   const ip=normalizeIP(st&&st.IP);
   return ip>0?(Number(st&&st.ER)||0)*9/ip:null;
 }
+export function baseballWHIP(st){
+  const ip=normalizeIP(st&&st.IP);
+  return ip>0?((Number(st&&st.H)||0)+(Number(st&&st.BB)||0))/ip:null;
+}
 export function fmtIP(ip){ /* 以出局數顯示棒球局數：1/3 局=.1、2/3 局=.2 */
   const outs=outsFromIP(ip);
   return Math.floor(outs/3)+'.'+(outs%3);
@@ -78,7 +82,7 @@ export function simSeason(lv){
     st.BB=Math.round(st.IP/9*bb9);
     const h9=clamp(9.2-d*0.16+N0(0.5),5.0,13.5);
     st.H=Math.round(st.IP/9*h9);
-    st.WHIP=st.IP>0?+((st.H+st.BB)/st.IP).toFixed(2):0;
+    st.WHIP=st.IP>0?+(baseballWHIP(st)||0).toFixed(2):0;
     if(isSP()){
       const dec=Math.round(st.G*0.72), wp=clamp(0.50+d*0.014+N0(0.05),0.15,0.85);
       st.W=Math.round(dec*wp); st.L=dec-st.W;
@@ -149,8 +153,8 @@ export function applySeasonForm(st,lv){
     st.SO=Math.round(st.SO*m);
     st.W=Math.round(st.W*m); if(st.L!=null)st.L=Math.max(0,Math.round(st.L/(m||1)));
     st.H=Math.max(0,Math.round(st.H/m)); st.ER=Math.max(0,Math.round(st.ER/m));
-    st.era=st.IP>0?+(st.ER*9/st.IP).toFixed(2):st.era;
-    st.WHIP=st.IP>0?+((st.H+st.BB)/st.IP).toFixed(2):st.WHIP;
+    st.era=st.IP>0?+(baseballERA(st)||0).toFixed(2):st.era;
+    st.WHIP=st.IP>0?+(baseballWHIP(st)||0).toFixed(2):st.WHIP;
     if(st.SV)st.SV=Math.min(st.G,Math.round(st.SV*m));
     if(st.HLD)st.HLD=Math.min(Math.max(0,st.G-(st.SV||0)),Math.round(st.HLD*m));
     /* 物理約束(倍率後再夾):救援占比<=85%、勝+敗+救援+中繼 <= 出賽數 */
@@ -231,7 +235,7 @@ export function normalizeBatterStats(st,lv){
 export function normalizePitchingStats(st,lv){
   const maxG=LV[lv].g||0;
   st.G=clamp(Math.round(st.G||0),0,maxG);
-  st.IP=+clamp(Number(st.IP)||0,0,st.G*9).toFixed(1);
+  st.IP=normalizeIP(clamp(Number(st.IP)||0,0,st.G*9));
   ['H','BB','SO','ER','W','L','SV','HLD'].forEach(k=>st[k]=Math.max(0,Math.round(st[k]||0)));
   if(isSP()){
     st.SV=0; st.HLD=0;
@@ -249,8 +253,8 @@ export function normalizePitchingStats(st,lv){
       st.W=Math.floor(st.W*ratio); st.L=Math.min(decCap-st.W,Math.floor(st.L*ratio));
     }
   }
-  st.era=st.IP>0?+(st.ER*9/st.IP).toFixed(2):0;
-  st.WHIP=st.IP>0?+((st.H+st.BB)/st.IP).toFixed(2):0;
+  st.era=st.IP>0?+(baseballERA(st)||0).toFixed(2):0;
+  st.WHIP=st.IP>0?+(baseballWHIP(st)||0).toFixed(2):0;
 }
 export function accStat(bucket,st){
   if(!S.stats[bucket]) S.stats[bucket]=blankStat();
@@ -263,7 +267,7 @@ export function accStat(bucket,st){
   else if(S.role){ S.roleYears[S.role]=(S.roleYears[S.role]||0)+1; }
   ['G','PA','AB','H','HR','RBI','SB','BB','W','L','SV','HLD','SO','ER'].forEach(k=>t[k]+=(st[k]||0));
   t.DEF+=(st.DEF||0);
-  t.IP=+(t.IP+st.IP).toFixed(1);
+  t.IP=ipFromOuts(outsFromIP(t.IP)+outsFromIP(st.IP));
 }
 export function statLine(st){
   if(S.pos==='P'){ const role=roleN(S.role); const relief=(S.role==='CL'&&st.SV)?`｜${st.SV}救援`:(S.role==='MR'&&st.HLD)?`｜${st.HLD}中繼`:''; return `出賽 ${st.G}｜局數 ${fmtIP(st.IP)}｜${st.W}勝${st.L}敗${relief}｜三振 ${st.SO}｜保送 ${st.BB||0}｜ERA ${st.era.toFixed(2)}｜WHIP ${(st.WHIP||0).toFixed(2)}`; }
@@ -290,15 +294,23 @@ export function amateurSeason(){
   const cups=S.stage==='HS'?HS_CUPS:S.stage==='U'?U_CUPS:['成棒甲組春季聯賽','成棒甲組秋季聯賽'];
   const thr=S.stage==='HS'?[52,46,40,34,28]:[60,54,48,42,36];
   let gain=0,lines=[],plain=[];
+  const eventForm=S.pendStat||0;
   const tB=S.stage==='HS'?({1:6,2:0,3:-6})[S.hsTier||2]:0; /* 高中隱藏強度分級 */
-  cups.forEach(c=>{ const pw=ovr()+tB+ri(-8,8);
+  cups.forEach(c=>{ const pw=ovr()+tB+eventForm+ri(-8,8);
     const i=pw>=thr[0]?0:pw>=thr[1]?1:pw>=thr[2]?2:pw>=thr[3]?3:pw>=thr[4]?4:5;
     const rk=['冠軍','亞軍','四強','八強','十六強','預賽出局'][i];
     const pts=[7,5,4,3,2,1][i]+Math.floor(ovr()/22);
     gain+=pts; lines.push(`${c}：<b class="hl">${rk}</b>（+${pts} 點）`); plain.push(`${c}${rk}`);
     if(S.stage==='U'&&rk==='冠軍'&&!S.traits.academy){ S.traits.academy=true;
       card('gold','隱藏屬性解鎖：學院派','大學殿堂的科學化訓練與防護打下扎實基礎——<b class="hl">25 歲前受傷率 −5%、季初擲骰期望值提升</b>。'); }
-    if(i===0)S.honors.push(`${S.year} ${c}冠軍`); });
+    if(i===0){
+      S.honors.push(`${S.year} ${c}冠軍`);
+      if(S.stage==='HS')S.hsChampions=(S.hsChampions||0)+1;
+    } });
+  if(S.stage==='HS'&&(S.hsChampions||0)>3&&!S.traits.miraclegen){
+    traitCard('miraclegen','奇蹟世代','沒有人知道這所學校的這群少年，會在棒球界中掀起什麼樣的風暴');
+  }
+  S.pendStat=0;
   S.pool+=gain;
   S.log.push({y:S.year,age:S.age,tm:S.team||stageLabel(),line:plain.join('、'), inj:false});
   card('','年度大賽',lines.join('<br>')+`<div class="statline">獲得能力點 ${gain} 點，季末統一分配。能力越高，大賽收穫越多。</div>`);
@@ -306,10 +318,10 @@ export function amateurSeason(){
 }
 export function proSeason(){
  const seasonLv=S.lv,st=simSeason(seasonLv); S.lastSt=st; S.lastD=st.d; S.lastLv=seasonLv;
-  if(S.pendStat>0&&S.seasonFactor>0){
+  if(S.pendStat!==0&&S.seasonFactor>0){
     /* 【修正】狀態火燙的加成，必須依照該季實際出賽的比例（seasonFactor）進行打折 */
     const p = S.pendStat * S.seasonFactor;
-    if(S.pos==='P'){
+    if(p>0&&S.pos==='P'){
       /* 狀態火燙=教練重用:後援先加出賽(不超過場次上限),再加內容;物理約束重夾 */
       if(!isSP()){ const reliefCap=Math.min(68,LV[seasonLv].g); const addG=Math.min(Math.max(0,reliefCap-st.G),Math.round(p*1.2)); st.G+=addG; st.IP=+(st.IP+addG*1.05).toFixed(1); }
       st.SO+=Math.round(p*8); st.IP=+(st.IP+p*4).toFixed(1);
@@ -321,7 +333,7 @@ export function proSeason(){
         const decCap=Math.max(0,st.G-st.SV-st.HLD);
         if((st.W+st.L)>decCap){ st.W=Math.min(st.W,decCap); st.L=Math.max(0,decCap-st.W); }
       } }
-    else { const Lg=LV[S.lv];
+    else if(p>0){ const Lg=LV[S.lv];
       /* 狀態火燙=教練重用:先轉為上場機會(G/PA 連動,不超過聯盟場次),打擊內容同步升溫 */
       const addG=Math.min(Math.max(0,(Lg.g||120)-st.G), Math.round(p*1.5));
       const addPA=Math.round(addG*4.25), addAB=Math.round(addPA*0.9);
@@ -331,6 +343,20 @@ export function proSeason(){
       const addHR=Math.min(addH, Math.round(p*1.2));
       st.H+=addH; st.HR+=addHR; st.RBI+=Math.round(addHR*2.1+(addH-addHR)*0.3);
       st.avg=st.AB?st.H/st.AB:0; }
+    else if(S.pos==='P'){
+      const q=Math.abs(p);
+      st.SO=Math.max(0,st.SO-Math.round(q*6));
+      st.W=Math.max(0,st.W-Math.round(q*.3));
+      if(!isSP())st.SV=Math.max(0,(st.SV||0)-Math.round(q*.4));
+      st.era=st.IP>0?clamp(st.era+q*.08,1.40,9.90):st.era;
+      st.ER=Math.round(st.era*st.IP/9);
+    } else {
+      const q=Math.abs(p), loseH=Math.min(st.H,Math.round(q*2));
+      st.H-=loseH;
+      st.HR=Math.min(st.H,Math.max(0,st.HR-Math.round(q*.5)));
+      st.RBI=Math.max(0,st.RBI-Math.round(q*1.2));
+      st.avg=st.AB?st.H/st.AB:0;
+    }
   }
   S.pendStat=0;
   /* 投法對成績的加成/折損 */
@@ -372,7 +398,7 @@ export function proSeason(){
   const healthy=S.seasonFactor>=0.95&&(S.pos==='P'?(isSP()?st.IP>=120:st.G>=42):st.G>=LV[S.lv].g*0.8);
   if(healthy){ S.ironStreak++;
     if(S.ironStreak>=5&&!S.traits.iron){ S.traits.iron=true;
-      card('gold','隱藏素質解鎖：鐵人','連續五年全勤級出賽！鋼鐵般的身體，未來每季受傷機率<b class="hl">不高於 10%</b>。'); } }
+      card('gold','隱藏素質解鎖：鐵人','連續五年全勤級出賽！你就像是八點檔，無論哪一年打開電視，都能看到你在球場奮戰，球迷們甚至開始懷疑你是機器人，未來每季受傷機率<b class="hl">不高於 10%</b>。'); } }
   else if(S.seasonFactor<0.95)S.ironStreak=0;
   /* 只會這個:先看夠不夠格當主力,夠格絕不判工具人;不夠格才看有無突出工具 */
   if(S.pos!=='P'){ const tg=toolGap();

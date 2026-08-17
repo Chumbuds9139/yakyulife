@@ -8,7 +8,7 @@ import {TEAM_COLOR, LV} from '../data/teams.js';
 import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js';
 import {playerName, stageLabel} from '../core/state.js';
 import {salParts, fmtMoney} from '../engine/contract.js';
-import {roleN, fmtIP, slgOf} from '../engine/season.js';
+import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js';
 import {honorGroups, yearRanges} from '../engine/career.js';
 import {playerType, ovr} from '../engine/ability.js';
 
@@ -118,7 +118,7 @@ export function choose(title,opts){
   a.classList.remove('collapsed'); /* 新選項出現時自動展開 */
   if(title)a.innerHTML=`<div class="title">${title}</div>`;
   opts.forEach(o=>{ const b=document.createElement('button');
-    b.className='btn'+(o.main?' main':'')+(o.warn?' warn':'');
+    b.className='btn'+(o.main?' main':'')+(o.warn?' warn':'')+(o.center?' center':'');
     b.innerHTML=o.t+(o.s?`<small>${o.s}</small>`:'');
     b.onclick=()=>{ actClear(); o.f(); }; a.appendChild(b); });
   actToggleSync(); scrollBottom();
@@ -206,8 +206,10 @@ function secSalary(){
   const contract=(ct&&Number.isFinite(annual))
     ?`${fmtMoney(Math.round(annual))} × 剩 ${Math.max(0,ct.yrs||0)} 年`:'—';
   const tenure=(S.stage==='PRO'&&S.orgTeam)?`${S.teamYears||0} 年（${S.orgTeam}）`:'—';
+  const outside=Math.round(S.outsideIncome||0), yearOutside=Math.round(S.yearOutsideIncome||0);
+  const outsideRow=outside?salRow('業外收入',`${fmtMoney(outside)}${yearOutside?`（本年 +${fmtMoney(yearOutside)}）`:''}`):'';
   return `<div class="bd-sec sec-s"><div class="bd-sh">薪資</div>`+
-    salRow('現行合約',contract)+salRow('球隊年資',tenure)+
+    salRow('現行合約',contract)+salRow('球隊年資',tenure)+outsideRow+
     `<div class="bd-sr tot"><span class="k">生涯累計</span>`+
     `<span class="v">${fmtMoney(Math.round(S.salary))}</span></div></div>`;
 }
@@ -242,7 +244,7 @@ function secLog(){
       `<div class="bd-yr hd"><span class="y">年</span><span class="a opt">齡</span>`+
       `<span class="tm">球隊</span>${cells(hd)}</div>`;
     pro.forEach(r=>{ const s=r.st; let v;
-      if(isP){ const era=s.IP>0?s.ER*9/s.IP:null;
+      if(isP){ const era=baseballERA(s);
         v=[s.G,fmtIP(s.IP),`${s.W}-${s.L}`,s.SV||0,s.SO,F2(era)];
       } else { const obp=s.PA>0?(s.H+s.BB)/s.PA:null, slg=s.AB>0?slgOf(s):null;
         v=[s.G,s.PA,F3(s.AB>0?s.H/s.AB:null),s.HR,s.RBI,F3((obp!=null&&slg!=null)?obp+slg:null)]; }

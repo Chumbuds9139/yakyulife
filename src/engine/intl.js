@@ -5,6 +5,8 @@ import {card, choose, board} from '../ui/dom.js';
 import {tlNote} from '../ui/timeline.js';
 import {isSP, fmtIP, outsFromIP, ipFromOuts, normalizeIP, baseballERA} from './season.js';
 import {ovr} from './ability.js';
+import {intlFinishIndex} from './championship.js';
+import {checkChampionTrait} from '../flow/events.js';
 export function intlStatLine(st){
   if(S.pos==='P'){
     const era=baseballERA(st);
@@ -54,8 +56,8 @@ export function maybeIntl(done){
   const opts=[
     {t:forced?'⋯⋯只能報到（強制徵召）':'披上國家隊戰袍',main:true,s:'依成績獲得能力點｜下季受傷機率 +10%',f:()=>{
       /* 國家隊成敗看整體興衰,個人只佔一小部分 */
-      const b=clamp(Math.round((ovr()-52)*0.35),0,8), r=R()*100+b;
-      const i=r>=96?0:r>=88?1:r>=79?2:r>=46?3:4;
+      const b=clamp(Math.round((ovr()-52)*0.35),0,8);
+      const i=intlFinishIndex(R()*100,b,!!S.traits.championmaker);
       const rk=intlFmt.ranks[i], teamGames=intlFmt.games[i], pts=[6,5,4,2,1][i];
       let gpts=pts; if(S.traits.intlace)gpts=Math.max(pts,2);
       S.pool+=gpts; S.injNext=S.traits.intlace?0:10; S.intlCount++;
@@ -93,7 +95,7 @@ export function maybeIntl(done){
       if(!S.traits.intlace&&S.intlCount>=3&&(S.intlTop4||0)>=2){ S.traits.intlace=true;
         card('gold','隱藏屬性解鎖：國際賽之鬼','只要穿上 CT 球衣，你的痛覺就會消失——你是為大場面而生的男人。<b class="hl">國際賽不再增加受傷風險，且每次徵召能力點保底 +2</b>。'); }
       if(i<=2)S.honors.push(`${S.year} ${name}${rk}`);
-      if(i===0)tlNote(3,(wbc?'經典賽':'12強')+'冠軍');
+      if(i===0){ tlNote(3,(wbc?'經典賽':'12強')+'冠軍'); checkChampionTrait(); }
       let ex=''; const mvpRate=intlMvpRate(intlSt,i); if(chance(mvpRate)){S.honors.push(`${S.year} ${name}MVP`);ex='你憑本屆表現被選為<b class="hl">賽會MVP</b>！';}
       card(i<=1?'gold':'info',name,`中華隊最終成績：<b class="hl">${rk}</b>（團隊出賽 ${teamGames} 場）。${ex}<br><b>本屆個人成績：</b>${intlStatLine(intlSt)}。${S.traits.clutch?'<span class="up">（大心臟：大賽表現加成）</span>':''}<br>獲得能力點 <b class="hl">${gpts}</b> 點。${S.traits.intlace?'國家英雄不知何謂疲憊。':'國際賽的高強度消耗，讓下季受傷風險上升。'}`);
       done(); }},

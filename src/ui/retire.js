@@ -7,7 +7,7 @@ import {TRAIT_KEYS} from '../data/traits.js';
 import {$, card, choose, divider, board, actClear} from './dom.js';
 import {careerTimelineCard, tlNote} from './timeline.js';
 import {traitNames, traitTagStyle} from './traits.js';
-import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js';
 import {playerType} from '../engine/ability.js';
 import {fmtMoney} from '../engine/contract.js';
 import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js';
@@ -40,7 +40,7 @@ export function rpCumData(){ /* per-league career totals; best-of-column marks n
              :['Yrs','G','PA','AVG','OBP','SLG','OPS','H','HR','RBI','SB','DEF'];
   const rows=order.map(b=>{ const st=S.stats[b];
     if(isP){
-      const era=st.IP>0?st.ER*9/st.IP:null, whip=st.IP>0?(st.H+st.BB)/st.IP:null;
+      const era=baseballERA(st), whip=baseballWHIP(st);
       return {b,txt:[st.yr,st.G,fmtIP(st.IP),st.W,st.L,st.SV||0,st.HLD||0,st.SO,st.BB||0,RP_F2(era),RP_F2(whip)],
               num:[st.yr,st.G,st.IP,st.W,st.L,st.SV||0,st.HLD||0,st.SO,st.BB||0,era,whip]};
     }
@@ -93,8 +93,8 @@ export function rpProData(proLogs){ /* team segments: a new block whenever the o
   proLogs.forEach(r=>{ const o=rpOrgOf(r);
     if(!cur||cur.team!==o.team||cur.lg!==o.lg){ cur={team:o.team,lg:o.lg,rows:[]}; blocks.push(cur); }
     const s=r.st||blankStat(); let txt,era=null,ops=null;
-    if(isP){ era=s.IP>0?s.ER*9/s.IP:null;
-      txt=[s.G,fmtIP(s.IP),`${s.W}-${s.L}`,s.SV||0,s.HLD||0,s.SO,s.BB||0,RP_F2(era),RP_F2(s.IP>0?(s.H+s.BB)/s.IP:null)];
+    if(isP){ era=baseballERA(s);
+      txt=[s.G,fmtIP(s.IP),`${s.W}-${s.L}`,s.SV||0,s.HLD||0,s.SO,s.BB||0,RP_F2(era),RP_F2(baseballWHIP(s))];
     } else { const obp=s.PA>0?(s.H+s.BB)/s.PA:null, slg=s.AB>0?slgOf(s):null;
       ops=(obp!=null&&slg!=null)?obp+slg:null;
       txt=[s.G,s.PA,RP_F3(s.AB>0?s.H/s.AB:null),RP_F3(obp),RP_F3(slg),RP_F3(ops),s.H,s.HR,s.RBI,s.SB,(s.DEF>0?'+':'')+(s.DEF||0)];
@@ -121,6 +121,30 @@ export function rpProData(proLogs){ /* team segments: a new block whenever the o
     else { if(bHR>0&&r.hr===bHR)r.best[7]=true; if(r.ops!=null&&r.ops===bOPS)r.best[5]=true; } }));
   return {hd,blocks};
 }
+export const POST_CAREER_ENDINGS={
+  coach:{title:'還在同一片草皮上',body:`球棒掛上牆的那天，你以為告別就此完成。<br><br>隔年春訓，你卻換了一件寫著自己名字、卻沒有背號意義的球衣，重新走進熟悉的休息區。手套換成了記事本，揮棒換成了一句句在耳邊的提醒。<br><br>你會在深夜看完三十球的慢動作重播，只為了告訴某個菜鳥：「你的前腳，早了0.2秒。」<br><br>有人說教練是站在光後面的人。但當你看著那個曾經笨拙的孩子，在滿場歡聲中繞過本壘，你忽然明白——<br><br>你從來沒有離開過球場，只是換了一種方式，繼續打球。`},
+  scout:{title:'在無人的看台上',body:`你的辦公室，是一張又一張空蕩蕩的鐵椅。<br><br>高中球場、乙組聯賽、鄉下的紅土球場。你帶著測速槍與一本翻爛的筆記本，跑遍那些沒有轉播、沒有掌聲的角落。<br><br>大多數時候，你什麼也沒找到。但偶爾，在某個午後的第七局，會有一顆球從陌生少年的手中飛出，讓你在筆記本上重重畫下一個圈。<br><br>沒有人會記得球探的名字。若干年後，當那個少年站上一軍投手丘，鏡頭只會拍到他。<br><br>但你會坐在電視機前，安靜地笑一下。<br><br>有些人負責發光，有些人負責——在天亮以前，先看見光。`},
+  grassroots:{title:'紅土上的第一步',body:`你回到了故鄉的小學。<br><br>球隊只有十四個人，手套是別人捐的，午餐要靠家長輪流準備。你教他們的第一件事，不是揮棒，是把球具排整齊。<br><br>這裡不會有選秀，不會有合約，不會有滿場的加油聲。有的只是每天放學後那兩個小時，和一整片被夕陽曬得溫熱的紅土。<br><br>有些孩子會走得很遠，有些孩子明年就不打了。你都送到路口為止。<br><br>多年後，某個穿著職業球衣的年輕人，在採訪中被問到誰影響他最深。<br><br>他想了想，說出了一個沒有人聽過的名字。<br><br>那是你，還有那片，永遠等著下一批孩子的紅土。`}
+};
+export const SECOND_CAREER_ENDINGS=[
+  `你加入了乙組業餘棒球隊。平日上班、週末穿上球衣，去年在協會盃敲出再見安打的影片被瘋傳，底下最熱門的留言是：「這揮棒不像業餘的。」——因為本來就不是。你比誰都清楚，愛棒球不一定要靠它吃飯。`,
+  `你考到了不動產營業員執照。帶看時爬六樓透天面不改色，客戶都說你氣場不一樣——十六歲就在幾千人面前投球的人，還會怕開價嗎？三年後你成了店裡的銷售王，名片頭銜下面偷偷印了一行小字：「前職業棒球選手」。`,
+  `你跟著舅舅去做板模。工地的日子曬得比春訓還黑，但你的核心力量和不服輸讓老師傅都點頭。五年後你自己出來帶班，薪水不比二軍差，而且——你笑著說——這裡沒有人會把你下放。`,
+  `你穿上襯衫走進辦公室，同事只知道你「以前有在打球」。直到公司壘球隊比賽那天，你一棒把球送出圍牆，全場安靜三秒。後來每年比賽，對手公司都會先問一句：「那個人今年還在嗎？」`,
+  `你頂下一間早餐店，招牌取名「滿壘」。店裡掛著你高中的球衣，蛋餅煎得跟你的守備一樣扎實。附近的少棒隊員放學都來報到，因為老闆會一邊煎蘿蔔糕一邊講解怎麼看投手的放球點——加蛋不加價。`,
+  `你回到母校當教練，月薪不高，但你把自己沒走完的路畫成地圖交給學弟。第七年，你帶的投手在選秀會上被第一輪指名，電視轉播帶到你的時候，你哭得比他還慘。`,
+  `你創了業，做棒球訓練科技——用手機慢動作幫素人抓揮棒軌跡。第一年差點倒閉，第三年被運動中心整批採購。募資簡報的第一頁只有一句話：「我沒能站上去的舞台，我想讓更多人站上去。」`,
+  `你考上了消防員。體能測驗全項第一，教官問你以前練什麼的，你說棒球。第一次出勤救人那晚，你突然明白：肩膀不能再投一百五，但還能扛著人走出火場——這雙手還是有用的。`
+];
+export function usesSecondCareerEnding(age){ return Number(age)<25; }
+export function postCareerEndingKeys(tiers){
+  const proStar=!!tiers.NPB||!!tiers.MLB||!!(tiers.CPBL&&tiers.CPBL.i<=1);
+  return proStar?['coach','scout']:['coach','scout','grassroots'];
+}
+export function postCareerEnding(tiers,roll){
+  const keys=postCareerEndingKeys(tiers),r=roll===undefined?R():roll;
+  return POST_CAREER_ENDINGS[keys[Math.min(keys.length-1,Math.floor(Math.max(0,r)*keys.length))]];
+}
 export function retireScene(tiers){
   /* tiers: {CPBL:{i,sc},NPB:...,MLB:...} 有出賽才有 */
   /* 生涯代表聯盟＝出賽最久的頂級聯盟;分級取生涯最佳(i 最小) */
@@ -134,7 +158,7 @@ export function retireScene(tiers){
   let txt='';
   if(lg==='CPBL'){
     if(i===0)txt=`引退戰選在<b class="hl">臺北大巨蛋</b>。四萬人把巨蛋塞得水洩不通，外野看板掛滿你生涯每一年的照片。九局下最後一個打席結束，全場燈光暗下，只剩一道追光打在你身上——隊友哭成一團，對手全員列隊脫帽，天團在二壘後方唱起你的應援曲改編的慢版。你繞場一周，把手套輕輕放在本壘板上。轉播單位說，這是中職史上收視最高的一場例行賽。`;
-    else if(i===1)txt=`球團為你舉辦了引退儀式。主場滿場，大螢幕播放生涯回顧影片，從高中甲子園夢碎到${S.pos==='P'?'職棒初登板':'職棒初安打'}，一幕一幕。老隊友從各地回來替你獻花，總教練在致詞時哽咽到說不下去。最後你脫下球帽向四個方向的看板深深鞠躬，應援團的鼓聲直到你走進休息室都沒有停。`;
+    else if(i===1)txt=`球團為你舉辦了引退儀式。主場滿場，大螢幕播放生涯回顧影片，從高中木棒聯賽夢碎到${S.pos==='P'?'職棒初登板':'職棒初安打'}，一幕一幕。老隊友從各地回來替你獻花，總教練在致詞時哽咽到說不下去。最後你脫下球帽向四個方向的看板深深鞠躬，應援團的鼓聲直到你走進休息室都沒有停。`;
     else if(i===2)txt=`${S.pos==='P'?'球季最後一個主場日，球團安排你先發登板。投完第一局後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你投出的每一顆全力的球」。':'球季最後一個主場日，球團安排你先發打第一棒。第一個打席結束後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你的每一次全力奔跑」。'}`;
     else txt=`你在球團官網的一則新聞稿裡宣布引退。發文的那個晚上，還是有幾十個老球迷湧進你的社群留言：「辛苦了」。職業棒球就是這樣——不是每個人都有儀式，但每個認真打過球的人，都有人記得。`;
   }else if(lg==='NPB'){
@@ -208,20 +232,6 @@ export function endGame(reason){
     if(!S.traits.grinder && (S.potSum0||999)<=grindTh){ S.traits.grinder=true;
       card('gold','隱藏特性：努力仔',`天賦平庸的球員千千萬萬，能走到這裡的卻寥寥無幾。你不是天選之人，你是把汗水熬成天賦的那種人。`); }
   }
-  /* 25 歲前離開棒球:每個球員都有第二人生的好劇本 */
-  if(S.age<25){
-    const nm=S.name;
-    const second=[
-      `你加入了乙組業餘棒球隊。平日上班、週末穿上球衣，去年在協會盃敲出再見安打的影片被瘋傳，底下最熱門的留言是：「這揮棒不像業餘的。」——因為本來就不是。你比誰都清楚，愛棒球不一定要靠它吃飯。`,
-      `你考到了不動產營業員執照。帶看時爬六樓透天面不改色，客戶都說你氣場不一樣——十六歲就在幾千人面前投球的人，還會怕開價嗎？三年後你成了店裡的銷售王，名片頭銜下面偷偷印了一行小字：「前職業棒球選手」。`,
-      `你跟著舅舅去做板模。工地的日子曬得比春訓還黑，但你的核心力量和不服輸讓老師傅都點頭。五年後你自己出來帶班，薪水不比二軍差，而且——你笑著說——這裡沒有人會把你下放。`,
-      `你穿上襯衫走進辦公室，同事只知道你「以前有在打球」。直到公司壘球隊比賽那天，你一棒把球送出圍牆，全場安靜三秒。後來每年比賽，對手公司都會先問一句：「那個人今年還在嗎？」`,
-      `你頂下一間早餐店，招牌取名「滿壘」。店裡掛著你高中的球衣，蛋餅煎得跟你的守備一樣扎實。附近的少棒隊員放學都來報到，因為老闆會一邊煎蘿蔔糕一邊講解怎麼看投手的放球點——加蛋不加價。`,
-      `你回到母校當教練，月薪不高，但你把自己沒走完的路畫成地圖交給學弟。第七年，你帶的投手在選秀會上被第一輪指名，電視轉播帶到你的時候，你哭得比他還慘。`,
-      `你創了業，做棒球訓練科技——用手機慢動作幫素人抓揮棒軌跡。第一年差點倒閉，第三年被運動中心整批採購。募資簡報的第一頁只有一句話：「我沒能站上去的舞台，我想讓更多人站上去。」`,
-      `你考上了消防員。體能測驗全項第一，教官問你以前練什麼的，你說棒球。第一次出勤救人那晚，你突然明白：肩膀不能再投一百五，但還能扛著人走出火場——這雙手還是有用的。`];
-    card('gold','第二人生',second[Math.floor(R()*second.length)].replace(/{n}/g,nm)+`<br><br><span class="sub">離開球場的人生，也是人生。${nm}，辛苦了。</span>`);
-  }
   /* 逐年成績年表 (分為業餘與職業) */
   if(S.log.length){
     const amaLogs = S.log.filter(r => !r.st);
@@ -239,8 +249,8 @@ export function endGame(reason){
         const cS = r.inj ? 'color:var(--bad);font-weight:700;' : '';
         const s = r.st || {G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,avg:0,era:0,WHIP:0,DEF:0};
         if(isP){
-          const era = s.IP>0 ? (s.ER*9/s.IP).toFixed(2) : '-';
-          const whip = s.IP>0 ? ((s.H+s.BB)/s.IP).toFixed(2) : '-';
+          const era = s.IP>0 ? baseballERA(s).toFixed(2) : '-';
+          const whip = s.IP>0 ? baseballWHIP(s).toFixed(2) : '-';
           return `<tr style="${cS}"><td>${r.y}</td><td>${r.age}</td><td style="text-align:left;white-space:nowrap">${r.tm}</td><td>${s.G}</td><td>${fmtIP(s.IP)}</td><td>${s.W}</td><td>${s.L}</td><td>${s.SV||0}</td><td>${s.HLD||0}</td><td>${s.SO}</td><td>${s.BB||0}</td><td>${era}</td><td>${whip}</td></tr>`;
         } else {
           const obpN = s.PA>0 ? (s.H+s.BB)/s.PA : 0;
@@ -315,8 +325,16 @@ export function endGame(reason){
   if(S.traits.phoenix)picks.push('從手術台爬回來還能拿獎，這種心臟是鈦合金做的吧');
   if(S.traits.onetool&&S.toolRole)picks.push(`那招${S.toolRole}真的無解，關鍵時刻換他上場就對了`);
   if(S.traits.clutch)picks.push('大場面先生，越關鍵的時刻越信任他');
+  if(S.traits.championmaker)picks.push('他走到哪裡就贏到哪裡，優勝請負人真的不是叫假的');
   if(S.love.st==='married'&&S.love.kids>=2)picks.push('引退後好好陪家人吧，孩子們等你很久了');
   card('info','球迷看板・引退串',picks.map(p=>'「'+p.replace(/{n}/g,S.name)+'」').join('<br>'));
+  if(usesSecondCareerEnding(S.age)){
+    const second=SECOND_CAREER_ENDINGS[Math.floor(R()*SECOND_CAREER_ENDINGS.length)];
+    card('gold','第二人生',second.replace(/{n}/g,S.name)+`<br><br><span class="sub">離開球場的人生，也是人生。${S.name}，辛苦了。</span>`);
+  }else{
+    const ending=postCareerEnding(tiersByLg);
+    card('gold','退役後・〈'+ending.title+'〉',ending.body);
+  }
   /* 一鍵分享 */
   const sh=document.createElement('div'); sh.className='card';
   sh.innerHTML=`<div class="title">分享這段生涯</div>
