@@ -290,8 +290,9 @@ export function amateurSeason(){
   const cups=S.stage==='HS'?HS_CUPS:S.stage==='U'?U_CUPS:['成棒甲組春季聯賽','成棒甲組秋季聯賽'];
   const thr=S.stage==='HS'?[52,46,40,34,28]:[60,54,48,42,36];
   let gain=0,lines=[],plain=[];
+  const eventForm=S.pendStat||0;
   const tB=S.stage==='HS'?({1:6,2:0,3:-6})[S.hsTier||2]:0; /* 高中隱藏強度分級 */
-  cups.forEach(c=>{ const pw=ovr()+tB+ri(-8,8);
+  cups.forEach(c=>{ const pw=ovr()+tB+eventForm+ri(-8,8);
     const i=pw>=thr[0]?0:pw>=thr[1]?1:pw>=thr[2]?2:pw>=thr[3]?3:pw>=thr[4]?4:5;
     const rk=['冠軍','亞軍','四強','八強','十六強','預賽出局'][i];
     const pts=[7,5,4,3,2,1][i]+Math.floor(ovr()/22);
@@ -299,6 +300,7 @@ export function amateurSeason(){
     if(S.stage==='U'&&rk==='冠軍'&&!S.traits.academy){ S.traits.academy=true;
       card('gold','隱藏屬性解鎖：學院派','大學殿堂的科學化訓練與防護打下扎實基礎——<b class="hl">25 歲前受傷率 −5%、季初擲骰期望值提升</b>。'); }
     if(i===0)S.honors.push(`${S.year} ${c}冠軍`); });
+  S.pendStat=0;
   S.pool+=gain;
   S.log.push({y:S.year,age:S.age,tm:S.team||stageLabel(),line:plain.join('、'), inj:false});
   card('','年度大賽',lines.join('<br>')+`<div class="statline">獲得能力點 ${gain} 點，季末統一分配。能力越高，大賽收穫越多。</div>`);
@@ -306,10 +308,10 @@ export function amateurSeason(){
 }
 export function proSeason(){
  const seasonLv=S.lv,st=simSeason(seasonLv); S.lastSt=st; S.lastD=st.d; S.lastLv=seasonLv;
-  if(S.pendStat>0&&S.seasonFactor>0){
+  if(S.pendStat!==0&&S.seasonFactor>0){
     /* 【修正】狀態火燙的加成，必須依照該季實際出賽的比例（seasonFactor）進行打折 */
     const p = S.pendStat * S.seasonFactor;
-    if(S.pos==='P'){
+    if(p>0&&S.pos==='P'){
       /* 狀態火燙=教練重用:後援先加出賽(不超過場次上限),再加內容;物理約束重夾 */
       if(!isSP()){ const reliefCap=Math.min(68,LV[seasonLv].g); const addG=Math.min(Math.max(0,reliefCap-st.G),Math.round(p*1.2)); st.G+=addG; st.IP=+(st.IP+addG*1.05).toFixed(1); }
       st.SO+=Math.round(p*8); st.IP=+(st.IP+p*4).toFixed(1);
@@ -321,7 +323,7 @@ export function proSeason(){
         const decCap=Math.max(0,st.G-st.SV-st.HLD);
         if((st.W+st.L)>decCap){ st.W=Math.min(st.W,decCap); st.L=Math.max(0,decCap-st.W); }
       } }
-    else { const Lg=LV[S.lv];
+    else if(p>0){ const Lg=LV[S.lv];
       /* 狀態火燙=教練重用:先轉為上場機會(G/PA 連動,不超過聯盟場次),打擊內容同步升溫 */
       const addG=Math.min(Math.max(0,(Lg.g||120)-st.G), Math.round(p*1.5));
       const addPA=Math.round(addG*4.25), addAB=Math.round(addPA*0.9);
@@ -331,6 +333,20 @@ export function proSeason(){
       const addHR=Math.min(addH, Math.round(p*1.2));
       st.H+=addH; st.HR+=addHR; st.RBI+=Math.round(addHR*2.1+(addH-addHR)*0.3);
       st.avg=st.AB?st.H/st.AB:0; }
+    else if(S.pos==='P'){
+      const q=Math.abs(p);
+      st.SO=Math.max(0,st.SO-Math.round(q*6));
+      st.W=Math.max(0,st.W-Math.round(q*.3));
+      if(!isSP())st.SV=Math.max(0,(st.SV||0)-Math.round(q*.4));
+      st.era=st.IP>0?clamp(st.era+q*.08,1.40,9.90):st.era;
+      st.ER=Math.round(st.era*st.IP/9);
+    } else {
+      const q=Math.abs(p), loseH=Math.min(st.H,Math.round(q*2));
+      st.H-=loseH;
+      st.HR=Math.min(st.H,Math.max(0,st.HR-Math.round(q*.5)));
+      st.RBI=Math.max(0,st.RBI-Math.round(q*1.2));
+      st.avg=st.AB?st.H/st.AB:0;
+    }
   }
   S.pendStat=0;
   /* 投法對成績的加成/折損 */

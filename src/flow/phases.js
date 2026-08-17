@@ -145,8 +145,10 @@ export function updateTeamTenureTraits(){
   }
 
   if(!S.traits.franchise&&S.teamYears>=7&&S.champThisTeam&&S.champTeam===S.orgTeam){
+    const removedCancer=!!S.traits.cancer;
+    if(removedCancer)removeTrait('cancer','更衣室毒瘤');
     S.traits.franchise=true; S.franchiseActive=true; S.franchiseTeamName=S.orgTeam;
-    card('gold','隱藏屬性解鎖：神主牌','小孩指著你說：「我媽媽從小就看你打球。」球團高層很清楚，放你走球迷會把主場拆了——<b class="hl">效力本隊期間享有交易保護與 4% 招牌球星溢價；引退評價永久 +200</b>。'); board(1);
+    card('gold','隱藏屬性解鎖：神主牌','小孩指著你說：「我媽媽從小就看你打球。」球團高層很清楚，放你走球迷會把主場拆了——<b class="hl">效力本隊期間享有交易保護與 4% 招牌球星溢價；引退評價永久 +200</b>。'+(removedCancer?'<br><b class="hl">你以長年貢獻重新贏回休息室信任，「更衣室毒瘤」解除。</b>':'')); board(1);
   }else if(S.traits.franchise&&!S.franchiseActive&&S.teamYears>=7){
     S.franchiseActive=true; S.franchiseTeamName=S.orgTeam;
     card('gold','神主牌效果恢復',`來到 <b class="hl">${S.orgTeam}</b> 的第七個頂級球季，你再一次成為城市無法割捨的招牌——<b class="hl">交易保護與 4% 合約溢價重新生效</b>。`); board(1);
