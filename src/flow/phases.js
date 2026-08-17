@@ -10,13 +10,13 @@ import {addAb, ovr, dposReview} from '../engine/ability.js';
 import {rollInjury, tjCap} from '../engine/injury.js';
 import {isMrTeamEligible} from '../engine/tenure.js';
 import {amateurSeason, proSeason, slgOf, currentSalaryRating} from '../engine/season.js';
-import {buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, signTo} from '../engine/contract.js';
+import {buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, signTo, teamChampRate} from '../engine/contract.js';
 import {drawEvents, removeTrait} from './events.js';
 import {loveEvent} from './love.js';
 import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js';
 import {endGame} from '../ui/retire.js';
 /* ================= 年度流程 ================= */
-export function startYear(){ stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
+export function startYear(){ S.yearOutsideIncome=0; stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* ---------- 季初 ---------- */
 export function phasePre(){
   board(0); S.tmpInj=0; S.seasonFactor=1; S.skipMid=false; S.marketInjury='healthy'; S.prevD=S.lastD||0; S.lastD=0; S.lastPayD=0; /* 先保留上季 d 供投手定位判定 */
@@ -147,7 +147,7 @@ export function updateTeamTenureTraits(){
     const removedCancer=!!S.traits.cancer;
     if(removedCancer)removeTrait('cancer','更衣室毒瘤');
     S.traits.franchise=true; S.franchiseActive=true; S.franchiseTeamName=S.orgTeam;
-    card('gold','隱藏屬性解鎖：神主牌','小孩指著你說：「我媽媽從小就看你打球。」球團高層很清楚，放你走球迷會把主場拆了——<b class="hl">效力本隊期間享有交易保護與 4% 招牌球星溢價；引退評價永久 +200</b>。'+(removedCancer?'<br><b class="hl">你以長年貢獻重新贏回休息室信任，「更衣室毒瘤」解除。</b>':'')); board(1);
+    card('gold','隱藏屬性解鎖：神主牌','小孩指著你說：「我媽媽從小就看你打球」。球團高層很清楚，放你走球迷會把主場拆了——<b class="hl">合約市場保有 4% 招牌球星溢價，並提高引退評價</b>。'+(removedCancer?'<br><b class="hl">你以長年貢獻重新贏回休息室信任，「更衣室毒瘤」解除。</b>':'')); board(1);
   }else if(S.traits.franchise&&!S.franchiseActive&&S.teamYears>=7){
     S.franchiseActive=true; S.franchiseTeamName=S.orgTeam;
     card('gold','神主牌效果恢復',`來到 <b class="hl">${S.orgTeam}</b> 的第七個頂級球季，你再一次成為城市無法割捨的招牌——<b class="hl">交易保護與 4% 合約溢價重新生效</b>。`); board(1);
@@ -173,6 +173,8 @@ export function updateTeamTenureTraits(){
 /* ---------- 季末 ---------- */
 export function phaseEnd(){
   board(2);
+  const outside=Math.round(S.yearOutsideIncome||0);
+  const outsideText=outside?`<br>業外收入：<b class="hl">+${fmtMoney(outside)}</b>`:'';
   if(S.stage==='PRO'){
     if(!S.ct)S.ct=makeContract(1,1,S.lv,currentSalaryRating(S.lastD||0));
     const sal=contractAnnual(); /* 合約保證年薪：不因本季表現、受傷或能力變動而重算 */
@@ -180,18 +182,18 @@ export function phaseEnd(){
     let extra='';
     if(LV[S.lv].top&&S.seasonFactor>0){
       const tp=LV[S.lv].top;
-      const pc=clamp(({CPBL:15,NPB:8,MLB:3.5})[tp]+(S.lastD||0)*0.5,2,({CPBL:26,NPB:15,MLB:9})[tp]);
+      const pc=teamChampRate(S.orgTeam,S.year);
       let pcc=pc;
       if(S.tradeRefuse>0){ pcc*=0.75; } /* 否決交易:戰力略受影響(成本已降) */
       if(chance(pcc)){ const cN={CPBL:'中職總冠軍',NPB:'日本一',MLB:'世界大賽冠軍'}[LV[S.lv].top];
         S.honors.push(`${S.year} ${cN}`); S.wonChamp=true; S.champThisTeam=true; S.champTeam=S.orgTeam; extra=`<br>球隊奪下 <b class="hl">${cN}</b>，全城陷入瘋狂！`; } }
     if(S.tradeRefuse>0)S.tradeRefuse--;
     if(S.tradeHeat>0)S.tradeHeat=Math.max(0,S.tradeHeat-5);
-    card('','季末結算',`本年度薪資：<b class="hl">${fmtMoney(sal)}</b>（生涯累計 ${fmtMoney(Math.round(S.salary))}）${S.ct?`｜合約剩 ${Math.max(0,S.ct.yrs-1)} 年`:''}${extra}`);
+    card('','季末結算',`本年度薪資：<b class="hl">${fmtMoney(sal)}</b>（生涯累計 ${fmtMoney(Math.round(S.salary))}）${S.ct?`｜合約剩 ${Math.max(0,S.ct.yrs-1)} 年`:''}${outsideText}${extra}`);
     board(2);
   }else if(S.stage==='AMA'){
     S.salary+=AMA_ANNUAL;
-    card('','企業隊年度收入',`本年度工作年薪：<b class="hl">${fmtMoney(AMA_ANNUAL)}</b>（每月 4 萬；生涯累計 ${fmtMoney(Math.round(S.salary))}）。這是企業隊職員收入，不是職業球員合約。`);
+    card('','企業隊年度收入',`本年度工作年薪：<b class="hl">${fmtMoney(AMA_ANNUAL)}</b>（每月 4 萬；生涯累計 ${fmtMoney(Math.round(S.salary))}）。有時候你分不清，你是員工，還是球員？${outsideText}`);
     board(2);
   }
   /* 冠軍、薪資與國際賽都結算完畢後，先把本季記在原隊，再進入季末交易。 */
@@ -284,6 +286,6 @@ export function movement(){
         card('info','升級薪資保障',`原合約固定年薪 <b>${fmtMoney(oldAnnual)}</b> 低於 ${LV[to].n}保障標準；自下季起調整為 <b class="hl">${fmtMoney(raised)}</b>，後續即使下放也不會再降回原薪。`);
       }
       if(LV[to].top)tlNote(2,'升上'+LV[to].n);
-      if(S.traits.yips){ removeTrait('yips','失憶症'); card('good','走出陰影','將身體與心靈重新來過，終於爬回了原本的高度——<b class="hl">失憶症痊癒</b>。'); } } }
+      if(S.traits.yips){ removeTrait('yips','失憶症'); card('good','走出陰影','將身體與心靈重新來過，終於爬回了原本的高度，——<b class="hl">失憶症痊癒</b>。'); } } }
   finishContractYear(o);
 }

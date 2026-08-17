@@ -67,7 +67,7 @@ export function tjBigInjury(cont){
   S.tjCount++; S.rehab=1; S.tj=0; S.marketInjury='major';
   /* 5% 肩膀報廢 */
   if(chance(5)){ S.ab.vel=10; S.ab.brk=10; S.pot.vel=20; S.pot.brk=20;
-    card('bad','最壞的結果',`長期閃避手肘的痛處，你的姿勢逐漸變形，投球姿勢彷彿在推鉛球。突然一陣劇痛，你發現自己的手已經抬不起來了。<br><b class="dn">肩膀報廢：球速與變化球降至 10，潛力上限降至 20。</b>`);
+    card('bad','最壞的結果',`長期閃避手肘的痛處，你的姿勢逐漸變形，投球姿勢彷彿在推鉛球。突然一陣劇痛，你突然發現你的手抬不起來了。<br><b class="dn">肩膀報廢：球速與變化球降至 10，潛力上限降至 20。</b>`);
     board(1); afterGamble('fail',cont); return; }
 
   /* 韌帶斷裂的懲罰 (-5) 以及手術後的回春 (+3~+10) */
@@ -131,7 +131,7 @@ export function rollInjury(){
       S.traits.glass=true;
       card('bad','隱藏素質解鎖：玻璃人','生涯第二次大傷。從此傷病如影隨形，未來每季受傷機率<b class="dn">不低於 40%</b>。'); }
     else if(S.bigInj>=2&&!S.traits.glass&&S.age>=32){
-      card('info','醫療團隊評估','「這是歲月的損耗，不是體質問題。」——老將的傷,球團看得比誰都開。'); }
+      card('info','醫療團隊評估','你不是易碎，只是風化 －－大傷不再被定義為玻璃人體質，身體都能體諒你這些年的征戰。'); }
   }
 }
 export function injStatLoss(big){

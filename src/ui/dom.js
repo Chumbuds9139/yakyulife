@@ -204,8 +204,10 @@ function secSalary(){
   const contract=(ct&&Number.isFinite(annual))
     ?`${fmtMoney(Math.round(annual))} × 剩 ${Math.max(0,ct.yrs||0)} 年`:'—';
   const tenure=(S.stage==='PRO'&&S.orgTeam)?`${S.teamYears||0} 年（${S.orgTeam}）`:'—';
+  const outside=Math.round(S.outsideIncome||0), yearOutside=Math.round(S.yearOutsideIncome||0);
+  const outsideRow=outside?salRow('業外收入',`${fmtMoney(outside)}${yearOutside?`（本年 +${fmtMoney(yearOutside)}）`:''}`):'';
   return `<div class="bd-sec sec-s"><div class="bd-sh">薪資</div>`+
-    salRow('現行合約',contract)+salRow('球隊年資',tenure)+
+    salRow('現行合約',contract)+salRow('球隊年資',tenure)+outsideRow+
     `<div class="bd-sr tot"><span class="k">生涯累計</span>`+
     `<span class="v">${fmtMoney(Math.round(S.salary))}</span></div></div>`;
 }

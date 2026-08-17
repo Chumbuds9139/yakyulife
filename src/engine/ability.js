@@ -78,8 +78,8 @@ export function dposReview(cont){
     S.role=nr;
     if(old&&old!==nr){
       /* 中繼與終結者互換看球季成績；先發與牛棚間的調整才看體力。 */
-      const basis=old!=='SP'&&nr!=='SP'?'成績':'體力狀況';
-      card('info','定位調整',`球團季末評估你的${basis}，新球季將你的角色調整為 <b class="hl">${roleN(nr)}</b>。`); }
+      const basis=old!=='SP'&&nr!=='SP'?'成績':'體力';
+      card('info','定位調整',`教練團評估你的${basis}，將你登錄為 <b class="hl">${roleN(nr)}</b>。`); }
     else if(!old){
       card('info','投手定位',`教練團評估你的體力，將你登錄為 <b class="hl">${roleN(nr)}</b>。`); }
     cont(); return;
@@ -135,12 +135,12 @@ export function playerType(){
     const m=Math.max(a.vel,a.ctl,a.brk);
     if(m<52)return '潛力股';
     if(a.sta>=m&&a.sta>=62)return '工作馬';
-    if(m===a.vel)return '火球男'; if(m===a.brk)return '變化球藝師'; return '控球大師';
+    if(m===a.vel)return '火球男'; if(m===a.brk)return '魔術師'; return '人體Kzone';
   }
   if(S.pos==='C'){ const rest=Math.max(a.con,a.pow,a.spd,a.eye,a.rng,a.fld,a.arm);
     if(a.cat>=58&&rest<=a.cat-8)return '配球皇帝'; }
   const dv=S.pos==='C'?(a.rng+a.fld+a.cat)/3:(a.rng+a.fld+a.arm)/3;
-  const cand=[['巨炮型',a.pow],['安打製造機',a.con],['選球大師',a.eye],['飛毛腿',a.spd],['守備至上',dv]];
+  const cand=[['巨炮型',a.pow],['安打製造機',a.con],['選球大師',a.eye],['飛毛腿',a.spd],['守備達人',dv]];
   cand.sort((x,y)=>y[1]-x[1]);
   if(cand[0][1]<52)return '潛力股';
   if(cand[0][1]-cand[1][1]<=3&&cand[0][1]>=60)return '全能型';

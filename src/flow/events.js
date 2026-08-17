@@ -47,6 +47,13 @@ function eventCash(mode){
   const base={CPBL2:5,CPBL1:20,NPB2:10,NPB1:50,R:5,A1:7,A2:10,A3:15,MLB:100}[S.lv]||5;
   return Math.max(1,Math.round(base*({bold:1.5,norm:1,safe:.5}[mode]||1)));
 }
+export function recordOutsideIncome(value){
+  const cash=Math.max(0,Math.round(Number(value)||0));
+  S.salary=(S.salary||0)+cash;
+  S.outsideIncome=(S.outsideIncome||0)+cash;
+  S.yearOutsideIncome=(S.yearOutsideIncome||0)+cash;
+  return cash;
+}
 const fmtEventMoney=value=>Number(value).toLocaleString()+'萬';
 export function eventPlan(category,mode,good,clutch){
   if(category==='training'){
@@ -63,7 +70,7 @@ export function eventPlan(category,mode,good,clutch){
 }
 function planSummary(ev,mode,good){
   const p=eventPlan(ev.category,mode,good,!!S.traits.clutch), parts=[];
-  if(p.cash)parts.push(`生涯收入 +${fmtEventMoney(eventCash(mode))}`);
+  if(p.cash)parts.push(`業外收入 +${fmtEventMoney(eventCash(mode))}`);
   if(p.ability)parts.push(`${targetLabel(ev)} ${p.ability>0?'成長點 +':'能力值 '}${p.ability>0?p.ability:p.ability}`);
   if(p.stat)parts.push(`本季成績加成 ${p.stat>0?'+':''}${p.stat}`);
   return parts.join('、')||'沒有額外數值變動';
@@ -108,7 +115,8 @@ export function resolveEvent(ev,mode,done){
   if((ev.n==='宵夜文化'||ev.n==='場外代言邀約')&&mode!=='safe'&&!good)S.cntSnack++;
   if(mode==='bold'&&!good&&(ev.category==='encounter'||ev.category==='endorsement'))S.cntSocialBoldFail=(S.cntSocialBoldFail||0)+1;
   const plan=eventPlan(ev.category,mode,good,!!S.traits.clutch), out=[];
-  if(plan.cash){ const cash=eventCash(mode); S.salary+=cash; out.push(`生涯收入 <span class="up">+${fmtEventMoney(cash)}</span>`); }
+  if(plan.cash){ const cash=recordOutsideIncome(eventCash(mode));
+    out.push(`業外收入 <span class="up">+${fmtEventMoney(cash)}</span>`); }
   if(plan.ability){
     const k=eventTarget(ev),before=S.ab[k],delta=addAb(k,plan.ability);
     if(plan.ability>0&&delta===0&&before<80)out.push(`${ABL[k]}：能力加點，但不足以提升一級`);
