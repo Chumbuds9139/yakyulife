@@ -1,15 +1,15 @@
-import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.5.0-r2';
-import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.0-r2';
-import {POS_ADJ_RUNS} from '../data/abilities.js?v=1.5.0-r2';
-import {LV, HS_CUPS, U_CUPS} from '../data/teams.js?v=1.5.0-r2';
-import {card, board} from '../ui/dom.js?v=1.5.0-r2';
-import {ovr, careerAllStars, toolGap} from './ability.js?v=1.5.0-r2';
-import {tjAccrue, tjGamble} from './injury.js?v=1.5.0-r2';
+import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.5.0-r3';
+import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.0-r3';
+import {POS_ADJ_RUNS} from '../data/abilities.js?v=1.5.0-r3';
+import {LV, HS_CUPS, U_CUPS} from '../data/teams.js?v=1.5.0-r3';
+import {card, board} from '../ui/dom.js?v=1.5.0-r3';
+import {ovr, careerAllStars, toolGap} from './ability.js?v=1.5.0-r3';
+import {tjAccrue, tjGamble} from './injury.js?v=1.5.0-r3';
 /* temporary scaffold until awards/intl/contract/flow are extracted */
-import {demotionAudit} from './contract.js?v=1.5.0-r2';
-import {awards} from './awards.js?v=1.5.0-r2';
-import {maybeIntl} from './intl.js?v=1.5.0-r2';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.0-r2';
+import {demotionAudit} from './contract.js?v=1.5.0-r3';
+import {awards} from './awards.js?v=1.5.0-r3';
+import {maybeIntl} from './intl.js?v=1.5.0-r3';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.0-r3';
 export function pitcherRole(){ /* 體力 >=52 先發;否則牛棚,牛棚內看表現升終結者 */
   if(S.ab.sta>=52)return 'SP';
   /* 牛棚:讀「上一季」的 d(prevD,因為 lastD 已被 phasePre 清空);頂尖 → 終結者 */
@@ -113,16 +113,12 @@ export function simSeason(lv){
     if(a.sta>=55)staF=1.0; else if(a.sta>=50)staF=0.90+(a.sta-50)*0.02;
     else if(a.sta>=45)staF=0.72+(a.sta-45)*0.036; else if(a.sta>=40)staF=0.52+(a.sta-40)*0.04;
     else if(a.sta>=35)staF=0.35+(a.sta-35)*0.034; else staF=Math.max(0.15,0.35-(35-a.sta)*0.03);
-    /* B. 明星級強打(d>=10)但體力撐不住守備(staF<0.75) → 該季轉 DH,只站打擊區,staF 拉到 0.9 下限 */
-    let dhThisYear=false;
-    if(d>=10 && staF<0.75 && S.dpos!=='DH' && S.dpos!=='C'){
-      staF=Math.max(staF,0.9); dhThisYear=true;
-    }
+    /* 守位只由季初守位會議決定。低體力會自然減少出賽，不再於季末暗中改判 DH。 */
     /* 表現係數:打得好才有滿打席,爛表現(d<0)出賽再打折 */
     const perfF=clamp(0.82+d*0.03,0.45,1.12);
     st.G=Math.min(L.g, Math.round(L.g*clamp(staF*perfF,0.10,1.0)*f*(0.95+R()*0.06))); /* 上限=聯盟場次,不可超過 */
     st.PA=Math.round(st.G*4.25);
-    st._dh=dhThisYear; /* 供 accStat 記 DH 年 */
+    st._dh=S.dpos==='DH'; /* 只有正式登錄為 DH 的球季才按 DH 結算。 */
     st.BB=Math.round(st.PA*clamp(0.062+(a.eye-par)*0.0034,0.045,0.17));
     st.AB=st.PA-st.BB;
     st.avg=clamp(0.252+d*0.0058+(a.sta-50)*0.0003+(a.spd-par)*0.0006+N0(0.014),0.140,0.380);

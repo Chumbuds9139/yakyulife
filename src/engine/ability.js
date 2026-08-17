@@ -1,9 +1,9 @@
-import {S} from '../core/state.js?v=1.5.0-r2';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.0-r2';
-import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.0-r2';
-import {LV} from '../data/teams.js?v=1.5.0-r2';
-import {card, choose, board} from '../ui/dom.js?v=1.5.0-r2';
-import {roleN, pitcherRole} from './season.js?v=1.5.0-r2';
+import {S} from '../core/state.js?v=1.5.0-r3';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.0-r3';
+import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.0-r3';
+import {LV} from '../data/teams.js?v=1.5.0-r3';
+import {card, choose, board} from '../ui/dom.js?v=1.5.0-r3';
+import {roleN, pitcherRole} from './season.js?v=1.5.0-r3';
 export function dpScore(p){ const a=S.ab;
   switch(p){
     case 'SS': return a.rng*0.5 + a.fld*0.3 + a.arm*0.2;   /* 游擊:範圍主導 */
@@ -200,7 +200,7 @@ export function addAbStat(k,amt){
   if(bud>0) S.pendStat=(S.pendStat||0)+bud;
   return gained;
 }
-export function statBonus(pts,out){ /* 能力已達潛力上限,獎勵轉成當季成績加成(下次結算套用) */
+export function statBonus(pts,out){ /* 正向獎勵無法再轉成能力時，改為當季成績加成（下次結算套用）。 */
   S.pendStat=(S.pendStat||0)+pts;
   out.push(`<span class="up">狀態火燙（本季成績加成 ×${pts}）</span>`);
 }

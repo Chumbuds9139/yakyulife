@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.0-r2';
-import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.0-r2';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.0-r2';
-import {LV} from '../data/teams.js?v=1.5.0-r2';
-import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS} from '../data/events.js?v=1.5.0-r2';
-import {card, choose, board} from '../ui/dom.js?v=1.5.0-r2';
-import {addAb, ovr} from '../engine/ability.js?v=1.5.0-r2';
-import {majorChampionshipCount} from '../engine/championship.js?v=1.5.0-r2';
+import {S} from '../core/state.js?v=1.5.0-r3';
+import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.0-r3';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.0-r3';
+import {LV} from '../data/teams.js?v=1.5.0-r3';
+import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS} from '../data/events.js?v=1.5.0-r3';
+import {card, choose, board} from '../ui/dom.js?v=1.5.0-r3';
+import {addAb, statBonus, ovr} from '../engine/ability.js?v=1.5.0-r3';
+import {majorChampionshipCount} from '../engine/championship.js?v=1.5.0-r3';
 export function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 export function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
@@ -155,10 +155,11 @@ export function resolveEvent(ev,mode,done){
   if(plan.cash){ const cash=recordOutsideIncome(eventCash(mode));
     out.push(`業外收入 <span class="up">+${fmtEventMoney(cash)}</span>`); }
   if(plan.ability){
-    const k=eventTarget(ev),before=S.ab[k],delta=addAb(k,plan.ability);
-    if(plan.ability>0&&delta===0&&before<80)out.push(`${ABL[k]}：能力加點，但不足以提升一級`);
-    else if(plan.ability>0&&before>=80)out.push(`${ABL[k]} 已達上限`);
-    else out.push(`${ABL[k]} <span class="${delta>=0?'up':'dn'}">${delta>0?'+':''}${delta}</span>`);
+    const k=eventTarget(ev),delta=addAb(k,plan.ability);
+    const overflow=plan.ability>0?(S.lastOverflow||0):0;
+    if(delta!==0)out.push(`${ABL[k]} <span class="${delta>=0?'up':'dn'}">${delta>0?'+':''}${delta}</span>`);
+    else if(!overflow)out.push(`${ABL[k]}：能力加點，但不足以提升一級`);
+    if(overflow>0)statBonus(overflow,out);
   }
   if(plan.stat){ S.pendStat=(S.pendStat||0)+plan.stat; out.push(`本季成績加成 <span class="${plan.stat>0?'up':'dn'}">${plan.stat>0?'+':''}${plan.stat}</span>`); }
   const result=ev.choices[mode];
