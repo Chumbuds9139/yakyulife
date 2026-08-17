@@ -31,6 +31,16 @@ function shuffled(list){ const out=list.slice(); for(let i=out.length-1;i>0;i--)
 export function availableEventCombinations(state){
   return EVENT_COMBINATIONS.filter(combo=>combo.every(category=>eventPool(category,state).length));
 }
+const isDoubleTraining=combo=>combo[0]==='training'&&combo[1]==='training';
+export function eventCombinationOptions(state){
+  const pool=shuffled(availableEventCombinations(state));
+  const chosen=pool.slice(0,3);
+  if(chosen.length===3&&!chosen.some(isDoubleTraining)){
+    const required=pool.filter(isDoubleTraining);
+    if(required.length)chosen[2]=pick(required);
+  }
+  return shuffled(chosen);
+}
 function eventTarget(ev){ return ev.target in S.ab?ev.target:pick(POS_AB[S.pos]); }
 function targetLabel(ev){ return ev.target in S.ab?ABL[ev.target]:'隨機主能力'; }
 function eventCash(mode){
@@ -70,15 +80,19 @@ function showEvent(ev,after){
   });
   choose(`事件｜${EVENT_CATEGORY_NAMES[ev.category]}｜${ev.n}<br><small>${ev.intro}</small>`,opts);
 }
-export function drawEvents(n,done){
-  if(n<=0){ done(); return; }
-  const combos=availableEventCombinations(S);
-  const combo=shuffled(pick(combos.length?combos:EVENT_COMBINATIONS));
-  const after=()=>{ board(1); drawEvents(n-1,done); };
-  choose(`選擇事件類型（本季剩 ${n} 次）`,combo.map((category,index)=>({
-    t:EVENT_CATEGORY_NAMES[category],main:index===0,
-    s:`從符合目前年齡、階段、聯盟與守位的「${EVENT_CATEGORY_NAMES[category]}」事件中抽出一張`,
-    f:()=>{ const pool=eventPool(category,S); showEvent(pick(pool.length?pool:EVENTS.filter(ev=>ev.category===category)),after); }
+function runEventSequence(sequence,done,index){
+  const i=index||0;
+  if(i>=sequence.length){ done(); return; }
+  const category=sequence[i],pool=eventPool(category,S);
+  const after=()=>{ board(1); runEventSequence(sequence,done,i+1); };
+  showEvent(pick(pool.length?pool:EVENTS.filter(ev=>ev.category===category)),after);
+}
+export function drawEvents(done){
+  const combos=eventCombinationOptions(S);
+  choose('請決定今年的事件組成',combos.map(combo=>({
+    t:combo.map(category=>EVENT_CATEGORY_NAMES[category]).join('・'),main:true,
+    s:`選定後依序進行：${combo.map(category=>EVENT_CATEGORY_NAMES[category]).join(' → ')}`,
+    f:()=>runEventSequence(combo,done,0)
   })));
 }
 export function resolveEvent(ev,mode,done){

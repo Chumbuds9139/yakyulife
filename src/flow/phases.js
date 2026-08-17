@@ -125,8 +125,7 @@ export function phasePre(){
 export function phaseMid(){
   board(1);
   if(S.skipMid){ S.ironStreak=0; nextStep(); return; }
-  const nEv=S.stage==='PRO'?3:2;
-  loveEvent(()=>drawEvents(nEv,()=>{
+  loveEvent(()=>drawEvents(()=>{
     choose('',[{t:'▸ 季中健康檢查',main:true,f:()=>{ rollInjury();
       choose('',[{t:'▸ 查看球季表現',main:true,f:()=>{
         if(S.stage==='PRO')proSeason();
