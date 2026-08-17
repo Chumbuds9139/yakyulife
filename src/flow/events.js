@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.1-r1';
-import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.1-r1';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.1-r1';
-import {LV} from '../data/teams.js?v=1.5.1-r1';
-import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS} from '../data/events.js?v=1.5.1-r1';
-import {card, choose, board} from '../ui/dom.js?v=1.5.1-r1';
-import {addAb, statBonus, ovr} from '../engine/ability.js?v=1.5.1-r1';
-import {majorChampionshipCount} from '../engine/championship.js?v=1.5.1-r1';
+import {S} from '../core/state.js?v=1.5.1-r2';
+import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.1-r2';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.1-r2';
+import {LV} from '../data/teams.js?v=1.5.1-r2';
+import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS} from '../data/events.js?v=1.5.1-r2';
+import {card, choose, board} from '../ui/dom.js?v=1.5.1-r2';
+import {addAb, statBonus, ovr} from '../engine/ability.js?v=1.5.1-r2';
+import {majorChampionshipCount} from '../engine/championship.js?v=1.5.1-r2';
 export function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 export function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
@@ -68,8 +68,8 @@ const fmtEventMoney=value=>Number(value).toLocaleString()+'萬';
 export function eventPlan(category,mode,good,clutch){
   if(category==='training'){
     /* 訓練的成功報酬與失敗風險都隨選擇強度遞增：保守 1、普通 2、全力 3。
-       大心臟維持全力成功 +3，但把失敗懲罰從 -3 降為 -2。 */
-    const points=mode==='safe'?1:mode==='norm'?2:(good?3:(clutch?2:3));
+       大心臟把全力成功提高為 +4，失敗懲罰則從 -3 降為 -2。 */
+    const points=mode==='safe'?1:mode==='norm'?2:(good?(clutch?4:3):(clutch?2:3));
     return {ability:good?points:-points,stat:0,cash:false};
   }
   if(category==='encounter'){
@@ -206,7 +206,7 @@ export function checkTraitsMid(){
     traitCard('disc','自律狂','你見過凌晨四點的洛杉磯嗎？——年紀輕輕就把身體當成聖殿經營，沒有派對、沒有酒精，只有重訓室的鐵片聲：<b class="hl">整條衰退曲線延後兩年</b>，你的巔峰比同梯更長。'); }
   /* 大心臟:25 歲前全力一搏成功 7 次(允許失敗) */
   if(!S.traits.clutch&&S.age<25&&S.cntBoldWin>=7){
-    traitCard('clutch','大心臟','每次的豪賭淬鍊出你無與無比的心性，愈刺激的狀況只會讓你更加幹勁十足。從此以後，愈賭愈強，成功獎勵愈大，失敗懲罰愈少，不過在豪賭的路上，還是要注意一下身邊的其他人……<br><b class="hl">「全力一搏」成功率提升至天才級；訓練成功加成 +3、失敗只 −2；遭遇與代言也會減輕失敗懲罰；國際賽個人成績獲得小幅加成</b>。'); }
+      traitCard('clutch','大心臟','每次的豪賭淬鍊出你無與無比的心性，愈刺激的狀況只會讓你更加幹勁十足。從此以後，愈賭愈強，成功獎勵愈大，失敗懲罰愈少，不過在豪賭的路上，還是要注意一下身邊的其他人……<br><b class="hl">「全力一搏」成功率提升至天才級；訓練成功加成 +4、失敗只 −2；遭遇與代言也會減輕失敗懲罰；國際賽個人成績獲得小幅加成</b>。'); }
   /* 外務纏身:宵夜/代言/緋聞累計(以宵夜次數 + 感情事件觸發次數估) */
   if(!S.traits.distract&&!S.traits.disc&&(S.love.affairs+S.love.caught+S.cntSnack)>=4&&(S.love.affairs+S.love.caught)>=1){
     traitCard('distract','外務纏身','通告、代言、社群媒體佔據了你太多心神，休賽季很久沒有完整專注在棒球上——<b class="dn">季初擲骰永久 −1 顆</b>（最低 2 顆）。','bad'); }

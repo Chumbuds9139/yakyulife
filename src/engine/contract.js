@@ -1,18 +1,18 @@
-import {S} from '../core/state.js?v=1.5.1-r1';
-import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.1-r1';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS} from '../data/teams.js?v=1.5.1-r1';
-import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.1-r1';
-import {card, choose, board} from '../ui/dom.js?v=1.5.1-r1';
-import {tlNote} from '../ui/timeline.js?v=1.5.1-r1';
-import {ovr} from './ability.js?v=1.5.1-r1';
-import {injuryMarketStatus} from './injury.js?v=1.5.1-r1';
-import {hasActiveFranchise} from './tenure.js?v=1.5.1-r1';
-import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.1-r1';
-import {capTeam} from './career.js?v=1.5.1-r1';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.1-r1';
-import {advance} from './draft.js?v=1.5.1-r1';
-import {finishContractYear} from '../flow/phases.js?v=1.5.1-r1';
-import {endGame} from '../ui/retire.js?v=1.5.1-r1';
+import {S} from '../core/state.js?v=1.5.1-r2';
+import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.1-r2';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS} from '../data/teams.js?v=1.5.1-r2';
+import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.1-r2';
+import {card, choose, board} from '../ui/dom.js?v=1.5.1-r2';
+import {tlNote} from '../ui/timeline.js?v=1.5.1-r2';
+import {ovr} from './ability.js?v=1.5.1-r2';
+import {injuryMarketStatus} from './injury.js?v=1.5.1-r2';
+import {hasActiveFranchise} from './tenure.js?v=1.5.1-r2';
+import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.1-r2';
+import {capTeam} from './career.js?v=1.5.1-r2';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.1-r2';
+import {advance} from './draft.js?v=1.5.1-r2';
+import {finishContractYear} from '../flow/phases.js?v=1.5.1-r2';
+import {endGame} from '../ui/retire.js?v=1.5.1-r2';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
