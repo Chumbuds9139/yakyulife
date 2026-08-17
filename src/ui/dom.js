@@ -116,7 +116,7 @@ export function choose(title,opts){
   a.classList.remove('collapsed'); /* 新選項出現時自動展開 */
   if(title)a.innerHTML=`<div class="title">${title}</div>`;
   opts.forEach(o=>{ const b=document.createElement('button');
-    b.className='btn'+(o.main?' main':'')+(o.warn?' warn':'');
+    b.className='btn'+(o.main?' main':'')+(o.warn?' warn':'')+(o.center?' center':'');
     b.innerHTML=o.t+(o.s?`<small>${o.s}</small>`:'');
     b.onclick=()=>{ actClear(); o.f(); }; a.appendChild(b); });
   actToggleSync(); scrollBottom();

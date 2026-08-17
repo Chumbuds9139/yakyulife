@@ -253,6 +253,7 @@ table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.
 .btn.main{background:var(--btnbg);border-color:var(--btnedge);color:var(--btntx);text-align:center}
 .btn.main small{color:inherit;opacity:.8}
 .btn.warn{border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.btn.center{text-align:center}
 #act .row2{display:flex;gap:8px}#act .row2 .btn{flex:1;text-align:center}
 /* trait side panel: desktop top-right list of unlocked hidden traits (hidden on mobile; settlement unchanged) */
 #trait-side{display:none}

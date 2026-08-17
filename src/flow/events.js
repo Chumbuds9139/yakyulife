@@ -93,7 +93,7 @@ function showEvent(ev,after){
     ['safe','保守應對',false,false],
   ].map(([mode,subtitle,warn,main])=>{
     const c=ev.choices[mode];
-    return {t:c.label,warn,main,s:`${subtitle}｜成功率 ${od[mode]}%<br>成功：${planSummary(ev,mode,true)}｜失敗：${planSummary(ev,mode,false)}`,f:()=>resolveEvent(ev,mode,after)};
+    return {t:c.label,warn,main,center:true,s:`${subtitle}｜成功率 ${od[mode]}%<br>成功：${planSummary(ev,mode,true)}｜失敗：${planSummary(ev,mode,false)}`,f:()=>resolveEvent(ev,mode,after)};
   });
   choose(`事件｜${EVENT_CATEGORY_NAMES[ev.category]}｜${ev.n}<br><small>${ev.intro}</small>`,opts);
 }
