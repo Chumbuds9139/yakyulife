@@ -1,17 +1,17 @@
-import {S, blankStat, bucketOf} from '../core/state.js?v=1.5.1-r2';
-import {R, ri, SEED} from '../core/rng.js?v=1.5.1-r2';
-import {OFFICIAL_URL} from '../config.js?v=1.5.1-r2';
-import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, teamNick} from '../data/teams.js?v=1.5.1-r2';
-import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.1-r2';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.5.1-r2';
-import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.1-r2';
-import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.1-r2';
-import {traitNames, traitTagStyle} from './traits.js?v=1.5.1-r2';
-import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.1-r2';
-import {playerType} from '../engine/ability.js?v=1.5.1-r2';
-import {fmtMoney} from '../engine/contract.js?v=1.5.1-r2';
-import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.1-r2';
-import {shareImage} from './share-image.js?v=1.5.1-r2';
+import {S, blankStat, bucketOf} from '../core/state.js?v=1.5.1-r4';
+import {R, ri, SEED} from '../core/rng.js?v=1.5.1-r4';
+import {OFFICIAL_URL} from '../config.js?v=1.5.1-r4';
+import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, teamNick} from '../data/teams.js?v=1.5.1-r4';
+import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.1-r4';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.5.1-r4';
+import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.1-r4';
+import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.1-r4';
+import {traitNames, traitTagStyle} from './traits.js?v=1.5.1-r4';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.1-r4';
+import {playerType} from '../engine/ability.js?v=1.5.1-r4';
+import {fmtMoney} from '../engine/contract.js?v=1.5.1-r4';
+import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.1-r4';
+import {shareImage} from './share-image.js?v=1.5.1-r4';
 /* ================= 結算圖資料建構 =================
    Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
    All values come from S.*; the in-game settlement cards are untouched. */

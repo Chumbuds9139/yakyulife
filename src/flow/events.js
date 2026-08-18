@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.1-r2';
-import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.1-r2';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.1-r2';
-import {LV} from '../data/teams.js?v=1.5.1-r2';
-import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS} from '../data/events.js?v=1.5.1-r2';
-import {card, choose, board} from '../ui/dom.js?v=1.5.1-r2';
-import {addAb, statBonus, ovr} from '../engine/ability.js?v=1.5.1-r2';
-import {majorChampionshipCount} from '../engine/championship.js?v=1.5.1-r2';
+import {S} from '../core/state.js?v=1.5.1-r4';
+import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.1-r4';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.1-r4';
+import {LV} from '../data/teams.js?v=1.5.1-r4';
+import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS, EVENT_ROUTES, eventInjuryRisk} from '../data/events.js?v=1.5.1-r4';
+import {card, choose, board} from '../ui/dom.js?v=1.5.1-r4';
+import {addAb, statBonus, ovr} from '../engine/ability.js?v=1.5.1-r4';
+import {majorChampionshipCount} from '../engine/championship.js?v=1.5.1-r4';
 export function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 export function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
@@ -38,20 +38,19 @@ export function eventEligible(ev,state){
 export function eventPool(category,state){ return EVENTS.filter(ev=>ev.category===category&&eventEligible(ev,state)); }
 function shuffled(list){ const out=list.slice(); for(let i=out.length-1;i>0;i--){ const j=Math.floor(R()*(i+1)); [out[i],out[j]]=[out[j],out[i]]; } return out; }
 export function availableEventCombinations(state){
-  return EVENT_COMBINATIONS.filter(combo=>combo.every(category=>eventPool(category,state).length));
+  return EVENT_COMBINATIONS.filter(combo=>{
+    const required=combo.reduce((counts,category)=>{ counts[category]=(counts[category]||0)+1; return counts; },{});
+    return Object.entries(required).every(([category,count])=>eventPool(category,state).length>=count);
+  });
 }
-const isDoubleTraining=combo=>combo[0]==='training'&&combo[1]==='training';
 export function eventCombinationOptions(state){
-  const pool=shuffled(availableEventCombinations(state));
-  const chosen=pool.slice(0,3);
-  if(chosen.length===3&&!chosen.some(isDoubleTraining)){
-    const required=pool.filter(isDoubleTraining);
-    if(required.length)chosen[2]=pick(required);
-  }
-  return shuffled(chosen);
+  const available=availableEventCombinations(state);
+  return EVENT_ROUTES.map(route=>{
+    const combinations=route.combinations.filter(combo=>available.includes(combo));
+    return combinations.length?{name:route.name,combination:pick(combinations)}:null;
+  }).filter(Boolean);
 }
 function eventTarget(ev){ return ev.target in S.ab?ev.target:pick(POS_AB[S.pos]); }
-function targetLabel(ev){ return ev.target in S.ab?ABL[ev.target]:'隨機主能力'; }
 function eventCash(mode){
   const base={CPBL2:5,CPBL1:20,NPB2:10,NPB1:50,R:5,A1:7,A2:10,A3:15,MLB:100}[S.lv]||5;
   const traitBonus=S.traits.adking?1.1:1;
@@ -80,31 +79,26 @@ export function eventPlan(category,mode,good,clutch){
   if(mode==='norm')return {ability:good?1:0,stat:good?0:-1,cash:good};
   return {ability:good?1:0,stat:good?(clutch?2:1):(clutch?-1:-2),cash:good};
 }
-function planSummary(ev,mode,good){
-  const p=eventPlan(ev.category,mode,good,!!S.traits.clutch), parts=[];
-  if(p.cash)parts.push(`業外收入 +${fmtEventMoney(eventCash(mode))}`);
-  if(p.ability)parts.push(`${targetLabel(ev)} ${p.ability>0?'成長點 +':'能力值 '}${p.ability>0?p.ability:p.ability}`);
-  if(p.stat)parts.push(`本季成績加成 ${p.stat>0?'+':''}${p.stat}`);
-  return parts.join('、')||'沒有額外數值變動';
-}
 function showEvent(ev,after){
   const od=evOdds();
   const opts=[
-    ['bold','全力一搏',true,false],
-    ['norm','普通應對',false,true],
-    ['safe','保守應對',false,false],
-  ].map(([mode,subtitle,warn,main])=>{
+    ['bold','加成／減益幅度最大',true,false],
+    ['norm','加成／減益幅度中等',false,true],
+    ['safe','加成／減益幅度最小',false,false],
+  ].map(([mode,scale,warn,main])=>{
     const c=ev.choices[mode];
-    return {t:c.label,warn,main,center:true,s:`${subtitle}｜成功率 ${od[mode]}%<br>成功：${planSummary(ev,mode,true)}｜失敗：${planSummary(ev,mode,false)}`,f:()=>resolveEvent(ev,mode,after)};
+    return {t:c.label,warn,main,center:true,s:`成功率 ${od[mode]}%｜${scale}`,f:()=>resolveEvent(ev,mode,after)};
   });
   choose(`事件｜${EVENT_CATEGORY_NAMES[ev.category]}｜${ev.n}<br><small>${ev.intro}</small>`,opts);
 }
-function runEventSequence(sequence,done,index){
-  const i=index||0;
-  if(i>=sequence.length){ done(); return; }
-  const category=sequence[i],pool=eventPool(category,S);
-  const after=()=>{ board(1); runEventSequence(sequence,done,i+1); };
-  showEvent(pick(pool.length?pool:EVENTS.filter(ev=>ev.category===category)),after);
+export function drawEventCards(sequence,state){
+  const used=new Set();
+  return sequence.map(category=>{
+    const pool=eventPool(category,state).filter(ev=>!used.has(ev.id));
+    const ev=pick(pool);
+    if(ev)used.add(ev.id);
+    return ev;
+  }).filter(Boolean);
 }
 function runEventCards(cards,done,index){
   const i=index||0;
@@ -126,18 +120,17 @@ export function amateurEventPool(state){
 }
 export function drawEvents(done){
   /* 高中、大學與業餘沒有代言或成績加成，也不選事件組成：
-     通用卡與該階段限定卡混池後，全部以訓練卡抽取；高中/大學維持兩張，
-     業餘維持既有三張，避免改動每年事件總點數。 */
+     通用卡與該階段限定卡混池後，全部以訓練卡抽取；高中與業餘三張，
+     大學維持兩張。 */
   if(isAmateurEventStage(S)){
-    const count=S.stage==='AMA'?3:2;
+    const count=S.stage==='U'?2:3;
     runEventCards(shuffled(amateurEventPool(S)).slice(0,count),done,0);
     return;
   }
-  const combos=eventCombinationOptions(S);
-  choose('請決定今年的事件組成',combos.map(combo=>({
-    t:combo.map(category=>EVENT_CATEGORY_NAMES[category]).join('・'),main:true,
-    s:`選定後依序進行：${combo.map(category=>EVENT_CATEGORY_NAMES[category]).join(' → ')}`,
-    f:()=>runEventSequence(combo,done,0)
+  const routes=eventCombinationOptions(S);
+  choose('請決定今年的事件組成',routes.map(route=>({
+    t:route.name,main:true,
+    f:()=>runEventCards(drawEventCards(route.combination,S),done,0)
   })));
 }
 export function resolveEvent(ev,mode,done){
@@ -164,6 +157,8 @@ export function resolveEvent(ev,mode,done){
     if(overflow>0)statBonus(overflow,out);
   }
   if(plan.stat){ S.pendStat=(S.pendStat||0)+plan.stat; out.push(`本季成績加成 <span class="${plan.stat>0?'up':'dn'}">${plan.stat>0?'+':''}${plan.stat}</span>`); }
+  const injuryRisk=eventInjuryRisk(ev,mode,good,!!S.traits.clutch);
+  if(injuryRisk){ S.tmpInj=(S.tmpInj||0)+injuryRisk; out.push(`本季受傷機率 <span class="dn">+${injuryRisk}%</span>`); }
   const result=ev.choices[mode];
   const resultText=good?result.good:result.bad;
   card(good?'good':'bad','事件卡｜'+ev.n+(tag?`（${tag}）`:''),

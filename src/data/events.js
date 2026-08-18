@@ -1,7 +1,29 @@
 /* 此檔由 YaKyoLife_事件卡完整文本與數值表_96張_補完版_A.xlsx 的「完整事件表」產生。 */
 /* 活頁簿實際提供 91 張：缺少 ID 15、93、94、95、96；不得在沒有來源文本時自行補寫。 */
 export const EVENT_CATEGORY_NAMES={training:'訓練',endorsement:'代言',encounter:'遭遇'};
-export const EVENT_COMBINATIONS=[['training','training','endorsement'],['training','training','encounter'],['training','endorsement','encounter'],['training','encounter','encounter'],['training','endorsement','endorsement']];
+export const EVENT_ROUTES=[
+  {name:'訓練至上',combinations:[['training','training','endorsement'],['training','training','encounter']]},
+  {name:'代言寵兒',combinations:[['endorsement','endorsement','training']]},
+  {name:'體驗人生',combinations:[['encounter','encounter','training']]},
+  {name:'均衡生活',combinations:[['training','endorsement','encounter']]}
+];
+export const EVENT_COMBINATIONS=EVENT_ROUTES.flatMap(route=>route.combinations);
+/* 舊版事件傷病倍率：保守 +8%、普通 +12%、全力 +16%；大心臟全力失敗降回 +12%。
+   下表只標記失敗文本確實出現受傷、疼痛、過勞或明示傷病風險的訓練／遭遇選項。
+   ID 7、38、73、74 另保留重製前既有的傷病狀態。 */
+export const EVENT_INJURY_RISK={safe:8,norm:12,bold:16};
+export const EVENT_INJURY_BAD_MODES={
+  1:['safe'], 2:['bold','norm','safe'], 4:['bold','norm','safe'], 7:['bold','norm','safe'],
+  9:['norm','safe'], 16:['bold','norm','safe'], 19:['safe'], 23:['bold','safe'],
+  24:['bold','safe'], 28:['bold','norm','safe'], 30:['norm','safe'],
+  38:['bold','norm','safe'], 42:['bold','norm','safe'], 50:['bold','norm','safe'], 56:['bold','safe'],
+  51:['bold','norm','safe'], 73:['bold','norm','safe'], 74:['bold','norm','safe'], 79:['norm'], 81:['bold','norm'],
+  84:['bold','norm','safe'], 85:['safe'], 90:['norm']
+};
+export function eventInjuryRisk(ev,mode,good,clutch){
+  if(good||!(EVENT_INJURY_BAD_MODES[ev.id]||[]).includes(mode))return 0;
+  return mode==='bold'&&clutch?EVENT_INJURY_RISK.norm:(EVENT_INJURY_RISK[mode]||0);
+}
 export const EVENTS=[
   {
     "id": 1,
@@ -57,7 +79,7 @@ export const EVENTS=[
       },
       "safe": {
         "label": "改善動作品質",
-        "good": "你將注意力放在改上動作品質上，修正了你重訓的許多壞習慣。",
+        "good": "你將注意力放在改善動作品質上，修正了你重訓的許多壞習慣。",
         "bad": "沒有增加重量，導致你的肌肉完全沒有成長，只是徒增受傷風險而已。"
       }
     },
@@ -651,13 +673,13 @@ export const EVENTS=[
     "target": "sta",
     "choices": {
       "bold": {
-        "label": "研究完整車上恢復流程",
-        "good": "你替全隊排了一套車上伸展與補水的節奏，下車時大家的腰都沒那麼硬。",
-        "bad": "你在搖晃的車上做伸展，反而把腰扭了。"
+        "label": "和隊友一起研究車內伸展",
+        "good": "伸展結束後，大家在車上的休息品質變高了",
+        "bad": "伸展完全沒有用，反而減少大家休息時間，下車時腰更酸了"
       },
       "norm": {
-        "label": "在位子上看手機",
-        "good": "看了許多比賽影片，知道了晚點應對對手的方法。",
+        "label": "滑一下手機再休息",
+        "good": "看了幾分鐘比賽影片，休息時都在冥想投打對決",
         "bad": "滑了一下短影音，回過神來已經到了目的地，完全沒有休息到。"
       },
       "safe": {
@@ -2186,7 +2208,7 @@ export const EVENTS=[
       "bold": {
         "label": "完整量測並嚴格執行",
         "good": "你連睡眠週期都記錄下來，一個月後的恢復數據漂亮得像換了個人。",
-        "bad": "你把飲食控制得太嚴，訓練到一半就低血糖。"
+        "bad": "飲食控制過於嚴格，讓你在一頓放縱餐後就一路放縱"
       },
       "norm": {
         "label": "遵守主要原則",
@@ -2325,7 +2347,7 @@ export const EVENTS=[
     "id": 79,
     "n": "跨語言戰術會議",
     "times": [
-      "ALL"
+      "PRO"
     ],
     "scope": "*",
     "role": "*",
