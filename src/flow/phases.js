@@ -1,21 +1,21 @@
-import {S, stepQ, nextStep, stageLabel} from '../core/state.js?v=1.5.1-r6';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.1-r6';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.1-r6';
-import {LV, PATHS, teamNick} from '../data/teams.js?v=1.5.1-r6';
-import {AMA_ANNUAL} from '../data/economy.js?v=1.5.1-r6';
-import {card, choose, board, divider} from '../ui/dom.js?v=1.5.1-r6';
-import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.5.1-r6';
-import {allocUI} from '../ui/alloc.js?v=1.5.1-r6';
-import {addAb, ovr, dposReview} from '../engine/ability.js?v=1.5.1-r6';
-import {rollInjury, tjCap} from '../engine/injury.js?v=1.5.1-r6';
-import {isMrTeamEligible} from '../engine/tenure.js?v=1.5.1-r6';
-import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.1-r6';
-import {championshipChance} from '../engine/championship.js?v=1.5.1-r6';
-import {buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, signTo, teamChampRate} from '../engine/contract.js?v=1.5.1-r6';
-import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.5.1-r6';
-import {loveEvent} from './love.js?v=1.5.1-r6';
-import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.5.1-r6';
-import {endGame} from '../ui/retire.js?v=1.5.1-r6';
+import {S, stepQ, nextStep, stageLabel} from '../core/state.js?v=1.5.1-r7';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.1-r7';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.1-r7';
+import {LV, PATHS, teamNick} from '../data/teams.js?v=1.5.1-r7';
+import {AMA_ANNUAL} from '../data/economy.js?v=1.5.1-r7';
+import {card, choose, board, divider} from '../ui/dom.js?v=1.5.1-r7';
+import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.5.1-r7';
+import {allocUI} from '../ui/alloc.js?v=1.5.1-r7';
+import {addAb, ovr, dposReview} from '../engine/ability.js?v=1.5.1-r7';
+import {rollInjury, tjCap} from '../engine/injury.js?v=1.5.1-r7';
+import {isMrTeamEligible} from '../engine/tenure.js?v=1.5.1-r7';
+import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.1-r7';
+import {championshipChance} from '../engine/championship.js?v=1.5.1-r7';
+import {buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, signTo, teamChampRate} from '../engine/contract.js?v=1.5.1-r7';
+import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.5.1-r7';
+import {loveEvent} from './love.js?v=1.5.1-r7';
+import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.5.1-r7';
+import {endGame} from '../ui/retire.js?v=1.5.1-r7';
 /* ================= 年度流程 ================= */
 export function startYear(){ S.yearOutsideIncome=0; stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* ---------- 季初 ---------- */
@@ -27,9 +27,13 @@ export function phasePre(){
   if(declAge>=32){ const baseDec=declAge>=35?5+(declAge-35):2;
     const oldGhostActive=!!(S.oldGhostPending&&!S.oldGhostUsed);
     const dec=oldGhostActive?Math.max(1,Math.round(baseDec*0.5)):baseDec;
-    POS_AB[S.pos].forEach(k=>S.ab[k]=clamp(S.ab[k]-dec,1,80));
+    const catcherCallDec=S.pos==='C'?Math.max(1,Math.round(dec*0.5)):dec;
+    POS_AB[S.pos].forEach(k=>S.ab[k]=clamp(S.ab[k]-(k==='cat'?catcherCallDec:dec),1,80));
     if(oldGhostActive){ S.oldGhostPending=false; S.oldGhostUsed=true; }
-    card('bad','歲月不饒人',`${declAge>=35?'第二階段（逐年加劇）':'第一階段'}衰退：所有能力 <b class="dn">−${dec}</b>${S.traits.disc?'（自律狂：生涯延後兩年）':''}${oldGhostActive?`（老鬼：原衰退 −${baseDec}，本年減緩 50%）`:''}。訓練加點照常，但身體回不去了。`); board(0); }
+    const declineText=S.pos==='C'
+      ?`配球以外能力 <b class="dn">−${dec}</b>，配球 <b class="dn">−${catcherCallDec}</b>（衰退減半）`
+      :`所有能力 <b class="dn">−${dec}</b>`;
+    card('bad','歲月不饒人',`${declAge>=35?'第二階段（逐年加劇）':'第一階段'}衰退：${declineText}${S.traits.disc?'（自律狂：生涯延後兩年）':''}${oldGhostActive?`（老鬼：原衰退 −${baseDec}，本年減緩 50%）`:''}。訓練加點照常，但身體回不去了。`); board(0); }
   if(S.rehab>0){ S.rehab--; S.skipMid=true; S.seasonFactor=0; S.marketInjury='rehab';
     card('bad','復健年',`大傷尚未痊癒，本季確定<b class="dn">全年報銷</b>，只能在復健室度過。（擲骰減為 2 顆）`);
     const dummySt = {G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,avg:0,era:0,WHIP:0,DEF:0};
