@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.1-r5';
-import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.1-r5';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.1-r5';
-import {LV} from '../data/teams.js?v=1.5.1-r5';
-import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS, EVENT_ROUTES, eventInjuryRisk} from '../data/events.js?v=1.5.1-r5';
-import {card, choose, board} from '../ui/dom.js?v=1.5.1-r5';
-import {addAb, statBonus, ovr} from '../engine/ability.js?v=1.5.1-r5';
-import {majorChampionshipCount} from '../engine/championship.js?v=1.5.1-r5';
+import {S} from '../core/state.js?v=1.5.1-r6';
+import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.1-r6';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.1-r6';
+import {LV} from '../data/teams.js?v=1.5.1-r6';
+import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS, EVENT_ROUTES, eventInjuryRisk} from '../data/events.js?v=1.5.1-r6';
+import {card, choose, board} from '../ui/dom.js?v=1.5.1-r6';
+import {addAb, statBonus, ovr} from '../engine/ability.js?v=1.5.1-r6';
+import {majorChampionshipCount} from '../engine/championship.js?v=1.5.1-r6';
 export function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 export function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
@@ -49,7 +49,12 @@ export function eventCombinationOptions(state){
     const combinations=route.combinations.filter(combo=>available.includes(combo));
     return combinations.length?{name:route.name,combination:pick(combinations)}:null;
   }).filter(Boolean);
-  return shuffled(routes).slice(0,3);
+  const training=routes.find(route=>route.name==='訓練至上');
+  if(!training)return shuffled(routes).slice(0,3);
+  const pair=shuffled(routes.filter(route=>route!==training)).slice(0,2);
+  const top=pair.find(route=>route.name==='體驗人生')||pair.find(route=>route.name==='代言寵兒')||pair[0];
+  const bottom=pair.find(route=>route.name==='均衡生活')||pair.find(route=>route!==top);
+  return [top,training,bottom].filter(Boolean);
 }
 function eventTarget(ev){ return ev.target in S.ab?ev.target:pick(POS_AB[S.pos]); }
 function eventCash(mode){
