@@ -10,13 +10,17 @@ export function positionScore(st){
   let runs=0; Object.entries(st.DPG).forEach(([dp,g])=>{ runs+=(POS_ADJ_RUNS[dp]||0)*(g/162); });
   return runs*6; /* 與 DEF 每 1 defensive run = 6 分使用同一尺度 */
 }
-/* 後援名人堂校準：300 救援接近候選、400 救援具入選實力、500 救援可挑戰最高門檻。 */
-export function reliefMilestoneScore(st){
-  const sv=st&&st.SV||0;
-  if(sv>=500)return 1800;
-  if(sv>=400)return 1200;
-  if(sv>=300)return 800;
-  if(sv>=200)return 350;
+/* 後援名人堂校準：300 救援接近候選、400 救援具入選實力、500 救援可挑戰最高門檻。
+   里程碑本身依聯盟場次比例縮放(比照其他獎項門檻的作法)，避免場次較少的聯盟
+   (中職120場/日職143場)因為天生救援總數就比大聯盟(162場)少，同等地位的終結者
+   卻吃不到里程碑加分。 */
+const BUCKET_G={CPBL:120,NPB:143,MLB:162};
+export function reliefMilestoneScore(st,bucket){
+  const sv=st&&st.SV||0, r=(BUCKET_G[bucket]||162)/162;
+  if(sv>=500*r)return 1800;
+  if(sv>=400*r)return 1200;
+  if(sv>=300*r)return 800;
+  if(sv>=200*r)return 350;
   return 0;
 }
 /* 投手生涯評價的質量校正：純堆數據(局數/勝場/救援等)過去會讓長年低品質後援
@@ -30,8 +34,8 @@ export function pitcherQualityFactor(st){
   if(whip!=null)q+=clamp((1.15-whip)*0.30,-0.20,0.20);
   return clamp(q,0.50,1.60);
 }
-export function pitcherCareerScore(st){
-  const base=st.W*13+(st.SV||0)*8+(st.HLD||0)*3+st.SO*0.9+st.IP*0.35+reliefMilestoneScore(st);
+export function pitcherCareerScore(st,bucket){
+  const base=st.W*13+(st.SV||0)*8+(st.HLD||0)*3+st.SO*0.9+st.IP*0.35+reliefMilestoneScore(st,bucket);
   return base*pitcherQualityFactor(st);
 }
 /* 打者生涯評價的質量校正：對齊投手 pitcherQualityFactor 的設計，用生涯打擊率／OPS
@@ -51,8 +55,8 @@ export function hitterCareerScore(st){
   const base=st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3+(st.DEF||0)*6+positionScore(st);
   return base*hitterQualityFactor(st)*1.5;
 }
-export function careerScore(st){
-  if(S.pos==='P')return pitcherCareerScore(st);
+export function careerScore(st,bucket){
+  if(S.pos==='P')return pitcherCareerScore(st,bucket);
   return hitterCareerScore(st);
 }
 export function primaryPos(){ /* 生涯主守位:過半→該位;無過半→工具人/搖擺人(年數降序) */
@@ -118,7 +122,7 @@ export function honorScore(bucket){
 export function tierOf(bucket){
   const st=S.stats[bucket]; if(!st)return null;
   const hs=honorScore(bucket);
-  const sc=careerScore(st)+hs.sc,th=TIER_TH[bucket];
+  const sc=careerScore(st,bucket)+hs.sc,th=TIER_TH[bucket];
   let i=sc>=th[0]?0:sc>=th[1]?1:sc>=th[2]?2:sc>=th[3]?3:4;
   /* 獎項保底:MVP/最高投手獎至少明星球員;單項王至少每日球員 */
   if(hs.mvp||hs.aceN)i=Math.min(i,1);
