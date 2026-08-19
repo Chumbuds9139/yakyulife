@@ -5,7 +5,7 @@ import {TEAM_COLOR, LG_N} from '../data/teams.js?v=1.5.2';
 import {RP_TICKS} from '../data/economy.js?v=1.5.2';
 import {TRAIT_KEYS} from '../data/traits.js?v=1.5.2';
 import {teamChip} from './dom.js?v=1.5.2';
-import {traitNames} from './traits.js?v=1.5.2';
+import {traitNames, traitColorRank} from './traits.js?v=1.5.2';
 import {fmtMoney} from '../engine/contract.js?v=1.5.2';
 import {rpTagline, rpFamily, RP_F3, RP_F2, rpCumData, rpIntlData, rpHonorItems, rpOrgOf, rpProData} from './retire.js?v=1.5.2';
 /* 結算圖（Canvas 產生 PNG，可長按儲存或自動下載）
@@ -34,8 +34,8 @@ export function shareImage(evals,picks,out){
   const GLOW=_tk('--glow','none')!=='none';
   const glowC=(_tk('--bgfx','none').match(/rgba?\([^)]*\)/)||[])[0]||null;
   const LGC={MLB:C_INFO,NPB:C_BAD,CPBL:C_ACC,MINOR:C_DIM};
-  /* 特性(保留 + 刪除線標記) */
-  const keepTr=[...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].filter(k=>S.traits[k]).flatMap(k=>
+  /* 特性(保留 + 刪除線標記；依顏色分類排序，避免同色特性東插一個西插一個) */
+  const keepTr=[...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].filter(k=>S.traits[k]).sort((a,b)=>traitColorRank(a)-traitColorRank(b)).flatMap(k=>
     traitNames(k).map(label=>({label,key:k,neg:TRAIT_KEYS.neg.includes(k)})));
   const remTr=(S.removed||[]).map(l=>({label:l,key:'',neg:false,rem:true}));
   function tagColor(o){ /* keep in sync with traitTagStyle() + the .tag defaults */

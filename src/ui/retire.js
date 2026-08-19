@@ -6,7 +6,7 @@ import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.2';
 import {TRAIT_KEYS} from '../data/traits.js?v=1.5.2';
 import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.2';
 import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.2';
-import {traitNames, traitTagStyle} from './traits.js?v=1.5.2';
+import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.2';
 import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.2';
 import {playerType} from '../engine/ability.js?v=1.5.2';
 import {fmtMoney} from '../engine/contract.js?v=1.5.2';
@@ -286,7 +286,8 @@ export function endGame(reason){
   card(settlementItems.length?'gold':'','獎項、大賽與里程碑',honorsHTML);
   /* 特質與薪資 */
   const tr=[];
-  [...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].forEach(k=>{ if(S.traits[k])traitNames(k).forEach(name=>tr.push(`<span class="tag" style="${traitTagStyle(k)}">${name}</span>`)); });
+  [...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].filter(k=>S.traits[k]).sort((a,b)=>traitColorRank(a)-traitColorRank(b))
+    .forEach(k=>{ traitNames(k).forEach(name=>tr.push(`<span class="tag" style="${traitTagStyle(k)}">${name}</span>`)); });
   (S.removed||[]).forEach(lbl=>tr.push(`<span class="tag" style="text-decoration:line-through;opacity:.4;color:#8a8a8a;border-color:#4a4a4a">${lbl}</span>`));
   const lv=S.love;
   const cur=lv.st==='married'?`老婆 ${lv.partner}（${lv.kids}）`:lv.st==='dating'?`交往中 ${lv.partner}（${lv.dyrs||0} 年）`:lv.st==='divorced'?'離婚':'未婚';

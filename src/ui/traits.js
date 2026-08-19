@@ -23,6 +23,13 @@ export function traitTagStyle(k){
   if(k==='mrteam'){ const c=teamChip(TEAM_COLOR[S.mrTeamName]||'#ffc95c'); return 'background:'+c.bg+';border-color:'+c.bd+';color:'+c.fg; }
   if(k==='genius')return 'background:#232733;border-color:#c8d0e0;color:#e8eef7'; /* 天才:銀 */
   return ''; /* 正向:預設琥珀 */ }
+export function traitColorRank(k){ /* 依 traitTagStyle 的顏色分類排序用；同色的特性排在一起，結算列表與結算圖共用 */
+  if(k==='legend'||k==='taiwan'||k==='pitcherTC'||k==='hitterTC')return 0; /* 金 */
+  if(k==='goldcloth')return 1; /* 黃 */
+  if(k==='genius')return 2; /* 銀 */
+  if(k==='mrteam')return 3; /* 球隊色 */
+  if(TRAIT_KEYS.neg.includes(k))return 5; /* 紅(負向) */
+  return 4; /* 預設琥珀(正向) */ }
 export function renderTraits(){ /* desktop trait side panel (presentation only) */
   const el=$('trait-tags'),box=$('trait-side'); if(!el||!box)return;
   let h='';
