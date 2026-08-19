@@ -17,13 +17,17 @@ export function awardP(value,hardLow,autoWin,base=25,lower=false){
 }
 export function rookieAwardGuaranteed(honors,year,leagueName){
   const sameLeagueAwards=honors.filter(x=>x.startsWith(`${year} ${leagueName}`));
-  const elite=sameLeagueAwards.some(x=>/年度MVP|最佳投手|賽揚/.test(x));
+  const elite=sameLeagueAwards.some(x=>/年度MVP|最佳投手|最佳打者|賽揚/.test(x));
   const titleCount=sameLeagueAwards.filter(x=>/(勝投王|防禦率王|三振王|救援王|中繼王|打擊王|全壘打王|盜壘王|打點王|上壘王)$/.test(x)).length;
   return elite||titleCount>=2;
 }
 export function pitcherAwardName(bucket){
   const leagueName={CPBL:'中職',NPB:'日職',MLB:'大聯盟'}[bucket];
   return `${leagueName}年度最佳投手`;
+}
+export function batterAwardName(bucket){
+  const leagueName={CPBL:'中職',NPB:'日職',MLB:'大聯盟'}[bucket];
+  return `${leagueName}年度最佳打者`;
 }
 export function relieverAceChance(st,role){
   const era=Number(st&&st.era);
@@ -35,7 +39,7 @@ export function relieverAceChance(st,role){
 }
 export function awards(bucket,st){
   if(!LV[S.lv].top||S.seasonFactor===0)return;
-  const y=S.year,h=S.honors,lgN={CPBL:'中職',NPB:'日職',MLB:'大聯盟'}[bucket],aceName=pitcherAwardName(bucket);
+  const y=S.year,h=S.honors,lgN={CPBL:'中職',NPB:'日職',MLB:'大聯盟'}[bucket],aceName=pitcherAwardName(bucket),bestBatterName=batterAwardName(bucket);
 
   /* 符合 simSeason 數學邏輯的門檻表 [必不得獎下限, 必得獎上限] */
   /* 比率數據(ERA/AVG/OBP)與非場次連動數據(SV/HLD/SB)三個聯盟統一標準 */
@@ -106,6 +110,9 @@ export function awards(bucket,st){
       if(chance(p)){ h.push(`${y} ${lgN}防禦率王`); hasEraTitle=true; }
     }
     { const p=awardP(st.SO,th.so[0],th.so[1]); if(chance(p)){ h.push(`${y} ${lgN}三振王`); hasSoTitle=true; } }
+    /* 三冠中拿下兩項以上，實力已無庸置疑，直接保底年度最佳投手。 */
+    const pitcherTitleCount=[hasWinTitle,hasEraTitle,hasSoTitle].filter(Boolean).length;
+    if(pitcherTitleCount>=2 && !h.includes(`${y} ${aceName}`)) h.push(`${y} ${aceName}`);
     pitcherTripleCrown = hasWinTitle && hasEraTitle && hasSoTitle;
     if(pitcherTripleCrown){
       h.push(`${y} ${lgN}投手三冠王`);
@@ -120,6 +127,16 @@ export function awards(bucket,st){
   /* 3. 野手個人獎項 */
   let hitterTripleCrown=false;
   if(S.pos!=='P'){
+    /* 年度最佳打者:比照最佳投手,先過近乎全勤的打席門檻,再以OPS機率角逐。 */
+    { const paGate=Math.round(LV[S.lv].g*3.6);
+      if(st.PA >= paGate){
+        const obp0=st.PA>0?(st.H+st.BB)/st.PA:0, ops0=obp0+slgOf(st);
+        let p=awardP(ops0,0.820,1.000,30);
+        if(p>0&&p<100)p=clamp(p+(st.PA-paGate)*0.08,30,95);
+        if(p===100&&st.PA<paGate*1.15)p=95;
+        if(chance(p)) h.push(`${y} ${bestBatterName}`);
+      }
+    }
     let hasAvgTitle=false, hasHrTitle=false, hasRbiTitle=false;
     if(st.PA >= 350){
       const p=awardP(st.avg,th.avg[0],th.avg[1]);
@@ -147,11 +164,18 @@ export function awards(bucket,st){
     const gloveMinG=Math.ceil(LV[S.lv].g*0.5);
     if(awardDp&&awardDp!=='DH'&&st.G>=gloveMinG){
       const gt=GLOVE_TH[awardDp]||[4,16];
+      const gloveAward=`${y} ${lgN}${DPN[awardDp]}金手套`;
       const pGlove=awardP(def1,gt[0],gt[1],30);
-      if(chance(pGlove))h.push(`${y} ${lgN}${DPN[awardDp]}金手套`);
+      if(chance(pGlove))h.push(gloveAward);
       const pBible=awardP(def1,9,22,25);
-      if(chance(pBible))h.push(`${y} ${lgN}守備聖經`);
+      if(chance(pBible)){
+        h.push(`${y} ${lgN}守備聖經`);
+        if(!h.includes(gloveAward))h.push(gloveAward); /* 守備聖經必定同時拿下金手套 */
+      }
     }
+    /* 三冠中拿下兩項以上，攻擊產出已無庸置疑，直接保底年度最佳打者。 */
+    const hitterTitleCount=[hasAvgTitle,hasHrTitle,hasRbiTitle].filter(Boolean).length;
+    if(hitterTitleCount>=2 && !h.includes(`${y} ${bestBatterName}`)) h.push(`${y} ${bestBatterName}`);
     /* 打擊王／全壘打王／打點王：三項齊得即觸發打擊三冠王，必得年度MVP。 */
     hitterTripleCrown = hasAvgTitle && hasHrTitle && hasRbiTitle;
     if(hitterTripleCrown){
@@ -211,10 +235,10 @@ export function awards(bucket,st){
   /* 6. 後續獲獎觸發特質 */
   const added=h.filter(x=>x.startsWith(String(y)));
   if(added.length){ card('gold','年度獎項',added.map(x=>x.slice(5)).join('｜'));
-    const topAw=added.find(x=>/年度MVP/.test(x))||added.find(x=>/最佳投手|王/.test(x))||added.find(x=>/新人王/.test(x))||added[0];
+    const topAw=added.find(x=>/年度MVP/.test(x))||added.find(x=>/最佳投手|最佳打者|王/.test(x))||added.find(x=>/新人王/.test(x))||added[0];
     tlNote(3,topAw.slice(5));
     if(S.traits.yips){ removeTrait('yips','失憶症'); card('good','走出陰影','站上大舞台拿下獎項的那一刻，腦海裡的雜音消失了——<b class="hl">失憶症痊癒</b>。'); }
-    if(S.traits.glass&&!S.traits.phoenix){ const big=added.some(x=>/MVP|最佳投手|打擊王|全壘打王|新人王/.test(x));
+    if(S.traits.glass&&!S.traits.phoenix){ const big=added.some(x=>/MVP|最佳投手|最佳打者|打擊王|全壘打王|新人王/.test(x));
       if(big){ S.traits.phoenix=true; removeTrait('glass','玻璃人');
         S.pool+=8;
         card('gold','隱藏屬性解鎖：浴火重生','那些殺不死你的，真的讓你更強大了。受傷的地方逐漸痊癒，長成了更強壯的形狀。——<b class="hl">玻璃人懲罰解除，受傷率恢復正常，並獲得一大筆能力點</b>。'); } }

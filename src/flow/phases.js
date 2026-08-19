@@ -258,7 +258,7 @@ export function movement(){
   if(S.org==='NPB'&&S.npbYears>=8){ minReq-=4; }
   const perf=(S.seasonFactor>=0.5)?(S.lastD||0):null; /* 傷缺季不看成績 */
   /* 得獎保護傘:當季拿過個人獎項(MVP/王/最佳投手,不含明星賽)→絕不下放/釋出 */
-  const wonAward = S.honors.some(x=>x.startsWith(String(S.year))&&/王|MVP|賽揚|澤村|最佳投手|金手套|守備聖經/.test(x)&&!/明星賽/.test(x));
+  const wonAward = S.honors.some(x=>x.startsWith(String(S.year))&&/王|MVP|賽揚|澤村|最佳投手|最佳打者|金手套|守備聖經/.test(x)&&!/明星賽/.test(x));
   /* Fix C:實際成績達標保護傘——用當季真實數據(不看能力 d),打得好就不下放 */
   let goodReal=false;
   { const st=S.lastSt;
