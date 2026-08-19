@@ -211,16 +211,15 @@ export function statBonusTxt(pts){
   if(n>=0)return `<span class="up">狀態火燙（本季成績加成 +${n}）</span>`;
   return `<span class="dn">狀態低迷（本季成績加成 −${Math.abs(n)}）</span>`;
 }
-/* 全遊戲「能力成長」的統一文案：明確區分「點」與「級」。
-   點＝投入的訓練點數；級＝能力數值實際上升的格數。有升級時只報級數(點數已反映在級數上，
-   再寫一次會囉嗦)；沒升級時才報投入了幾點，讓玩家知道點數沒有白費。
-   負向扣值是 1:1 不吃成本表，點與級同義，直接寫 −N級。 */
+/* 全遊戲「能力成長」的統一文案。能力數值的增減直接寫 +N／−N 不加單位(畫面上到處都是，
+   加單位反而囉嗦)；只有「投入了點數但沒升級」這種需要區分的情況才標出「點」，讓玩家知道
+   點數沒有白費。負向扣值是 1:1 不吃成本表，直接寫 −N。 */
 export function abGainTxt(k,pts,levels){
   const name=ABL[k]||k;
   if(pts<0||levels<0){
     const d=Math.abs(Math.round(levels));
-    return d?`<b class="dn">${name} −${d}級</b>`:`${name} 無變化`;
+    return d?`<b class="dn">${name} −${d}</b>`:`${name} 無變化`;
   }
-  if(levels>0)return `${name} <span class="up">升了 ${levels} 級</span>`;
-  return `${name} <span class="up">加了 ${Math.round(pts)} 點</span>，不足以升級`;
+  if(levels>0)return `${name} <span class="up">+${levels}</span>`;
+  return `${name} <span class="up">+${Math.round(pts)} 點</span>，不足以升級`;
 }

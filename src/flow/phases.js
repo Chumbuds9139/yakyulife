@@ -31,9 +31,9 @@ export function phasePre(){
     POS_AB[S.pos].forEach(k=>S.ab[k]=clamp(S.ab[k]-(k==='cat'?catcherCallDec:dec),1,80));
     if(oldGhostActive){ S.oldGhostPending=false; S.oldGhostUsed=true; }
     const declineText=S.pos==='C'
-      ?`配球以外能力 <b class="dn">−${dec}級</b>（你的配球經驗是你珍貴的財產，不會急遽衰退，配球<b class="dn">−${catcherCallDec}級</b>）`
-      :`所有能力 <b class="dn">−${dec}級</b>`;
-    card('bad','歲月不饒人',`${declAge>=35?'第二階段（逐年加劇）':'第一階段'}衰退：${declineText}${S.traits.disc?'（自律狂：生涯延後兩年）':''}${oldGhostActive?`（老鬼：原衰退 −${baseDec}級，本年減緩 50%）`:''}。訓練加點照常，但身體回不去了。`); board(0); }
+      ?`配球以外能力 <b class="dn">−${dec}</b>（你的配球經驗是你珍貴的財產，不會急遽衰退，配球<b class="dn">−${catcherCallDec}</b>）`
+      :`所有能力 <b class="dn">−${dec}</b>`;
+    card('bad','歲月不饒人',`${declAge>=35?'第二階段（逐年加劇）':'第一階段'}衰退：${declineText}${S.traits.disc?'（自律狂：生涯延後兩年）':''}${oldGhostActive?`（老鬼：原衰退 −${baseDec}，本年減緩 50%）`:''}。訓練加點照常，但身體回不去了。`); board(0); }
   if(S.rehab>0){ S.rehab--; S.skipMid=true; S.seasonFactor=0; S.marketInjury='rehab';
     card('bad','復健年',`大傷尚未痊癒，本季確定<b class="dn">全年報銷</b>，只能在復健室度過。（擲骰減為 2 顆）`);
     const dummySt = {G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,avg:0,era:0,WHIP:0,DEF:0};
@@ -60,9 +60,9 @@ export function phasePre(){
       if(overflow > 0) S.pendStat = (S.pendStat || 0) + overflow;
 
       let cmsg = `<br>大巧不工發動：系統自動擲出 <b class="hl">${cv}</b> 點，挹注於 <b class="hl">${ABL[ck]}</b>`;
-      if(gained > 0) cmsg += `（升了 <b class="up">${gained}</b> 級）`;
+      if(gained > 0) cmsg += `（<b class="up">+${gained}</b>）`;
       if(overflow > 0) cmsg += `（頂峰造極：溢出的 ${overflow} 點轉為${statBonusTxt(overflow)}）`;
-      if(gained===0 && overflow===0) cmsg += `（加了 ${cv} 點，不足以升級）`;
+      if(gained===0 && overflow===0) cmsg += `（+${cv} 點，不足以升級）`;
       msg += cmsg + `。`;
     }
     
@@ -74,7 +74,7 @@ export function phasePre(){
       for(let i=cands.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=cands[i];cands[i]=cands[j];cands[j]=t;}
       const boost=cands.slice(0,2), bl=[];
       boost.forEach(k=>{ S.pot[k]=Math.min(80,(S.pot[k]||62)+10);
-        S.ab[k]=clamp(S.ab[k]+5,1,80); bl.push(`${ABL[k]} <b class="up">+5級</b>（潛力上限 +10級 → ${S.pot[k]}）`); });
+        S.ab[k]=clamp(S.ab[k]+5,1,80); bl.push(`${ABL[k]} <b class="up">+5</b>（潛力上限 +10 → ${S.pot[k]}）`); });
       card('gold','隱藏素質解鎖：天才','22 歲前五度擲出高標值！從今以後，每一顆訓練骰<b class="hl">永久固定 4 點以上</b>，事件卡好結果機率提升至 <b class="hl">70%</b>。'+(bl.length?`天賦覺醒，潛能重新被評估：${bl.join('、')}。`:'')+'天賦，是藏不住的。');
       board(1);
     } }

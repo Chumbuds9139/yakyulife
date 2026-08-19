@@ -108,9 +108,9 @@ export function loveCaught(next){
   let extra='';
   if(L.caught>=2){
     if(!S.traits.scum){ S.traits.scum=true;
-      card('bad','隱藏屬性解鎖：渣男','第二次被逮個正著。從今以後你在球迷心中的形象定型了——<b class="dn">每次外遇被抓到，全能力 −5級</b>。'); }
+      card('bad','隱藏屬性解鎖：渣男','第二次被逮個正著。從今以後你在球迷心中的形象定型了——<b class="dn">每次外遇被抓到，全能力 −5</b>。'); }
     POS_AB[S.pos].forEach(k=>{ S.ab[k]=clamp(S.ab[k]-5,1,80); });
-    extra='<b class="dn">全能力 −5級</b>（渣男的代價）。'; }
+    extra='<b class="dn">全能力 −5</b>（渣男的代價）。'; }
   board(1);
   card('bad','頭版醜聞',`狗仔的鏡頭比你想的更快，照片鋪滿版面。贊助商緊急撤圖，你在鏡頭前鞠躬 90 度。${abGainTxt(kk,-1,g)}。${extra}`);
   choose(`${L.partner} 把離婚協議書放在餐桌上`,[
@@ -141,7 +141,7 @@ export function loveCaughtDating(next){
     if(!S.traits.scum){ S.traits.scum=true;
       card('bad','隱藏屬性解鎖：渣男','第二次被逮個正著。從今以後你在球迷心中的形象定型了——<b class="dn">每次劈腿/外遇被抓到，全能力 −5</b>。'); }
     POS_AB[S.pos].forEach(k=>{ S.ab[k]=clamp(S.ab[k]-5,1,80); });
-    extra='<b class="dn">全能力 −5級</b>（渣男的代價）。'; }
+    extra='<b class="dn">全能力 −5</b>（渣男的代價）。'; }
   board(1);
   card('bad','劈腿曝光',`行車紀錄器畫面流出，時間軸對得整整齊齊。${abGainTxt(kk,-1,g)}。${extra}`);
   choose(`${L.partner} 已讀不回三天後，終於答應見面`,[

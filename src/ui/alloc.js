@@ -66,7 +66,7 @@ export function allocUI(mode,label,done){
       if(!cap&&remaining()>0)r.onclick=()=>{ const amt=dice?dice[idx]:1;
         const pc=(S.carry&&S.carry[k])||0;
         const got=addAb(k,amt); touchedKeys[k]=(touchedKeys[k]||0)+amt; hist.push([k,got,pc]); if(dice)idx++; else pool--;
-        r.querySelector('.val').innerHTML=`${S.ab[k]} <b style="display:block;font-size:10.5px">${got>0?'+'+got+'級':'蓄力中'}</b>`; render(); board(0); };
+        r.querySelector('.val').innerHTML=`${S.ab[k]} <b style="display:block;font-size:10.5px">${got>0?'+'+got:'蓄力中'}</b>`; render(); board(0); };
       rows.appendChild(r); });
     btm.innerHTML='';
     /* 復原鈕固定佔位:無可復原時 disabled 而非消失,避免版面跳動誤觸 */
