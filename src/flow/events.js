@@ -4,7 +4,7 @@ import {ABL, POS_AB} from '../data/abilities.js?v=1.5.2-r1';
 import {LV} from '../data/teams.js?v=1.5.2-r1';
 import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS, EVENT_ROUTES, eventInjuryRisk} from '../data/events.js?v=1.5.2-r1';
 import {card, choose, board} from '../ui/dom.js?v=1.5.2-r1';
-import {addAb, statBonus, ovr} from '../engine/ability.js?v=1.5.2-r1';
+import {addAb, statBonus, statBonusTxt, abGainTxt, ovr} from '../engine/ability.js?v=1.5.2-r1';
 import {majorChampionshipCount} from '../engine/championship.js?v=1.5.2-r1';
 export function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
@@ -158,11 +158,11 @@ export function resolveEvent(ev,mode,done){
   if(plan.ability){
     const k=eventTarget(ev),delta=addAb(k,plan.ability);
     const overflow=plan.ability>0?(S.lastOverflow||0):0;
-    if(delta!==0)out.push(`${ABL[k]} <span class="${delta>=0?'up':'dn'}">${delta>0?'+':''}${delta}</span>`);
-    else if(!overflow)out.push(`${ABL[k]}：能力加點，但不足以提升一級`);
+    /* 能力已滿 80 時全額溢出，這裡不重複報「加了幾點」，只報轉成的狀態火燙 */
+    if(!(overflow>0&&delta===0))out.push(abGainTxt(k,plan.ability-overflow,delta));
     if(overflow>0)statBonus(overflow,out);
   }
-  if(plan.stat){ S.pendStat=(S.pendStat||0)+plan.stat; out.push(`本季成績加成 <span class="${plan.stat>0?'up':'dn'}">${plan.stat>0?'+':''}${plan.stat}</span>`); }
+  if(plan.stat){ S.pendStat=(S.pendStat||0)+plan.stat; out.push(statBonusTxt(plan.stat)); }
   const injuryRisk=eventInjuryRisk(ev,mode,good,!!S.traits.clutch);
   if(injuryRisk){ S.tmpInj=(S.tmpInj||0)+injuryRisk; out.push(`本季受傷機率 <span class="dn">+${injuryRisk}%</span>`); }
   const result=ev.choices[mode];
@@ -195,7 +195,7 @@ export function allocDone(touched,isDice){
     for(let i=cands.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=cands[i];cands[i]=cands[j];cands[j]=t;}
     const boost=cands.slice(0,2), bl=[];
     boost.forEach(k=>{ S.pot[k]=Math.min(80,(S.pot[k]||62)+10); S.ab[k]=clamp(S.ab[k]+5,1,80);
-      bl.push(`${ABL[k]} <b class="up">+5</b>（潛力上限 +10 → ${S.pot[k]}）`); });
+      bl.push(`${ABL[k]} <b class="up">升 5 級</b>（潛力上限提高 10 級 → ${S.pot[k]}）`); });
     card('gold','隱藏素質解鎖：大器晚成',`別人都以為你到頂了，你卻在這一年脫胎換骨——從今以後，每一顆訓練骰<b class="hl">永久固定 3 點以上</b>，事件卡好結果機率提升至 <b class="hl">70%</b>。`+(bl.length?`潛能重新被評估：${bl.join('、')}。`:'')+'你的故事，才正要展開。');
     board(1); }
 }

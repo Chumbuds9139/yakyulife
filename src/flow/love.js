@@ -2,7 +2,7 @@ import {S} from '../core/state.js?v=1.5.2-r1';
 import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.2-r1';
 import {ABL, POS_AB} from '../data/abilities.js?v=1.5.2-r1';
 import {card, choose, board} from '../ui/dom.js?v=1.5.2-r1';
-import {addAb, addAbStat} from '../engine/ability.js?v=1.5.2-r1';
+import {addAb, addAbStat, statBonusTxt, abGainTxt} from '../engine/ability.js?v=1.5.2-r1';
 /* 出廠預設為全虛構人名;玩家可透過隱藏編輯器自訂名單(僅存於玩家本機) */
 export let CHEER=['林曉晴','陳若彤','張沛慈','王詠恩','許昀熙','蘇采蓁','周依潔','郭芷萱'];
 export const CHEER_DEFAULT=CHEER.slice();
@@ -26,7 +26,7 @@ export function loveEvent(next){
       const k1=pick(POS_AB[S.pos]),k2=pick(POS_AB[S.pos]);
       const g1=addAb(k1,-3),g2=addAb(k2,-3); board(1);
       const ex=L.partner; L.st=L.exes.length?'divorced':'single'; L.partner=null; L.dyrs=0;
-      card('bad','分手',`${cheatPen?'那晚的事她其實都知道。':''}交往 ${y} 年，婚期一延再延。<b class="hl">${ex}</b> 最後留下一句：「我等不到了。」轉身離開。整個休賽季你魂不守舍——<b class="dn">${ABL[k1]} ${g1}、${ABL[k2]} ${g2}</b>。`);
+      card('bad','分手',`${cheatPen?'那晚的事她其實都知道。':''}交往 ${y} 年，婚期一延再延。<b class="hl">${ex}</b> 最後留下一句：「我等不到了。」轉身離開。整個休賽季你魂不守舍——${abGainTxt(k1,-1,g1)}、${abGainTxt(k2,-1,g2)}。`);
       next(); return; }
     const ask=()=>proposalAsk(next);
     if(chance(30)){ /* 三成機率先來一段插曲,結束後照樣問婚 */
@@ -108,18 +108,18 @@ export function loveCaught(next){
   let extra='';
   if(L.caught>=2){
     if(!S.traits.scum){ S.traits.scum=true;
-      card('bad','隱藏屬性解鎖：渣男','第二次被逮個正著。從今以後你在球迷心中的形象定型了——<b class="dn">每次外遇被抓到，全能力 −5</b>。'); }
+      card('bad','隱藏屬性解鎖：渣男','第二次被逮個正著。從今以後你在球迷心中的形象定型了——<b class="dn">每次外遇被抓到，全能力降 5 級</b>。'); }
     POS_AB[S.pos].forEach(k=>{ S.ab[k]=clamp(S.ab[k]-5,1,80); });
-    extra='<b class="dn">全能力 −5</b>（渣男的代價）。'; }
+    extra='<b class="dn">全能力降 5 級</b>（渣男的代價）。'; }
   board(1);
-  card('bad','頭版醜聞',`狗仔的鏡頭比你想的更快，照片鋪滿版面。贊助商緊急撤圖，你在鏡頭前鞠躬 90 度。<b class="dn">${ABL[kk]} ${g}</b>。${extra}`);
+  card('bad','頭版醜聞',`狗仔的鏡頭比你想的更快，照片鋪滿版面。贊助商緊急撤圖，你在鏡頭前鞠躬 90 度。${abGainTxt(kk,-1,g)}。${extra}`);
   choose(`${L.partner} 把離婚協議書放在餐桌上`,[
     {t:'跪著道歉，求她再給一次機會',s:'成功保住婚姻｜失敗＝再扣能力並離婚',f:()=>{
       if(chance(40)){
         card('info','低谷之後',`長談了一整夜。<b class="hl">${L.partner}</b> 最後說：「為了孩子，也為了那個我認識的你——最後一次。」婚姻保住了，但有些東西回不去了。`); next(); }
       else{ const k2=pick(POS_AB[S.pos]); const g2=addAb(k2,-2);
         const ex=L.partner; divorceRec(); board(1);
-        card('bad','道歉無效',`她聽完只是搖頭，隔天律師的存證信函就到了。<b class="hl">${ex}</b> 正式與你離婚，輿論二次發酵——<b class="dn">${ABL[k2]} ${g2}</b>。`); next(); } }},
+        card('bad','道歉無效',`她聽完只是搖頭，隔天律師的存證信函就到了。<b class="hl">${ex}</b> 正式與你離婚，輿論二次發酵——${abGainTxt(k2,-1,g2)}。`); next(); } }},
     {t:'簽字離婚',f:()=>{ const ex=L.partner; divorceRec();
       card('bad','離婚',`你在協議書上簽了名。<b class="hl">${ex}</b> 的聲明只有一句：「祝彼此安好。」`); next(); }}]);
 }
@@ -141,16 +141,16 @@ export function loveCaughtDating(next){
     if(!S.traits.scum){ S.traits.scum=true;
       card('bad','隱藏屬性解鎖：渣男','第二次被逮個正著。從今以後你在球迷心中的形象定型了——<b class="dn">每次劈腿/外遇被抓到，全能力 −5</b>。'); }
     POS_AB[S.pos].forEach(k=>{ S.ab[k]=clamp(S.ab[k]-5,1,80); });
-    extra='<b class="dn">全能力 −5</b>（渣男的代價）。'; }
+    extra='<b class="dn">全能力降 5 級</b>（渣男的代價）。'; }
   board(1);
-  card('bad','劈腿曝光',`行車紀錄器畫面流出，時間軸對得整整齊齊。<b class="dn">${ABL[kk]} ${g}</b>。${extra}`);
+  card('bad','劈腿曝光',`行車紀錄器畫面流出，時間軸對得整整齊齊。${abGainTxt(kk,-1,g)}。${extra}`);
   choose(`${L.partner} 已讀不回三天後，終於答應見面`,[
     {t:'道歉，求她再給一次機會',s:'成功保住感情｜失敗＝再扣能力並分手',f:()=>{
       if(chance(40)){
         card('info','低谷之後',`她哭著罵完，最後說：「最後一次。」感情保住了，但信任的裂痕補不回來。`); next(); }
       else{ const k2=pick(POS_AB[S.pos]); const g2=addAb(k2,-2);
         const ex=L.partner; L.st=L.exes.length?'divorced':'single'; L.partner=null; L.dyrs=0; board(1);
-        card('bad','道歉無效',`她把你送的東西整箱寄回。<b class="hl">${ex}</b> 封鎖了所有聯絡方式——<b class="dn">${ABL[k2]} ${g2}</b>。`); next(); } }},
+        card('bad','道歉無效',`她把你送的東西整箱寄回。<b class="hl">${ex}</b> 封鎖了所有聯絡方式——${abGainTxt(k2,-1,g2)}。`); next(); } }},
     {t:'坦然分手',f:()=>{ const ex=L.partner;
       L.st=L.exes.length?'divorced':'single'; L.partner=null; L.dyrs=0;
       card('bad','分手',`<b class="hl">${ex}</b> 的限時動態只有一片黑。粉絲全都知道是誰的錯。`); next(); }}]);
@@ -159,8 +159,9 @@ export function loveGainTxt(k,amt){ /* 戀愛事件加點:機制同事件卡(add
   const before=S.pendStat||0;
   const g=addAbStat(k,amt);
   const over=(S.pendStat||0)-before;
-  if(g>0&&over>0)return `<b class="up">${ABL[k]} +${g}</b>（溢出 ${over} 點轉為本季成績加成）`;
-  if(g>0)return `<b class="up">${ABL[k]} +${g}</b>`;
-  if(over>0)return `<b class="up">本季成績加成 +${over}</b>（${ABL[k]} 已達潛力上限）`;
-  return `${ABL[k]} 能力加點，但不足以提升一級`;
+  const used=Math.max(0,Math.round(amt)-over); /* 真正吃進能力的點數,其餘為溢出 */
+  if(g>0&&over>0)return `${abGainTxt(k,used,g)}，溢出 ${over} 點轉為${statBonusTxt(over)}`;
+  if(g>0)return abGainTxt(k,used,g);
+  if(over>0)return `${ABL[k]} 已達潛力上限，${Math.round(amt)} 點全數轉為${statBonusTxt(over)}`;
+  return abGainTxt(k,amt,0);
 }

@@ -202,5 +202,27 @@ export function addAbStat(k,amt){
 }
 export function statBonus(pts,out){ /* 正向獎勵無法再轉成能力時，改為當季成績加成（下次結算套用）。 */
   S.pendStat=(S.pendStat||0)+pts;
-  out.push(`<span class="up">狀態火燙（本季成績加成 ×${pts}）</span>`);
+  out.push(statBonusTxt(pts));
+}
+/* 全遊戲「本季成績加成」的統一文案：正值為狀態火燙、負值為狀態低迷，格式一律
+   「狀態火燙（本季成績加成 +N）」，避免各處出現 ×N／+N／純文字等不一致寫法。 */
+export function statBonusTxt(pts){
+  const n=Math.round(pts);
+  if(n>=0)return `<span class="up">狀態火燙（本季成績加成 +${n}）</span>`;
+  return `<span class="dn">狀態低迷（本季成績加成 −${Math.abs(n)}）</span>`;
+}
+/* 全遊戲「能力成長」的統一文案：明確區分「點」與「級」。
+   點＝投入的訓練點數；級＝能力數值實際上升的格數。正向加點要依養成成本表換算
+   (例如投手 66 以上每級要 7 點)，所以投入的點數不等於升的級數，未湊滿一級的餘數
+   會留在進度槽，一律寫成「加了 N 點，升了 M 級」讓玩家看得懂差別。
+   負向扣值是 1:1 不吃成本表，點與級同義，直接寫「降 M 級」。 */
+export function abGainTxt(k,pts,levels){
+  const name=ABL[k]||k;
+  if(pts<0||levels<0){
+    const d=Math.abs(Math.round(levels));
+    return d?`<b class="dn">${name} 降 ${d} 級</b>`:`${name} 無變化`;
+  }
+  const p=Math.round(pts);
+  if(levels>0)return `${name} <span class="up">加了 ${p} 點，升了 ${levels} 級</span>`;
+  return `${name} <span class="up">加了 ${p} 點</span>，尚未升級（不足一級，點數保留在進度槽）`;
 }

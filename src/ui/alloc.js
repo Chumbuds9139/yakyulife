@@ -56,7 +56,7 @@ export function allocUI(mode,label,done){
   function remaining(){ return dice?dice.length-idx:pool; }
   function render(){
     if(dice){ top.innerHTML='<div id="dice">'+dice.map((v,i)=>`<div class="die ${i<idx?'used':''} ${i===idx?'active':''} ${v===6?'six':''}">${v}</div>`).join('')+'</div>'; }
-    else top.innerHTML=`<div class="pool">剩餘可分配點數：${pool} 點（點一下能力 +1）</div>`;
+    else top.innerHTML=`<div class="pool">剩餘可分配點數：${pool} 點（點一下投入 1 點）</div>`;
     const cue=$('al-cue'); if(cue)cue.textContent=dice?`剩餘 ${remaining()} 顆骰子未分配`:`剩餘 ${remaining()} 點未分配`;
     rows.innerHTML='';
     keys.forEach(k=>{ normalizeAbCarry(k); const v=S.ab[k],cap=v>=80;
@@ -66,7 +66,7 @@ export function allocUI(mode,label,done){
       if(!cap&&remaining()>0)r.onclick=()=>{ const amt=dice?dice[idx]:1;
         const pc=(S.carry&&S.carry[k])||0;
         const got=addAb(k,amt); touchedKeys[k]=(touchedKeys[k]||0)+amt; hist.push([k,got,pc]); if(dice)idx++; else pool--;
-        r.querySelector('.val').innerHTML=`${S.ab[k]} <b style="display:block;font-size:10.5px">${got>0?'+'+got:'蓄力中'}</b>`; render(); board(0); };
+        r.querySelector('.val').innerHTML=`${S.ab[k]} <b style="display:block;font-size:10.5px">${got>0?'升 '+got+' 級':'蓄力中'}</b>`; render(); board(0); };
       rows.appendChild(r); });
     btm.innerHTML='';
     /* 復原鈕固定佔位:無可復原時 disabled 而非消失,避免版面跳動誤觸 */
