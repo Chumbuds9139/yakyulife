@@ -20,14 +20,14 @@ export function dpScore(p){ const a=S.ab;
 export function posAdjLabel(p){ const v=POS_ADJ_RUNS[p]||0; return `薪資守位調整 ${v>0?'+':''}${v}／162 場`; }
 export function dpBar(){ /* 年輕球員吃潛力紅利,球團不急著拔守位 */
   const base=DP_BAR[S.lv]||0;
-  const disc=S.age<=21?7:S.age<=24?5:S.age<=26?2:0;
+  const disc=(S.age<=21?7:S.age<=24?5:S.age<=26?2:0)+(S.traits&&S.traits.favorite?3:0); /* 愛將:教練不急著拔你的守位 */
   return base-disc;
 }
 export function dpQual(p){
   if(p==='DH')return true;
   if(!DP_TH[p]||!DP_TH[p][S.lv])return true;   /* 非頂級聯盟不設限 */
   /* 年輕球員吃潛力紅利:門檻略降(球團給時間成長) */
-  const youthAdj = S.age<24?-3 : S.age<26?-1.5 : 0;
+  const youthAdj = (S.age<24?-3 : S.age<26?-1.5 : 0)+(S.traits&&S.traits.favorite?-3:0); /* 愛將:守位門檻永久紅利 */
   return dpScore(p) >= DP_TH[p][S.lv]+youthAdj;
 }
 export function dpList(){ /* 依守位難度掃描:內野手守內野序、外野手守外野序,選出守得動的(最高階在前) */

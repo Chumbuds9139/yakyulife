@@ -62,7 +62,8 @@ export function simSeason(lv){
   if(S.pos==='P'){
     const q=(a.vel+a.ctl+a.brk)/3, d=q-par; st.d=d;
     /* 表現係數:投得好給滿局數,投爛減少出賽(比照野手) */
-    const perfF=clamp(0.80+d*0.028,0.42,1.12);
+    let perfF=clamp(0.80+d*0.028,0.42,1.12);
+    if(S.traits.favorite)perfF=Math.max(perfF,0.85); /* 愛將:教練照樣派你上,低潮年不會被冷凍 */
     if(isSP()){
       const gs=Math.round(clamp(20+(a.sta-40)*0.18,10,30)*f*perfF*(0.94+R()*0.08));
       st.G=Math.max(1,gs);
@@ -116,7 +117,9 @@ export function simSeason(lv){
     /* 守位只由季初守位會議決定。低體力會自然減少出賽，不再於季末暗中改判 DH。 */
     /* 表現係數:打得好才有滿打席,爛表現(d<0)出賽再打折 */
     const perfF=clamp(0.82+d*0.03,0.45,1.12);
-    st.G=Math.min(L.g, Math.round(L.g*clamp(staF*perfF,0.10,1.0)*f*(0.90+R()*0.10))); /* 上限=聯盟場次,不可超過;隨機項加寬(原0.95~1.01)—實力遠超聯盟水準時 staF*perfF 常年頂在1.0上限，
+    let useF=clamp(staF*perfF,0.10,1.0);
+    if(S.traits.favorite)useF=Math.max(useF,0.85); /* 愛將:出賽率保底(體力偏低或低潮年才會生效,滿額主力無感) */
+    st.G=Math.min(L.g, Math.round(L.g*useF*f*(0.90+R()*0.10))); /* 上限=聯盟場次,不可超過;隨機項加寬(原0.95~1.01)—實力遠超聯盟水準時 staF*perfF 常年頂在1.0上限，
        只剩這個隨機項在決定出賽數，範圍太窄(僅約±3%)會讓生涯逐年出賽數/打席看起來年年幾乎一模一樣;加寬到±5%讓表現飽和的球季也有自然的年度落差 */
     st.PA=Math.round(st.G*4.25);
     st._dh=S.dpos==='DH'; /* 只有正式登錄為 DH 的球季才按 DH 結算。 */

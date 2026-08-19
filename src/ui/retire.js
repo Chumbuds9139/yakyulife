@@ -316,6 +316,7 @@ export function endGame(reason){
   if(S.traits.intlace)picks.push('穿上國家隊球衣的那個男人，永遠的國家英雄');
   if(S.traits.taiwan)picks.push('六度披上國家隊戰袍，從不推辭。他比劃胸口的那一幕，我手機桌布放到現在');
   if(S.traits.disc)picks.push('自律到可怕，凌晨四點的球場都認得他');
+  if(S.traits.favorite)picks.push('不躁進也不畏縮，歷任教練的先發名單上永遠有他的名字');
   if(S.traits.cancer)picks.push('球是打得好啦，但那個態度……更衣室少了他反而清靜');
   if(S.traits.thief)picks.push('當年拒絕下放又打不出來，薪水小倫這名號是自己掙來的');
   if(S.traits.mrteam)picks.push('十五年只為一隊，'+(teamNick(S.mrTeamName||'')||'')+'先生這個稱號，他當之無愧');

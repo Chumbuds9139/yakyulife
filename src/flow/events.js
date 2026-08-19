@@ -22,7 +22,10 @@ export function evOdds(){ /* 事件卡成功率:顯示與擲骰共用同一來�
   let base=(S.traits.genius||S.traits.late||S.traits.clutch)?70:50; /* 天才/大器晚成/大心臟 70 */
   if(S.traits.thief)base-=10; /* 薪水小倫 -10 */
   const boldPen=S.traits.clutch?0:15; /* 大心臟:豪賭無懲罰 */
-  return {safe:Math.min(95,base+20), norm:base, bold:base-boldPen};
+  /* 愛將:只加「普通」這一路,幅度比照天才對整體的 +20。保守與全力不受影響,
+     薪水小倫的 -10 已含在 base 裡,兩者可正常疊加。 */
+  const normBonus=S.traits.favorite?20:0;
+  return {safe:Math.min(95,base+20), norm:Math.min(95,base+normBonus), bold:base-boldPen};
 }
 export function eventEligible(ev,state){
   const s=state||S;
@@ -151,7 +154,7 @@ export function resolveEvent(ev,mode,done){
   else if(mode==='bold'){ good=chance(od.bold); tag='全力一搏';
     if(good){ S.cntBoldWin++; if(ev.category==='endorsement')S.cntEndorseBoldWin=(S.cntEndorseBoldWin||0)+1; }
     else S.cntBoldFail++; }
-  else { good=chance(od.norm); tag=''; }
+  else { good=chance(od.norm); tag=''; if(good)S.cntNormWin=(S.cntNormWin||0)+1; } /* 愛將:普通成功才算 */
   if(mode==='safe'&&good)S.cntSaveWin=(S.cntSaveWin||0)+1; /* 自律狂:保守成功才算 */
   if((ev.n==='宵夜文化'||ev.n==='場外代言邀約')&&mode!=='safe'&&!good)S.cntSnack++;
   if(mode==='bold'&&!good&&(ev.category==='encounter'||ev.category==='endorsement'))S.cntSocialBoldFail=(S.cntSocialBoldFail||0)+1;
@@ -208,6 +211,11 @@ export function checkTraitsMid(){
   /* 自律狂:25 歲前累積保守「成功」15 次 + 從未外遇被抓 + 宵夜 <5 次 */
   if(!S.traits.disc&&S.age<25&&(S.cntSaveWin||0)>=15&&S.love.caught===0&&S.cntSnack<5){
     traitCard('disc','自律狂','你見過凌晨四點的洛杉磯嗎？——年紀輕輕就把身體當成聖殿經營，沒有派對、沒有酒精，只有重訓室的鐵片聲：<b class="hl">整條衰退曲線延後兩年</b>，你的巔峰比同梯更長。'); }
+  /* 愛將:25 歲前普通應對成功 10 次。三條事件路線各有一個代表特性——保守是自律狂(15 次)、
+     全力是大心臟(7 次)，普通這條線原本是空的。10 次對應約 86% 的達成率，與另外兩條齊平
+     (自律狂 85%、大心臟 82%)。 */
+  if(!S.traits.favorite&&S.age<25&&(S.cntNormWin||0)>=10){
+    traitCard('favorite','愛將','不躁進，也不過度保守——你總是做出當下最合理的那個判斷。教練不需要為你多操一份心，先發名單上永遠有你的名字。<br><b class="hl">「普通應對」成功率提升 20 個百分點；出賽率保底 85%；守位門檻永久享有年輕球員的紅利</b>。'); }
   /* 大心臟:25 歲前全力一搏成功 7 次(允許失敗) */
   if(!S.traits.clutch&&S.age<25&&S.cntBoldWin>=7){
       traitCard('clutch','大心臟','每次的豪賭淬鍊出你無與無比的心性，愈刺激的狀況只會讓你更加幹勁十足。從此以後，愈賭愈強，成功獎勵愈大，失敗懲罰愈少，不過在豪賭的路上，還是要注意一下身邊的其他人……<br><b class="hl">「全力一搏」成功率提升至天才級；訓練成功加成 +4、失敗只 −2；遭遇與代言也會減輕失敗懲罰；國際賽個人成績獲得小幅加成</b>。'); }
