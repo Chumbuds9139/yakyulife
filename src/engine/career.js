@@ -34,9 +34,26 @@ export function pitcherCareerScore(st){
   const base=st.W*13+(st.SV||0)*8+(st.HLD||0)*3+st.SO*0.9+st.IP*0.35+reliefMilestoneScore(st);
   return base*pitcherQualityFactor(st);
 }
+/* 打者生涯評價的質量校正：對齊投手 pitcherQualityFactor 的設計，用生涯打擊率／OPS
+   相對聯盟參考值(0.270／0.760)算出 0.50~1.60 倍品質係數，並整體上調基礎分數尺度，
+   讓「優秀」等級的打者與同等級投手在名人堂機率上站在同一把尺上，不會因為打者本來
+   就沒有品質校正而系統性地比投手更難拿到榮譽級評價。 */
+export function hitterQualityFactor(st){
+  const ab=st&&st.AB||0, pa=st&&st.PA||0;
+  if(!ab||!pa)return 1;
+  const avg=st.H/ab, obp=(st.H+(st.BB||0))/pa, slg=slgOf(st), ops=obp+slg;
+  let q=1;
+  q+=clamp((avg-0.270)*3.0,-0.35,0.35);
+  q+=clamp((ops-0.760)*0.6,-0.20,0.20);
+  return clamp(q,0.50,1.60);
+}
+export function hitterCareerScore(st){
+  const base=st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3+(st.DEF||0)*6+positionScore(st);
+  return base*hitterQualityFactor(st)*1.5;
+}
 export function careerScore(st){
   if(S.pos==='P')return pitcherCareerScore(st);
-  return st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3+(st.DEF||0)*6+positionScore(st);
+  return hitterCareerScore(st);
 }
 export function primaryPos(){ /* 生涯主守位:過半→該位;無過半→工具人/搖擺人(年數降序) */
   if(S.pos==='P'){

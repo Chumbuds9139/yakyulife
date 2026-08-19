@@ -2,7 +2,7 @@
 export const AMA_ANNUAL=48; /* 業餘企業隊工作年薪：4 萬／月，不視為職業合約。 */
 export const LEVEL_MIN_ANNUAL={CPBL2:84,CPBL1:100,NPB2:240,NPB1:320,R:60,A1:95,A2:105,A3:125,MLB:2400};
 export const MLB_SERVICE_MINOR_MIN=381; /* 2026 MLB CBA：已有 MLB 年資者回小聯盟，年薪至少約 US$127,100（匯率 30）。 */
-export const TIER_TH={CPBL:[12000,7000,4300,2100],NPB:[8500,6200,3000,1900],MLB:[7500,6200,3500,1900]}; /* M2:五帶金字塔校準(擬真玩家尺)——成功稀有化、浮沉為大宗、失敗有感 */
+export const TIER_TH={CPBL:[7100,5850,3300,1800],NPB:[8400,6950,3900,2150],MLB:[9550,7900,4450,2400]}; /* M3:三聯盟同尺重校——原本CPBL門檻遠高於NPB/MLB但場次卻最少，導致同實力選手在CPBL幾乎進不了名人堂、去NPB/MLB卻很容易；現在讓同一套「優秀」級距的相對實力選手，在三聯盟的名人堂機率落在同一區間(約七至九成)，並搭配打者品質係數(hitterQualityFactor)校正投手/打者的榮譽落差 */
 export const MILESTONE_DEF={
   bat:[['H',1000,'安'],['HR',100,'轟'],['SB',50,'盜']],
   pit:[['IP',1000,'局'],['W',100,'勝'],['SV',100,'救援'],['HLD',100,'中繼'],['SO',1000,'K']]
