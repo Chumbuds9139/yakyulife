@@ -394,8 +394,17 @@ export function proSeason(){
   /* 鐵人累計 */
   const healthy=S.seasonFactor>=0.95&&(S.pos==='P'?(isSP()?st.IP>=120:st.G>=42):st.G>=LV[S.lv].g*0.8);
   if(healthy){ S.ironStreak++;
-    if(S.ironStreak>=5&&!S.traits.iron){ S.traits.iron=true;
-      card('gold','隱藏素質解鎖：鐵人','連續五年全勤級出賽！你就像是八點檔，無論哪一年打開電視，都能看到你在球場奮戰，球迷們甚至開始懷疑你是機器人，未來每季受傷機率<b class="hl">不高於 10%</b>。'); } }
+    if(S.ironStreak>=5&&!S.traits.iron){
+      /* 鐵人與玻璃人互為對立體質，不可並存：本來是玻璃人的話直接被鐵人覆蓋過去。 */
+      const wasGlass=!!S.traits.glass;
+      if(wasGlass)removeTrait('glass','玻璃人');
+      S.traits.iron=true;
+      S.removed=(S.removed||[]).filter(x=>x!=='鐵人'); /* 曾被玻璃人蓋掉又練回來:清掉刪除線紀錄 */
+      if(wasGlass)
+        card('gold','隱藏素質覆蓋：玻璃人 → 鐵人','多年來的傷病，讓你逐漸了解與自己傷痕累累的身體相處，出賽愈來愈多，你發現到那些說你是玻璃人的觀眾逐漸閉嘴，你現在是強化玻璃，大家改叫你鐵人。<br><b class="hl">玻璃人解除</b>，未來每季受傷機率<b class="hl">不高於 10%</b>。');
+      else
+        card('gold','隱藏素質解鎖：鐵人','連續五年全勤級出賽！你就像是八點檔，無論哪一年打開電視，都能看到你在球場奮戰，球迷們甚至開始懷疑你是機器人，未來每季受傷機率<b class="hl">不高於 10%</b>。');
+      board(1); } }
   else if(S.seasonFactor<0.95)S.ironStreak=0;
   /* 只會這個:先看夠不夠格當主力,夠格絕不判工具人;不夠格才看有無突出工具 */
   if(S.pos!=='P'){ const tg=toolGap();

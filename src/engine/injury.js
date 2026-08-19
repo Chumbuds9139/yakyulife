@@ -101,7 +101,7 @@ export function injuryProb(){ /* 基礎風險從 24 降為 15，減少動不動�
   let p=15+S.injNext;
   if(S.age>=35)p+=12; else if(S.age>=32)p+=6;
   if(S.traits.academy&&S.age<25)p-=5; /* 學院派:25歲前科學化管理 */
-  if(S.traits.iron&&S.traits.glass)p=25;
+  if(S.traits.iron&&S.traits.glass)p=25; /* 兩者現已互斥,此分支僅供尚未覆蓋過的舊存檔相容 */
   else if(S.traits.iron)p=Math.min(p,10); /* 鐵人:基礎風險上限 10% */
   else if(S.traits.glass)p=Math.max(p,40);
   /* 事件卡等自找的額外風險(tmpInj)疊加在基礎之上,不受鐵人上限保護 */
@@ -131,8 +131,16 @@ export function rollInjury(){
     if(chance(20)){ S.rehab=1; txt+=`醫生搖搖頭：<b class="dn">明年也很難趕上開季</b>（明年整季報廢）。`; }
     card('bad','大傷',txt+injStatLoss(true));
     if(S.bigInj>=2&&!S.traits.glass&&S.age<32){ /* 32 歲後的大傷是老化,不再定性為玻璃體質 */
+      /* 玻璃人與鐵人互為對立體質，不可並存：本來是鐵人的話直接被玻璃人覆蓋過去。 */
+      const wasIron=!!S.traits.iron;
+      if(wasIron)removeTrait('iron','鐵人');
       S.traits.glass=true;
-      card('bad','隱藏素質解鎖：玻璃人','生涯第二次大傷。從此傷病如影隨形，未來每季受傷機率<b class="dn">不低於 40%</b>。'); }
+      S.removed=(S.removed||[]).filter(x=>x!=='玻璃人'); /* 曾被鐵人蓋掉又碎回來:清掉刪除線紀錄 */
+      if(wasIron)
+        card('bad','隱藏素質覆蓋：鐵人 → 玻璃人','大量的出賽，開始讓你原本如機器人般的身體出現變化，身體逐漸脆弱，最後變為易碎品。<br><b class="dn">鐵人解除</b>，未來每季受傷機率<b class="dn">不低於 40%</b>。');
+      else
+        card('bad','隱藏素質解鎖：玻璃人','生涯第二次大傷。從此傷病如影隨形，未來每季受傷機率<b class="dn">不低於 40%</b>。');
+      board(1); }
     else if(S.bigInj>=2&&!S.traits.glass&&S.age>=32){
       card('info','醫療團隊評估','你不是易碎，只是風化 －－大傷不再被定義為玻璃人體質，身體都能體諒你這些年的征戰。'); }
   }
