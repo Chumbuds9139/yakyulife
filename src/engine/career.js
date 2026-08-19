@@ -123,7 +123,10 @@ export function honorScore(bucket){
 export function tierOf(bucket){
   const st=S.stats[bucket]; if(!st)return null;
   const hs=honorScore(bucket);
-  const k=(LEAGUE_K[bucket]||{P:1,H:1})[S.pos==='P'?'P':'H'];
+  /* 生涯評價折算依「這個聯盟這段生涯的實際角色」判斷，不是看目前角色：
+     救援數占推估出賽數四成以上視為終結者型生涯，套用終結者專屬折算值。 */
+  const posKey=S.pos!=='P'?'H':((st.SV||0)>=(st.IP||0)/1.05*0.4?'CL':'P');
+  const k=(LEAGUE_K[bucket]||{P:1,H:1,CL:1})[posKey];
   const sc=(careerScore(st,bucket)+hs.sc)*k,th=TIER_TH[bucket];
   let i=sc>=th[0]?0:sc>=th[1]?1:sc>=th[2]?2:sc>=th[3]?3:4;
   /* 獎項保底:MVP/最高投手獎至少明星球員;單項王至少每日球員 */
