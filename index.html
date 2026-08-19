@@ -32,10 +32,14 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=IBM+Plex+Mono:wght@500;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=1.5.2-r1">
+<link rel="stylesheet" href="css/style.css?v=1.5.2-r2">
 </head>
 <body>
 <div id="start">
+  <!-- 贊助入口：與 #start 同層(而非放進 .wrap)，才能固定在畫面右上角不隨內容捲動。
+       網址同時寫在 src/config.js 的 SPONSOR_URL（遊戲內選單用），兩處要一起改。 -->
+  <a id="sponsor-corner" href="https://portaly.cc/mrthemost" target="_blank" rel="noopener noreferrer"
+     title="支持 YaKyoLife：贊助伺服器與後續開發"><span class="ic" aria-hidden="true">♥</span>贊助支持</a>
   <div class="wrap">
     <h1 id="logo-tap" class="lockup">
       <img class="wm-img" src="assets/wordmark-cream.png" alt="YaKyoLife" decoding="async">
@@ -133,6 +137,6 @@
 <div id="alloc-full"><div id="af-inner"><div class="af-head"><span class="af-title" id="af-title"></span><button class="btn" id="af-close">收起</button></div><div id="af-body"></div></div></div>
 <!-- GitHub Pages sits behind a long-lived CDN cache. The entry point and every
      relative import carry this release token so browsers cannot mix versions. -->
-<script type="module" src="src/main.js?v=1.5.2-r1"></script>
+<script type="module" src="src/main.js?v=1.5.2-r2"></script>
 </body>
 </html>

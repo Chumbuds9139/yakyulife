@@ -1,16 +1,16 @@
-import {S} from '../core/state.js?v=1.5.2-r1';
-import {APP_VER} from '../config.js?v=1.5.2-r1';
-import {renderTraits, traitName} from './traits.js?v=1.5.2-r1';
-import {clearAlloc, allocFullClose} from './alloc.js?v=1.5.2-r1';
-import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.5.2-r1';
-import {DPN, POSN} from '../data/abilities.js?v=1.5.2-r1';
-import {TEAM_COLOR, LV} from '../data/teams.js?v=1.5.2-r1';
-import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js?v=1.5.2-r1';
-import {playerName, stageLabel} from '../core/state.js?v=1.5.2-r1';
-import {salParts, fmtMoney} from '../engine/contract.js?v=1.5.2-r1';
-import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js?v=1.5.2-r1';
-import {honorGroups, yearRanges} from '../engine/career.js?v=1.5.2-r1';
-import {playerType, ovr} from '../engine/ability.js?v=1.5.2-r1';
+import {S} from '../core/state.js?v=1.5.2-r2';
+import {APP_VER, SPONSOR_URL} from '../config.js?v=1.5.2-r2';
+import {renderTraits, traitName} from './traits.js?v=1.5.2-r2';
+import {clearAlloc, allocFullClose} from './alloc.js?v=1.5.2-r2';
+import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.5.2-r2';
+import {DPN, POSN} from '../data/abilities.js?v=1.5.2-r2';
+import {TEAM_COLOR, LV} from '../data/teams.js?v=1.5.2-r2';
+import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js?v=1.5.2-r2';
+import {playerName, stageLabel} from '../core/state.js?v=1.5.2-r2';
+import {salParts, fmtMoney} from '../engine/contract.js?v=1.5.2-r2';
+import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js?v=1.5.2-r2';
+import {honorGroups, yearRanges} from '../engine/career.js?v=1.5.2-r2';
+import {playerType, ovr} from '../engine/ability.js?v=1.5.2-r2';
 
 export const $=id=>document.getElementById(id);
 export let _curYearBody=null; /* 當前年度的內容容器 */
@@ -52,7 +52,8 @@ export function menuModal(){
     <button class="btn" id="md-theme" style="text-align:center">切換佈景主題</button>
     <button class="btn" id="md-big" style="text-align:center">${big?'切回標準字級':'改用大字級'}</button>
     ${wide?`<button class="btn" id="md-ui" style="text-align:center">${mob?'切回電腦版介面':'改用手機版介面'}</button>`:''}
-    <button class="btn warn" id="md-restart0" style="text-align:center">重新開始</button>
+    <a class="btn" id="md-sponsor" href="${SPONSOR_URL}" target="_blank" rel="noopener noreferrer" style="text-align:center;margin-top:14px"><span aria-hidden="true">♥</span> 贊助支持<small>贊助伺服器與後續開發</small></a>
+    <button class="btn warn" id="md-restart0" style="text-align:center;margin-top:14px">重新開始</button>
     <button class="btn" id="md-close" style="text-align:center;margin-top:14px">關閉</button>`);
   $('md-theme').onclick=themeModal;
   $('md-big').onclick=()=>{ applyBigText(!big); menuModal(); };

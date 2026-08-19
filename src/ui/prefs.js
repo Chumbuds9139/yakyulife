@@ -1,5 +1,5 @@
-import {$, modalOpen, menuModal} from './dom.js?v=1.5.2-r1';
-import {allocPlace} from './alloc.js?v=1.5.2-r1';
+import {$, modalOpen, menuModal} from './dom.js?v=1.5.2-r2';
+import {allocPlace} from './alloc.js?v=1.5.2-r2';
 
 /* ================= 主題系統(純呈現層) ================= */
 export const THEME_KEY='yakyu-theme';

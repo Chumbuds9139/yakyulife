@@ -368,6 +368,27 @@ body[data-theme='c'] .lockup-sub em,body[data-theme='d'] .lockup-sub em{text-sha
   border:1px solid var(--edge);border-radius:999px;padding:8px 16px;
   color:var(--text);text-decoration:none;font-size:12.5px;letter-spacing:.06em;transition:.15s}
 #community a:hover,#community a:focus-visible{color:var(--accent);border-color:var(--accent)}
+/* ---------- 贊助入口 ----------
+   首頁右上角常駐膠囊 + 遊戲內選單的連結按鈕，兩處導向同一個贊助頁。
+   顏色一律走主題變數，四種佈景(深綠記分板/電子看板/報紙版面/現代儀表板)都能正確換色；
+   圖示用文字符號 ♥ 而不是彩色 emoji，才會跟著 currentColor 一起變，在淺色主題下不會突兀。 */
+#sponsor-corner{position:absolute;z-index:3;
+  top:calc(12px + env(safe-area-inset-top,0px));right:14px;
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid color-mix(in srgb,var(--accent) 55%,var(--edge));border-radius:999px;
+  background:color-mix(in srgb,var(--accent) 10%,var(--panel));
+  padding:7px 14px;color:var(--accent);text-decoration:none;
+  font-size:12.5px;font-weight:700;letter-spacing:.08em;line-height:1;transition:.15s}
+#sponsor-corner .ic{font-size:13px;line-height:1}
+#sponsor-corner:hover,#sponsor-corner:focus-visible{border-color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 20%,var(--panel));box-shadow:var(--glow)}
+/* 窄螢幕縮一點,避免跟置中的 logo 擠在一起 */
+@media (max-width:400px){#sponsor-corner{top:calc(10px + env(safe-area-inset-top,0px));right:10px;padding:6px 11px;font-size:11.5px}}
+/* 選單內的贊助按鈕沿用 .btn 外觀,但因為是 <a> 必須蓋掉底線與 a 的預設連結色 */
+a.btn{text-decoration:none;color:var(--text)}
+a.btn#md-sponsor{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--edge))}
+a.btn#md-sponsor:hover,a.btn#md-sponsor:focus-visible{border-color:var(--accent)}
+a.btn#md-sponsor small{color:var(--dim)}
 .seedline b{color:var(--accent)}
 #seed-show{width:120px;background:var(--panel);color:var(--accent);border:1px solid var(--edge);
   border-radius:min(var(--r),6px);padding:2px 6px;font-family:inherit;font-size:12px;text-align:center}
