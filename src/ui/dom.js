@@ -1,16 +1,16 @@
-import {S} from '../core/state.js?v=1.5.3-r3';
-import {APP_VER, SPONSOR_URL} from '../config.js?v=1.5.3-r3';
-import {renderTraits, traitName} from './traits.js?v=1.5.3-r3';
-import {clearAlloc, allocFullClose} from './alloc.js?v=1.5.3-r3';
-import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.5.3-r3';
-import {DPN, POSN} from '../data/abilities.js?v=1.5.3-r3';
-import {TEAM_COLOR, LV} from '../data/teams.js?v=1.5.3-r3';
-import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js?v=1.5.3-r3';
-import {playerName, stageLabel} from '../core/state.js?v=1.5.3-r3';
-import {salParts, fmtMoney} from '../engine/contract.js?v=1.5.3-r3';
-import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js?v=1.5.3-r3';
-import {honorGroups, yearRanges} from '../engine/career.js?v=1.5.3-r3';
-import {playerType, ovr} from '../engine/ability.js?v=1.5.3-r3';
+import {S} from '../core/state.js?v=1.5.3-r4';
+import {APP_VER, SPONSOR_URL} from '../config.js?v=1.5.3-r4';
+import {renderTraits, traitName} from './traits.js?v=1.5.3-r4';
+import {clearAlloc, allocFullClose} from './alloc.js?v=1.5.3-r4';
+import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.5.3-r4';
+import {DPN, POSN} from '../data/abilities.js?v=1.5.3-r4';
+import {TEAM_COLOR, LV} from '../data/teams.js?v=1.5.3-r4';
+import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js?v=1.5.3-r4';
+import {playerName, stageLabel} from '../core/state.js?v=1.5.3-r4';
+import {salParts, fmtMoney} from '../engine/contract.js?v=1.5.3-r4';
+import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js?v=1.5.3-r4';
+import {honorGroups, yearRanges} from '../engine/career.js?v=1.5.3-r4';
+import {playerType, ovr} from '../engine/ability.js?v=1.5.3-r4';
 
 export const $=id=>document.getElementById(id);
 export let _curYearBody=null; /* 當前年度的內容容器 */
