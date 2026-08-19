@@ -31,7 +31,7 @@ export function phasePre(){
     POS_AB[S.pos].forEach(k=>S.ab[k]=clamp(S.ab[k]-(k==='cat'?catcherCallDec:dec),1,80));
     if(oldGhostActive){ S.oldGhostPending=false; S.oldGhostUsed=true; }
     const declineText=S.pos==='C'
-      ?`配球以外能力 <b class="dn">−${dec}</b>，配球 <b class="dn">−${catcherCallDec}</b>（衰退減半）`
+      ?`配球以外能力 <b class="dn">−${dec}</b>（你的配球經驗是你珍貴的財產，不會急遽衰退，配球<b class="dn">−${catcherCallDec}</b>）`
       :`所有能力 <b class="dn">−${dec}</b>`;
     card('bad','歲月不饒人',`${declAge>=35?'第二階段（逐年加劇）':'第一階段'}衰退：${declineText}${S.traits.disc?'（自律狂：生涯延後兩年）':''}${oldGhostActive?`（老鬼：原衰退 −${baseDec}，本年減緩 50%）`:''}。訓練加點照常，但身體回不去了。`); board(0); }
   if(S.rehab>0){ S.rehab--; S.skipMid=true; S.seasonFactor=0; S.marketInjury='rehab';

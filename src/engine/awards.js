@@ -18,7 +18,7 @@ export function awardP(value,hardLow,autoWin,base=25,lower=false){
 export function rookieAwardGuaranteed(honors,year,leagueName){
   const sameLeagueAwards=honors.filter(x=>x.startsWith(`${year} ${leagueName}`));
   const elite=sameLeagueAwards.some(x=>/年度MVP|最佳投手|賽揚/.test(x));
-  const titleCount=sameLeagueAwards.filter(x=>/(三振王|救援王|中繼王|打擊王|全壘打王|盜壘王|打點王|上壘王)$/.test(x)).length;
+  const titleCount=sameLeagueAwards.filter(x=>/(勝投王|防禦率王|三振王|救援王|中繼王|打擊王|全壘打王|盜壘王|打點王|上壘王)$/.test(x)).length;
   return elite||titleCount>=2;
 }
 export function pitcherAwardName(bucket){
@@ -40,10 +40,11 @@ export function awards(bucket,st){
   /* 符合 simSeason 數學邏輯的門檻表 [必不得獎下限, 必得獎上限] */
   /* 比率數據(ERA/AVG/OBP)與非場次連動數據(SV/HLD/SB)三個聯盟統一標準 */
   /* 只有吃打席/局數的(HR/RBI/SO)依 120:143:162 場次等比放大 */
+  /* 勝投王(w)比照 SO 的場次等比放大邏輯:CPBL/NPB/MLB = 120:143:162 場 */
   const TH = {
-    CPBL: { g: 120, era: [3.20, 2.20], sv: [22, 35], hld: [18, 30], so: [130, 180], avg: [0.300, 0.360], hr: [20, 32], rbi: [75, 105], obp: [0.370, 0.430] },
-    NPB:  { g: 143, era: [3.20, 2.20], sv: [22, 35], hld: [18, 30], so: [155, 215], avg: [0.300, 0.360], hr: [24, 38], rbi: [90, 125], obp: [0.370, 0.430] },
-    MLB:  { g: 162, era: [3.20, 2.20], sv: [22, 35], hld: [18, 30], so: [175, 240], avg: [0.300, 0.360], hr: [27, 43], rbi: [100, 140], obp: [0.370, 0.430] }
+    CPBL: { g: 120, era: [3.20, 2.20], sv: [22, 35], hld: [18, 30], so: [130, 180], w: [10, 16], avg: [0.300, 0.360], hr: [20, 32], rbi: [75, 105], obp: [0.370, 0.430] },
+    NPB:  { g: 143, era: [3.20, 2.20], sv: [22, 35], hld: [18, 30], so: [155, 215], w: [12, 18], avg: [0.300, 0.360], hr: [24, 38], rbi: [90, 125], obp: [0.370, 0.430] },
+    MLB:  { g: 162, era: [3.20, 2.20], sv: [22, 35], hld: [18, 30], so: [175, 240], w: [14, 20], avg: [0.300, 0.360], hr: [27, 43], rbi: [100, 140], obp: [0.370, 0.430] }
   };
   const th = TH[bucket] || TH.CPBL;
 
@@ -77,6 +78,7 @@ export function awards(bucket,st){
   }
 
   /* 2. 投手個人獎項 */
+  let pitcherTripleCrown=false;
   if(S.pos==='P'){
     if(isSP() && st.IP >= th.g){
       let p=awardP(st.era,th.era[0],th.era[1],30,true);
@@ -96,17 +98,36 @@ export function awards(bucket,st){
       const p=awardP(st.HLD||0,th.hld[0],th.hld[1],28);
       if(chance(p)) h.push(`${y} ${lgN}中繼王`);
     }
-    { const p=awardP(st.SO,th.so[0],th.so[1]); if(chance(p))h.push(`${y} ${lgN}三振王`); }
+    /* 勝投王／防禦率王／三振王：三項齊得即觸發投手三冠王，必得年度MVP。 */
+    let hasWinTitle=false, hasEraTitle=false, hasSoTitle=false;
+    { const p=awardP(st.W,th.w[0],th.w[1]); if(chance(p)){ h.push(`${y} ${lgN}勝投王`); hasWinTitle=true; } }
+    if(isSP() && st.IP >= th.g){ /* 防禦率王比照最佳投手,需先達成先發完投量門檻才具資格 */
+      const p=awardP(st.era,th.era[0],th.era[1],25,true);
+      if(chance(p)){ h.push(`${y} ${lgN}防禦率王`); hasEraTitle=true; }
+    }
+    { const p=awardP(st.SO,th.so[0],th.so[1]); if(chance(p)){ h.push(`${y} ${lgN}三振王`); hasSoTitle=true; } }
+    pitcherTripleCrown = hasWinTitle && hasEraTitle && hasSoTitle;
+    if(pitcherTripleCrown){
+      h.push(`${y} ${lgN}投手三冠王`);
+      if(!S.pitcherTCLeagues.includes(lgN)){
+        S.pitcherTCLeagues=[...S.pitcherTCLeagues,lgN];
+        S.traits.pitcherTC=true;
+        card('gold',`隱藏屬性解鎖：${lgN}投手三冠王`,
+          `勝投、防禦率、三振同時稱王——一整個球季，你就是聯盟裡最強的那個投手。<b class="hl">${lgN}投手三冠王</b>，王牌中的王牌，至高的榮耀。`);
+      }
+    }
   }
   /* 3. 野手個人獎項 */
-  else{
+  let hitterTripleCrown=false;
+  if(S.pos!=='P'){
+    let hasAvgTitle=false, hasHrTitle=false, hasRbiTitle=false;
     if(st.PA >= 350){
       const p=awardP(st.avg,th.avg[0],th.avg[1]);
-      if(chance(p)) h.push(`${y} ${lgN}打擊王`);
+      if(chance(p)){ h.push(`${y} ${lgN}打擊王`); hasAvgTitle=true; }
     }
     if(st.PA >= 300){
       const p=awardP(st.HR,th.hr[0],th.hr[1]);
-      if(chance(p)) h.push(`${y} ${lgN}全壘打王`);
+      if(chance(p)){ h.push(`${y} ${lgN}全壘打王`); hasHrTitle=true; }
     }
     if(st.PA >= 300){ // SB不隨場次放大，全聯盟標準一致
       const p=awardP(st.SB,25,45);
@@ -114,7 +135,7 @@ export function awards(bucket,st){
     }
     if(st.PA >= 300){
       const p=awardP(st.RBI,th.rbi[0],th.rbi[1]);
-      if(chance(p)) h.push(`${y} ${lgN}打點王`);
+      if(chance(p)){ h.push(`${y} ${lgN}打點王`); hasRbiTitle=true; }
     }
     const obp = st.PA > 0 ? (st.H + st.BB) / st.PA : 0;
     if(st.PA >= 350){
@@ -130,6 +151,17 @@ export function awards(bucket,st){
       if(chance(pGlove))h.push(`${y} ${lgN}${DPN[awardDp]}金手套`);
       const pBible=awardP(def1,9,22,25);
       if(chance(pBible))h.push(`${y} ${lgN}守備聖經`);
+    }
+    /* 打擊王／全壘打王／打點王：三項齊得即觸發打擊三冠王，必得年度MVP。 */
+    hitterTripleCrown = hasAvgTitle && hasHrTitle && hasRbiTitle;
+    if(hitterTripleCrown){
+      h.push(`${y} ${lgN}打擊三冠王`);
+      if(!S.hitterTCLeagues.includes(lgN)){
+        S.hitterTCLeagues=[...S.hitterTCLeagues,lgN];
+        S.traits.hitterTC=true;
+        card('gold',`隱藏屬性解鎖：${lgN}打擊三冠王`,
+          `打擊率、全壘打、打點同時稱王——攻擊三項數據無人能及。<b class="hl">${lgN}打擊三冠王</b>，棒球場上最華麗的頭銜，非你莫屬。`);
+      }
     }
   }
 
@@ -151,7 +183,10 @@ export function awards(bucket,st){
       (st.avg>=th.avg[0]&&st.RBI>=th.rbi[0])
     );
   }
-  if(mvpQual&&S.seasonFactor>=0.9){
+  if(pitcherTripleCrown||hitterTripleCrown){
+    /* 投手/打擊三冠王：必得年度MVP，不再走機率判定。 */
+    h.push(`${y} ${lgN}年度MVP`);
+  }else if(mvpQual&&S.seasonFactor>=0.9){
     if(isReliever){
       /* 後援 MVP 保持極低機率，且必須先達神級救援／中繼實績。 */
       const pMVP=clamp(

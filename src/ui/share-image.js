@@ -40,7 +40,7 @@ export function shareImage(evals,picks,out){
   const remTr=(S.removed||[]).map(l=>({label:l,key:'',neg:false,rem:true}));
   function tagColor(o){ /* keep in sync with traitTagStyle() + the .tag defaults */
     if(o.rem)return {bg:'#242424',bd:'#4a4a4a',fg:'#8a8a8a'};
-    if(o.key==='legend'||o.key==='taiwan')return {bg:'#3a2c05',bd:'#ffc95c',fg:'#ffe08a'}; /* 金(歷史級/Team Taiwan) */
+    if(o.key==='legend'||o.key==='taiwan'||o.key==='pitcherTC'||o.key==='hitterTC')return {bg:'#3a2c05',bd:'#ffc95c',fg:'#ffe08a'}; /* 金(歷史級/Team Taiwan/三冠王) */
     if(o.key==='goldcloth')return {bg:'#3a3505',bd:'#e8d43a',fg:'#fff35a'}; /* 黃 */
     if(o.key==='mrteam')return teamChip(TEAM_COLOR[S.mrTeamName]||'#ffc95c');
     if(o.key==='genius')return {bg:'#232733',bd:'#c8d0e0',fg:'#e8eef7'}; /* 銀 */

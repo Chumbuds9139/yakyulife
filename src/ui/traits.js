@@ -1,22 +1,24 @@
 import {S} from '../core/state.js?v=1.5.1-r7';
 import {$, teamChip} from './dom.js?v=1.5.1-r7';
-import {TRAIT_KEYS, TRAIT_N, TRAIT_FX, legendTraitNames} from '../data/traits.js?v=1.5.1-r7';
+import {TRAIT_KEYS, TRAIT_N, TRAIT_FX, legendTraitNames, pitcherTCNames, hitterTCNames} from '../data/traits.js?v=1.5.1-r7';
 import {TEAM_COLOR, teamNick} from '../data/teams.js?v=1.5.1-r7';
 
 export function traitNames(k){
   if(k==='legend'){
     return legendTraitNames(S.legendLeagues,S.legendLeague); /* legendLeague 供舊狀態相容 */
   }
+  if(k==='pitcherTC')return pitcherTCNames(S.pitcherTCLeagues);
+  if(k==='hitterTC')return hitterTCNames(S.hitterTCLeagues);
   return [traitName(k)];
 }
 export function traitName(k){
   if(k==='mrteam')return (teamNick(S.mrTeamName||'')||'')+'先生';
-  if(k==='legend')return traitNames(k)[0]||'歷史級球星';
+  if(k==='legend'||k==='pitcherTC'||k==='hitterTC')return traitNames(k)[0]||TRAIT_N[k]||k;
   if(k==='rainbow')return (S.rainbowLg||'')+'七彩球衣';
   return TRAIT_N[k]||k; }
 export function traitTagStyle(k){
   if(TRAIT_KEYS.neg.includes(k))return 'background:#2a0f0f;border-color:#c0392b;color:#ff8b7a'; /* 負向:紅 */
-  if(k==='legend'||k==='taiwan')return 'background:#3a2c05;border-color:#ffc95c;color:#ffe08a'; /* 歷史級/挺台灣:金 */
+  if(k==='legend'||k==='taiwan'||k==='pitcherTC'||k==='hitterTC')return 'background:#3a2c05;border-color:#ffc95c;color:#ffe08a'; /* 歷史級/挺台灣/三冠王:金 */
   if(k==='goldcloth')return 'background:#3a3505;border-color:#e8d43a;color:#fff35a'; /* 黃金聖衣:黃 */
   if(k==='mrteam'){ const c=teamChip(TEAM_COLOR[S.mrTeamName]||'#ffc95c'); return 'background:'+c.bg+';border-color:'+c.bd+';color:'+c.fg; }
   if(k==='genius')return 'background:#232733;border-color:#c8d0e0;color:#e8eef7'; /* 天才:銀 */
