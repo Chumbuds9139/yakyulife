@@ -211,15 +211,20 @@ export function statBonusTxt(pts){
   if(n>=0)return `<span class="up">狀態火燙（本季成績加成 +${n}）</span>`;
   return `<span class="dn">狀態低迷（本季成績加成 −${Math.abs(n)}）</span>`;
 }
-/* 全遊戲「能力成長」的統一文案。能力數值的增減直接寫 +N／−N 不加單位(畫面上到處都是，
-   加單位反而囉嗦)；只有「投入了點數但沒升級」這種需要區分的情況才標出「點」，讓玩家知道
-   點數沒有白費。負向扣值是 1:1 不吃成本表，直接寫 −N。 */
+/* 全遊戲「能力成長」的統一文案。能力數值的增減寫 +N／−N 不加單位(畫面上到處都是，加單位
+   反而囉嗦)。事件卡不會告訴玩家這次給了幾點，而養成成本表會讓投入點數與實際升的級數對不
+   起來(投手 66 以上每級 7 點、突破潛力上限後成本再 ×3~×4)，所以只在兩者不相等時才補上
+   「加了 N 點」——沒補的時候就代表 1 點換 1 級，不必多寫。進度槽的餘數刻意不顯示，太吵。
+   負向扣值是 1:1 不吃成本表，直接寫 −N。 */
 export function abGainTxt(k,pts,levels){
   const name=ABL[k]||k;
   if(pts<0||levels<0){
     const d=Math.abs(Math.round(levels));
     return d?`<b class="dn">${name} −${d}</b>`:`${name} 無變化`;
   }
-  if(levels>0)return `${name} <span class="up">+${levels}</span>`;
-  return `${name} <span class="up">+${Math.round(pts)} 點</span>，不足以升級`;
+  const p=Math.round(pts);
+  if(levels>0)return p===levels
+    ?`${name} <span class="up">+${levels}</span>`
+    :`加了 ${p} 點，${name} <span class="up">+${levels}</span>`;
+  return `加了 ${p} 點，${name} <span class="dn">未升級</span>`;
 }

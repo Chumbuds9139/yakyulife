@@ -62,7 +62,7 @@ export function phasePre(){
       let cmsg = `<br>大巧不工發動：系統自動擲出 <b class="hl">${cv}</b> 點，挹注於 <b class="hl">${ABL[ck]}</b>`;
       if(gained > 0) cmsg += `（<b class="up">+${gained}</b>）`;
       if(overflow > 0) cmsg += `（頂峰造極：溢出的 ${overflow} 點轉為${statBonusTxt(overflow)}）`;
-      if(gained===0 && overflow===0) cmsg += `（+${cv} 點，不足以升級）`;
+      if(gained===0 && overflow===0) cmsg += `（<b class="dn">未升級</b>）`;
       msg += cmsg + `。`;
     }
     
