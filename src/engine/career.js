@@ -2,7 +2,7 @@ import {S} from '../core/state.js?v=1.5.1-r7';
 import {clamp} from '../core/rng.js?v=1.5.1-r7';
 import {DPN, POSN, POS_ADJ_RUNS} from '../data/abilities.js?v=1.5.1-r7';
 import {LG_N} from '../data/teams.js?v=1.5.1-r7';
-import {TIER_TH, MILESTONE_DEF} from '../data/economy.js?v=1.5.1-r7';
+import {TIER_TH, LEAGUE_K, MILESTONE_DEF} from '../data/economy.js?v=1.5.1-r7';
 import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.1-r7';
 /* ================= 生涯終章 ================= */
 export function positionScore(st){
@@ -39,9 +39,10 @@ export function pitcherCareerScore(st,bucket){
   return base*pitcherQualityFactor(st);
 }
 /* 打者生涯評價的質量校正：對齊投手 pitcherQualityFactor 的設計，用生涯打擊率／OPS
-   相對聯盟參考值(0.270／0.760)算出 0.50~1.60 倍品質係數，並整體上調基礎分數尺度，
-   讓「優秀」等級的打者與同等級投手在名人堂機率上站在同一把尺上，不會因為打者本來
-   就沒有品質校正而系統性地比投手更難拿到榮譽級評價。 */
+   相對聯盟參考值(0.270／0.760)算出 0.50~1.60 倍品質係數，讓打者也有跟投手對稱的
+   品質校正，不會因為打者本來沒有品質校正而系統性地比投手更難拿到榮譽級評價。
+   末尾 0.67 是配合 LEAGUE_K 重新以「絕對能力值換算生涯總分」實測校準出的尺度，
+   讓投手/打者在同一把 TIER_TH 尺上大致對齊(細節見 economy.js 的 LEAGUE_K 說明)。 */
 export function hitterQualityFactor(st){
   const ab=st&&st.AB||0, pa=st&&st.PA||0;
   if(!ab||!pa)return 1;
@@ -53,7 +54,7 @@ export function hitterQualityFactor(st){
 }
 export function hitterCareerScore(st){
   const base=st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3+(st.DEF||0)*6+positionScore(st);
-  return base*hitterQualityFactor(st)*1.5;
+  return base*hitterQualityFactor(st)*0.67;
 }
 export function careerScore(st,bucket){
   if(S.pos==='P')return pitcherCareerScore(st,bucket);
@@ -122,7 +123,8 @@ export function honorScore(bucket){
 export function tierOf(bucket){
   const st=S.stats[bucket]; if(!st)return null;
   const hs=honorScore(bucket);
-  const sc=careerScore(st,bucket)+hs.sc,th=TIER_TH[bucket];
+  const k=(LEAGUE_K[bucket]||{P:1,H:1})[S.pos==='P'?'P':'H'];
+  const sc=(careerScore(st,bucket)+hs.sc)*k,th=TIER_TH[bucket];
   let i=sc>=th[0]?0:sc>=th[1]?1:sc>=th[2]?2:sc>=th[3]?3:4;
   /* 獎項保底:MVP/最高投手獎至少明星球員;單項王至少每日球員 */
   if(hs.mvp||hs.aceN)i=Math.min(i,1);
