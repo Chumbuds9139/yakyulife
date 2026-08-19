@@ -1,9 +1,9 @@
-import {S} from '../core/state.js?v=1.5.2';
-import {clamp} from '../core/rng.js?v=1.5.2';
-import {DPN, POSN, POS_ADJ_RUNS} from '../data/abilities.js?v=1.5.2';
-import {LG_N} from '../data/teams.js?v=1.5.2';
-import {TIER_TH, LEAGUE_K, MILESTONE_DEF} from '../data/economy.js?v=1.5.2';
-import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.2';
+import {S} from '../core/state.js?v=1.5.2-r1';
+import {clamp} from '../core/rng.js?v=1.5.2-r1';
+import {DPN, POSN, POS_ADJ_RUNS} from '../data/abilities.js?v=1.5.2-r1';
+import {LG_N} from '../data/teams.js?v=1.5.2-r1';
+import {TIER_TH, LEAGUE_K, MILESTONE_DEF} from '../data/economy.js?v=1.5.2-r1';
+import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.2-r1';
 /* ================= 生涯終章 ================= */
 export function positionScore(st){
   if(!st||!st.DPG)return 0;
@@ -126,8 +126,9 @@ export function tierOf(bucket){
   /* 生涯評價折算依「這個聯盟這段生涯的實際角色」判斷，不是看目前角色：
      救援數占推估出賽數四成以上視為終結者型生涯，套用終結者專屬折算值。 */
   const posKey=S.pos!=='P'?'H':((st.SV||0)>=(st.IP||0)/1.05*0.4?'CL':'P');
-  const k=(LEAGUE_K[bucket]||{P:1,H:1,CL:1})[posKey];
-  const sc=(careerScore(st,bucket)+hs.sc)*k,th=TIER_TH[bucket];
+  /* [Kbase,Khonor]:數據累積分與獎項分分開折算(兩者的聯盟差異性質相反,詳見 economy.js) */
+  const k=((LEAGUE_K[bucket]||{})[posKey])||[1,1];
+  const sc=careerScore(st,bucket)*k[0]+hs.sc*k[1],th=TIER_TH[bucket];
   let i=sc>=th[0]?0:sc>=th[1]?1:sc>=th[2]?2:sc>=th[3]?3:4;
   /* 獎項保底:MVP/最高投手獎至少明星球員;單項王至少每日球員 */
   if(hs.mvp||hs.aceN)i=Math.min(i,1);
