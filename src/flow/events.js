@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.1-r7';
-import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.1-r7';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.1-r7';
-import {LV} from '../data/teams.js?v=1.5.1-r7';
-import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS, EVENT_ROUTES, eventInjuryRisk} from '../data/events.js?v=1.5.1-r7';
-import {card, choose, board} from '../ui/dom.js?v=1.5.1-r7';
-import {addAb, statBonus, ovr} from '../engine/ability.js?v=1.5.1-r7';
-import {majorChampionshipCount} from '../engine/championship.js?v=1.5.1-r7';
+import {S} from '../core/state.js?v=1.5.2';
+import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.2';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.2';
+import {LV} from '../data/teams.js?v=1.5.2';
+import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS, EVENT_ROUTES, eventInjuryRisk} from '../data/events.js?v=1.5.2';
+import {card, choose, board} from '../ui/dom.js?v=1.5.2';
+import {addAb, statBonus, ovr} from '../engine/ability.js?v=1.5.2';
+import {majorChampionshipCount} from '../engine/championship.js?v=1.5.2';
 export function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 export function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
