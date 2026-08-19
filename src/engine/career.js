@@ -189,8 +189,8 @@ export function careerMilestones(){
 export function honorRank(awd){
   const intl=/經典賽|12強|奧運|亞運|國家隊/.test(awd);
   const league=intl?0:(/大聯盟|世界大賽/.test(awd)?1:(/日職|日本一/.test(awd)?2:(/中職/.test(awd)?3:4)));
-  const kind=/總冠軍|世界大賽冠軍|日本一$/.test(awd)?0:/年度MVP/.test(awd)?1:/MVP/.test(awd)?2:
-    /最佳投手|最佳打者|賽揚/.test(awd)?3:/金手套/.test(awd)?4:/守備聖經/.test(awd)?5:/王/.test(awd)?6:/明星賽/.test(awd)?8:7;
+  const kind=/總冠軍|世界大賽冠軍|日本一$/.test(awd)?0:/年度MVP/.test(awd)?1:/三冠王/.test(awd)?2:/MVP/.test(awd)?3:
+    /最佳投手|最佳打者|賽揚/.test(awd)?4:/金手套/.test(awd)?5:/守備聖經/.test(awd)?6:/王/.test(awd)?7:/明星賽/.test(awd)?9:8;
   return league*10+kind;
 }
 export function honorGroups(){
