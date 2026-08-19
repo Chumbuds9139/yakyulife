@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.3-r4';
-import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.3-r4';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.3-r4';
-import {LV} from '../data/teams.js?v=1.5.3-r4';
-import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS, EVENT_ROUTES, eventInjuryRisk} from '../data/events.js?v=1.5.3-r4';
-import {card, choose, board} from '../ui/dom.js?v=1.5.3-r4';
-import {addAb, statBonus, statBonusTxt, abGainTxt, ovr} from '../engine/ability.js?v=1.5.3-r4';
-import {majorChampionshipCount} from '../engine/championship.js?v=1.5.3-r4';
+import {S} from '../core/state.js?v=1.5.3-r5';
+import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.3-r5';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.3-r5';
+import {LV} from '../data/teams.js?v=1.5.3-r5';
+import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS, EVENT_ROUTES, eventInjuryRisk} from '../data/events.js?v=1.5.3-r5';
+import {card, choose, board} from '../ui/dom.js?v=1.5.3-r5';
+import {addAb, statBonus, statBonusTxt, abGainTxt, ovr} from '../engine/ability.js?v=1.5.3-r5';
+import {majorChampionshipCount} from '../engine/championship.js?v=1.5.3-r5';
 export function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 export function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
@@ -30,6 +30,9 @@ export function eventEligible(ev,state){
   if(ev.role==='P'&&s.pos!=='P')return false;
   if(ev.role==='C'&&s.pos!=='C')return false;
   if(ev.role==='B'&&(s.pos==='P'||s.pos==='C'))return false;
+  /* F=野手(所有非投手,含捕手)。B 沿用舊定義(內外野手,捕手另有專屬卡池)，但像跑壘這種
+     捕手同樣會遇到的情境用 B 會把捕手誤排除，所以另立 F 只排除投手。 */
+  if(ev.role==='F'&&s.pos==='P')return false;
   if(ev.scope!=='*'&&s.org!==ev.scope)return false;
   if(ev.times.includes('ALL'))return true;
   if(s.stage==='PRO')return ev.times.includes(LV[s.lv]&&LV[s.lv].top?'PRO':'MINOR');

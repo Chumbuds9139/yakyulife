@@ -1,5 +1,6 @@
 /* 此檔由 YaKyoLife_事件卡完整文本與數值表_96張_補完版_A.xlsx 的「完整事件表」產生。 */
 /* 活頁簿實際提供 91 張：缺少 ID 15、93、94、95、96；不得在沒有來源文本時自行補寫。 */
+/* ID 15 之後由專案擁有者提供原創文本補上(中職投手職業卡「挑戰Kzone邊緣」)，其餘 93~96 仍為空缺。 */
 export const EVENT_CATEGORY_NAMES={training:'訓練',endorsement:'代言',encounter:'遭遇'};
 export const EVENT_ROUTES=[
   {name:'訓練至上',combinations:[['training','training','endorsement'],['training','training','encounter']]},
@@ -447,6 +448,36 @@ export const EVENTS=[
       }
     },
     "note": "不綁特定企業｜三模式獨立文本需改為 choices 結構"
+  },
+  {
+    "id": 15,
+    "n": "挑戰Kzone邊緣",
+    "times": [
+      "PRO"
+    ],
+    "scope": "CPBL",
+    "role": "P",
+    "category": "encounter",
+    "intro": "對面是選球很好的強打，你的投球策略是甚麼？",
+    "target": "ctl",
+    "choices": {
+      "bold": {
+        "label": "盡量把球投進邊邊角角",
+        "good": "主審火眼金睛，成功三振",
+        "bad": "主審全部都沒撿，觀眾席噓聲大作"
+      },
+      "norm": {
+        "label": "按照原本的策略",
+        "good": "打者也按照原本的計畫出局",
+        "bad": "球以出乎你想像的方式穿出內野"
+      },
+      "safe": {
+        "label": "以外角低球為主進行投球",
+        "good": "纏鬥8球後，打者耐不住性子揮了個大空棒",
+        "bad": "打者完全放掉你投的引誘球，走上一壘"
+      }
+    },
+    "note": "由專案擁有者補寫的原創文本(非來自原始試算表);場上單一打席對決,歸類為遭遇卡(影響本季成績)"
   },
   {
     "id": 16,
@@ -2170,7 +2201,7 @@ export const EVENTS=[
       "ALL"
     ],
     "scope": "*",
-    "role": "*",
+    "role": "F",
     "category": "training",
     "intro": "教練把每一次起跑都拆成投手動作與壘包情境。",
     "target": "spd",
@@ -2191,7 +2222,7 @@ export const EVENTS=[
         "bad": "少了滑壘練習，你在實戰中還是用了最危險的方式回壘。"
       }
     },
-    "note": "投手若無打席可轉為補位與牽制判斷｜三模式獨立文本需改為 choices 結構"
+    "note": "跑壘卡改為野手限定(role F=非投手,含捕手);投手沒有打席,原註記的「轉為補位與牽制判斷」變體並未實作,直接排除較誠實"
   },
   {
     "id": 74,

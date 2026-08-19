@@ -1,9 +1,9 @@
-import {S} from '../core/state.js?v=1.5.3-r4';
-import {clamp} from '../core/rng.js?v=1.5.3-r4';
-import {DPN, POSN, POS_ADJ_RUNS} from '../data/abilities.js?v=1.5.3-r4';
-import {LG_N} from '../data/teams.js?v=1.5.3-r4';
-import {TIER_TH, LEAGUE_K, MILESTONE_DEF} from '../data/economy.js?v=1.5.3-r4';
-import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.3-r4';
+import {S} from '../core/state.js?v=1.5.3-r5';
+import {clamp} from '../core/rng.js?v=1.5.3-r5';
+import {DPN, POSN, POS_ADJ_RUNS} from '../data/abilities.js?v=1.5.3-r5';
+import {LG_N} from '../data/teams.js?v=1.5.3-r5';
+import {TIER_TH, LEAGUE_K, MILESTONE_DEF} from '../data/economy.js?v=1.5.3-r5';
+import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.3-r5';
 /* ================= 生涯終章 ================= */
 export function positionScore(st){
   if(!st||!st.DPG)return 0;
