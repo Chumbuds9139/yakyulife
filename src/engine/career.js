@@ -1,4 +1,5 @@
 import {S} from '../core/state.js?v=1.5.1-r7';
+import {clamp} from '../core/rng.js?v=1.5.1-r7';
 import {DPN, POSN, POS_ADJ_RUNS} from '../data/abilities.js?v=1.5.1-r7';
 import {LG_N} from '../data/teams.js?v=1.5.1-r7';
 import {TIER_TH, MILESTONE_DEF} from '../data/economy.js?v=1.5.1-r7';
@@ -18,8 +19,20 @@ export function reliefMilestoneScore(st){
   if(sv>=200)return 350;
   return 0;
 }
+/* 投手生涯評價的質量校正：純堆數據(局數/勝場/救援等)過去會讓長年低品質後援
+   在總分上輾壓真正壓制力強的先發。用生涯 ERA/WHIP 相對聯盟參考值(3.40/1.15，
+   對齊「稱職先發」與「王牌先發」的真實分界)算出一個 0.50~1.60 倍的品質係數，
+   乘回堆疊分數，讓失分率真正影響評價高低，同時讓各等級先發的級距拉開。 */
+export function pitcherQualityFactor(st){
+  const era=baseballERA(st), whip=baseballWHIP(st);
+  let q=1;
+  if(era!=null)q+=clamp((3.40-era)*0.15,-0.40,0.40);
+  if(whip!=null)q+=clamp((1.15-whip)*0.30,-0.20,0.20);
+  return clamp(q,0.50,1.60);
+}
 export function pitcherCareerScore(st){
-  return st.W*13+(st.SV||0)*8+(st.HLD||0)*3+st.SO*0.9+st.IP*0.35+reliefMilestoneScore(st);
+  const base=st.W*13+(st.SV||0)*8+(st.HLD||0)*3+st.SO*0.9+st.IP*0.35+reliefMilestoneScore(st);
+  return base*pitcherQualityFactor(st);
 }
 export function careerScore(st){
   if(S.pos==='P')return pitcherCareerScore(st);

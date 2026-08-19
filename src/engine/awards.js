@@ -45,10 +45,12 @@ export function awards(bucket,st){
   /* 比率數據(ERA/AVG/OBP)與非場次連動數據(SV/HLD/SB)三個聯盟統一標準 */
   /* 只有吃打席/局數的(HR/RBI/SO)依 120:143:162 場次等比放大 */
   /* 勝投王(w)比照 SO 的場次等比放大邏輯:CPBL/NPB/MLB = 120:143:162 場 */
+  /* era(最佳投手)門檻收緊為[2.90,1.90](原[3.20,2.20])，避免生涯夠長時單靠中等偏上的ERA
+     就能反覆拿下最高榮譽；eraK(防禦率王)則刻意更嚴格，避免同一顆ERA每年雙開兩個獎項。 */
   const TH = {
-    CPBL: { g: 120, era: [3.20, 2.20], sv: [22, 35], hld: [18, 30], so: [130, 180], w: [10, 16], avg: [0.300, 0.360], hr: [20, 32], rbi: [75, 105], obp: [0.370, 0.430] },
-    NPB:  { g: 143, era: [3.20, 2.20], sv: [22, 35], hld: [18, 30], so: [155, 215], w: [12, 18], avg: [0.300, 0.360], hr: [24, 38], rbi: [90, 125], obp: [0.370, 0.430] },
-    MLB:  { g: 162, era: [3.20, 2.20], sv: [22, 35], hld: [18, 30], so: [175, 240], w: [14, 20], avg: [0.300, 0.360], hr: [27, 43], rbi: [100, 140], obp: [0.370, 0.430] }
+    CPBL: { g: 120, era: [2.90, 1.90], eraK: [2.80, 1.60], sv: [22, 35], hld: [18, 30], so: [130, 180], w: [10, 16], avg: [0.300, 0.360], hr: [20, 32], rbi: [75, 105], obp: [0.370, 0.430] },
+    NPB:  { g: 143, era: [2.90, 1.90], eraK: [2.80, 1.60], sv: [22, 35], hld: [18, 30], so: [155, 215], w: [12, 18], avg: [0.300, 0.360], hr: [24, 38], rbi: [90, 125], obp: [0.370, 0.430] },
+    MLB:  { g: 162, era: [2.90, 1.90], eraK: [2.80, 1.60], sv: [22, 35], hld: [18, 30], so: [175, 240], w: [14, 20], avg: [0.300, 0.360], hr: [27, 43], rbi: [100, 140], obp: [0.370, 0.430] }
   };
   const th = TH[bucket] || TH.CPBL;
 
@@ -105,8 +107,8 @@ export function awards(bucket,st){
     /* 勝投王／防禦率王／三振王：三項齊得即觸發投手三冠王，必得年度MVP。 */
     let hasWinTitle=false, hasEraTitle=false, hasSoTitle=false;
     { const p=awardP(st.W,th.w[0],th.w[1]); if(chance(p)){ h.push(`${y} ${lgN}勝投王`); hasWinTitle=true; } }
-    if(isSP() && st.IP >= th.g){ /* 防禦率王比照最佳投手,需先達成先發完投量門檻才具資格 */
-      const p=awardP(st.era,th.era[0],th.era[1],25,true);
+    if(isSP() && st.IP >= th.g){ /* 防禦率王門檻比最佳投手嚴格,避免同一顆ERA每年雙開兩個獎項 */
+      const p=awardP(st.era,th.eraK[0],th.eraK[1],25,true);
       if(chance(p)){ h.push(`${y} ${lgN}防禦率王`); hasEraTitle=true; }
     }
     { const p=awardP(st.SO,th.so[0],th.so[1]); if(chance(p)){ h.push(`${y} ${lgN}三振王`); hasSoTitle=true; } }
@@ -127,11 +129,13 @@ export function awards(bucket,st){
   /* 3. 野手個人獎項 */
   let hitterTripleCrown=false;
   if(S.pos!=='P'){
-    /* 年度最佳打者:比照最佳投手,先過近乎全勤的打席門檻,再以OPS機率角逐。 */
+    /* 年度最佳打者:比照最佳投手,先過近乎全勤的打席門檻,再以OPS機率角逐。
+       門檻收緊為[0.900,1.050](原[0.820,1.000])，避免生涯夠長時單靠中等偏上的OPS
+       就能反覆拿下最高榮譽。 */
     { const paGate=Math.round(LV[S.lv].g*3.6);
       if(st.PA >= paGate){
         const obp0=st.PA>0?(st.H+st.BB)/st.PA:0, ops0=obp0+slgOf(st);
-        let p=awardP(ops0,0.820,1.000,30);
+        let p=awardP(ops0,0.900,1.050,30);
         if(p>0&&p<100)p=clamp(p+(st.PA-paGate)*0.08,30,95);
         if(p===100&&st.PA<paGate*1.15)p=95;
         if(chance(p)) h.push(`${y} ${bestBatterName}`);
