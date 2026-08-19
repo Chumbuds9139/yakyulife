@@ -195,7 +195,7 @@ export function allocDone(touched,isDice){
     for(let i=cands.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=cands[i];cands[i]=cands[j];cands[j]=t;}
     const boost=cands.slice(0,2), bl=[];
     boost.forEach(k=>{ S.pot[k]=Math.min(80,(S.pot[k]||62)+10); S.ab[k]=clamp(S.ab[k]+5,1,80);
-      bl.push(`${ABL[k]} <b class="up">升 5 級</b>（潛力上限提高 10 級 → ${S.pot[k]}）`); });
+      bl.push(`${ABL[k]} <b class="up">+5級</b>（潛力上限 +10級 → ${S.pot[k]}）`); });
     card('gold','隱藏素質解鎖：大器晚成',`別人都以為你到頂了，你卻在這一年脫胎換骨——從今以後，每一顆訓練骰<b class="hl">永久固定 3 點以上</b>，事件卡好結果機率提升至 <b class="hl">70%</b>。`+(bl.length?`潛能重新被評估：${bl.join('、')}。`:'')+'你的故事，才正要展開。');
     board(1); }
 }
