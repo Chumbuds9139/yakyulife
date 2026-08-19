@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.3';
-import {R, ri, pick, chance, clamp} from '../core/rng.js?v=1.5.3';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.3';
-import {LV} from '../data/teams.js?v=1.5.3';
-import {card, choose, board} from '../ui/dom.js?v=1.5.3';
-import {addAb} from './ability.js?v=1.5.3';
-import {isSP} from './season.js?v=1.5.3';
-import {removeTrait} from '../flow/events.js?v=1.5.3';
+import {S} from '../core/state.js?v=1.5.3-r1';
+import {R, ri, pick, chance, clamp} from '../core/rng.js?v=1.5.3-r1';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.3-r1';
+import {LV} from '../data/teams.js?v=1.5.3-r1';
+import {card, choose, board} from '../ui/dom.js?v=1.5.3-r1';
+import {addAb} from './ability.js?v=1.5.3-r1';
+import {isSP} from './season.js?v=1.5.3-r1';
+import {removeTrait} from '../flow/events.js?v=1.5.3-r1';
 export function tjAccrue(st,lv){ /* 球威風險 × 投法 × 角色標準化工作量；體力不參與。 */
   if(S.pos!=='P'||S.seasonFactor<=0||!st||!(st.G>0))return;
   const L=LV[lv||S.lv],effort={'全力投':1.30,'普通投':1.0,'養生球':0.80}[S.effort]||1.0;

@@ -1,13 +1,13 @@
-import {S} from '../core/state.js?v=1.5.3';
-import {ri, pick} from '../core/rng.js?v=1.5.3';
-import {CPBL_TEAMS} from '../data/teams.js?v=1.5.3';
-import {card, choose, board, menuModal} from '../ui/dom.js?v=1.5.3';
-import {tlNote} from '../ui/timeline.js?v=1.5.3';
-import {ovr, playerType} from './ability.js?v=1.5.3';
-import {primaryPos} from './career.js?v=1.5.3';
-import {fmtMoney, makeOffers, pickOfferUI, signTo} from './contract.js?v=1.5.3';
-import {startYear} from '../flow/phases.js?v=1.5.3';
-import {endGame} from '../ui/retire.js?v=1.5.3';
+import {S} from '../core/state.js?v=1.5.3-r1';
+import {ri, pick} from '../core/rng.js?v=1.5.3-r1';
+import {CPBL_TEAMS} from '../data/teams.js?v=1.5.3-r1';
+import {card, choose, board, menuModal} from '../ui/dom.js?v=1.5.3-r1';
+import {tlNote} from '../ui/timeline.js?v=1.5.3-r1';
+import {ovr, playerType} from './ability.js?v=1.5.3-r1';
+import {primaryPos} from './career.js?v=1.5.3-r1';
+import {fmtMoney, makeOffers, pickOfferUI, signTo} from './contract.js?v=1.5.3-r1';
+import {startYear} from '../flow/phases.js?v=1.5.3-r1';
+import {endGame} from '../ui/retire.js?v=1.5.3-r1';
 /* ---------- 選秀與生涯路口 ---------- */
 export function runDraft(fromSchool,cb){
   const o=ovr(); const score=o+Math.max(0,22-S.age)*2+ri(-4,4);
