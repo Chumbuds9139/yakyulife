@@ -4,16 +4,41 @@ import {APP_VER, OFFICIAL_HOST} from '../config.js?v=1.5.5';
 import {TEAM_COLOR, LG_N} from '../data/teams.js?v=1.5.5';
 import {RP_TICKS} from '../data/economy.js?v=1.5.5';
 import {TRAIT_KEYS} from '../data/traits.js?v=1.5.5';
-import {teamChip} from './dom.js?v=1.5.5';
+import {$, teamChip, modalOpen, modalClose} from './dom.js?v=1.5.5';
+import {THEME_NAMES} from './prefs.js?v=1.5.5';
 import {traitNames, traitColorRank} from './traits.js?v=1.5.5';
 import {fmtMoney} from '../engine/contract.js?v=1.5.5';
 import {rpTagline, rpFamily, RP_F3, RP_F2, rpCumData, rpIntlData, rpHonorItems, rpOrgOf, rpProData} from './retire.js?v=1.5.5';
-/* 結算圖（Canvas 產生 PNG，可長按儲存或自動下載）
+/* 結算圖（Canvas 產生 PNG，回傳 data URL 供面板顯示與儲存）
    Single-sheet settlement layout from the design handoff, drawn 1:1 at the
    design's 820px width. The layout is rendered twice: a measure pass on a
    throwaway canvas walks the full flow to learn the total height, then the
-   real pass paints background, border, content and footer. */
-export function shareImage(evals,picks,out){
+   real pass paints background, border, content and footer. Presentation is
+   shareImageSheet()'s job — this only returns the encoded image. */
+/* The palette lives on body[data-theme], so reading another theme's tokens means wearing
+   it for a moment. Attribute swap + getComputedStyle + restore all happen in one
+   synchronous block: the style recalc is forced, but no paint can land in between, so
+   the page never flashes. applyTheme() is deliberately not used — it would persist the
+   theme to localStorage and repoint the wordmark. */
+export function readTheme(t){
+  const b=document.body, had=b.hasAttribute('data-theme'), prev=b.dataset.theme;
+  if(t)b.dataset.theme=t;
+  const cs=getComputedStyle(b), tk=(n,fb)=>((cs.getPropertyValue(n)||'').trim()||fb);
+  const p={
+    bg:tk('--bg','#081510'), edge:tk('--edge','#2b4d3a'), dim:tk('--dim','#93ab9c'),
+    accent:tk('--accent','#ffc95c'), text:tk('--text','#ece7d6'), good:tk('--good','#8fd08f'),
+    bad:tk('--bad','#e2695c'), info:tk('--info','#7fb3d5'), panel2:tk('--panel2','#1a382a'),
+    panel:tk('--panel','#132920'), row:tk('--row','#0d2115'), gold:tk('--gold','#ffc95c'),
+    sans:tk('--sans',"'Noto Sans TC',sans-serif"), mono:tk('--mono',"'IBM Plex Mono',monospace")};
+  p.btnedge=tk('--btnedge',p.edge);
+  p.head=tk('--head',p.sans);
+  p.glow=tk('--glow','none')!=='none';
+  p.glowC=(tk('--bgfx','none').match(/rgba?\([^)]*\)/)||[])[0]||null;
+  if(t){ if(had)b.dataset.theme=prev; else b.removeAttribute('data-theme'); }
+  return p;
+}
+export function renderShareImage(evals,picks,opt){
+  opt=opt||{};
   const isP=S.pos==='P';
   const tiers=(evals||[]).map(t=>String(t).replace(/<[^>]+>/g,''));
   const hist=S.log.slice(), amaLogs=hist.filter(r=>!r.st), proLogs=hist.filter(r=>r.st);
@@ -21,18 +46,16 @@ export function shareImage(evals,picks,out){
   const pro=proLogs.length?rpProData(proLogs):null;
   const intl=S.intlCount>0?rpIntlData():null;
   const fans=(picks||[]).map(p=>'「'+p.replace(/{n}/g,S.name)+'」');
+  const showFans=opt.fans!==false&&fans.length>0;
   const W=820,PADX=36,CW=W-PADX*2,scale=2;
-  /* Canvas colors/fonts follow the active theme tokens (read from computed style) */
-  const _css=getComputedStyle(document.body), _tk=(n,fb)=>((_css.getPropertyValue(n)||'').trim()||fb);
-  const C_BG=_tk('--bg','#081510'), C_EDGE=_tk('--edge','#2b4d3a'), C_DIM=_tk('--dim','#93ab9c'),
-        C_ACC=_tk('--accent','#ffc95c'), C_TX=_tk('--text','#ece7d6'), C_GOOD=_tk('--good','#8fd08f'),
-        C_BAD=_tk('--bad','#e2695c'), C_INFO=_tk('--info','#7fb3d5'), C_P2=_tk('--panel2','#1a382a'),
-        C_PANEL=_tk('--panel','#132920'), C_ROW=_tk('--row','#0d2115'), C_GOLD=_tk('--gold','#ffc95c'),
-        C_BTNEDGE=_tk('--btnedge',C_EDGE);
-  const F_SANS=_tk('--sans',"'Noto Sans TC',sans-serif"), F_MONO=_tk('--mono',"'IBM Plex Mono',monospace"),
-        F_HEAD=_tk('--head',F_SANS);
-  const GLOW=_tk('--glow','none')!=='none';
-  const glowC=(_tk('--bgfx','none').match(/rgba?\([^)]*\)/)||[])[0]||null;
+  /* Canvas colors/fonts follow the theme the player picked for the image, which is not
+     necessarily the one the page is wearing (opt.theme omitted = the active one). */
+  const P=readTheme(opt.theme);
+  const C_BG=P.bg, C_EDGE=P.edge, C_DIM=P.dim, C_ACC=P.accent, C_TX=P.text, C_GOOD=P.good,
+        C_BAD=P.bad, C_INFO=P.info, C_P2=P.panel2, C_PANEL=P.panel, C_ROW=P.row, C_GOLD=P.gold,
+        C_BTNEDGE=P.btnedge;
+  const F_SANS=P.sans, F_MONO=P.mono, F_HEAD=P.head;
+  const GLOW=P.glow, glowC=P.glowC;
   const LGC={MLB:C_INFO,NPB:C_BAD,CPBL:C_ACC,MINOR:C_DIM};
   /* 特性(保留 + 刪除線標記；依顏色分類排序，避免同色特性東插一個西插一個) */
   const keepTr=[...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].filter(k=>S.traits[k]).sort((a,b)=>traitColorRank(a)-traitColorRank(b)).flatMap(k=>
@@ -253,7 +276,7 @@ export function shareImage(evals,picks,out){
       });
     }
     /* ---- 球迷看板・引退串 ---- */
-    if(fans.length){
+    if(showFans){
       sec('球迷看板 · 引退串');
       fans.forEach(t=>{ const lines=wrap(c,t,'13px '+F_SANS,CW-14), top=y;
         c.font='13px '+F_SANS; c.fillStyle=C_TX;
@@ -286,28 +309,115 @@ export function shareImage(evals,picks,out){
   c.fillStyle=C_ACC; c.textAlign='center'; c.fillText(OFFICIAL_HOST,W/2,fy+23.5);
   c.textAlign='left';
   const url=cv.toDataURL('image/png');
+  /* the PNG is encoded; drop the ~17MB backing bitmap rather than wait for GC, since a
+     player comparing themes can ask for several of these in a row on a phone */
+  cv.width=cv.height=0;
+  return url;
+}
+
+/* Webfonts are fetched only when the page actually paints with them, so a player sitting
+   in 深綠記分板 who asks for 報紙版面 would get the canvas silently falling back to
+   sans-serif. Warm the target theme's families first; the race caps a slow network so the
+   panel can never hang, at the cost of one fallback render in that rare case. */
+function ensureFonts(P){
+  if(!document.fonts||!document.fonts.load)return Promise.resolve();
+  const jobs=[];
+  [P.head,P.sans,P.mono].forEach(f=>[400,500,700,900].forEach(w=>{
+    try{ jobs.push(document.fonts.load(w+' 16px '+f)); }catch(e){} }));
+  return Promise.race([Promise.all(jobs).catch(()=>{}), new Promise(r=>setTimeout(r,2500))]);
+}
+function download(url,fileName){ const a=document.createElement('a'); a.href=url; a.download=fileName;
+  document.body.appendChild(a); a.click(); a.remove(); }
+const SH_THEMES=['a','b','c','d'];
+/* Options survive re-opening the panel; the rendered PNGs are kept too, so flipping back to
+   a theme already seen is instant. The whole space is 4 themes x 2, and each entry is a
+   base64 string rather than a live bitmap, so the ceiling is small enough to leave uncapped.
+   Neither is persisted: a career settles once, and the next run should start from whatever
+   theme that player is actually looking at. */
+let shOpt=null;
+const shCache=new Map();
+/* 結算圖面板：開啟即以目前佈景畫好，換主題或開關球迷看板都在原地重畫 */
+export function shareImageSheet(evals,picks){
+  const fanN=(picks||[]).length;
+  if(!shOpt)shOpt={theme:document.body.dataset.theme||'a',fans:true};
+  const st=shOpt;
+  if(!fanN)st.fans=false;
   const fileName='棒球生涯結算_'+S.name+'.png';
-  out.innerHTML=`<img src="${url}" style="width:100%;border-radius:8px" alt="結算圖">
-    <div style="display:flex;gap:8px;margin-top:8px">
-      <button class="btn main" id="sh-save" style="flex:1">💾 儲存 / 分享圖片</button>
-      <button class="btn" id="sh-dl" style="flex:1">下載到裝置</button>
+  const key=()=>st.theme+(st.fans?'+f':'-f');
+  const cur=()=>shCache.get(key());
+  /* One scroll surface only: the box is a flex column whose middle section scrolls, so the
+     preview never becomes a scroller nested inside another one. The actions sit in a pinned
+     footer instead of at the end of the scroll, which is what keeps 儲存 reachable while the
+     expanded image runs past the viewport. */
+  modalOpen(`<div class="sh-head"><h3>結算圖</h3><button class="sh-x" id="sh-x" aria-label="關閉">✕</button></div>
+    <div class="sh-body">
+      <div class="sh-frame clip busy" id="sh-frame">
+        <img id="sh-pic" alt="結算圖">
+        <div class="sh-wait">產生中…</div>
+        <div class="sh-more" id="sh-more">點圖展開</div>
+      </div>
+      <div class="sh-lab">佈景主題</div>
+      <div class="seg two sh-seg" id="sh-seg">${SH_THEMES.map(t=>{ const p=readTheme(t);
+        return `<button data-st="${t}" style="background:${p.bg};color:${p.text}">`+
+          `<span class="sh-sw" style="background:${p.accent}"></span><span class="sh-nm"></span></button>`; }).join('')}</div>
+      ${fanN?`<div class="sh-lab">收錄內容</div><button class="btn sh-chk" id="sh-fans"></button>`:''}
     </div>
-    <div class="statline" style="margin-top:6px">若按鈕無效，長按上方圖片也可儲存</div>`;
-  /* 下載連結(桌機/備援) */
-  out.querySelector('#sh-dl').onclick=()=>{ const a=document.createElement('a'); a.href=url; a.download=fileName;
-    document.body.appendChild(a); a.click(); a.remove(); };
+    <div class="sh-foot">
+      <button class="btn main" id="sh-save">💾 儲存 / 分享圖片</button>
+      <div class="sh-row"><button class="btn" id="sh-dl">下載到裝置</button><button class="btn" id="sh-close">關閉</button></div>
+      <div class="sh-hint">若按鈕無效，長按上方圖片也可儲存</div>
+    </div>`,'sh-sheet');
+  const frame=$('sh-frame'), pic=$('sh-pic');
+  /* every repaint is stamped: a tap landing while an older render is still awaiting fonts
+     must not have its result overwrite the newer pick */
+  let seq=0;
+  const syncCtl=()=>{
+    $('sh-seg').querySelectorAll('[data-st]').forEach(b=>{
+      const p=readTheme(b.dataset.st), on=b.dataset.st===st.theme;
+      b.style.borderColor=on?p.accent:p.edge;
+      b.style.boxShadow=on?'0 0 0 2px '+p.accent:'none';
+      b.querySelector('.sh-nm').textContent=THEME_NAMES[b.dataset.st]+(on?' ✓':'');
+    });
+    const f=$('sh-fans');
+    if(f){ f.classList.toggle('on',st.fans);
+      f.innerHTML=(st.fans?'☑':'☐')+' 球迷看板・引退串<small>共 '+fanN+' 則留言</small>'; }
+  };
+  const paint=async()=>{
+    syncCtl();
+    const k=key(), my=++seq, hit=shCache.get(k);
+    if(hit){ pic.src=hit; frame.classList.remove('busy'); return; }
+    frame.classList.add('busy');
+    await ensureFonts(readTheme(st.theme));
+    /* yield a task so 產生中… actually paints before the render blocks the thread */
+    await new Promise(r=>setTimeout(r,0));
+    if(my!==seq)return;
+    const url=renderShareImage(evals,picks,{theme:st.theme,fans:st.fans});
+    shCache.set(k,url);
+    if(my!==seq)return;
+    pic.src=url; frame.classList.remove('busy');
+  };
+  $('sh-seg').querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{
+    if(st.theme===b.dataset.st)return; st.theme=b.dataset.st; paint(); });
+  const fb=$('sh-fans'); if(fb)fb.onclick=()=>{ st.fans=!st.fans; paint(); };
+  const more=$('sh-more');
+  frame.onclick=()=>{ if(frame.classList.contains('busy'))return;
+    const clip=frame.classList.toggle('clip');
+    more.textContent=clip?'點圖展開':'點圖收合'; };
+  $('sh-close').onclick=modalClose;
+  $('sh-x').onclick=modalClose;
+  $('sh-dl').onclick=()=>{ const u=cur(); if(u)download(u,fileName); };
   /* 分享:優先 Web Share(可存相簿),不支援則退回下載 */
-  out.querySelector('#sh-save').onclick=async ()=>{
+  $('sh-save').onclick=async ()=>{
+    const u=cur(); if(!u)return;
     try{
-      const blob=await (await fetch(url)).blob();
+      const blob=await (await fetch(u)).blob();
       const file=new File([blob],fileName,{type:'image/png'});
       if(navigator.canShare&&navigator.canShare({files:[file]})){
         await navigator.share({files:[file],title:'棒球生涯結算',text:S.name+' 的棒球人生'});
         return;
       }
     }catch(e){ if(e&&e.name==='AbortError')return; /* 使用者取消,不用退回 */ }
-    /* 不支援 Web Share → 退回下載 */
-    const a=document.createElement('a'); a.href=url; a.download=fileName;
-    document.body.appendChild(a); a.click(); a.remove();
+    download(u,fileName); /* 不支援 Web Share → 退回下載 */
   };
+  paint();
 }

@@ -11,7 +11,7 @@ import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.j
 import {playerType} from '../engine/ability.js?v=1.5.5';
 import {fmtMoney} from '../engine/contract.js?v=1.5.5';
 import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.5';
-import {shareImage} from './share-image.js?v=1.5.5';
+import {shareImageSheet} from './share-image.js?v=1.5.5';
 /* ================= 結算圖資料建構 =================
    Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
    All values come from S.*; the in-game settlement cards are untouched. */
@@ -355,9 +355,9 @@ export function endGame(reason){
     <div class="row2" style="display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn main" id="sh-img" style="flex:1">📸 產生結算圖</button>
       <button class="btn" id="sh-url" style="flex:1">🔗 複製重播連結</button>
-    </div><div id="sh-out" style="margin-top:8px"></div>`;
+    </div>`;
   $('log').appendChild(sh);
-  sh.querySelector('#sh-img').onclick=()=>shareImage(evals,picks,sh.querySelector('#sh-out'));
+  sh.querySelector('#sh-img').onclick=()=>shareImageSheet(evals,picks);
   sh.querySelector('#sh-url').onclick=e=>{
     const url=OFFICIAL_URL+'?seed='+SEED;
     const okmsg=()=>{e.target.textContent='✅ 已複製';setTimeout(()=>e.target.textContent='🔗 複製重播連結',1600);};
