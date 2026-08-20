@@ -189,14 +189,26 @@ export function retireScene(tiers){
       const firstNow = t.sc>=th*fbMult;
       const ballotYr = firstNow?1:ri(2,6);
       if(firstNow)firstBallotLeagues.push(cfg.lg);
-      const pct=Math.min(99.1,75+ (t.sc-th)/th*40 + R()*6 - (ballotYr-1)*4);
-      const votes=Math.round(cfg.total*Math.max(75,pct)/100);
-      if(!S.hofInfo)S.hofInfo=[]; S.hofInfo.push({lg:cfg.lg,yr:ballotYr,pct:Math.max(75,pct).toFixed(1)}); /* 供結算圖 */
+      /* 得票率是離散量：先決定「票數」，再由票數反算顯示的百分比，兩者永遠一致。
+         舊版方向相反——先算連續的 pct、再四捨五入成票數，於是畫面上會出現 131 票
+         卻標 99.1%（131/132 實為 99.2%）；而且 99.1% 這個上限在三個聯盟都不對應
+         任何一個整數票數（中職 131 票=99.24%、132 票=100%），本身就是憑空的數字。
+         下限改用無條件進位，確保票數真的跨過 75% 門檻（舊版日職 245/326=75.15%
+         是靠四捨五入擦邊算過）；上限為「總票數 −1」，即差一票的傳奇，不開放滿票。 */
+      const rawPct=75+ (t.sc-th)/th*40 + R()*6 - (ballotYr-1)*4;
+      const minVotes=Math.ceil(cfg.total*0.75), maxVotes=cfg.total-1;
+      const votes=Math.max(minVotes,Math.min(maxVotes,Math.round(cfg.total*rawPct/100)));
+      const pctTxt=(votes/cfg.total*100).toFixed(1);
+      if(!S.hofInfo)S.hofInfo=[]; S.hofInfo.push({lg:cfg.lg,yr:ballotYr,pct:pctTxt}); /* 供結算圖 */
       const cap=capTeam(b), phr=posLegendPhrase(b);
-      hofs.push(`引退 <b class="hl">${cfg.wait}</b> 年後（${yr+cfg.wait} 年）進入候選，於<b class="hl">第 ${ballotYr} 年投票</b>以 <b class="hl">${votes}</b> 票（得票率 ${Math.max(75,pct).toFixed(1)}%）榮登<b class="hl">${cfg.n}</b>——你以 <b class="hl">${cap||'—'}</b> 的代表球員身分${phr}留名。${ballotYr===1?'<b class="hl">一票入魂，首輪即殿堂。</b>':''}名匾上的隊徽，是 ${cap||'—'}。`);
+      const oneShort=votes===maxVotes?'<b class="hl">全聯盟只有一張票沒有投給你。</b>':'';
+      hofs.push(`引退 <b class="hl">${cfg.wait}</b> 年後（${yr+cfg.wait} 年）進入候選，於<b class="hl">第 ${ballotYr} 年投票</b>以 <b class="hl">${votes}</b>／${cfg.total} 票（得票率 ${pctTxt}%）榮登<b class="hl">${cfg.n}</b>——你以 <b class="hl">${cap||'—'}</b> 的代表球員身分${phr}留名。${ballotYr===1?'<b class="hl">一票入魂，首輪即殿堂。</b>':''}${oneShort}名匾上的隊徽，是 ${cap||'—'}。`);
     }else if(t.i===1){
-      const pct=55+R()*17, tries=ri(3,9);
-      hofs.push(`你連續 ${tries} 年入圍${cfg.n}票選，最高曾獲得 ${pct.toFixed(1)}% 得票率，可惜始終未能跨過 75% 門檻。`);
+      /* 落選同樣以票數為準：門檻票數減 1 就是「最接近的一次」的上限。 */
+      const gateVotes=Math.ceil(cfg.total*0.75);
+      const bestVotes=Math.max(1,Math.min(gateVotes-1,Math.round(cfg.total*(55+R()*17)/100)));
+      const tries=ri(3,9);
+      hofs.push(`你連續 ${tries} 年入圍${cfg.n}票選，最高曾獲得 <b>${bestVotes}</b>／${cfg.total} 票（${(bestVotes/cfg.total*100).toFixed(1)}%），可惜始終未能跨過 75% 門檻（需 ${gateVotes} 票）。`);
     } });
   if(firstBallotLeagues.length){
     const old=Array.isArray(S.legendLeagues)?S.legendLeagues:[];
