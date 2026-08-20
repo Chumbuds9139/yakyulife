@@ -2,7 +2,7 @@ import {S} from '../core/state.js?v=1.5.5';
 import {clamp} from '../core/rng.js?v=1.5.5';
 import {DPN, POSN, POS_ADJ_RUNS, POS_TIER_K, POS_TIER_STR} from '../data/abilities.js?v=1.5.5';
 import {LG_N} from '../data/teams.js?v=1.5.5';
-import {TIER_TH, LEAGUE_K, MILESTONE_DEF} from '../data/economy.js?v=1.5.5';
+import {TIER_TH, LEAGUE_K, MILESTONE_DEF, HOF_TH_K} from '../data/economy.js?v=1.5.5';
 import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.5';
 /* ================= 生涯終章 ================= */
 const BUCKET_G={CPBL:120,NPB:143,MLB:162};
@@ -152,7 +152,8 @@ export function tierOf(bucket){
   const sc=careerScore(st,bucket)*k[0]+hs.sc*k[1],th=TIER_TH[bucket];
   /* 五級門檻整條依守位加權平移(不只名人堂)：同一個守位就該從頭到尾用同一把尺。 */
   const pk=posTierK(st,bucket);
-  let i=sc>=th[0]*pk?0:sc>=th[1]*pk?1:sc>=th[2]*pk?2:sc>=th[3]*pk?3:4;
+  const hk=((HOF_TH_K[bucket]||{})[posKey])||1; /* 名人堂線獨立微調,明星以下不受影響(詳見 economy.js) */
+  let i=sc>=th[0]*pk*hk?0:sc>=th[1]*pk?1:sc>=th[2]*pk?2:sc>=th[3]*pk?3:4;
   /* 獎項保底:MVP/最高投手獎至少明星球員;單項王至少每日球員 */
   if(hs.mvp||hs.aceN)i=Math.min(i,1);
   else if(hs.king)i=Math.min(i,2);
