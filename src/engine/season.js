@@ -1,15 +1,15 @@
-import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.5.4';
-import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.4';
-import {POS_ADJ_RUNS} from '../data/abilities.js?v=1.5.4';
-import {LV, HS_CUPS, U_CUPS} from '../data/teams.js?v=1.5.4';
-import {card, board} from '../ui/dom.js?v=1.5.4';
-import {ovr, careerAllStars, toolGap} from './ability.js?v=1.5.4';
-import {tjAccrue, tjGamble} from './injury.js?v=1.5.4';
+import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.5.5';
+import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.5';
+import {POS_ADJ_RUNS, POS_PT_BAR} from '../data/abilities.js?v=1.5.5';
+import {LV, HS_CUPS, U_CUPS, spLoad} from '../data/teams.js?v=1.5.5';
+import {card, board} from '../ui/dom.js?v=1.5.5';
+import {ovr, careerAllStars, toolGap} from './ability.js?v=1.5.5';
+import {tjAccrue, tjGamble} from './injury.js?v=1.5.5';
 /* temporary scaffold until awards/intl/contract/flow are extracted */
-import {demotionAudit} from './contract.js?v=1.5.4';
-import {awards} from './awards.js?v=1.5.4';
-import {maybeIntl} from './intl.js?v=1.5.4';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.4';
+import {demotionAudit} from './contract.js?v=1.5.5';
+import {awards} from './awards.js?v=1.5.5';
+import {maybeIntl} from './intl.js?v=1.5.5';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.5';
 export function pitcherRole(){ /* 體力 >=52 先發;否則牛棚,牛棚內看表現升終結者 */
   if(S.ab.sta>=52)return 'SP';
   /* 牛棚:讀「上一季」的 d(prevD,因為 lastD 已被 phasePre 清空);頂尖 → 終結者 */
@@ -65,7 +65,11 @@ export function simSeason(lv){
     let perfF=clamp(0.80+d*0.028,0.42,1.12);
     if(S.traits.favorite)perfF=Math.max(perfF,0.85); /* 愛將:教練照樣派你上,低潮年不會被冷凍 */
     if(isSP()){
-      const gs=Math.round(clamp(20+(a.sta-40)*0.18,10,30)*f*perfF*(0.94+R()*0.08));
+      /* 先發場次要乘上該層級的輪次倍率(詳見 teams.js 的 rot / spLoad)：
+         中職一軍 1.00、日職一軍 0.99(六人輪值)、大聯盟 1.35(五人輪值 162 場)。
+         舊版沒有這一項，三個聯盟的先發都投 25~30 場，但獎項門檻、TJ 負荷與薪資
+         工作量全都以「局數隨聯盟場次放大」為前提，四個系統對不上。 */
+      const gs=Math.round(clamp(20+(a.sta-40)*0.18,10,30)*spLoad(lv)*f*perfF*(0.94+R()*0.08));
       st.G=Math.max(1,gs);
       /* IP/GS:聯盟平均~5.0、優質先發5.2-6.0、工作馬6.1-6.5;由 d 值(綜合實力)決定,控球差略減 */
       const ipg=clamp(5.0+d*0.05+(a.sta-50)*0.012+(a.ctl-par)*0.006+N0(0.12),4.8,6.5);
@@ -115,8 +119,12 @@ export function simSeason(lv){
     else if(a.sta>=45)staF=0.72+(a.sta-45)*0.036; else if(a.sta>=40)staF=0.52+(a.sta-40)*0.04;
     else if(a.sta>=35)staF=0.35+(a.sta-35)*0.034; else staF=Math.max(0.15,0.35-(35-a.sta)*0.03);
     /* 守位只由季初守位會議決定。低體力會自然減少出賽，不再於季末暗中改判 DH。 */
-    /* 表現係數:打得好才有滿打席,爛表現(d<0)出賽再打折 */
-    const perfF=clamp(0.82+d*0.03,0.45,1.12);
+    /* 表現係數:打得好才有滿打席,爛表現(d<0)出賽再打折
+       守備光譜:先發門檻依守位平移(詳見 abilities.js 的 POS_PT_BAR)。捕手/游擊打平聯盟水準
+       就守得住先發,一壘/指定打擊打不出來就掉打席。只動出賽率,st.d 不變。 */
+    const spotDp=(S.dpos)||(S.pos==='C'?'C':null);
+    const posBar=(spotDp&&POS_PT_BAR[spotDp]!=null)?POS_PT_BAR[spotDp]:0;
+    const perfF=clamp(0.82+(d+posBar)*0.03,0.45,1.12);
     let useF=clamp(staF*perfF,0.10,1.0);
     if(S.traits.favorite)useF=Math.max(useF,0.85); /* 愛將:出賽率保底(體力偏低或低潮年才會生效,滿額主力無感) */
     st.G=Math.min(L.g, Math.round(L.g*useF*f*(0.90+R()*0.10))); /* 上限=聯盟場次,不可超過;隨機項加寬(原0.95~1.01)—實力遠超聯盟水準時 staF*perfF 常年頂在1.0上限，
@@ -210,8 +218,40 @@ export function seasonSalaryRating(st,lv,recordedRoleOrPos){
   }
   const dp=st._dh?'DH':(recordedRoleOrPos||S.dpos||(S.pos==='C'?'C':'DH'));
   const games=Math.max(0,Number(st.G)||0), def=dp==='DH'?0:(Number(st.DEF)||0);
-  const posRuns=(POS_ADJ_RUNS[dp]||0)*(games/162);
+  /* 守位分母用該聯盟滿季場次，不寫死 162：同一行的 def 來自 defRuns()，那邊已經以
+     gw=games/L.g 正規化過，兩者必須同尺度。寫死 162 會讓場次較少的聯盟(中職 120 場)
+     的守位薪資只算到 74%，捕手/游擊的加價與一壘/指定打擊的減價同時被稀釋。
+     與 career.js 的 positionScore() 同一套規則。 */
+  const full=((LV[lv]||LV[S.lv]||{}).g)||162;
+  const posRuns=(POS_ADJ_RUNS[dp]||0)*(games/full);
   return +(st.d+(def+posRuns)/6).toFixed(2);
+}
+/* 球季帳面成績評等：0=差 1=普通 2=好 3=壓倒性。
+   只讀真實數據，完全不看能力值——升降級判定需要「打出來的」跟「體檢數字漂亮」是兩件事。
+   以率值(OPS／ERA／WHIP)為主軸，數量型指標(全壘打、救援+中繼)依聯盟場次等比縮放；
+   出場量太少的球季一律回傳 1(普通)，資料不足不獎不罰。 */
+export function seasonGrade(st,lv){
+  if(!st)return 1;
+  const g=(LV[lv]||{}).g||130, r=g/130;
+  if(S.pos==='P'){
+    const era=baseballERA(st), whip=baseballWHIP(st);
+    if(era==null||(st.IP||0)<g*0.22)return 1;
+    const bulk=isSP()?((st.IP||0)>=g*0.5):(((st.SV||0)+(st.HLD||0))>=15*r);
+    if(era<=2.80&&bulk)return 3;
+    if(era<=3.50||(whip!=null&&whip<=1.15&&era<=3.75))return 2;
+    if(era<=4.35)return 1;
+    return 0;
+  }
+  const pa=st.PA||0;
+  if(pa<g*2.0)return 1;
+  const obp=(st.H+(st.BB||0))/pa, ops=obp+slgOf(st);
+  /* 門檻對齊本作的 OPS 尺度，不是現實棒球的：這裡「聯盟平均」的 OPS 約 .64，
+     .750 已是主力等級、.850 是聯盟頂尖。用現實的 .700/.800/.900 會讓小聯盟
+     (升級門檻只比該級 par 高 2~3 點)的球員有六成以上被評為「差」，卡住升級。 */
+  if(ops>=0.850||(ops>=0.800&&(st.HR||0)>=20*r))return 3;
+  if(ops>=0.750)return 2;
+  if(ops>=0.650)return 1;
+  return 0;
 }
 export function currentSalaryRating(fallback){
   if(Number.isFinite(S.lastPayD))return S.lastPayD;

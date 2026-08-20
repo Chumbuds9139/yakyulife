@@ -1,13 +1,13 @@
-import {S} from '../core/state.js?v=1.5.4';
-import {SEED} from '../core/rng.js?v=1.5.4';
-import {APP_VER, OFFICIAL_HOST} from '../config.js?v=1.5.4';
-import {TEAM_COLOR, LG_N} from '../data/teams.js?v=1.5.4';
-import {RP_TICKS} from '../data/economy.js?v=1.5.4';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.5.4';
-import {teamChip} from './dom.js?v=1.5.4';
-import {traitNames, traitColorRank} from './traits.js?v=1.5.4';
-import {fmtMoney} from '../engine/contract.js?v=1.5.4';
-import {rpTagline, rpFamily, RP_F3, RP_F2, rpCumData, rpIntlData, rpHonorItems, rpOrgOf, rpProData} from './retire.js?v=1.5.4';
+import {S} from '../core/state.js?v=1.5.5';
+import {SEED} from '../core/rng.js?v=1.5.5';
+import {APP_VER, OFFICIAL_HOST} from '../config.js?v=1.5.5';
+import {TEAM_COLOR, LG_N} from '../data/teams.js?v=1.5.5';
+import {RP_TICKS} from '../data/economy.js?v=1.5.5';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.5.5';
+import {teamChip} from './dom.js?v=1.5.5';
+import {traitNames, traitColorRank} from './traits.js?v=1.5.5';
+import {fmtMoney} from '../engine/contract.js?v=1.5.5';
+import {rpTagline, rpFamily, RP_F3, RP_F2, rpCumData, rpIntlData, rpHonorItems, rpOrgOf, rpProData} from './retire.js?v=1.5.5';
 /* 結算圖（Canvas 產生 PNG，可長按儲存或自動下載）
    Single-sheet settlement layout from the design handoff, drawn 1:1 at the
    design's 820px width. The layout is rendered twice: a measure pass on a

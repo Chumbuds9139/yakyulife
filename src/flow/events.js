@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.4';
-import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.4';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.4';
-import {LV} from '../data/teams.js?v=1.5.4';
-import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS, EVENT_ROUTES, eventInjuryRisk} from '../data/events.js?v=1.5.4';
-import {card, choose, board} from '../ui/dom.js?v=1.5.4';
-import {addAb, statBonus, statBonusTxt, abGainTxt, ovr} from '../engine/ability.js?v=1.5.4';
-import {majorChampionshipCount} from '../engine/championship.js?v=1.5.4';
+import {S} from '../core/state.js?v=1.5.5';
+import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.5';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.5';
+import {LV} from '../data/teams.js?v=1.5.5';
+import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS, EVENT_ROUTES, eventInjuryRisk} from '../data/events.js?v=1.5.5';
+import {card, choose, board} from '../ui/dom.js?v=1.5.5';
+import {addAb, statBonus, statBonusTxt, abGainTxt, ovr} from '../engine/ability.js?v=1.5.5';
+import {majorChampionshipCount} from '../engine/championship.js?v=1.5.5';
 export function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 export function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
@@ -21,11 +21,16 @@ export function checkChampionTrait(){
 export function evOdds(){ /* 事件卡成功率:顯示與擲骰共用同一來源 */
   let base=(S.traits.genius||S.traits.late||S.traits.clutch)?70:50; /* 天才/大器晚成/大心臟 70 */
   if(S.traits.thief)base-=10; /* 薪水小倫 -10 */
-  const boldPen=S.traits.clutch?0:15; /* 大心臟:豪賭無懲罰 */
-  /* 愛將:只加「普通」這一路,幅度比照天才對整體的 +20。保守與全力不受影響,
-     薪水小倫的 -10 已含在 base 裡,兩者可正常疊加。 */
-  const normBonus=S.traits.favorite?20:0;
-  return {safe:Math.min(95,base+20), norm:Math.min(95,base+normBonus), bold:base-boldPen};
+  /* 大心臟(2026-08-20 調弱)：不再免除豪賭的 -15 懲罰。非天才的效果是「全力成功率提升到
+     與天才同等」(base 進 70 後照扣 15 → 55%，正好是天才的全力線)；本身已是天才者這條
+     對他無感，改為全力 +5(→60%)。調弱前大心臟全力 70%、訓練事件期望值 2.2，遠壓過保守
+     與普通的 0.8，豪賭是無腦最優解；調弱後非天才 0.75、天才 1.6，三條路線拉回同一水平。 */
+  const boldPen=15;
+  const clutchBold=(S.traits.clutch&&S.traits.genius)?5:0;
+  /* 愛將(2026-08-20 調弱)：出賽保底與守位紅利已經夠有價值，「普通」加成由 20 降為 5——
+     原本天才+愛將的普通應對高達 90%。保守與全力不受影響,薪水小倫的 -10 已含在 base 裡。 */
+  const normBonus=S.traits.favorite?5:0;
+  return {safe:Math.min(95,base+20), norm:Math.min(95,base+normBonus), bold:base-boldPen+clutchBold};
 }
 export function eventEligible(ev,state){
   const s=state||S;
@@ -76,20 +81,24 @@ export function recordOutsideIncome(value){
   return cash;
 }
 const fmtEventMoney=value=>Number(value).toLocaleString()+'萬';
-export function eventPlan(category,mode,good,clutch){
+/* clutchTier：0=無大心臟、1=大心臟(非天才)、2=大心臟+天才。
+   2026-08-20 調弱：只有「天才加持的大心臟」保有成功獎勵放大(+4/+2)；
+   非天才的大心臟成功獎勵與常人相同，只保留「失敗懲罰減 1」。 */
+export function eventPlan(category,mode,good,clutchTier){
+  const soft=clutchTier>=1, full=clutchTier>=2; /* soft=失敗減 1;full=成功獎勵放大 */
   if(category==='training'){
     /* 訓練的成功報酬與失敗風險都隨選擇強度遞增：保守 1、普通 2、全力 3。
-       大心臟把全力成功提高為 +4，失敗懲罰則從 -3 降為 -2。 */
-    const points=mode==='safe'?1:mode==='norm'?2:(good?(clutch?4:3):(clutch?2:3));
+       大心臟+天才把全力成功提高為 +4；大心臟(不分天才)把失敗懲罰從 -3 降為 -2。 */
+    const points=mode==='safe'?1:mode==='norm'?2:(good?(full?4:3):(soft?2:3));
     return {ability:good?points:-points,stat:0,cash:false};
   }
   if(category==='encounter'){
-    const points=mode==='safe'?1:mode==='norm'?2:(clutch?(good?3:2):3);
+    const points=mode==='safe'?1:mode==='norm'?2:(good?3:(soft?2:3));
     return {ability:0,stat:good?points:-points,cash:false};
   }
   if(mode==='safe')return {ability:0,stat:good?1:-1,cash:good};
   if(mode==='norm')return {ability:good?1:0,stat:good?0:-1,cash:good};
-  return {ability:good?1:0,stat:good?(clutch?2:1):(clutch?-1:-2),cash:good};
+  return {ability:good?1:0,stat:good?(full?2:1):(soft?-1:-2),cash:good};
 }
 function showEvent(ev,after){
   const od=evOdds();
@@ -158,7 +167,7 @@ export function resolveEvent(ev,mode,done){
   if(mode==='safe'&&good)S.cntSaveWin=(S.cntSaveWin||0)+1; /* 自律狂:保守成功才算 */
   if((ev.n==='宵夜文化'||ev.n==='場外代言邀約')&&mode!=='safe'&&!good)S.cntSnack++;
   if(mode==='bold'&&!good&&(ev.category==='encounter'||ev.category==='endorsement'))S.cntSocialBoldFail=(S.cntSocialBoldFail||0)+1;
-  const plan=eventPlan(ev.category,mode,good,!!S.traits.clutch), out=[];
+  const plan=eventPlan(ev.category,mode,good,S.traits.clutch?(S.traits.genius?2:1):0), out=[];
   if(plan.cash){ const cash=recordOutsideIncome(eventCash(mode));
     out.push(`業外收入 <span class="up">+${fmtEventMoney(cash)}</span>`); }
   if(plan.ability){
@@ -215,10 +224,13 @@ export function checkTraitsMid(){
      全力是大心臟(7 次)，普通這條線原本是空的。10 次對應約 86% 的達成率，與另外兩條齊平
      (自律狂 85%、大心臟 82%)。 */
   if(!S.traits.favorite&&S.age<25&&(S.cntNormWin||0)>=10){
-    traitCard('favorite','愛將','不躁進，也不過度保守——你總是做出當下最合理的那個判斷。教練不需要為你多操一份心，先發名單上永遠有你的名字。<br><b class="hl">「普通應對」成功率提升 20 個百分點；出賽率保底 85%；守位門檻永久享有年輕球員的紅利</b>。'); }
-  /* 大心臟:25 歲前全力一搏成功 7 次(允許失敗) */
+    traitCard('favorite','愛將','不躁進，也不過度保守——你總是做出當下最合理的那個判斷。教練不需要為你多操一份心，先發名單上永遠有你的名字。<br><b class="hl">「普通應對」成功率提升 5 個百分點；出賽率保底 85%；守位門檻永久享有年輕球員的紅利</b>。'); }
+  /* 大心臟:25 歲前全力一搏成功 7 次(允許失敗)。解鎖文案依當下是否為天才分流:
+     只有天才加持的大心臟保有「成功獎勵放大」,非天才版把那句拿掉。 */
   if(!S.traits.clutch&&S.age<25&&S.cntBoldWin>=7){
-      traitCard('clutch','大心臟','每次的豪賭淬鍊出你無與無比的心性，愈刺激的狀況只會讓你更加幹勁十足。從此以後，愈賭愈強，成功獎勵愈大，失敗懲罰愈少，不過在豪賭的路上，還是要注意一下身邊的其他人……<br><b class="hl">「全力一搏」成功率提升至天才級；訓練成功加成 +4、失敗只 −2；遭遇與代言也會減輕失敗懲罰；國際賽個人成績獲得小幅加成</b>。'); }
+      traitCard('clutch','大心臟',S.traits.genius
+        ?'每次的豪賭淬鍊出你無與無比的心性，愈刺激的狀況只會讓你更加幹勁十足。從此以後，愈賭愈強，成功獎勵愈大，失敗懲罰愈少，不過在豪賭的路上，還是要注意一下身邊的其他人……<br><b class="hl">「全力一搏」成功率再 +5%；訓練成功加成 +4、失敗只 −2；遭遇與代言也會減輕失敗懲罰；國際賽個人成績獲得小幅加成</b>。'
+        :'每次的豪賭淬鍊出你無與無比的心性，愈刺激的狀況只會讓你更加幹勁十足。從此以後，失敗懲罰愈少，不過在豪賭的路上，還是要注意一下身邊的其他人……<br><b class="hl">「全力一搏」成功率提升至天才級；訓練失敗只 −2；遭遇與代言也會減輕失敗懲罰；國際賽個人成績獲得小幅加成</b>。'); }
   /* 外務纏身:宵夜/代言/緋聞累計(以宵夜次數 + 感情事件觸發次數估) */
   if(!S.traits.distract&&!S.traits.disc&&(S.love.affairs+S.love.caught+S.cntSnack)>=4&&(S.love.affairs+S.love.caught)>=1){
     traitCard('distract','外務纏身','通告、代言、社群媒體佔據了你太多心神，休賽季很久沒有完整專注在棒球上——<b class="dn">季初擲骰永久 −1 顆</b>（最低 2 顆）。','bad'); }

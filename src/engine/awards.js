@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.4';
-import {chance, clamp} from '../core/rng.js?v=1.5.4';
-import {DPN, GLOVE_TH} from '../data/abilities.js?v=1.5.4';
-import {LV} from '../data/teams.js?v=1.5.4';
-import {card} from '../ui/dom.js?v=1.5.4';
-import {tlNote} from '../ui/timeline.js?v=1.5.4';
-import {isSP, slgOf, baseballERA} from './season.js?v=1.5.4';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.4';
+import {S} from '../core/state.js?v=1.5.5';
+import {chance, clamp} from '../core/rng.js?v=1.5.5';
+import {DPN, GLOVE_TH, GLOVE_K} from '../data/abilities.js?v=1.5.5';
+import {LV} from '../data/teams.js?v=1.5.5';
+import {card} from '../ui/dom.js?v=1.5.5';
+import {tlNote} from '../ui/timeline.js?v=1.5.5';
+import {isSP, slgOf, baseballERA} from './season.js?v=1.5.5';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.5';
 /* 獎項機率同時有硬下限與必得上限；數值越低越好的獎項（ERA）用 lower=true。 */
 export function awardP(value,hardLow,autoWin,base=25,lower=false){
   const ineligible=lower?value>hardLow:value<hardLow;
@@ -44,12 +44,16 @@ export function awards(bucket,st){
   /* 符合 simSeason 數學邏輯的門檻表 [必不得獎下限, 必得獎上限] */
   /* 比率數據(ERA/AVG/OBP)與非場次連動數據(SV/HLD/SB)三個聯盟統一標準 */
   /* 只有吃打席/局數的(HR/RBI/SO)依 120:143:162 場次等比放大 */
-  /* 勝投王(w)比照 SO 的場次等比放大邏輯:CPBL/NPB/MLB = 120:143:162 場 */
+  /* 投手的量產型獎項(SO/W)依「先發輪次」放大,不是依球季場次:日職是六人輪值,
+     143 場 / 6 人 = 23.8 輪，與中職 120 場 / 5 人 = 24.0 輪幾乎相同，所以門檻與中職同級；
+     大聯盟 162 場 / 5 人 = 32.4 輪，比中職多 35%，門檻才該放大(so 175、w 14)。
+     舊版按場次放大成 so 155 / w 12，但日職先發的實際工作量並沒有跟著長，
+     造成日職名人堂級投手 15 年只拿 0.7 座三振王。 */
   /* era(最佳投手)門檻收緊為[2.90,1.90](原[3.20,2.20])，避免生涯夠長時單靠中等偏上的ERA
      就能反覆拿下最高榮譽；eraK(防禦率王)則刻意更嚴格，避免同一顆ERA每年雙開兩個獎項。 */
   const TH = {
     CPBL: { g: 120, era: [2.90, 1.90], eraK: [2.80, 1.60], sv: [22, 35], hld: [18, 30], so: [130, 180], w: [10, 16], avg: [0.300, 0.360], hr: [20, 32], rbi: [75, 105], obp: [0.370, 0.430] },
-    NPB:  { g: 143, era: [2.90, 1.90], eraK: [2.80, 1.60], sv: [22, 35], hld: [18, 30], so: [155, 215], w: [12, 18], avg: [0.300, 0.360], hr: [24, 38], rbi: [90, 125], obp: [0.370, 0.430] },
+    NPB:  { g: 143, era: [2.90, 1.90], eraK: [2.80, 1.60], sv: [22, 35], hld: [18, 30], so: [132, 183], w: [10, 16], avg: [0.300, 0.360], hr: [24, 38], rbi: [90, 125], obp: [0.370, 0.430] },
     MLB:  { g: 162, era: [2.90, 1.90], eraK: [2.80, 1.60], sv: [22, 35], hld: [18, 30], so: [175, 240], w: [14, 20], avg: [0.300, 0.360], hr: [27, 43], rbi: [100, 140], obp: [0.370, 0.430] }
   };
   const th = TH[bucket] || TH.CPBL;
@@ -168,10 +172,13 @@ export function awards(bucket,st){
     const gloveMinG=Math.ceil(LV[S.lv].g*0.5);
     if(awardDp&&awardDp!=='DH'&&st.G>=gloveMinG){
       const gt=GLOVE_TH[awardDp]||[4,16];
+      /* 必得獎上限依聯盟可達 DEF 上限縮放(詳見 abilities.js 的 GLOVE_K)；下限不動。 */
+      const gk=GLOVE_K[S.lv]||1;
+      const top=v=>Math.max(v*gk,v*0.5); /* 保險:縮放後仍必定高於下限 */
       const gloveAward=`${y} ${lgN}${DPN[awardDp]}金手套`;
-      const pGlove=awardP(def1,gt[0],gt[1],30);
+      const pGlove=awardP(def1,gt[0],top(gt[1]),30);
       if(chance(pGlove))h.push(gloveAward);
-      const pBible=awardP(def1,9,22,25);
+      const pBible=awardP(def1,9,top(22),25);
       if(chance(pBible)){
         h.push(`${y} ${lgN}守備聖經`);
         if(!h.includes(gloveAward))h.push(gloveAward); /* 守備聖經必定同時拿下金手套 */

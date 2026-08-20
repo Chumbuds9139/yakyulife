@@ -1,20 +1,26 @@
-import {S} from '../core/state.js?v=1.5.4';
-import {clamp} from '../core/rng.js?v=1.5.4';
-import {DPN, POSN, POS_ADJ_RUNS} from '../data/abilities.js?v=1.5.4';
-import {LG_N} from '../data/teams.js?v=1.5.4';
-import {TIER_TH, LEAGUE_K, MILESTONE_DEF} from '../data/economy.js?v=1.5.4';
-import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.4';
+import {S} from '../core/state.js?v=1.5.5';
+import {clamp} from '../core/rng.js?v=1.5.5';
+import {DPN, POSN, POS_ADJ_RUNS, POS_TIER_K, POS_TIER_STR} from '../data/abilities.js?v=1.5.5';
+import {LG_N} from '../data/teams.js?v=1.5.5';
+import {TIER_TH, LEAGUE_K, MILESTONE_DEF} from '../data/economy.js?v=1.5.5';
+import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.5';
 /* ================= 生涯終章 ================= */
-export function positionScore(st){
+const BUCKET_G={CPBL:120,NPB:143,MLB:162};
+/* 守位分：守位難度(POS_ADJ_RUNS 以「每 162 場」計)換算成該聯盟的實際球季長度。
+   分母必須用該聯盟的滿季場次，不能寫死 162——守備計分的另一半 defRuns() 用的就是
+   gw=games/L.g，兩邊尺度要一致。寫死 162 會讓場次較少的聯盟只拿到部分守位分
+   (中職滿勤 18 年只算 13.3 個守位年、日職 15.9 個)，等於把整條守位級距壓縮，
+   捕手/游擊的加分與一壘/指定打擊的扣分同時被稀釋。 */
+export function positionScore(st,bucket){
   if(!st||!st.DPG)return 0;
-  let runs=0; Object.entries(st.DPG).forEach(([dp,g])=>{ runs+=(POS_ADJ_RUNS[dp]||0)*(g/162); });
+  const full=BUCKET_G[bucket]||162;
+  let runs=0; Object.entries(st.DPG).forEach(([dp,g])=>{ runs+=(POS_ADJ_RUNS[dp]||0)*(g/full); });
   return runs*6; /* 與 DEF 每 1 defensive run = 6 分使用同一尺度 */
 }
 /* 後援名人堂校準：300 救援接近候選、400 救援具入選實力、500 救援可挑戰最高門檻。
    里程碑本身依聯盟場次比例縮放(比照其他獎項門檻的作法)，避免場次較少的聯盟
    (中職120場/日職143場)因為天生救援總數就比大聯盟(162場)少，同等地位的終結者
    卻吃不到里程碑加分。 */
-const BUCKET_G={CPBL:120,NPB:143,MLB:162};
 export function reliefMilestoneScore(st,bucket){
   const sv=st&&st.SV||0, r=(BUCKET_G[bucket]||162)/162;
   if(sv>=500*r)return 1800;
@@ -52,13 +58,13 @@ export function hitterQualityFactor(st){
   q+=clamp((ops-0.760)*0.6,-0.20,0.20);
   return clamp(q,0.50,1.60);
 }
-export function hitterCareerScore(st){
-  const base=st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3+(st.DEF||0)*6+positionScore(st);
+export function hitterCareerScore(st,bucket){
+  const base=st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3+(st.DEF||0)*6+positionScore(st,bucket);
   return base*hitterQualityFactor(st)*0.67;
 }
 export function careerScore(st,bucket){
   if(S.pos==='P')return pitcherCareerScore(st,bucket);
-  return hitterCareerScore(st);
+  return hitterCareerScore(st,bucket);
 }
 export function primaryPos(){ /* 生涯主守位:過半→該位;無過半→工具人/搖擺人(年數降序) */
   if(S.pos==='P'){
@@ -120,6 +126,21 @@ export function honorScore(bucket){
   if(S.traits.franchise)sc+=200; /* 神主牌:忠誠加成 */
   return {sc,mvp,aceN,king};
 }
+/* 生涯守位加權：以各守位的實際出賽數加權平均（詳見 abilities.js 的 POS_TIER_K）。
+   用 DPG 而非「主守位」，所以捕手蹲十年再轉一壘的球員會拿到兩者的混合標準，
+   不會因為最後幾年移防就整段生涯改用另一把尺。 */
+export function posTierK(st,bucket){
+  if(S.pos==='P'||!st||!st.DPG)return 1;
+  let g=0,acc=0;
+  Object.entries(st.DPG).forEach(([dp,games])=>{
+    const n=Math.max(0,games||0); if(!n)return;
+    g+=n; acc+=(POS_TIER_K[dp]!=null?POS_TIER_K[dp]:1)*n;
+  });
+  if(!(g>0))return 1;
+  /* 聯盟強度縮放(詳見 abilities.js 的 POS_TIER_STR) */
+  const s=(POS_TIER_STR[bucket]!=null?POS_TIER_STR[bucket]:1);
+  return 1+(acc/g-1)*s;
+}
 export function tierOf(bucket){
   const st=S.stats[bucket]; if(!st)return null;
   const hs=honorScore(bucket);
@@ -129,7 +150,9 @@ export function tierOf(bucket){
   /* [Kbase,Khonor]:數據累積分與獎項分分開折算(兩者的聯盟差異性質相反,詳見 economy.js) */
   const k=((LEAGUE_K[bucket]||{})[posKey])||[1,1];
   const sc=careerScore(st,bucket)*k[0]+hs.sc*k[1],th=TIER_TH[bucket];
-  let i=sc>=th[0]?0:sc>=th[1]?1:sc>=th[2]?2:sc>=th[3]?3:4;
+  /* 五級門檻整條依守位加權平移(不只名人堂)：同一個守位就該從頭到尾用同一把尺。 */
+  const pk=posTierK(st,bucket);
+  let i=sc>=th[0]*pk?0:sc>=th[1]*pk?1:sc>=th[2]*pk?2:sc>=th[3]*pk?3:4;
   /* 獎項保底:MVP/最高投手獎至少明星球員;單項王至少每日球員 */
   if(hs.mvp||hs.aceN)i=Math.min(i,1);
   else if(hs.king)i=Math.min(i,2);
