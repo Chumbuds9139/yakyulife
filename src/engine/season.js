@@ -226,16 +226,17 @@ export function seasonSalaryRating(st,lv,recordedRoleOrPos){
   const posRuns=(POS_ADJ_RUNS[dp]||0)*(games/full);
   return +(st.d+(def+posRuns)/6).toFixed(2);
 }
-/* 球季帳面成績評等：0=差 1=普通 2=好 3=壓倒性。
+/* 球季帳面成績評等：0=差 1=普通 2=好 3=壓倒性，另有 −1=樣本不足（無法評價）。
    只讀真實數據，完全不看能力值——升降級判定需要「打出來的」跟「體檢數字漂亮」是兩件事。
-   以率值(OPS／ERA／WHIP)為主軸，數量型指標(全壘打、救援+中繼)依聯盟場次等比縮放；
-   出場量太少的球季一律回傳 1(普通)，資料不足不獎不罰。 */
+   以率值(OPS／ERA／WHIP)為主軸，數量型指標(全壘打、救援+中繼)依聯盟場次等比縮放。
+   −1 與 1 必須分開：受傷或打席不足的球季無從論斷成績，呼叫端要改用能力判斷，
+   不能當成「普通」處理，否則會出現「打擊率 .358 卻被說帳面成績不夠好」的矛盾訊息。 */
 export function seasonGrade(st,lv){
-  if(!st)return 1;
+  if(!st)return -1;
   const g=(LV[lv]||{}).g||130, r=g/130;
   if(S.pos==='P'){
     const era=baseballERA(st), whip=baseballWHIP(st);
-    if(era==null||(st.IP||0)<g*0.22)return 1;
+    if(era==null||(st.IP||0)<g*0.22)return -1;
     const bulk=isSP()?((st.IP||0)>=g*0.5):(((st.SV||0)+(st.HLD||0))>=15*r);
     if(era<=2.80&&bulk)return 3;
     if(era<=3.50||(whip!=null&&whip<=1.15&&era<=3.75))return 2;
@@ -243,7 +244,7 @@ export function seasonGrade(st,lv){
     return 0;
   }
   const pa=st.PA||0;
-  if(pa<g*2.0)return 1;
+  if(pa<g*2.0)return -1;
   const obp=(st.H+(st.BB||0))/pa, ops=obp+slgOf(st);
   /* 門檻對齊本作的 OPS 尺度，不是現實棒球的：這裡「聯盟平均」的 OPS 約 .64，
      .750 已是主力等級、.850 是聯盟頂尖。用現實的 .700/.800/.900 會讓小聯盟
