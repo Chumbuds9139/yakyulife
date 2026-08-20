@@ -1,21 +1,21 @@
-import {S, stepQ, nextStep, stageLabel} from '../core/state.js?v=1.5.5';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.5';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.5';
-import {LV, PATHS, teamNick} from '../data/teams.js?v=1.5.5';
-import {AMA_ANNUAL} from '../data/economy.js?v=1.5.5';
-import {card, choose, board, divider} from '../ui/dom.js?v=1.5.5';
-import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.5.5';
-import {allocUI} from '../ui/alloc.js?v=1.5.5';
-import {addAb, ovr, dposReview, statBonusTxt} from '../engine/ability.js?v=1.5.5';
-import {rollInjury, tjCap} from '../engine/injury.js?v=1.5.5';
-import {isMrTeamEligible} from '../engine/tenure.js?v=1.5.5';
-import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.5.5';
-import {championshipChance} from '../engine/championship.js?v=1.5.5';
-import {buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, signTo, teamChampRate} from '../engine/contract.js?v=1.5.5';
-import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.5.5';
-import {loveEvent} from './love.js?v=1.5.5';
-import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.5.5';
-import {endGame} from '../ui/retire.js?v=1.5.5';
+import {S, stepQ, nextStep, stageLabel} from '../core/state.js?v=1.5.6';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.6';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.6';
+import {LV, PATHS, teamNick} from '../data/teams.js?v=1.5.6';
+import {AMA_ANNUAL} from '../data/economy.js?v=1.5.6';
+import {card, choose, board, divider} from '../ui/dom.js?v=1.5.6';
+import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.5.6';
+import {allocUI} from '../ui/alloc.js?v=1.5.6';
+import {addAb, ovr, dposReview, statBonusTxt} from '../engine/ability.js?v=1.5.6';
+import {rollInjury, tjCap} from '../engine/injury.js?v=1.5.6';
+import {isMrTeamEligible} from '../engine/tenure.js?v=1.5.6';
+import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.5.6';
+import {championshipChance} from '../engine/championship.js?v=1.5.6';
+import {buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, signTo, teamChampRate} from '../engine/contract.js?v=1.5.6';
+import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.5.6';
+import {loveEvent} from './love.js?v=1.5.6';
+import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.5.6';
+import {endGame} from '../ui/retire.js?v=1.5.6';
 /* ================= 年度流程 ================= */
 export function startYear(){ S.yearOutsideIncome=0; stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* ---------- 季初 ---------- */
