@@ -1,9 +1,9 @@
-import {S} from '../core/state.js?v=1.5.7';
-import {clamp} from '../core/rng.js?v=1.5.7';
-import {DPN, POSN, POS_ADJ_RUNS, POS_TIER_K, POS_TIER_STR} from '../data/abilities.js?v=1.5.7';
-import {LG_N} from '../data/teams.js?v=1.5.7';
-import {TIER_TH, LEAGUE_K, MILESTONE_DEF, HOF_TH_K} from '../data/economy.js?v=1.5.7';
-import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.7';
+import {S} from '../core/state.js?v=1.5.8';
+import {clamp} from '../core/rng.js?v=1.5.8';
+import {DPN, POSN, POS_ADJ_RUNS, POS_TIER_K, POS_TIER_STR} from '../data/abilities.js?v=1.5.8';
+import {LG_N} from '../data/teams.js?v=1.5.8';
+import {TIER_TH, LEAGUE_K, MILESTONE_DEF, HOF_TH_K} from '../data/economy.js?v=1.5.8';
+import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.8';
 /* ================= 生涯終章 ================= */
 const BUCKET_G={CPBL:120,NPB:143,MLB:162};
 /* 守位分：守位難度(POS_ADJ_RUNS 以「每 162 場」計)換算成該聯盟的實際球季長度。
@@ -153,11 +153,14 @@ export function tierOf(bucket){
   /* 五級門檻整條依守位加權平移(不只名人堂)：同一個守位就該從頭到尾用同一把尺。 */
   const pk=posTierK(st,bucket);
   const hk=((HOF_TH_K[bucket]||{})[posKey])||1; /* 名人堂線獨立微調,明星以下不受影響(詳見 economy.js) */
-  let i=sc>=th[0]*pk*hk?0:sc>=th[1]*pk?1:sc>=th[2]*pk?2:sc>=th[3]*pk?3:4;
+  const hofTh=th[0]*pk*hk;                 /* 這段生涯實際適用的名人堂線 */
+  let i=sc>=hofTh?0:sc>=th[1]*pk?1:sc>=th[2]*pk?2:sc>=th[3]*pk?3:4;
   /* 獎項保底:MVP/最高投手獎至少明星球員;單項王至少每日球員 */
   if(hs.mvp||hs.aceN)i=Math.min(i,1);
   else if(hs.king)i=Math.min(i,2);
-  return {i,sc:Math.round(sc),name:LG_N[bucket]+['名人堂','明星球員','每日球員','邊緣球員','一頁過客'][i]};
+  /* hofTh 一併回傳:票選畫面的「首輪入選」與「得票率」必須跟這裡用同一把尺，
+     不能各自去讀 TIER_TH[bucket][0] 的裸值(詳見 ui/retire.js 的說明)。 */
+  return {i,sc:Math.round(sc),hofTh,name:LG_N[bucket]+['名人堂','明星球員','每日球員','邊緣球員','一頁過客'][i]};
 }
 export function statTable(bucket){
   const st=S.stats[bucket]; if(!st)return '';

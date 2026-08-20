@@ -1,17 +1,17 @@
-import {S, blankStat, bucketOf} from '../core/state.js?v=1.5.7';
-import {R, ri, SEED} from '../core/rng.js?v=1.5.7';
-import {OFFICIAL_URL} from '../config.js?v=1.5.7';
-import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, teamNick} from '../data/teams.js?v=1.5.7';
-import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.7';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.5.7';
-import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.7';
-import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.7';
-import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.7';
-import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.7';
-import {playerType} from '../engine/ability.js?v=1.5.7';
-import {fmtMoney} from '../engine/contract.js?v=1.5.7';
-import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.7';
-import {shareImage} from './share-image.js?v=1.5.7';
+import {S, blankStat, bucketOf} from '../core/state.js?v=1.5.8';
+import {R, ri, SEED} from '../core/rng.js?v=1.5.8';
+import {OFFICIAL_URL} from '../config.js?v=1.5.8';
+import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, teamNick} from '../data/teams.js?v=1.5.8';
+import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.8';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.5.8';
+import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.8';
+import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.8';
+import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.8';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.8';
+import {playerType} from '../engine/ability.js?v=1.5.8';
+import {fmtMoney} from '../engine/contract.js?v=1.5.8';
+import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.8';
+import {shareImage} from './share-image.js?v=1.5.8';
 /* ================= 結算圖資料建構 =================
    Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
    All values come from S.*; the in-game settlement cards are untouched. */
@@ -183,8 +183,15 @@ export function retireScene(tiers){
   ['CPBL','NPB','MLB'].forEach(b=>{ const t=tiers[b]; if(!t)return;
     const cfg=HOF_CFG[b];
     if(t.i===0){
-      /* 第一年當選門檻:評價分明顯超標(1.15×名人堂門檻)才 first-ballot,否則需等 N 年 */
-      const th=TIER_TH[b][0];
+      /* 第一年當選門檻:評價分明顯超標才 first-ballot,否則需等 N 年。
+         門檻必須用 tierOf() 實際判定時的那條線(t.hofTh = 7500 × posTierK × HOF_TH_K)，
+         不能用 TIER_TH[b][0] 的裸值 7500——兩把尺分岔會直接壞掉：
+         大聯盟指定打擊的 posTierK 是 1.221，名人堂線 9158，但裸值算出的首輪線只有
+         7500×1.2＝9000，比名人堂線還低，於是「只要進得了名人堂就必定首輪入選」，
+         實測大聯盟／日職指定打擊的首輪率都是 100%，而捕手、游擊只有 41～53%——
+         最好混的守位反而穩拿最稀有的隱藏素質。得票率的 rawPct 同理，用裸值會讓
+         門檻被上調的守位得票率整體虛高。 */
+      const th=t.hofTh||TIER_TH[b][0];
       const fbMult={CPBL:1.12,NPB:1.12,MLB:1.2}[b]||1.2; /* 大聯盟最嚴,中職日職放寬 */
       const firstNow = t.sc>=th*fbMult;
       const ballotYr = firstNow?1:ri(2,6);
