@@ -414,6 +414,61 @@ a.btn#md-sponsor small{color:var(--dim)}
   border-left:1px solid var(--edge);padding-left:8px;white-space:nowrap}
 .md-brand .ver{font-family:var(--mono);font-size:10px;color:var(--dim);opacity:.7;letter-spacing:.05em}
 #modal-box p{font-size:14px;margin:6px 0 4px}
+/* Tall modals (settlement options, anything in big-text mode) must stay reachable on a
+   short phone: #modal centres its box, so without this the confirm button is simply
+   scrolled off both ends of the screen. dvh overrides vh where supported. */
+#modal-box{max-height:calc(100vh - 44px);max-height:calc(100dvh - 44px);overflow-y:auto}
+/* ---- 結算圖面板 ---- */
+/* A flex column: only .sh-body scrolls. Two scrollers stacked inside each other (an image
+   box inside a scrolling modal) is the thing this layout exists to avoid. */
+#modal-box.sh-sheet{max-width:420px;padding:0;overflow:hidden;display:flex;flex-direction:column}
+/* Phones get the whole screen rather than a centred card: #modal's own padding plus the
+   card inset cost ~44px of height, which is the scarcest thing on a small handset.
+   position:fixed breaks out of that padded flex parent without touching #modal itself. */
+@media (max-width:560px),(max-height:720px){
+  #modal-box.sh-sheet{position:fixed;inset:0;width:auto;max-width:none;height:auto;max-height:none;
+    border-radius:0;border-width:0}
+}
+.sh-head{flex:none;display:flex;align-items:center;gap:10px;padding:15px 18px 9px}
+.sh-head h3{flex:1;margin:0}
+.sh-x{flex:none;width:30px;height:30px;background:none;border:0;color:var(--dim);font-size:16px;cursor:pointer}
+.sh-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 18px 14px}
+.sh-foot{flex:none;padding:10px 18px 14px;border-top:1px solid var(--edge);background:var(--panel)}
+/* buttons do not inherit body's line-height (the UA sheet sets it), so the emoji in the
+   primary label grew its line box and made that button 4px taller than the pair below.
+   Pinning one line-height for the footer keeps all three the same height. */
+.sh-foot .btn{line-height:1.5}
+/* direct child only: as a descendant selector this also caught .sh-row's first button,
+   zeroing its top margin while its sibling kept one — the row then stretched them to
+   different heights with mismatched top edges */
+.sh-foot > .btn:first-child{margin-top:0}
+.sh-lab{font-size:11px;font-weight:700;letter-spacing:.2em;color:var(--dim);margin:14px 0 7px}
+/* The settlement sheet is ~1:1.6 and would still be ~570px tall at phone width, so it is shown
+   clipped to its top (the part that identifies the player) and expands to full height on tap —
+   the panel's own scroll carries it, and the footer stays pinned. */
+.sh-frame{position:relative;border:1px solid var(--edge);border-radius:8px;background:var(--row);
+  overflow:hidden;cursor:pointer}
+.sh-frame.clip{max-height:36vh;max-height:min(36dvh,300px)}
+.sh-frame img{display:block;width:100%}
+.sh-frame img:not([src]){display:none} /* first paint has no source yet: no broken-image icon */
+.sh-frame.busy img{opacity:.3}
+.sh-frame.busy .sh-more{display:none}
+.sh-wait{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;letter-spacing:.24em;color:var(--dim)}
+.sh-frame.busy .sh-wait{display:flex}
+.sh-more{position:absolute;left:0;right:0;bottom:0;padding:26px 0 7px;text-align:center;
+  font-size:11px;letter-spacing:.16em;color:var(--dim);pointer-events:none;
+  background:linear-gradient(transparent,var(--panel) 78%)}
+.sh-frame:not(.clip) .sh-more{position:static;background:var(--panel);padding:7px 0}
+.sh-seg button{display:flex;align-items:center;gap:8px;text-align:left;font-size:13px;padding:12px 10px;line-height:1.25}
+.sh-seg .sh-sw{width:4px;height:20px;border-radius:2px;flex:none}
+.btn.sh-chk.on{border-color:var(--accent)}
+/* the card version of this note is a .statline panel; inside the sheet that reads as a
+   third, dead button under the two real ones, so it is a plain caption here */
+.sh-hint{font-size:11.5px;color:var(--dim);text-align:center;margin-top:9px;line-height:1.5}
+.sh-row{display:flex;gap:8px;margin-top:8px}
+.sh-row .btn{flex:1;text-align:center;margin-top:0}
+body.big-text .sh-seg button{font-size:17.4px}
 /* ================= 大字模式（設定：字級） =================
    Additive only: none of the base declarations above are edited, so syncing with
    upstream stays conflict-free. Card body text comes from body{font-size:15px} by

@@ -34,7 +34,10 @@ export function teamChip(hex){
   return {bg:hex,fg:dark?'#000000':'#ffffff',bd:dark?'rgba(0,0,0,.4)':'rgba(255,255,255,.45)'};
 }
 /* ---------- 主題化對話框(純呈現層) ---------- */
-export function modalOpen(html){ const m=$('modal'); if(!m)return; $('modal-box').innerHTML=html; m.classList.add('show'); }
+/* cls is an optional modifier for the box (e.g. a wider sheet). It is assigned rather
+   than added so one modal's variant can never leak into the next one opened. */
+export function modalOpen(html,cls){ const m=$('modal'); if(!m)return; const b=$('modal-box');
+  b.className=cls||''; b.innerHTML=html; m.classList.add('show'); }
 export function modalClose(){ const m=$('modal'); if(m)m.classList.remove('show'); }
 /* the wordmark tracks the theme (applyTheme rewrites every .wm-img src), so read the source
    off one that is already in the document rather than hardcoding a file here */
