@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.9';
-import {chance, clamp} from '../core/rng.js?v=1.5.9';
-import {DPN, GLOVE_TH, GLOVE_K} from '../data/abilities.js?v=1.5.9';
-import {LV} from '../data/teams.js?v=1.5.9';
-import {card} from '../ui/dom.js?v=1.5.9';
-import {tlNote} from '../ui/timeline.js?v=1.5.9';
-import {isSP, slgOf, baseballERA} from './season.js?v=1.5.9';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.9';
+import {S} from '../core/state.js?v=1.6.0';
+import {chance, clamp} from '../core/rng.js?v=1.6.0';
+import {DPN, GLOVE_TH, GLOVE_K} from '../data/abilities.js?v=1.6.0';
+import {LV} from '../data/teams.js?v=1.6.0';
+import {card} from '../ui/dom.js?v=1.6.0';
+import {tlNote} from '../ui/timeline.js?v=1.6.0';
+import {isSP, slgOf, baseballERA} from './season.js?v=1.6.0';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.6.0';
 /* 獎項機率同時有硬下限與必得上限；數值越低越好的獎項（ERA）用 lower=true。 */
 export function awardP(value,hardLow,autoWin,base=25,lower=false){
   const ineligible=lower?value>hardLow:value<hardLow;
@@ -54,8 +54,20 @@ export function awards(bucket,st){
   const TH = {
     CPBL: { g: 120, era: [2.90, 1.90], eraK: [2.80, 1.60], sv: [22, 35], hld: [18, 30], so: [130, 180], w: [10, 16], avg: [0.300, 0.360], hr: [20, 32], rbi: [75, 105], obp: [0.370, 0.430] },
     NPB:  { g: 143, era: [2.90, 1.90], eraK: [2.80, 1.60], sv: [22, 35], hld: [18, 30], so: [132, 183], w: [10, 16], avg: [0.300, 0.360], hr: [24, 38], rbi: [90, 125], obp: [0.370, 0.430] },
-    MLB:  { g: 162, era: [2.90, 1.90], eraK: [2.80, 1.60], sv: [22, 35], hld: [18, 30], so: [175, 240], w: [14, 20], avg: [0.300, 0.360], hr: [27, 43], rbi: [100, 140], obp: [0.370, 0.430] }
+    MLB:  { g: 162, era: [3.50, 2.40], eraK: [3.40, 2.25], sv: [22, 35], hld: [18, 30], so: [175, 240], w: [14, 20], avg: [0.300, 0.360], hr: [27, 43], rbi: [100, 140], obp: [0.370, 0.430] }
   };
+  /* v1.6.0 大聯盟的 ERA 門檻改為 [3.50,2.40]／防禦率王 [3.40,2.25]，不再與中職日職共用。
+     比率型門檻(ERA/AVG/OBP)本來統一是有道理的——它們不隨球季場次變動。但它們隨
+     「聯盟基準(par)」變動：同一個能力值的球員，在中職是 par+18、在大聯盟只有 par+3。
+     實測 100 局以上球季的 ERA 分布：
+       中職   最佳10% 1.66 ／ 中位 2.97   → 達 2.90 的球季 48.3%
+       日職   最佳10% 2.20 ／ 中位 3.40   → 29.9%
+       大聯盟 最佳10% 3.21 ／ 中位 4.33   → 4.6%
+     大聯盟連「最佳 10% 的球季」都摸不到 2.90，年度最佳投手變成一個再怎麼投都拿不到
+     的獎(生涯中位 1 座，日職 6 座)。打者的比率門檻不動：打率達 .300 的比例是
+     47.7%／39.7%／30.8%，階梯本來就正常。
+     註：這一項只值約 60 分，遠不足以解釋大聯盟的名人堂缺口(那是 economy.js 的
+     Kbase 問題)，但「拿不到的獎」本身就是壞掉的體驗，該修。 */
   const th = TH[bucket] || TH.CPBL;
 
   /* 1. 明星賽入選：一般球隊須先達真實成績門檻；台中猛獁可用 30% 人氣票入選。 */
