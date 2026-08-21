@@ -1,17 +1,17 @@
-import {S, blankStat, bucketOf} from '../core/state.js?v=1.6.1';
-import {R, ri, SEED} from '../core/rng.js?v=1.6.1';
-import {OFFICIAL_URL} from '../config.js?v=1.6.1';
-import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, teamNick} from '../data/teams.js?v=1.6.1';
-import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.6.1';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.6.1';
-import {$, card, choose, divider, board, actClear} from './dom.js?v=1.6.1';
-import {careerTimelineCard, tlNote} from './timeline.js?v=1.6.1';
-import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.6.1';
-import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.6.1';
-import {playerType} from '../engine/ability.js?v=1.6.1';
-import {fmtMoney} from '../engine/contract.js?v=1.6.1';
-import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.6.1';
-import {shareImage} from './share-image.js?v=1.6.1';
+import {S, blankStat, bucketOf} from '../core/state.js?v=1.6.2';
+import {R, ri, SEED} from '../core/rng.js?v=1.6.2';
+import {OFFICIAL_URL} from '../config.js?v=1.6.2';
+import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, teamNick} from '../data/teams.js?v=1.6.2';
+import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.6.2';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.6.2';
+import {$, card, choose, divider, board, actClear} from './dom.js?v=1.6.2';
+import {careerTimelineCard, tlNote} from './timeline.js?v=1.6.2';
+import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.6.2';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.6.2';
+import {playerType} from '../engine/ability.js?v=1.6.2';
+import {fmtMoney} from '../engine/contract.js?v=1.6.2';
+import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.6.2';
+import {shareImage} from './share-image.js?v=1.6.2';
 /* ================= 結算圖資料建構 =================
    Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
    All values come from S.*; the in-game settlement cards are untouched. */
@@ -197,7 +197,20 @@ export function retireScene(tiers){
          已經由 LEAGUE_K 折算過一次，這裡再分一次等於重複計價。 */
       const fbMult=1.527;
       const firstNow = t.sc>=th*fbMult;
-      const ballotYr = firstNow?1:ri(2,6);
+      /* v1.6.2 入選年份改由實力決定，不再是 ri(2,6) 的均勻亂數。
+         舊版的因果是反的：先隨機抽第幾年，再讓票數被那個隨機值每年扣 4 個百分點——
+         現實是「票數高所以早入選」，舊版是「隨機抽到早入選所以票數高」。
+         而且亂數的影響力壓過實力：ri(2,6) 造成 16 個百分點的擺盪，實力項
+         (sc-th)/th*40 要超標 40% 才追得上，而超標 40% 以內的人佔名人堂的大多數。
+         結果是超標 2% 的人可能抽到第 2 年、超標 35% 的人可能抽到第 6 年。
+         現在 r = 評價分 ÷ 該生涯實際適用的名人堂線：
+           r >= fbMult          → 第 1 年（首輪入選）
+           r <  fbMult          → t=(r-1)/(fbMult-1)，第 round(7 − t×5) 年
+         壓線者等 7 年、接近首輪線者等 2 年，苦等終於有苦等的樣子。
+         ±1 年的抖動保留重玩變化，但不再主導結果。 */
+      const meritT = Math.max(0, Math.min(1, (t.sc/th - 1)/(fbMult - 1)));
+      const ballotYr = firstNow ? 1
+        : Math.max(2, Math.min(8, Math.round(7 - meritT*5) + ri(-1,1)));
       if(firstNow)firstBallotLeagues.push(cfg.lg);
       /* 得票率是離散量：先決定「票數」，再由票數反算顯示的百分比，兩者永遠一致。
          舊版方向相反——先算連續的 pct、再四捨五入成票數，於是畫面上會出現 131 票
@@ -205,7 +218,15 @@ export function retireScene(tiers){
          任何一個整數票數（中職 131 票=99.24%、132 票=100%），本身就是憑空的數字。
          下限改用無條件進位，確保票數真的跨過 75% 門檻（舊版日職 245/326=75.15%
          是靠四捨五入擦邊算過）；上限為「總票數 −1」，即差一票的傳奇，不開放滿票。 */
-      const rawPct=75+ (t.sc-th)/th*40 + R()*6 - (ballotYr-1)*4;
+      /* v1.6.2 得票率同樣改由實力決定，不再倒過來被入選年份扣分。
+         舊版另一個問題是 75% 保底吃掉了低段的資訊：壓線者算出來常是 70 幾趴，
+         一律被拉到 75.x%，於是「差一點點入選」和「穩穩入選」顯示同一個數字。
+         現在直接把 r 映射到票數區間，保底只當防呆而不再是主要成因：
+           首輪（r>=fbMult）：88% 起跳，每超標 1% 再加 0.25 個百分點，上限 99%
+           非首輪           ：75.5% + t×11 → 壓線 75.5%、接近首輪線 86.5% */
+      const rawPct = firstNow
+        ? Math.min(99, 88 + (t.sc/th - fbMult)*25 + R()*2)
+        : (75.5 + meritT*11 + (R()*3 - 1.5));
       const minVotes=Math.ceil(cfg.total*0.75), maxVotes=cfg.total-1;
       const votes=Math.max(minVotes,Math.min(maxVotes,Math.round(cfg.total*rawPct/100)));
       const pctTxt=(votes/cfg.total*100).toFixed(1);
@@ -214,10 +235,17 @@ export function retireScene(tiers){
       const oneShort=votes===maxVotes?'<b class="hl">全聯盟只有一張票沒有投給你。</b>':'';
       hofs.push(`引退 <b class="hl">${cfg.wait}</b> 年後（${yr+cfg.wait} 年）進入候選，於<b class="hl">第 ${ballotYr} 年投票</b>以 <b class="hl">${votes}</b>／${cfg.total} 票（得票率 ${pctTxt}%）榮登<b class="hl">${cfg.n}</b>——你以 <b class="hl">${cap||'—'}</b> 的代表球員身分${phr}留名。${ballotYr===1?'<b class="hl">一票入魂，首輪即殿堂。</b>':''}${oneShort}名匾上的隊徽，是 ${cap||'—'}。`);
     }else if(t.i===1){
-      /* 落選同樣以票數為準：門檻票數減 1 就是「最接近的一次」的上限。 */
+      /* 落選同樣以票數為準：門檻票數減 1 就是「最接近的一次」的上限。
+         v1.6.2 最高得票率改由「差多遠」決定，不再是固定的 55~72% 亂數。
+         舊版讓差一分落選的人和差三千分的人顯示同一個區間，一個明星段中緣的球員
+         也可能看到「最高曾獲得 72%」，那個數字會誤導玩家以為自己差一點點。
+         near = 評價分 ÷ 名人堂線（0~1）：貼著線的人逼近門檻票數 −1，
+         離線很遠的人停在三四成。入圍年數也跟著差距走，越接近的人被討論越久。 */
       const gateVotes=Math.ceil(cfg.total*0.75);
-      const bestVotes=Math.max(1,Math.min(gateVotes-1,Math.round(cfg.total*(55+R()*17)/100)));
-      const tries=ri(3,9);
+      const near=Math.max(0,Math.min(1,t.sc/(t.hofTh||TIER_TH[b][0])));
+      const bestPct=30+near*44+(R()*4-2);          /* 0.55 → 約 52%；0.99 → 約 73% */
+      const bestVotes=Math.max(1,Math.min(gateVotes-1,Math.round(cfg.total*bestPct/100)));
+      const tries=Math.max(2,Math.min(10,Math.round(2+near*7)+ri(-1,1)));
       hofs.push(`你連續 ${tries} 年入圍${cfg.n}票選，最高曾獲得 <b>${bestVotes}</b>／${cfg.total} 票（${(bestVotes/cfg.total*100).toFixed(1)}%），可惜始終未能跨過 75% 門檻（需 ${gateVotes} 票）。`);
     } });
   if(firstBallotLeagues.length){
