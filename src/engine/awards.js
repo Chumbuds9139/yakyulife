@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.8';
-import {chance, clamp} from '../core/rng.js?v=1.5.8';
-import {DPN, GLOVE_TH, GLOVE_K} from '../data/abilities.js?v=1.5.8';
-import {LV} from '../data/teams.js?v=1.5.8';
-import {card} from '../ui/dom.js?v=1.5.8';
-import {tlNote} from '../ui/timeline.js?v=1.5.8';
-import {isSP, slgOf, baseballERA} from './season.js?v=1.5.8';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.8';
+import {S} from '../core/state.js?v=1.5.9';
+import {chance, clamp} from '../core/rng.js?v=1.5.9';
+import {DPN, GLOVE_TH, GLOVE_K} from '../data/abilities.js?v=1.5.9';
+import {LV} from '../data/teams.js?v=1.5.9';
+import {card} from '../ui/dom.js?v=1.5.9';
+import {tlNote} from '../ui/timeline.js?v=1.5.9';
+import {isSP, slgOf, baseballERA} from './season.js?v=1.5.9';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.9';
 /* 獎項機率同時有硬下限與必得上限；數值越低越好的獎項（ERA）用 lower=true。 */
 export function awardP(value,hardLow,autoWin,base=25,lower=false){
   const ineligible=lower?value>hardLow:value<hardLow;

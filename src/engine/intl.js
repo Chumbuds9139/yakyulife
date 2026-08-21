@@ -1,12 +1,12 @@
-import {S} from '../core/state.js?v=1.5.8';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.8';
-import {LV} from '../data/teams.js?v=1.5.8';
-import {card, choose, board} from '../ui/dom.js?v=1.5.8';
-import {tlNote} from '../ui/timeline.js?v=1.5.8';
-import {isSP, fmtIP, outsFromIP, ipFromOuts, normalizeIP, baseballERA} from './season.js?v=1.5.8';
-import {ovr} from './ability.js?v=1.5.8';
-import {intlFinishIndex} from './championship.js?v=1.5.8';
-import {checkChampionTrait} from '../flow/events.js?v=1.5.8';
+import {S} from '../core/state.js?v=1.5.9';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.9';
+import {LV} from '../data/teams.js?v=1.5.9';
+import {card, choose, board} from '../ui/dom.js?v=1.5.9';
+import {tlNote} from '../ui/timeline.js?v=1.5.9';
+import {isSP, fmtIP, outsFromIP, ipFromOuts, normalizeIP, baseballERA} from './season.js?v=1.5.9';
+import {ovr} from './ability.js?v=1.5.9';
+import {intlFinishIndex} from './championship.js?v=1.5.9';
+import {checkChampionTrait} from '../flow/events.js?v=1.5.9';
 export function intlStatLine(st){
   if(S.pos==='P'){
     const era=baseballERA(st);

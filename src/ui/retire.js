@@ -1,17 +1,17 @@
-import {S, blankStat, bucketOf} from '../core/state.js?v=1.5.8';
-import {R, ri, SEED} from '../core/rng.js?v=1.5.8';
-import {OFFICIAL_URL} from '../config.js?v=1.5.8';
-import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, teamNick} from '../data/teams.js?v=1.5.8';
-import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.8';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.5.8';
-import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.8';
-import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.8';
-import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.8';
-import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.8';
-import {playerType} from '../engine/ability.js?v=1.5.8';
-import {fmtMoney} from '../engine/contract.js?v=1.5.8';
-import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.8';
-import {shareImage} from './share-image.js?v=1.5.8';
+import {S, blankStat, bucketOf} from '../core/state.js?v=1.5.9';
+import {R, ri, SEED} from '../core/rng.js?v=1.5.9';
+import {OFFICIAL_URL} from '../config.js?v=1.5.9';
+import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, teamNick} from '../data/teams.js?v=1.5.9';
+import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.9';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.5.9';
+import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.9';
+import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.9';
+import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.9';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.9';
+import {playerType} from '../engine/ability.js?v=1.5.9';
+import {fmtMoney} from '../engine/contract.js?v=1.5.9';
+import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.9';
+import {shareImage} from './share-image.js?v=1.5.9';
 /* ================= 結算圖資料建構 =================
    Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
    All values come from S.*; the in-game settlement cards are untouched. */
@@ -192,7 +192,10 @@ export function retireScene(tiers){
          最好混的守位反而穩拿最稀有的隱藏素質。得票率的 rawPct 同理，用裸值會讓
          門檻被上調的守位得票率整體虛高。 */
       const th=t.hofTh||TIER_TH[b][0];
-      const fbMult={CPBL:1.12,NPB:1.12,MLB:1.2}[b]||1.2; /* 大聯盟最嚴,中職日職放寬 */
+      /* v1.5.9 三聯盟統一 1.527（舊值 1.12／1.12／1.2）。以完整流程模擬反解：
+         「歷史級球星 = 全部名人堂成員的 25%」。聯盟間不再分別給倍率——聯盟難度差
+         已經由 LEAGUE_K 折算過一次，這裡再分一次等於重複計價。 */
+      const fbMult=1.527;
       const firstNow = t.sc>=th*fbMult;
       const ballotYr = firstNow?1:ri(2,6);
       if(firstNow)firstBallotLeagues.push(cfg.lg);
