@@ -1,7 +1,7 @@
-import {S} from '../core/state.js?v=1.5.5';
-import {$, teamChip} from './dom.js?v=1.5.5';
-import {TRAIT_KEYS, TRAIT_N, TRAIT_FX, legendTraitNames, pitcherTCNames, hitterTCNames} from '../data/traits.js?v=1.5.5';
-import {TEAM_COLOR, teamNick} from '../data/teams.js?v=1.5.5';
+import {S} from '../core/state.js?v=1.5.7';
+import {$, teamChip} from './dom.js?v=1.5.7';
+import {TRAIT_KEYS, TRAIT_N, TRAIT_FX, legendTraitNames, pitcherTCNames, hitterTCNames} from '../data/traits.js?v=1.5.7';
+import {TEAM_COLOR, teamNick} from '../data/teams.js?v=1.5.7';
 
 export function traitNames(k){
   if(k==='legend'){

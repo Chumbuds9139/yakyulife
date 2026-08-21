@@ -1,9 +1,9 @@
-import {S} from '../core/state.js?v=1.5.5';
-import {clamp} from '../core/rng.js?v=1.5.5';
-import {DPN, POSN, POS_ADJ_RUNS, POS_TIER_K, POS_TIER_STR} from '../data/abilities.js?v=1.5.5';
-import {LG_N} from '../data/teams.js?v=1.5.5';
-import {TIER_TH, LEAGUE_K, MILESTONE_DEF, HOF_TH_K} from '../data/economy.js?v=1.5.5';
-import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.5';
+import {S} from '../core/state.js?v=1.5.7';
+import {clamp} from '../core/rng.js?v=1.5.7';
+import {DPN, POSN, POS_ADJ_RUNS, POS_TIER_K, POS_TIER_STR} from '../data/abilities.js?v=1.5.7';
+import {LG_N} from '../data/teams.js?v=1.5.7';
+import {TIER_TH, LEAGUE_K, MILESTONE_DEF, HOF_TH_K} from '../data/economy.js?v=1.5.7';
+import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.7';
 /* ================= 生涯終章 ================= */
 const BUCKET_G={CPBL:120,NPB:143,MLB:162};
 /* 守位分：守位難度(POS_ADJ_RUNS 以「每 162 場」計)換算成該聯盟的實際球季長度。
@@ -141,6 +141,26 @@ export function posTierK(st,bucket){
   const s=(POS_TIER_STR[bucket]!=null?POS_TIER_STR[bucket]:1);
   return 1+(acc/g-1)*s;
 }
+/* ⚠ 刻意的設計，不是 bug：生涯評價「一個聯盟一份履歷」，分開算、取最好的那份
+   （呼叫端 ui/retire.js 取 i 最小者）。所以中職打 16 年是一份完整履歷，
+   中職 8 年＋日職 8 年是兩份各半的履歷，兩份都不夠看。
+
+   實測代價（完整流程模擬，N=2500／路線）：
+     只待過一個頂級舞台 → 橫跨兩個
+     先發投手 20.8% → 14.5%　捕手 22.2% → 11.4%　游擊 19.1% → 8.9%
+     最佳聯盟年資 15~16 → 11~12 年，最佳聯盟累積分 1566 → 1268
+   而且付這個代價的人數依守位差很多：先發投手 44~48% 會橫跨兩個舞台，
+   捕手與游擊只有 21~25%——這就是先發投手「名人堂率不隨天賦上升」(18/17/17)
+   的成因：一半的人生涯被拆散，而拆散率不隨運氣變動，於是對每一層均勻扣分。
+
+   為什麼不改（2026-08-21 決定）：現實中日本野球殿堂與古柏鎮本來就是分開的兩座，
+   旅外把生涯切成兩半、兩邊都不夠格，是真實存在的球員命運，該有代價。
+   評估過的替代方案：跨聯盟累積分打折互相折抵（×0.25~0.35）、另設合併全生涯的
+   總評價——兩者都會讓「橫跨兩個舞台」不再有代價，等於取消這個設計，故不採用。
+
+   若日後有人看到「橫跨兩聯盟名人堂率腰斬」想當成 bug 修，請先讀完這段。
+   要驗證請用完整流程模擬（高中→引退、玩家行為母體驅動），不要用固定能力的靜態測試
+   ——靜態測試沒有聯盟流動，量不到這個效應。 */
 export function tierOf(bucket){
   const st=S.stats[bucket]; if(!st)return null;
   const hs=honorScore(bucket);
@@ -153,11 +173,14 @@ export function tierOf(bucket){
   /* 五級門檻整條依守位加權平移(不只名人堂)：同一個守位就該從頭到尾用同一把尺。 */
   const pk=posTierK(st,bucket);
   const hk=((HOF_TH_K[bucket]||{})[posKey])||1; /* 名人堂線獨立微調,明星以下不受影響(詳見 economy.js) */
-  let i=sc>=th[0]*pk*hk?0:sc>=th[1]*pk?1:sc>=th[2]*pk?2:sc>=th[3]*pk?3:4;
+  const hofTh=th[0]*pk*hk;                 /* 這段生涯實際適用的名人堂線 */
+  let i=sc>=hofTh?0:sc>=th[1]*pk?1:sc>=th[2]*pk?2:sc>=th[3]*pk?3:4;
   /* 獎項保底:MVP/最高投手獎至少明星球員;單項王至少每日球員 */
   if(hs.mvp||hs.aceN)i=Math.min(i,1);
   else if(hs.king)i=Math.min(i,2);
-  return {i,sc:Math.round(sc),name:LG_N[bucket]+['名人堂','明星球員','每日球員','邊緣球員','一頁過客'][i]};
+  /* hofTh 一併回傳:票選畫面的「首輪入選」與「得票率」必須跟這裡用同一把尺，
+     不能各自去讀 TIER_TH[bucket][0] 的裸值(詳見 ui/retire.js 的說明)。 */
+  return {i,sc:Math.round(sc),hofTh,name:LG_N[bucket]+['名人堂','明星球員','每日球員','邊緣球員','一頁過客'][i]};
 }
 export function statTable(bucket){
   const st=S.stats[bucket]; if(!st)return '';

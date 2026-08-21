@@ -1,9 +1,9 @@
-import {S} from '../core/state.js?v=1.5.5';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.5';
-import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.5';
-import {LV} from '../data/teams.js?v=1.5.5';
-import {card, choose, board} from '../ui/dom.js?v=1.5.5';
-import {roleN, pitcherRole} from './season.js?v=1.5.5';
+import {S} from '../core/state.js?v=1.5.7';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.7';
+import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.7';
+import {LV} from '../data/teams.js?v=1.5.7';
+import {card, choose, board} from '../ui/dom.js?v=1.5.7';
+import {roleN, pitcherRole} from './season.js?v=1.5.7';
 export function dpScore(p){ const a=S.ab;
   switch(p){
     case 'SS': return a.rng*0.5 + a.fld*0.3 + a.arm*0.2;   /* 游擊:範圍主導 */
@@ -146,9 +146,9 @@ export function playerType(){
   if(cand[0][1]-cand[1][1]<=3&&cand[0][1]>=60)return '全能型';
   return cand[0][0];
 }
-export function abCost(k){ /* 目前這一級要花幾點(須與 addAb 成本公式一致) */
+export function abCost(k){ /* 目前這一級要花幾點(須與 addAb 成本公式一致，含體力的例外) */
   const cur=S.ab[k], pk=(S.pot&&S.pot[k])||62, isP=S.pos==='P';
-  let c=isP?(cur>=66?7:cur>=58?4:cur>=50?2:1):(cur>=72?3:cur>=64?2:1);
+  let c=(isP&&k!=='sta')?(cur>=66?7:cur>=58?4:cur>=50?2:1):(cur>=72?3:cur>=64?2:1);
   if(cur>=pk)c*=isP?4:3; return c;
 }
 export function normalizeAbCarry(k){
@@ -173,8 +173,16 @@ export function addAb(k,v){ if(!(k in S.ab))return 0;
   const pk=(S&&S.pot&&S.pot[k])||62;
   const isP=S&&S.pos==='P';
   while(bud>0&&cur<80){
-    let cost=isP?(cur>=66?7:cur>=58?4:cur>=50?2:1)      /* 投手只有4項,養成成本最陡 */
-              :(cur>=72?3:cur>=64?2:1);                    /* 野手9項,中高段變貴 */
+    /* v1.5.9 體力單獨改用野手曲線。體力不是球威，卻跟球速/控球/變化球吃同一條
+       最陡的成本(66 以上每點 7)，而先發必須把體力墊到 52 才站得上輪值——那些點數
+       本來該進球威。實測結果是先發成為唯一一條「實際峰值低於自身潛力」的路線
+       (峰值 − 潛力 = −3.3；後援 0.0、捕手 +2.3、一壘 +3.7)，天賦再好也轉不成分數：
+       名人堂率在四個運氣分層是 12/12/9/15%，完全沒有梯度。
+       只動體力這一項(球威成本與超潛力 ×4 都不碰)之後：−3.3 → −1.3，
+       名人堂率 15/14/15/55%——普通運氣只動 3 個百分點，但「天賦好又健康」
+       從 15% 回到 55%，跟捕手(54)、游擊(52) 對齊。後援幾乎不受影響(本來就不練體力)。 */
+    let cost=(isP&&k!=='sta')?(cur>=66?7:cur>=58?4:cur>=50?2:1)  /* 投手球威,養成成本最陡 */
+              :(cur>=72?3:cur>=64?2:1);                          /* 野手9項與投手體力 */
     if(cur>=pk)cost*=isP?4:3; /* 天花板之上:投手×4、野手×3 */
     if(bud>=cost){bud-=cost;cur++;} else break; }
   if(cur>=80) S.lastOverflow=bud; /* 滿 80 後，剩下的點數才是真正的溢出 */
