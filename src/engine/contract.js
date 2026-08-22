@@ -228,7 +228,7 @@ export function offseasonTradeCheck(cont){
 }
 export function doTradeExec(){
   /* 季末交易只更換下季球隊，當季成績仍完整歸屬原隊。 */
-  S.teamSeasons=0; S.teamYears=0; S.franchiseActive=false; S.champThisTeam=false; S.champTeam=null;
+  S.teamSeasons=0; S.teamYears=0; S.teamStarYears=0; S.franchiseActive=false; S.champThisTeam=false; S.champTeam=null;
   const list=S.org==='CPBL'?CPBL_TEAMS:S.org==='NPB'?NPB_TEAMS:MLB_TEAMS;
   const nt=pick(list.filter(t=>t!==S.orgTeam)); S.orgTeam=nt; tlNote(2,'轉隊 '+nt); board(1);
 }
@@ -313,7 +313,7 @@ export function signTo(org,lv,team,yrs,mult,annual){
   S.org=org; S.lv=lv;
   /* 【修正】先決定新球隊是誰，比對不一樣才把年資歸零，最後再蓋掉 S.orgTeam */
   const newTeam = team || pick(teamListOf(org));
-  if(newTeam !== S.orgTeam){ S.teamSeasons=0; S.teamYears=0; S.franchiseActive=false; S.champThisTeam=false; S.champTeam=null; tlNote(2,'加盟 '+newTeam); }
+  if(newTeam !== S.orgTeam){ S.teamSeasons=0; S.teamYears=0; S.teamStarYears=0; S.franchiseActive=false; S.champThisTeam=false; S.champTeam=null; tlNote(2,'加盟 '+newTeam); }
   S.orgTeam = newTeam;
   if(org==='CPBL')S.lastCpblTeam=newTeam;
   S.ct=makeContract(yrs||2,mult||1,lv,contractD,annual);

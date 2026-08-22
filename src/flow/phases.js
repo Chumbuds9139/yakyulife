@@ -145,7 +145,10 @@ export function phaseMid(){
 export function updateTeamTenureTraits(){
   if(S.stage!=='PRO'||!S.orgTeam)return;
   S.teamSeasons=(S.teamSeasons||0)+1; /* 同一球團全部球季：二軍、復健年也算忠誠年資。 */
-  if(LV[S.lv].top&&!S.skipMid)S.teamYears=(S.teamYears||0)+1; /* 全年復健算球團年資，但不算實際頂級球季。 */
+  if(LV[S.lv].top&&!S.skipMid){
+    S.teamYears=(S.teamYears||0)+1; /* 樣本不足仍是在一軍度過的球季，照常累積一軍年資。 */
+    if(seasonGrade(S.lastSt,S.lv)>=2)S.teamStarYears=(S.teamStarYears||0)+1;
+  }
 
   if(!S.traits.goldcloth&&S.orgTeam==='台中猛獁'&&(S.teamTally.CPBL&&S.teamTally.CPBL['台中猛獁']>=10)){
     S.traits.goldcloth=true;
@@ -162,8 +165,8 @@ export function updateTeamTenureTraits(){
     card('gold','神主牌效果恢復',`來到 <b class="hl">${S.orgTeam}</b> 的第七個頂級球季，你再一次成為城市無法割捨的招牌——<b class="hl">交易保護與 4% 合約溢價重新生效</b>。`); board(1);
   }
 
-  /* ◯◯先生：同隊至少 15 季，且其中至少 2/3 是頂級聯盟球季。 */
-  const mrEligible=isMrTeamEligible(S.teamSeasons,S.teamYears);
+  /* ◯◯先生：同隊至少 15 個一軍球季，且其中至少 2/3 達明星級表現。 */
+  const mrEligible=isMrTeamEligible(S.teamYears,S.teamStarYears);
   if(!S.traits.mrteam&&mrEligible){ S.traits.mrteam=true; S.mrTeamName=S.orgTeam;
     const nick=teamNick(S.orgTeam);
     card('gold','隱藏稱號：'+nick+'先生',`在同一支球隊走過 <b class="hl">${S.teamSeasons}</b> 個球季，其中 <b class="hl">${S.teamYears}</b> 季站在頂級舞台。球迷不再喊你的名字，他們喊你「<b class="hl">${nick}先生</b>」——你就是這支球隊的代名詞。`); board(1);
