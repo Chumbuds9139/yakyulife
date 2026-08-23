@@ -342,11 +342,15 @@ const SH_THEMES=['a','b','c','d'];
    Neither is persisted: a career settles once, and the next run should start from whatever
    theme that player is actually looking at. */
 let shOpt=null;
+let shCareerKey=null;
 const shCache=new Map();
 /* 結算圖面板：開啟即以目前佈景畫好，換主題或開關球迷看板都在原地重畫 */
 export function shareImageSheet(evals,picks){
+  const careerKey=SEED+'|'+S.name+'|'+S.year;
+  if(!shOpt||shCareerKey!==careerKey){
+    shCareerKey=careerKey; shOpt={theme:document.body.dataset.theme||'a',fans:false}; shCache.clear();
+  }
   const fanN=(picks||[]).length;
-  if(!shOpt)shOpt={theme:document.body.dataset.theme||'a',fans:false};
   const st=shOpt;
   if(!fanN)st.fans=false;
   const fileName='棒球生涯結算_'+S.name+'.png';
