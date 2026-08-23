@@ -70,7 +70,8 @@ export function phasePre(){
     if(S.six>=5&&!S.traits.genius&&S.age<22){ S.traits.genius=true;
       {
       const exDef=S.pos==='C'?['rng','fld','arm','cat']:[];
-      const cands=POS_AB[S.pos].filter(k=>S.ab[k]<70&&!exDef.includes(k));
+      /* 目前能力低於 70 還不夠：潛力已滿 80 的項目不能再吃掉這次潛力覺醒。 */
+      const cands=POS_AB[S.pos].filter(k=>S.ab[k]<70&&(S.pot[k]||62)<80&&!exDef.includes(k));
       for(let i=cands.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=cands[i];cands[i]=cands[j];cands[j]=t;}
       const boost=cands.slice(0,2), bl=[];
       boost.forEach(k=>{ S.pot[k]=Math.min(80,(S.pot[k]||62)+10);
@@ -353,3 +354,4 @@ export function movement(){
       if(S.traits.yips){ removeTrait('yips','失憶症'); card('good','走出陰影','將身體與心靈重新來過，終於爬回了原本的高度，——<b class="hl">失憶症痊癒</b>。'); } } }
   finishContractYear(o);
 }
+
