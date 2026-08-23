@@ -125,9 +125,11 @@ export function honorScore(bucket){
       :awards.some(a=>/最佳投手|最佳打者|賽揚/.test(a))?460:0;
     const titleN=awards.filter(a=>/(勝投王|防禦率王|三振王|救援王|中繼王|打擊王|全壘打王|盜壘王|打點王|上壘王)$/.test(a)).length;
     const titles=Math.min(200,titleN*100);
-    const fielding=awards.some(a=>/守備聖經|金手套/.test(a))?150:0;
-    /* 每年只計「最高大獎」或「小獎組合」較高者；不同年度仍完整累積。 */
-    sc+=Math.max(major,titles+fielding);
+    /* 守備獎獨立於打擊獎計分；同年兩者皆有時只取層級較高的守備聖經。 */
+    const fielding=awards.some(a=>/守備聖經/.test(a))?250
+      :awards.some(a=>/金手套/.test(a))?100:0;
+    /* 大獎與打擊單項王取較高者，再加上獨立的守備價值；不同年度仍完整累積。 */
+    sc+=Math.max(major,titles)+fielding;
   });
   if(S.traits.franchise)sc+=200; /* 神主牌:忠誠加成 */
   return {sc};

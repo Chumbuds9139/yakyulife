@@ -374,6 +374,14 @@ export function endGame(reason){
   }
   if(S.traits.glass)picks.push('他甚麼都好，只是真的太痛了，沒有那些傷他會更好的，好可惜');
   if(S.traits.iron)picks.push('鐵人謝幕。我以為今年狀元退休的時候還可以看到{n}打球');
+  if(S.traits.oldghost){
+    const oldGhostFans=[
+      '過去是他的、現在是他的、未來還是他的。',
+      '今年新人大物引退時，先發第四棒{n}',
+      '老鬼已經擋了別人快20年了，還要擋這些年輕人多久？'
+    ];
+    picks.push(oldGhostFans[Math.floor(R()*oldGhostFans.length)]);
+  }
   if(S.traits.genius&&best<=1)picks.push('學生時代就是天才，還好沒有養壞，真的打出來了');
   if(S.honors.some(h=>h.includes('經典賽冠軍')))picks.push('經典賽奪冠那一夜，全台灣都沒睡。謝謝你');
   if(S.love.caught)picks.push('球打得還可以啦，但私生活真的有夠亂的，新聞比他的嗨賴還多');
