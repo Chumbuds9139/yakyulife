@@ -234,7 +234,9 @@ function secTraits(){
 }
 function secLog(){
   const L=S.log||[], isP=S.pos==='P';
-  const yearHTML=y=>(isChampionshipYear(S.honors,y)?'<span class="champ-crown" title="該年度奪冠" role="img" aria-label="冠軍"></span>':'')+y;
+  const yearHTML=y=>{ const crown=isChampionshipYear(S.honors,y)
+    ?'<span class="champ-crown" title="該年度奪冠" role="img" aria-label="冠軍"></span>':'';
+    return `<span class="champ-slot">${crown}</span>${y}`; };
   /* 業餘年份沒有 st(逐項數據)，只有文字事蹟——這就是兩張表的分界 */
   const ama=L.filter(r=>!r.st), pro=L.filter(r=>r.st);
   const hd=isP?['G','IP','W-L','SV','SO','ERA']:['G','PA','AVG','HR','RBI','OPS'];

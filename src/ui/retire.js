@@ -36,7 +36,8 @@ export const RP_F3=v=>v==null?'-':v.toFixed(3).replace(/^0/,'');
 export const RP_F2=v=>v==null?'-':v.toFixed(2);
 export function championshipYear(year){ return isChampionshipYear(S.honors,year); }
 export function settlementYearHTML(year){
-  return (championshipYear(year)?'<span class="champ-crown" title="該年度奪冠" role="img" aria-label="冠軍"></span>':'')+year;
+  const crown=championshipYear(year)?'<span class="champ-crown" title="該年度奪冠" role="img" aria-label="冠軍"></span>':'';
+  return `<span class="champ-slot">${crown}</span>${year}`;
 }
 export function rpCumData(){ /* per-league career totals; best-of-column marks need 2+ rows */
   const isP=S.pos==='P';

@@ -216,7 +216,7 @@ export function renderShareImage(evals,picks,opt){
         c.font=(o.best||o.bold||opt.bold?'700 ':'')+fs+'px '+((cc.zh||o.zh)?F_SANS:F_MONO);
         c.fillStyle=o.best?C_ACC:(o.color||opt.color||C_TX);
         c.textAlign=cc.a==='l'?'left':'right';
-        let t=String(o.t); const crownPad=o.crown?9:0, maxw=cc.w-12-crownPad;
+        let t=String(o.t); const crownPad=o.year?9:0, maxw=cc.w-12-crownPad;
         while(c.measureText(t).width>maxw&&t.length>1)t=t.slice(0,-1);
         mid(t,cc.a==='l'?cc.x+7+crownPad:cc.x+cc.w-7,cyR); });
       c.textAlign='left'; y+=rh; }
@@ -237,7 +237,7 @@ export function renderShareImage(evals,picks,opt){
         .concat(intl.hd.map(t=>({t,w:56,a:'r'}))));
       thRow(cols);
       intl.rows.forEach((r,i)=>{ tdRow(cols,
-        [{t:r.year,crown:championshipYear(r.year)},{t:r.name,zh:true},{t:r.rank,badge:/冠軍/.test(r.rank)?'gold':/亞軍/.test(r.rank)?'silver':''}]
+        [{t:r.year,year:true,crown:championshipYear(r.year)},{t:r.name,zh:true},{t:r.rank,badge:/冠軍/.test(r.rank)?'gold':/亞軍/.test(r.rank)?'silver':''}]
           .concat(r.txt),{bg:i%2?C_ROW:null,rh:28}); });
       tdRow(cols,[{t:'通算',zh:true,bold:true,color:C_GOOD},null,null].concat(intl.tot.map(t=>({t,bold:true}))),
         {bg:C_PANEL,topline:true,rh:28});
@@ -263,7 +263,7 @@ export function renderShareImage(evals,picks,opt){
       const cols=tcols([{t:'年',w:50,a:'l'},{t:'齡',w:38,a:'r'},{t:'球隊',w:110,a:'l',zh:true},{t:'成績',w:550,a:'l',zh:true}]);
       thRow(cols);
       amaLogs.forEach((r,i)=>{ tdRow(cols,
-        [{t:r.y,crown:championshipYear(r.y)},r.age,{t:r.tm,zh:true},{t:r.line,zh:true,color:r.inj?null:C_DIM}],
+        [{t:r.y,year:true,crown:championshipYear(r.y)},r.age,{t:r.tm,zh:true},{t:r.line,zh:true,color:r.inj?null:C_DIM}],
         {bg:i%2?C_ROW:null,rh:21,fs:12,color:r.inj?C_BAD:null,bold:r.inj}); });
     }
     /* ---- 生涯年表(職業,按球隊分段) ---- */
@@ -277,7 +277,7 @@ export function renderShareImage(evals,picks,opt){
         y+=6; c.font='700 11px '+F_SANS; c.fillStyle=LGC[b.lg]||C_DIM; ls('2.2px');
         mid((LG_N[b.lg]||'')+' · '+b.team,PADX+7,y+6); ls('0px'); y+=19;
         b.rows.forEach((r,i)=>{ tdRow(cols,
-          [{t:r.y,crown:r.champ},r.age,{t:r.lvl,zh:true,color:r.inj?null:(r.minor?C_DIM:null)}]
+          [{t:r.y,year:true,crown:r.champ},r.age,{t:r.lvl,zh:true,color:r.inj?null:(r.minor?C_DIM:null)}]
             .concat(r.txt.map((t,j)=>({t,best:r.best[j]}))),
           {bg:i%2?C_ROW:null,rh:21,fs:12,color:r.inj?C_BAD:null,bold:r.inj}); });
       });
