@@ -218,6 +218,9 @@ export function phaseEnd(){
   else go();
 }
 /* ---------- 升降級與去向 ---------- */
+export function annualHomecomingEligible(org,lv){
+  return (org==='MiLB'&&!!LV[lv]&&!LV[lv].top)||(org==='NPB'&&lv==='NPB2');
+}
 export function finishContractYear(o){
   if(!S.ct)S.ct=makeContract(2,1,S.lv,currentSalaryRating(S.lastD||0));
   S.ct.yrs--;
@@ -235,14 +238,17 @@ export function finishContractYear(o){
       card('info','球團續約',`你仍在選秀球隊掌控期（服務 ${S.svc}/5 年），球團依服務年資與近年表現行使續約權——固定年薪 <b class="hl">${fmtMoney(S.ct.annual)}</b> × <b class="hl">${S.ct.yrs} 年</b>，合約總額 <b class="hl">${fmtMoney(S.ct.annual*S.ct.yrs)}</b>。`); board(1);
     } else { S.ct=makeContract(ri(1,2),1,S.lv,currentSalaryRating(S.lastD||0)); } /* 非頂級層級 */
   }
-  /* 仍在小聯盟時，每個球季結束都讓玩家重新決定是否返台。 */
-  if(S.org==='MiLB'&&!LV[S.lv].top){
+  /* 仍在海外養成層級時，每個球季結束都讓玩家重新決定是否返台。
+     日職二軍與小聯盟相同，不因身處支配下體系就鎖死去向。 */
+  if(annualHomecomingEligible(S.org,S.lv)){
     const homeLv=o>=LV.CPBL1.min?'CPBL1':'CPBL2';
-    choose('旅美生涯抉擇',[
-      {t:'繼續挑戰小聯盟',main:true,s:`留在${LV[S.lv].n}，繼續朝大聯盟前進`,f:()=>crossOffers(o)},
-      {t:`返台加盟中職（${LV[homeLv].n}）`,s:'結束小聯盟挑戰，回到台灣延續職業生涯',f:()=>{
+    const inJapan=S.org==='NPB';
+    choose(inJapan?'旅日生涯抉擇':'旅美生涯抉擇',[
+      {t:inJapan?'繼續挑戰日職':'繼續挑戰小聯盟',main:true,
+       s:inJapan?`留在${LV[S.lv].n}，繼續爭取升上一軍`:`留在${LV[S.lv].n}，繼續朝大聯盟前進`,f:()=>crossOffers(o)},
+      {t:`返台加盟中職（${LV[homeLv].n}）`,s:`結束${inJapan?'旅日':'小聯盟'}挑戰，回到台灣延續職業生涯`,f:()=>{
         signTo('CPBL',homeLv);
-        card('good','返鄉',`你決定結束旅美挑戰，回到台灣，從<b class="hl">${LV[homeLv].n}</b>延續職業生涯。`);
+        card('good','返鄉',`你決定結束${inJapan?'旅日':'旅美'}挑戰，回到台灣，從<b class="hl">${LV[homeLv].n}</b>延續職業生涯。`);
         advance();
       }}
     ]);

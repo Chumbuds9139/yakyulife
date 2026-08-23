@@ -357,10 +357,27 @@ export function termEstimate(lv,d,offerMult,profile,franchisePremium){
   const line=(y,m)=>{ const annual=calcContractAnnual(lv,mp.rating,+(m*bm).toFixed(2)); return `${fmtMoney(annual)}×${y}年＝${fmtMoney(annual*y)}`; };
   return tp.longEligible?`長約 ${line(tp.longY,tp.longM)}／短約 ${line(tp.shortY,tp.shortM)}`:`${mp.proveIt?'證明約':'短約'} ${line(tp.shortY,tp.shortM)}`;
 }
-export function termChoice(o,d,baseTitle,onPick,onReject,rejectLabel,rejectDesc,offerMult,franchisePremium){
+export function protectExtensionOffer(y,annual,minGuaranteedTotal,guaranteedYears){
+  const years=Math.max(1,Math.round(y||1)), rawAnnual=Math.max(0,Math.round(annual||0));
+  const oldTotal=Math.max(0,Math.round(minGuaranteedTotal||0)), oldYears=Math.max(0,Math.round(guaranteedYears||0));
+  /* 舊約保障完整保留；延長出去的每一年，至少再加上新估值的一年薪資。 */
+  const floorTotal=oldTotal+rawAnnual*Math.max(0,years-oldYears);
+  const protectedAnnual=Math.max(rawAnnual,Math.ceil(floorTotal/years));
+  return {annual:protectedAnnual,total:protectedAnnual*years};
+}
+export function remainingContractGuarantee(){
+  if(!S.ct)return 0;
+  const yrs=Math.max(0,Math.round(S.ct.yrs||0)); if(!yrs)return 0;
+  const floor=levelMinAnnual(S.lv), schedule=S.ct.annualSchedule;
+  if(schedule&&schedule.length>=yrs)return schedule.slice(0,yrs).reduce((sum,v)=>sum+Math.max(floor,Math.round(v||0)),0);
+  return contractAnnual()*yrs;
+}
+export function termChoice(o,d,baseTitle,onPick,onReject,rejectLabel,rejectDesc,offerMult,franchisePremium,extensionProtection){
   const mp=contractMarketProfile(d), tp=termParams(d,S.lv,mp,franchisePremium);
   const now=contractAnnual(), baseMult=offerMult||1;
-  const offer=(y,m)=>{ const actualMult=+(m*baseMult).toFixed(2), annual=calcContractAnnual(S.lv,mp.rating,actualMult); return {y,m:actualMult,annual,total:annual*y}; };
+  const offer=(y,m)=>{ const actualMult=+(m*baseMult).toFixed(2), rawAnnual=calcContractAnnual(S.lv,mp.rating,actualMult);
+    const protectedPay=protectExtensionOffer(y,rawAnnual,extensionProtection&&extensionProtection.total,extensionProtection&&extensionProtection.years);
+    return {y,m:actualMult,annual:protectedPay.annual,total:protectedPay.total}; };
   const describe=x=>`固定年薪 <b>${fmtMoney(x.annual)}</b> × ${x.y} 年｜合約總額 <b>${fmtMoney(x.total)}</b>`;
   const opts=[];
   if(tp.longEligible){ /* 夠格才給長約選項 */
@@ -376,11 +393,17 @@ export function termChoice(o,d,baseTitle,onPick,onReject,rejectLabel,rejectDesc,
   }
   if(onReject)opts.push({t:rejectLabel||'拒絕，維持現狀',s:rejectDesc||'不接受這份合約',f:onReject});
   const health=mp.label?`｜<span class="dn">${mp.label}</span>`:'';
-  choose(`${baseTitle}<div style="margin-top:8px;color:var(--dim);font-size:13px">目前年薪：<b class="hl">${fmtMoney(now)}</b>｜市場依最近三季加權估值${health}</div>`,opts);
+  const guarantee=extensionProtection&&extensionProtection.total?`｜原約剩餘保障：<b class="hl">${fmtMoney(extensionProtection.total)}</b>`:'';
+  choose(`${baseTitle}<div style="margin-top:8px;color:var(--dim);font-size:13px">目前年薪：<b class="hl">${fmtMoney(now)}</b>${guarantee}｜市場依最近三季加權估值${health}</div>`,opts);
 }
 /* 母隊延長續約:提前綁約 */
 export function extensionOffer(o){
   const d=S.lastD||0;
+  const remainingYears=Math.max(0,S.ct&&S.ct.yrs||0), mp=contractMarketProfile(d), tp=termParams(d,S.lv,mp);
+  const maxOfferedYears=Math.max(tp.longEligible?tp.longY:0,tp.shortY);
+  /* 新約若沒有增加任何保障年限，就只是拿新估值覆蓋舊約，不應包裝成提前延長。 */
+  if(maxOfferedYears<=remainingYears){ crossOffers(o); return; }
+  const remainingGuarantee=remainingContractGuarantee();
   termChoice(o,d,`母隊提前延長續約 · ${S.teamName()}（原合約剩 1 年）`,(y,m,annual,total)=>{
     const effectiveYear=S.year+1, team=S.teamName();
     /* 提前續約直接覆蓋剩餘舊約；下一球季起領新約，不額外多綁舊約年數。 */
@@ -390,7 +413,7 @@ export function extensionOffer(o){
   }, ()=>{ /* 拒絕延長:維持原合約繼續跑 */
     card('info','婉拒延長',`你婉拒了母隊的提前延長，選擇打完現有合約再說。`);
     crossOffers(o);
-  });
+  },undefined,undefined,undefined,undefined,{total:remainingGuarantee,years:remainingYears});
 }
 /* ---------- FA 自由球員 ---------- */
 export function faFlow(o){
