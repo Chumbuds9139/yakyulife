@@ -1,21 +1,21 @@
-import {S, stepQ, nextStep, stageLabel} from '../core/state.js?v=1.5.7';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.7';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.7';
-import {LV, PATHS, teamNick} from '../data/teams.js?v=1.5.7';
-import {AMA_ANNUAL} from '../data/economy.js?v=1.5.7';
-import {card, choose, board, divider} from '../ui/dom.js?v=1.5.7';
-import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.5.7';
-import {allocUI} from '../ui/alloc.js?v=1.5.7';
-import {addAb, ovr, dposReview, statBonusTxt} from '../engine/ability.js?v=1.5.7';
-import {rollInjury, tjCap} from '../engine/injury.js?v=1.5.7';
-import {isMrTeamEligible} from '../engine/tenure.js?v=1.5.7';
-import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.5.7';
-import {championshipChance} from '../engine/championship.js?v=1.5.7';
-import {buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, signTo, teamChampRate} from '../engine/contract.js?v=1.5.7';
-import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.5.7';
-import {loveEvent} from './love.js?v=1.5.7';
-import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.5.7';
-import {endGame} from '../ui/retire.js?v=1.5.7';
+import {S, stepQ, nextStep, stageLabel} from '../core/state.js?v=1.5.8';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.8';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.8';
+import {LV, PATHS, teamNick} from '../data/teams.js?v=1.5.8';
+import {AMA_ANNUAL} from '../data/economy.js?v=1.5.8';
+import {card, choose, board, divider} from '../ui/dom.js?v=1.5.8';
+import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.5.8';
+import {allocUI} from '../ui/alloc.js?v=1.5.8';
+import {addAb, ovr, dposReview, statBonusTxt} from '../engine/ability.js?v=1.5.8';
+import {rollInjury, tjCap} from '../engine/injury.js?v=1.5.8';
+import {isMrTeamEligible} from '../engine/tenure.js?v=1.5.8';
+import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.5.8';
+import {championshipChance} from '../engine/championship.js?v=1.5.8';
+import {buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, signTo, teamChampRate} from '../engine/contract.js?v=1.5.8';
+import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.5.8';
+import {loveEvent} from './love.js?v=1.5.8';
+import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.5.8';
+import {endGame} from '../ui/retire.js?v=1.5.8';
 /* ================= 年度流程 ================= */
 export function startYear(){ S.yearOutsideIncome=0; stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* ---------- 季初 ---------- */
@@ -74,8 +74,9 @@ export function phasePre(){
       const cands=POS_AB[S.pos].filter(k=>S.ab[k]<70&&(S.pot[k]||62)<80&&!exDef.includes(k));
       for(let i=cands.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=cands[i];cands[i]=cands[j];cands[j]=t;}
       const boost=cands.slice(0,2), bl=[];
-      boost.forEach(k=>{ S.pot[k]=Math.min(80,(S.pot[k]||62)+10);
-        S.ab[k]=clamp(S.ab[k]+5,1,80); bl.push(`${ABL[k]} <b class="up">+5</b>（潛力上限 +10 → ${S.pot[k]}）`); });
+      boost.forEach(k=>{ const oldPot=S.pot[k]||62,newPot=Math.min(80,oldPot+10),potGain=newPot-oldPot;
+        S.pot[k]=newPot; S.ab[k]=clamp(S.ab[k]+5,1,80);
+        bl.push(`${ABL[k]} <b class="up">+5</b>（潛力上限 ${oldPot} → ${newPot}，實際 +${potGain}）`); });
       card('gold','隱藏素質解鎖：天才','22 歲前五度擲出高標值！從今以後，每一顆訓練骰<b class="hl">永久固定 4 點以上</b>，事件卡好結果機率提升至 <b class="hl">70%</b>。'+(bl.length?`天賦覺醒，潛能重新被評估：${bl.join('、')}。`:'')+'天賦，是藏不住的。');
       board(1);
     } }
@@ -170,8 +171,8 @@ export function updateTeamTenureTraits(){
   /* ◯◯先生：同隊至少 15 個一軍球季，且其中至少 2/3 達明星級表現。 */
   const mrEligible=isMrTeamEligible(S.teamYears,S.teamStarYears);
   if(!S.traits.mrteam&&mrEligible){ S.traits.mrteam=true; S.mrTeamName=S.orgTeam;
-    const nick=teamNick(S.orgTeam);
-    card('gold','隱藏稱號：'+nick+'先生',`在同一支球隊走過 <b class="hl">${S.teamSeasons}</b> 個球季，其中 <b class="hl">${S.teamYears}</b> 季站在頂級舞台。球迷不再喊你的名字，他們喊你「<b class="hl">${nick}先生</b>」——你就是這支球隊的代名詞。`); board(1);
+    const nick=teamNick(S.orgTeam),starNeed=Math.ceil(S.teamYears*2/3);
+    card('gold','隱藏稱號：'+nick+'先生',`在同一支球隊走過 <b class="hl">${S.teamSeasons}</b> 個球季，其中 <b class="hl">${S.teamYears}</b> 季站在一軍，並有 <b class="hl">${S.teamStarYears}</b> 季達明星級表現（所需 ${starNeed} 季）。球迷不再喊你的名字，他們喊你「<b class="hl">${nick}先生</b>」——你就是這支球隊的代名詞。`); board(1);
   }
 
   /* ◯◯七彩球衣：同一聯盟生涯效力球隊數超標（中職>3、日職>5、美職>5）。 */
@@ -354,4 +355,3 @@ export function movement(){
       if(S.traits.yips){ removeTrait('yips','失憶症'); card('good','走出陰影','將身體與心靈重新來過，終於爬回了原本的高度，——<b class="hl">失憶症痊癒</b>。'); } } }
   finishContractYear(o);
 }
-

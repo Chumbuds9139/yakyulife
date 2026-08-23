@@ -1,11 +1,11 @@
-import {S} from '../core/state.js?v=1.5.7';
-import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.7';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.7';
-import {LV} from '../data/teams.js?v=1.5.7';
-import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS, EVENT_ROUTES, eventInjuryRisk} from '../data/events.js?v=1.5.7';
-import {card, choose, board} from '../ui/dom.js?v=1.5.7';
-import {addAb, statBonus, statBonusTxt, abGainTxt, ovr} from '../engine/ability.js?v=1.5.7';
-import {majorChampionshipCount} from '../engine/championship.js?v=1.5.7';
+import {S} from '../core/state.js?v=1.5.8';
+import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.8';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.8';
+import {LV} from '../data/teams.js?v=1.5.8';
+import {EVENTS, EVENT_CATEGORY_NAMES, EVENT_COMBINATIONS, EVENT_ROUTES, eventInjuryRisk} from '../data/events.js?v=1.5.8';
+import {card, choose, board} from '../ui/dom.js?v=1.5.8';
+import {addAb, statBonus, statBonusTxt, abGainTxt, ovr} from '../engine/ability.js?v=1.5.8';
+import {majorChampionshipCount} from '../engine/championship.js?v=1.5.8';
 export function traitCard(key,name,desc,tone){ S.traits[key]=true;
   card(tone||'gold','隱藏屬性解鎖：'+name,desc); board(0); }
 export function removeTrait(key,label){ if(S.traits[key]){ S.traits[key]=false;
@@ -210,8 +210,9 @@ export function allocDone(touched,isDice){
     const cands=POS_AB[S.pos].filter(k=>S.ab[k]<70&&(S.pot[k]||62)<80&&!exDef.includes(k));
     for(let i=cands.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=cands[i];cands[i]=cands[j];cands[j]=t;}
     const boost=cands.slice(0,2), bl=[];
-    boost.forEach(k=>{ S.pot[k]=Math.min(80,(S.pot[k]||62)+10); S.ab[k]=clamp(S.ab[k]+5,1,80);
-      bl.push(`${ABL[k]} <b class="up">+5</b>（潛力上限 +10 → ${S.pot[k]}）`); });
+    boost.forEach(k=>{ const oldPot=S.pot[k]||62,newPot=Math.min(80,oldPot+10),potGain=newPot-oldPot;
+      S.pot[k]=newPot; S.ab[k]=clamp(S.ab[k]+5,1,80);
+      bl.push(`${ABL[k]} <b class="up">+5</b>（潛力上限 ${oldPot} → ${newPot}，實際 +${potGain}）`); });
     card('gold','隱藏素質解鎖：大器晚成',`別人都以為你到頂了，你卻在這一年脫胎換骨——從今以後，每一顆訓練骰<b class="hl">永久固定 3 點以上</b>，事件卡好結果機率提升至 <b class="hl">70%</b>。`+(bl.length?`潛能重新被評估：${bl.join('、')}。`:'')+'你的故事，才正要展開。');
     board(1); }
 }
@@ -239,4 +240,3 @@ export function checkTraitsMid(){
   if(!S.traits.cancer&&!S.traits.franchise&&!S.traits.intlace&&((S.cntSocialBoldFail||0)>10||S.traits.scum)){
     traitCard('cancer','更衣室毒瘤','教練受夠了你的不可控，隊友對你的新聞指指點點。比起成績，球團現在更想清理休息室的氣氛——<b class="dn">季末被交易機率大增、續約條件惡化</b>。','bad'); }
 }
-
