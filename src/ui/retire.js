@@ -8,7 +8,6 @@ import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.8';
 import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.8';
 import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.8';
 import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.8';
-import {playerType} from '../engine/ability.js?v=1.5.8';
 import {fmtMoney} from '../engine/contract.js?v=1.5.8';
 import {isChampionshipYear} from '../engine/championship.js?v=1.5.8';
 import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.8';
@@ -20,7 +19,13 @@ import {shareImageSheet} from './share-image.js?v=1.5.8';
    (7.6,1.9) over (2.6,12) to (7.6,22.1)); the right seam mirrors them at x=24-x. */
 export function rpTagline(){
   const first=S.log.length?S.log[0].y:'?';
-  return `${primaryPos()}｜${playerType()}｜${first}–${S.year}｜引退時 ${S.age} 歲`+
+  let bestTier=null;
+  ['MLB','NPB','CPBL'].forEach(bucket=>{
+    const tier=tierOf(bucket);
+    if(tier&&(!bestTier||tier.i<bestTier.i||(tier.i===bestTier.i&&tier.sc>bestTier.sc)))bestTier=tier;
+  });
+  const labels=[primaryPos(),bestTier&&bestTier.name,`${first}–${S.year}`,`引退時 ${S.age} 歲`].filter(Boolean);
+  return labels.join('｜')+
     (S.pos==='P'&&(S.tjCrises||S.tjCount)?`｜手肘危機×${S.tjCrises||0}／TJ×${S.tjCount}`:'');
 }
 export function rpFamily(){
