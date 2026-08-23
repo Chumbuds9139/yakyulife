@@ -372,25 +372,25 @@ export function endGame(reason){
       }
     }); });
   }
-  if(S.traits.glass)picks.push('如果沒有那些傷，他的生涯會是什麼樣子……不敢想');
-  if(S.traits.iron)picks.push('鐵人謝幕。那個連續出賽紀錄，大概很久都不會被打破了');
-  if(S.traits.genius&&best<=1)picks.push('高中就被叫做天才的男人，真的把天賦兌現了');
+  if(S.traits.glass)picks.push('他甚麼都好，只是真的太痛了，沒有那些傷他會更好的，好可惜');
+  if(S.traits.iron)picks.push('鐵人謝幕。我以為今年狀元退休的時候還可以看到{n}打球');
+  if(S.traits.genius&&best<=1)picks.push('學生時代就是天才，還好沒有養壞，真的打出來了');
   if(S.honors.some(h=>h.includes('經典賽冠軍')))picks.push('經典賽奪冠那一夜，全台灣都沒睡。謝謝你');
-  if(S.love.caught)picks.push('球技沒話說，私生活就……唉，不說了');
-  if(S.traits.scum)picks.push('引退串裡不准提那些事，今天只談棒球。……好啦還是很氣');
-  if(S.traits.franchise)picks.push(S.franchiseActive?'一隊一人，退休號碼準備掛上去了。謝謝你留下來':'他曾經是一座城市不能被取代的神主牌，那段歲月沒有人會忘記');
-  if(S.traits.legend)picks.push('這輩子能看到你打球，是我們這代球迷的福氣。歷史級的');
+  if(S.love.caught)picks.push('球打得還可以啦，但私生活真的有夠亂的，新聞比他的嗨賴還多');
+  if(S.traits.scum)picks.push('實在很不想恭喜他引退，想到他做過的事情，吼，想到就氣。');
+  if(S.traits.franchise)picks.push(S.franchiseActive?'一隊一人，退休號碼準備掛上去了。謝謝你留下來':'雖然你離開了，但還是謝謝你那段時間帶給我們球隊的希望');
+  if(S.traits.legend)picks.push('這種千年一遇的球員，能夠看到他的比賽，真的是最幸福的事情');
   if(S.traits.intlace)picks.push('穿上國家隊球衣的那個男人，永遠的國家英雄');
   if(S.traits.taiwan)picks.push('六度披上國家隊戰袍，從不推辭。他比劃胸口的那一幕，我手機桌布放到現在');
   if(S.traits.disc)picks.push('自律到可怕，凌晨四點的球場都認得他');
-  if(S.traits.favorite)picks.push('不躁進也不畏縮，歷任教練的先發名單上永遠有他的名字');
-  if(S.traits.cancer)picks.push('球是打得好啦，但那個態度……更衣室少了他反而清靜');
-  if(S.traits.thief)picks.push('當年拒絕下放又打不出來，薪水小倫這名號是自己掙來的');
+  if(S.traits.favorite)picks.push('他真的很有教練愛欸，我一度懷疑他有總A裸照');
+  if(S.traits.cancer)picks.push('真的是休息室毒瘤，巨嬰就趕快退休吧');
+  if(S.traits.thief)picks.push('被這個小倫倫了好幾年，打不好還是有高薪，真的有夠爽');
   if(S.traits.mrteam)picks.push('十五年只為一隊，'+(teamNick(S.mrTeamName||'')||'')+'先生這個稱號，他當之無愧');
-  if(S.traits.confidante)picks.push('場上叱吒風雲，感情路上卻總是差一步，唉');
+  if(S.traits.confidante)picks.push('場上叱吒風雲，感情跟我一樣，55555');
   if(S.traits.smallschool)picks.push('從那種小學校打到職業，這故事夠拍一部電影了');
   if(S.traits.grinder)picks.push('沒什麼天分卻拼到這種成就，這種球員最讓人尊敬');
-  if(S.traits.goldcloth)picks.push('我愛台中猛獁，不離不棄');
+  if(S.traits.goldcloth)picks.push('我愛台中猛獁，不離不棄，( ￣□￣)/喔~~喔喔~~喔喔~~喔喔~猛瑪');
   if(S.traits.phoenix)picks.push('從手術台爬回來還能拿獎，這種心臟是鈦合金做的吧');
   if(S.traits.onetool&&S.toolRole)picks.push(`那招${S.toolRole}真的無解，關鍵時刻換他上場就對了`);
   if(S.traits.clutch)picks.push('大場面先生，越關鍵的時刻越信任他');
