@@ -43,7 +43,7 @@ export function rpCumData(){ /* per-league career totals; best-of-column marks n
   const isP=S.pos==='P';
   const order=['MLB','NPB','CPBL','MINOR'].filter(b=>S.stats[b]);
   const hd=isP?['Yrs','G','IP','W','L','SV','HLD','SO','BB','ERA','WHIP']
-             :['Yrs','G','PA','AVG','OBP','SLG','OPS','H','HR','RBI','SB','DEF'];
+             :['Yrs','G','PA','AVG','OBP','SLG','OPS','H','HR','RBI','BB','SB','DEF'];
   const rows=order.map(b=>{ const st=S.stats[b];
     if(isP){
       const era=baseballERA(st), whip=baseballWHIP(st);
@@ -52,10 +52,10 @@ export function rpCumData(){ /* per-league career totals; best-of-column marks n
     }
     const obp=st.PA>0?(st.H+st.BB)/st.PA:null, slg=st.AB>0?slgOf(st):null,
           avg=st.AB>0?st.H/st.AB:null, ops=(obp!=null&&slg!=null)?obp+slg:null;
-    return {b,txt:[st.yr,st.G,st.PA,RP_F3(avg),RP_F3(obp),RP_F3(slg),RP_F3(ops),st.H,st.HR,st.RBI,st.SB,(st.DEF>0?'+':'')+(st.DEF||0)],
-            num:[st.yr,st.G,st.PA,avg,obp,slg,ops,st.H,st.HR,st.RBI,st.SB,st.DEF||0]};
+    return {b,txt:[st.yr,st.G,st.PA,RP_F3(avg),RP_F3(obp),RP_F3(slg),RP_F3(ops),st.H,st.HR,st.RBI,st.BB||0,st.SB,(st.DEF>0?'+':'')+(st.DEF||0)],
+            num:[st.yr,st.G,st.PA,avg,obp,slg,ops,st.H,st.HR,st.RBI,st.BB||0,st.SB,st.DEF||0]};
   });
-  /* Yrs never marked; L/BB "best" is meaningless; ERA/WHIP take the minimum */
+  /* Yrs never marked; pitcher L/BB "best" is meaningless; ERA/WHIP take the minimum */
   const minCols=isP?{9:1,10:1}:{}, skip=isP?{0:1,4:1,8:1}:{0:1}, best={};
   if(rows.length>=2)hd.forEach((_,i)=>{ if(skip[i])return;
     const vs=rows.map(r=>r.num[i]).filter(v=>v!=null&&!(v===0&&!minCols[i]));
@@ -71,10 +71,10 @@ export function rpIntlData(){
         txt:[st.G,fmtIP(st.IP),st.W,st.SV,st.SO,RP_F2(baseballERA(st))]}; }),
       tot:[IS.G,fmtIP(IS.IP),IS.W,IS.SV,IS.SO,RP_F2(baseballERA(IS))]};
   }
-  return {hd:['G','PA','AVG','H','HR','RBI'],
+  return {hd:['G','PA','AVG','H','HR','RBI','BB'],
     rows:il.map(r=>{ const st=r.st; return {year:r.year,name:r.name,rank:r.rank,
-      txt:[st.G,st.PA,RP_F3(st.AB>0?st.H/st.AB:null),st.H,st.HR,st.RBI]}; }),
-    tot:[IS.G,IS.PA,RP_F3(IS.AB>0?IS.H/IS.AB:null),IS.H,IS.HR,IS.RBI]};
+      txt:[st.G,st.PA,RP_F3(st.AB>0?st.H/st.AB:null),st.H,st.HR,st.RBI,st.BB||0]}; }),
+    tot:[IS.G,IS.PA,RP_F3(IS.AB>0?IS.H/IS.AB:null),IS.H,IS.HR,IS.RBI,IS.BB||0]};
 }
 export function rpHonorItems(){ /* [[text,accent?],...] per item; ×N gets the accent color */
   return careerMilestones().map(t=>[[t,0]])
@@ -94,7 +94,7 @@ export function rpOrgOf(r){ /* org team + league + level label for one pro-log r
 export function rpProData(proLogs){ /* team segments: a new block whenever the org changes */
   const isP=S.pos==='P';
   const hd=isP?['G','IP','W-L','SV','HLD','SO','BB','ERA','WHIP']
-             :['G','PA','AVG','OBP','SLG','OPS','H','HR','RBI','SB','DEF'];
+             :['G','PA','AVG','OBP','SLG','OPS','H','HR','RBI','BB','SB','DEF'];
   const blocks=[]; let cur=null;
   proLogs.forEach(r=>{ const o=rpOrgOf(r);
     if(!cur||cur.team!==o.team||cur.lg!==o.lg){ cur={team:o.team,lg:o.lg,rows:[]}; blocks.push(cur); }
@@ -103,7 +103,7 @@ export function rpProData(proLogs){ /* team segments: a new block whenever the o
       txt=[s.G,fmtIP(s.IP),`${s.W}-${s.L}`,s.SV||0,s.HLD||0,s.SO,s.BB||0,RP_F2(era),RP_F2(baseballWHIP(s))];
     } else { const obp=s.PA>0?(s.H+s.BB)/s.PA:null, slg=s.AB>0?slgOf(s):null;
       ops=(obp!=null&&slg!=null)?obp+slg:null;
-      txt=[s.G,s.PA,RP_F3(s.AB>0?s.H/s.AB:null),RP_F3(obp),RP_F3(slg),RP_F3(ops),s.H,s.HR,s.RBI,s.SB,(s.DEF>0?'+':'')+(s.DEF||0)];
+      txt=[s.G,s.PA,RP_F3(s.AB>0?s.H/s.AB:null),RP_F3(obp),RP_F3(slg),RP_F3(ops),s.H,s.HR,s.RBI,s.BB||0,s.SB,(s.DEF>0?'+':'')+(s.DEF||0)];
     }
     /* level cell carries the season's role: fielding position for batters (一軍·CF),
        SP/MR/CL for pitchers (一軍·先發). r.p is already the position actually played,
@@ -300,7 +300,7 @@ export function endGame(reason){
       const isP = S.pos === 'P';
       const head = isP
         ? `<tr><th>年</th><th>齡</th><th style="text-align:left">球隊</th><th>G</th><th>IP</th><th>W</th><th>L</th><th>SV</th><th>HLD</th><th>SO</th><th>BB</th><th>ERA</th><th>WHIP</th></tr>`
-        : `<tr><th>年</th><th>齡</th><th style="text-align:left">球隊</th><th>G</th><th>PA</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>H</th><th>HR</th><th>RBI</th><th>SB</th><th>DEF</th></tr>`;
+        : `<tr><th>年</th><th>齡</th><th style="text-align:left">球隊</th><th>G</th><th>PA</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>H</th><th>HR</th><th>RBI</th><th>BB</th><th>SB</th><th>DEF</th></tr>`;
       const rows = proLogs.map(r => {
         const cS = r.inj ? 'color:var(--bad);font-weight:700;' : '';
         const s = r.st || {G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,avg:0,era:0,WHIP:0,DEF:0};
@@ -315,7 +315,7 @@ export function endGame(reason){
           const obp = s.PA>0 ? obpN.toFixed(3).replace(/^0/,'') : '-';
           const slg = s.AB>0 ? slgN.toFixed(3).replace(/^0/,'') : '-';
           const ops = s.AB>0 ? (obpN+slgN).toFixed(3).replace(/^0/,'') : '-';
-          return `<tr style="${cS}"><td>${settlementYearHTML(r.y)}</td><td>${r.age}</td><td style="text-align:left;white-space:nowrap">${r.tm}${r.p?"·"+r.p:""}</td><td>${s.G}</td><td>${s.PA}</td><td>${avg}</td><td>${obp}</td><td>${slg}</td><td>${ops}</td><td>${s.H}</td><td>${s.HR}</td><td>${s.RBI}</td><td>${s.SB}</td><td>${s.DEF>0?'+':''}${s.DEF||0}</td></tr>`;
+          return `<tr style="${cS}"><td>${settlementYearHTML(r.y)}</td><td>${r.age}</td><td style="text-align:left;white-space:nowrap">${r.tm}${r.p?"·"+r.p:""}</td><td>${s.G}</td><td>${s.PA}</td><td>${avg}</td><td>${obp}</td><td>${slg}</td><td>${ops}</td><td>${s.H}</td><td>${s.HR}</td><td>${s.RBI}</td><td>${s.BB||0}</td><td>${s.SB}</td><td>${s.DEF>0?'+':''}${s.DEF||0}</td></tr>`;
         }
       }).join('');
       card('','生涯年表（職業成績）',`<table class="fin">${head}${rows}</table>`);
@@ -329,9 +329,9 @@ export function endGame(reason){
       const era=RP_F2(baseballERA(IS));
       intlTable=`<h4 style="margin:12px 0 4px">國際賽逐屆成績（中華隊 ${S.intlCount} 屆）</h4><table class="fin"><tr><th>年度</th><th>賽事</th><th>結果</th><th>G</th><th>IP</th><th>W</th><th>SV</th><th>SO</th><th>ERA</th></tr>${rows}<tr><th colspan="3">國際賽通算</th><td>${IS.G}</td><td>${fmtIP(IS.IP)}</td><td>${IS.W}</td><td>${IS.SV}</td><td>${IS.SO}</td><td>${era}</td></tr></table>`;
     } else {
-      const rows=il.map(r=>{ const st=r.st, avg=st.AB>0?(st.H/st.AB).toFixed(3).replace(/^0/,''):'-'; return `<tr><td>${settlementYearHTML(r.year)}</td><td style="text-align:left;white-space:nowrap">${r.name}</td><td>${r.rank}</td><td>${st.G}</td><td>${st.PA}</td><td>${avg}</td><td>${st.H}</td><td>${st.HR}</td><td>${st.RBI}</td></tr>`; }).join('');
+      const rows=il.map(r=>{ const st=r.st, avg=st.AB>0?(st.H/st.AB).toFixed(3).replace(/^0/,''):'-'; return `<tr><td>${settlementYearHTML(r.year)}</td><td style="text-align:left;white-space:nowrap">${r.name}</td><td>${r.rank}</td><td>${st.G}</td><td>${st.PA}</td><td>${avg}</td><td>${st.H}</td><td>${st.HR}</td><td>${st.RBI}</td><td>${st.BB||0}</td></tr>`; }).join('');
       const avg=IS.AB>0?(IS.H/IS.AB).toFixed(3).replace(/^0/,''):'-';
-      intlTable=`<h4 style="margin:12px 0 4px">國際賽逐屆成績（中華隊 ${S.intlCount} 屆）</h4><table class="fin"><tr><th>年度</th><th>賽事</th><th>結果</th><th>G</th><th>PA</th><th>AVG</th><th>H</th><th>HR</th><th>RBI</th></tr>${rows}<tr><th colspan="3">國際賽通算</th><td>${IS.G}</td><td>${IS.PA}</td><td>${avg}</td><td>${IS.H}</td><td>${IS.HR}</td><td>${IS.RBI}</td></tr></table>`;
+      intlTable=`<h4 style="margin:12px 0 4px">國際賽逐屆成績（中華隊 ${S.intlCount} 屆）</h4><table class="fin"><tr><th>年度</th><th>賽事</th><th>結果</th><th>G</th><th>PA</th><th>AVG</th><th>H</th><th>HR</th><th>RBI</th><th>BB</th></tr>${rows}<tr><th colspan="3">國際賽通算</th><td>${IS.G}</td><td>${IS.PA}</td><td>${avg}</td><td>${IS.H}</td><td>${IS.HR}</td><td>${IS.RBI}</td><td>${IS.BB||0}</td></tr></table>`;
     }
   }
   card('','生涯累積數據',(tables||'<p>（無職業層級出賽紀錄）</p>')+intlTable);
