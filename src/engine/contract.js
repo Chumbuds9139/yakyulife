@@ -542,6 +542,14 @@ export function ageGateJP(){ /* 旅日:窗口寬,31 歲(衰退前)都還有機�
   if(age<=31)return 0.25;
   return 0; /* 32 歲起(進入衰退)關窗 */
 }
+export function cpblUsaOfferChance(o,age){
+  /* 中職旅美同時看年齡與綜合評價：年輕球員有培養價值，大齡怪物級戰力仍有被看見的機會。 */
+  const a=Number.isFinite(age)?age:S.age;
+  if(o<57||a>=33)return 0; /* 32 歲是最後窗口，33 歲起關窗 */
+  const base=a<=22?30:a<=24?25:a<=26?20:a<=28?15:a<=30?10:a<=31?6:3;
+  const abilityMult=o>=70?2:o>=65?1.5:o>=60?1:0.75;
+  return Math.min(40,Math.round(base*abilityMult));
+}
 export function rollCpblCrossOffers(o,d,rollJP,rollUSA){
   /* 先獨立完成兩國判定，再組合畫面；日職抽中不再阻斷旅美判定。 */
   const jp=o>=53&&d>=1&&!!rollJP();
@@ -555,7 +563,7 @@ export function crossOffers(o){
   const priceBid=(of,lv)=>{ const target=contractMarketProfile(S.lastD||0,lv);
     of.bonus=Math.round(of.bonus*target.bonus); of.annual=calcContractAnnual(lv,target.rating,+(target.aav*(0.97+R()*0.08)).toFixed(2)); return of; };
   if(S.lv==='CPBL1'){
-    const jpP=Math.round(35*ageGateJP()),usaP=Math.round(30*ageGateUSA(o,57));
+    const jpP=Math.round(35*ageGateJP()),usaP=cpblUsaOfferChance(o,S.age);
     const hits=rollCpblCrossOffers(o,S.lastD||0,
       ()=>jpP>0&&chance(jpP),
       ()=>usaP>0&&chance(usaP));
