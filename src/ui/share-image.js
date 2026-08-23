@@ -335,6 +335,10 @@ function ensureFonts(P){
 }
 function download(url,fileName){ const a=document.createElement('a'); a.href=url; a.download=fileName;
   document.body.appendChild(a); a.click(); a.remove(); }
+export function shareImageFileName(name=S.name,seed=SEED){
+  const safe=value=>String(value??'').trim().replace(/[\\/:*?"<>|]/g,'_').slice(0,64)||'unknown';
+  return `棒球生涯結算_${safe(name)}_${safe(seed)}.png`;
+}
 const SH_THEMES=['a','b','c','d'];
 /* Options survive re-opening the panel; the rendered PNGs are kept too, so flipping back to
    a theme already seen is instant. The whole space is 4 themes x 2, and each entry is a
@@ -353,7 +357,7 @@ export function shareImageSheet(evals,picks){
   const fanN=(picks||[]).length;
   const st=shOpt;
   if(!fanN)st.fans=false;
-  const fileName='棒球生涯結算_'+S.name+'.png';
+  const fileName=shareImageFileName();
   const key=()=>st.theme+(st.fans?'+f':'-f');
   const cur=()=>shCache.get(key());
   /* One scroll surface only: the box is a flex column whose middle section scrolls, so the
