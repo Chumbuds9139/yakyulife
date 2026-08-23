@@ -10,6 +10,7 @@ import {playerName, stageLabel} from '../core/state.js?v=1.5.7';
 import {salParts, fmtMoney} from '../engine/contract.js?v=1.5.7';
 import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js?v=1.5.7';
 import {honorGroups, yearRanges} from '../engine/career.js?v=1.5.7';
+import {isChampionshipYear} from '../engine/championship.js?v=1.5.7';
 import {playerType, ovr} from '../engine/ability.js?v=1.5.7';
 
 export const $=id=>document.getElementById(id);
@@ -233,6 +234,7 @@ function secTraits(){
 }
 function secLog(){
   const L=S.log||[], isP=S.pos==='P';
+  const yearHTML=y=>(isChampionshipYear(S.honors,y)?'<span class="champ-crown" title="該年度奪冠" role="img" aria-label="冠軍"></span>':'')+y;
   /* 業餘年份沒有 st(逐項數據)，只有文字事蹟——這就是兩張表的分界 */
   const ama=L.filter(r=>!r.st), pro=L.filter(r=>r.st);
   const hd=isP?['G','IP','W-L','SV','SO','ERA']:['G','PA','AVG','HR','RBI','OPS'];
@@ -241,7 +243,7 @@ function secLog(){
   let h=`<div class="bd-sec sec-y"><div class="bd-sh">生涯逐年成績</div>`;
   if(!L.length)h+='<div class="bd-none">還沒有完整打過一個球季。</div>';
   if(ama.length){ h+='<div class="bd-yg">業餘</div>';
-    ama.forEach(r=>{ h+=`<div class="bd-yr${r.inj?' inj':''}"><span class="y">${r.y}</span>`+
+    ama.forEach(r=>{ h+=`<div class="bd-yr${r.inj?' inj':''}"><span class="y">${yearHTML(r.y)}</span>`+
       `<span class="a opt">${r.age}</span><span class="tm">${esc(r.tm)}</span>`+
       `<span class="ln">${esc(r.line)}</span></div>`; }); }
   if(pro.length){ h+='<div class="bd-yg">職業</div>'+
@@ -253,7 +255,7 @@ function secLog(){
       } else { const obp=s.PA>0?(s.H+s.BB)/s.PA:null, slg=s.AB>0?slgOf(s):null;
         v=[s.G,s.PA,F3(s.AB>0?s.H/s.AB:null),s.HR,s.RBI,F3((obp!=null&&slg!=null)?obp+slg:null)]; }
       /* the compact row drops BB/WHIP/SB/DEF; the full season line stays on hover */
-      h+=`<div class="bd-yr${r.inj?' inj':''}" title="${esc(r.line)}"><span class="y">${r.y}</span>`+
+      h+=`<div class="bd-yr${r.inj?' inj':''}" title="${esc(r.line)}"><span class="y">${yearHTML(r.y)}</span>`+
         `<span class="a opt">${r.age}</span><span class="tm">${esc(r.tm)}</span>${cells(v)}</div>`; }); }
   return h+'</div>';
 }

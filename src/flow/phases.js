@@ -94,8 +94,7 @@ export function phasePre(){
   if(S.stage==='U'&&S.stageYr>=2){
     const o=ovr();
     const opts=[
-      {t:'投入中華職棒選秀',s:`目前綜合 ${o}｜年齡加權：越年輕評價越高`,f:()=>runDraft(true,afterAsk)},
-      {t:'留在大學繼續磨練',main:true,f:afterAsk}
+      {t:'投入中華職棒選秀',s:`目前綜合 ${o}｜年齡加權：越年輕評價越高`,f:()=>runDraft(true,afterAsk)}
     ];
     /* 年齡懲罰：每長一歲，門檻微調，但簽約金大幅縮水 */
     const agePenalty = Math.max(0, S.age - 18);
@@ -112,6 +111,8 @@ export function phasePre(){
     if(o>=reqMiLB)opts.push({t:'洽談旅美合約',s:`休學挑戰小聯盟｜大齡影響簽約金`,f:()=>{
       S.stage='PRO'; S.team=''; S.svc=0; S.faElig=false;
       pickOfferUI('大聯盟球團報價','MiLB',makeOffers('MiLB',2,bonusMiLB,3,4,o>=55?'A1':'R',null),goPro);}});
+    /* 續留選項固定放在所有選秀／旅外選項之後。 */
+    opts.push({t:'留在大學繼續磨練',main:true,f:afterAsk});
     choose(`大${['一','二','三','四'][S.stageYr-1]}季前 · 升學與職棒的十字路口`,opts);
     return;
   }
@@ -233,6 +234,19 @@ export function finishContractYear(o){
       S.ct=makeContract(ri(1,2),1,S.lv,renewalD,renewalAnnual,{extOffered:false,controlled:true});
       card('info','球團續約',`你仍在選秀球隊掌控期（服務 ${S.svc}/5 年），球團依服務年資與近年表現行使續約權——固定年薪 <b class="hl">${fmtMoney(S.ct.annual)}</b> × <b class="hl">${S.ct.yrs} 年</b>，合約總額 <b class="hl">${fmtMoney(S.ct.annual*S.ct.yrs)}</b>。`); board(1);
     } else { S.ct=makeContract(ri(1,2),1,S.lv,currentSalaryRating(S.lastD||0)); } /* 非頂級層級 */
+  }
+  /* 仍在小聯盟時，每個球季結束都讓玩家重新決定是否返台。 */
+  if(S.org==='MiLB'&&!LV[S.lv].top){
+    const homeLv=o>=LV.CPBL1.min?'CPBL1':'CPBL2';
+    choose('旅美生涯抉擇',[
+      {t:'繼續挑戰小聯盟',main:true,s:`留在${LV[S.lv].n}，繼續朝大聯盟前進`,f:()=>crossOffers(o)},
+      {t:`返台加盟中職（${LV[homeLv].n}）`,s:'結束小聯盟挑戰，回到台灣延續職業生涯',f:()=>{
+        signTo('CPBL',homeLv);
+        card('good','返鄉',`你決定結束旅美挑戰，回到台灣，從<b class="hl">${LV[homeLv].n}</b>延續職業生涯。`);
+        advance();
+      }}
+    ]);
+    return;
   }
   crossOffers(o);
 }

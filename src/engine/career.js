@@ -107,24 +107,30 @@ export function posLegendPhrase(bucket){ /* 依守備占比與獎項決定守位
 }
 export function honorScore(bucket){
   const lg={CPBL:'中職',NPB:'日職',MLB:'大聯盟'}[bucket];
-  const champ={CPBL:'中職總冠軍',NPB:'日本一',MLB:'世界大賽冠軍'}[bucket];
-  const isAce=h=>h.includes('最佳投手')||h.includes('最佳打者')||h.includes('賽揚');
-  let sc=0,mvp=0,aceN=0,king=0;
+  const years=new Map();
   S.honors.forEach(h=>{
-    if(h.includes(champ)){sc+=90;return;}
     if(!h.includes(lg))return;
-    if(isAce(h)){sc+=460;aceN++;return;}
-    if(h.includes('年度MVP')){sc+=420;mvp++;}
-    else if(h.includes('新人王'))sc+=140;
-    else if(h.includes('金手套')){sc+=300;king++;}
-    else if(h.includes('守備聖經')){sc+=220;king++;}
-    else if(h.includes('救援王')){sc+=280;king++;}
-    else if(h.includes('中繼王')){sc+=210;king++;}
-    else if(h.includes('王')){sc+=160;king++;}
-    else if(h.includes('明星賽'))sc+=(S.pos==='P'?70:40);
+    const m=String(h).match(/^(\d{4})\s+(.+)$/); if(!m)return;
+    const award=m[2];
+    /* 仍完整顯示於履歷，但不納入生涯評價。 */
+    if(/明星賽|新人王|中職總冠軍|世界大賽冠軍|日本一$/.test(award))return;
+    if(!years.has(m[1]))years.set(m[1],[]);
+    years.get(m[1]).push(award);
+  });
+  let sc=0;
+  years.forEach(awards=>{
+    /* 同年度的大獎只取最高層級；三冠王已包含其構成獎項，不重複加總。 */
+    const major=awards.some(a=>/投手三冠王|打擊三冠王/.test(a))?700
+      :awards.some(a=>/年度MVP/.test(a))?520
+      :awards.some(a=>/最佳投手|最佳打者|賽揚/.test(a))?460:0;
+    const titleN=awards.filter(a=>/(勝投王|防禦率王|三振王|救援王|中繼王|打擊王|全壘打王|盜壘王|打點王|上壘王)$/.test(a)).length;
+    const titles=Math.min(200,titleN*100);
+    const fielding=awards.some(a=>/守備聖經|金手套/.test(a))?150:0;
+    /* 每年只計「最高大獎」或「小獎組合」較高者；不同年度仍完整累積。 */
+    sc+=Math.max(major,titles+fielding);
   });
   if(S.traits.franchise)sc+=200; /* 神主牌:忠誠加成 */
-  return {sc,mvp,aceN,king};
+  return {sc};
 }
 /* 生涯守位加權：以各守位的實際出賽數加權平均（詳見 abilities.js 的 POS_TIER_K）。
    用 DPG 而非「主守位」，所以捕手蹲十年再轉一壘的球員會拿到兩者的混合標準，
@@ -175,9 +181,7 @@ export function tierOf(bucket){
   const hk=((HOF_TH_K[bucket]||{})[posKey])||1; /* 名人堂線獨立微調,明星以下不受影響(詳見 economy.js) */
   const hofTh=th[0]*pk*hk;                 /* 這段生涯實際適用的名人堂線 */
   let i=sc>=hofTh?0:sc>=th[1]*pk?1:sc>=th[2]*pk?2:sc>=th[3]*pk?3:4;
-  /* 獎項保底:MVP/最高投手獎至少明星球員;單項王至少每日球員 */
-  if(hs.mvp||hs.aceN)i=Math.min(i,1);
-  else if(hs.king)i=Math.min(i,2);
+  /* 不設單季獎項的階級保底；明星與名人堂必須靠整段生涯累積。 */
   /* hofTh 一併回傳:票選畫面的「首輪入選」與「得票率」必須跟這裡用同一把尺，
      不能各自去讀 TIER_TH[bucket][0] 的裸值(詳見 ui/retire.js 的說明)。 */
   return {i,sc:Math.round(sc),hofTh,name:LG_N[bucket]+['名人堂','明星球員','每日球員','邊緣球員','一頁過客'][i]};

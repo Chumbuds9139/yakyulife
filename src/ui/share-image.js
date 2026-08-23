@@ -8,7 +8,7 @@ import {$, teamChip, modalOpen, modalClose} from './dom.js?v=1.5.7';
 import {THEME_NAMES} from './prefs.js?v=1.5.7';
 import {traitNames, traitColorRank} from './traits.js?v=1.5.7';
 import {fmtMoney} from '../engine/contract.js?v=1.5.7';
-import {rpTagline, rpFamily, RP_F3, RP_F2, rpCumData, rpIntlData, rpHonorItems, rpOrgOf, rpProData} from './retire.js?v=1.5.7';
+import {rpTagline, rpFamily, RP_F3, RP_F2, rpCumData, rpIntlData, rpHonorItems, rpOrgOf, rpProData, championshipYear} from './retire.js?v=1.5.7';
 /* 結算圖（Canvas 產生 PNG，回傳 data URL 供面板顯示與儲存）
    Single-sheet settlement layout from the design handoff, drawn 1:1 at the
    design's 820px width. The layout is rendered twice: a measure pass on a
@@ -196,6 +196,13 @@ export function renderShareImage(evals,picks,opt){
       const cyR=y+rh/2;
       cells.forEach((cell,i)=>{ if(cell==null)return; const cc=cols[i];
         const o=(cell&&typeof cell==='object')?cell:{t:cell};
+        if(o.crown){
+          const x=cc.x+6, top=cyR-3;
+          c.save(); c.fillStyle=C_GOLD; c.beginPath(); c.moveTo(x,top+1);
+          c.lineTo(x+2,top+3.5); c.lineTo(x+4,top); c.lineTo(x+6,top+3.5);
+          c.lineTo(x+8,top+1); c.lineTo(x+7.2,top+6); c.lineTo(x+.8,top+6);
+          c.closePath(); c.fill(); c.restore();
+        }
         if(o.badge!==undefined){ /* 國際賽結果膠囊 badge */
           c.font='700 11.5px '+F_SANS;
           const bw=c.measureText(String(o.t)).width+16, bx=cc.x+7, bh=19, byy=y+(rh-bh)/2;
@@ -209,9 +216,9 @@ export function renderShareImage(evals,picks,opt){
         c.font=(o.best||o.bold||opt.bold?'700 ':'')+fs+'px '+((cc.zh||o.zh)?F_SANS:F_MONO);
         c.fillStyle=o.best?C_ACC:(o.color||opt.color||C_TX);
         c.textAlign=cc.a==='l'?'left':'right';
-        let t=String(o.t); const maxw=cc.w-12;
+        let t=String(o.t); const crownPad=o.crown?9:0, maxw=cc.w-12-crownPad;
         while(c.measureText(t).width>maxw&&t.length>1)t=t.slice(0,-1);
-        mid(t,cc.a==='l'?cc.x+7:cc.x+cc.w-7,cyR); });
+        mid(t,cc.a==='l'?cc.x+7+crownPad:cc.x+cc.w-7,cyR); });
       c.textAlign='left'; y+=rh; }
     /* ---- 生涯累積數據 ---- */
     sec('生涯累積數據');
@@ -230,7 +237,7 @@ export function renderShareImage(evals,picks,opt){
         .concat(intl.hd.map(t=>({t,w:56,a:'r'}))));
       thRow(cols);
       intl.rows.forEach((r,i)=>{ tdRow(cols,
-        [r.year,{t:r.name,zh:true},{t:r.rank,badge:/冠軍/.test(r.rank)?'gold':/亞軍/.test(r.rank)?'silver':''}]
+        [{t:r.year,crown:championshipYear(r.year)},{t:r.name,zh:true},{t:r.rank,badge:/冠軍/.test(r.rank)?'gold':/亞軍/.test(r.rank)?'silver':''}]
           .concat(r.txt),{bg:i%2?C_ROW:null,rh:28}); });
       tdRow(cols,[{t:'通算',zh:true,bold:true,color:C_GOOD},null,null].concat(intl.tot.map(t=>({t,bold:true}))),
         {bg:C_PANEL,topline:true,rh:28});
@@ -256,7 +263,7 @@ export function renderShareImage(evals,picks,opt){
       const cols=tcols([{t:'年',w:50,a:'l'},{t:'齡',w:38,a:'r'},{t:'球隊',w:110,a:'l',zh:true},{t:'成績',w:550,a:'l',zh:true}]);
       thRow(cols);
       amaLogs.forEach((r,i)=>{ tdRow(cols,
-        [r.y,r.age,{t:r.tm,zh:true},{t:r.line,zh:true,color:r.inj?null:C_DIM}],
+        [{t:r.y,crown:championshipYear(r.y)},r.age,{t:r.tm,zh:true},{t:r.line,zh:true,color:r.inj?null:C_DIM}],
         {bg:i%2?C_ROW:null,rh:21,fs:12,color:r.inj?C_BAD:null,bold:r.inj}); });
     }
     /* ---- 生涯年表(職業,按球隊分段) ---- */
@@ -270,7 +277,7 @@ export function renderShareImage(evals,picks,opt){
         y+=6; c.font='700 11px '+F_SANS; c.fillStyle=LGC[b.lg]||C_DIM; ls('2.2px');
         mid((LG_N[b.lg]||'')+' · '+b.team,PADX+7,y+6); ls('0px'); y+=19;
         b.rows.forEach((r,i)=>{ tdRow(cols,
-          [r.y,r.age,{t:r.lvl,zh:true,color:r.inj?null:(r.minor?C_DIM:null)}]
+          [{t:r.y,crown:r.champ},r.age,{t:r.lvl,zh:true,color:r.inj?null:(r.minor?C_DIM:null)}]
             .concat(r.txt.map((t,j)=>({t,best:r.best[j]}))),
           {bg:i%2?C_ROW:null,rh:21,fs:12,color:r.inj?C_BAD:null,bold:r.inj}); });
       });

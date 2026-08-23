@@ -228,6 +228,9 @@ table.fin,table.st{width:100%;border-collapse:collapse;font-family:var(--mono);f
 table.fin th,table.fin td,table.st th,table.st td{border-bottom:1px solid var(--edge);padding:4px 4px;text-align:right;white-space:nowrap}
 table.fin th,table.st th{color:var(--dim);font-weight:500;letter-spacing:.05em}
 table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.st th:first-child{text-align:left}
+.champ-crown{display:inline-block;width:8px;height:6px;margin-right:2px;vertical-align:1px;background:#ffc95c;
+  clip-path:polygon(0 18%,25% 58%,50% 0,75% 58%,100% 18%,90% 100%,10% 100%);
+  filter:drop-shadow(0 0 2px rgba(255,201,92,.4))}
 .divider{text-align:center;color:var(--dim);font-size:11px;letter-spacing:.4em;padding:6px 0 0}
 .divider::before,.divider::after{content:'———'}
 .yr-head{text-align:center;color:var(--dim);font-size:11px;letter-spacing:.3em;padding:8px 0 0;cursor:pointer;user-select:none}
