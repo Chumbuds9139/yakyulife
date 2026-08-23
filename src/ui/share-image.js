@@ -271,7 +271,7 @@ export function renderShareImage(evals,picks,opt){
       sec('生涯年表（職業成績）');
       const defs=isP
         ?[{t:'年',w:48,a:'l'},{t:'齡',w:34,a:'r'},{t:'球隊',w:96,a:'l',zh:true},{t:'G',w:40,a:'r'},{t:'IP',w:54,a:'r'},{t:'W-L',w:50,a:'r'},{t:'SV',w:42,a:'r'},{t:'HLD',w:46,a:'r'},{t:'SO',w:44,a:'r'},{t:'BB',w:42,a:'r'},{t:'ERA',w:52,a:'r'},{t:'WHIP',w:54,a:'r'}]
-        :[{t:'年',w:48,a:'l'},{t:'齡',w:34,a:'r'},{t:'球隊',w:84,a:'l',zh:true},{t:'G',w:38,a:'r'},{t:'PA',w:44,a:'r'},{t:'AVG',w:50,a:'r'},{t:'OBP',w:50,a:'r'},{t:'SLG',w:50,a:'r'},{t:'OPS',w:50,a:'r'},{t:'H',w:38,a:'r'},{t:'HR',w:38,a:'r'},{t:'RBI',w:42,a:'r'},{t:'SB',w:36,a:'r'},{t:'DEF',w:42,a:'r'}];
+        :[{t:'年',w:48,a:'l'},{t:'齡',w:34,a:'r'},{t:'球隊',w:84,a:'l',zh:true},{t:'G',w:38,a:'r'},{t:'PA',w:44,a:'r'},{t:'AVG',w:50,a:'r'},{t:'OBP',w:50,a:'r'},{t:'SLG',w:50,a:'r'},{t:'OPS',w:50,a:'r'},{t:'H',w:38,a:'r'},{t:'HR',w:38,a:'r'},{t:'RBI',w:42,a:'r'},{t:'BB',w:36,a:'r'},{t:'SB',w:36,a:'r'},{t:'DEF',w:42,a:'r'}];
       const cols=tcols(defs); thRow(cols);
       pro.blocks.forEach(b=>{
         y+=6; c.font='700 11px '+F_SANS; c.fillStyle=LGC[b.lg]||C_DIM; ls('2.2px');
@@ -346,7 +346,7 @@ const shCache=new Map();
 /* 結算圖面板：開啟即以目前佈景畫好，換主題或開關球迷看板都在原地重畫 */
 export function shareImageSheet(evals,picks){
   const fanN=(picks||[]).length;
-  if(!shOpt)shOpt={theme:document.body.dataset.theme||'a',fans:true};
+  if(!shOpt)shOpt={theme:document.body.dataset.theme||'a',fans:false};
   const st=shOpt;
   if(!fanN)st.fans=false;
   const fileName='棒球生涯結算_'+S.name+'.png';
