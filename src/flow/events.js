@@ -206,7 +206,8 @@ export function allocDone(touched,isDice){
   if(!S.traits.late&&!S.traits.genius&&ovr()<47&&S.age>=25&&S.age<32&&isDice&&gain>=16){
     S.traits.late=true;
     const exDef=S.pos==='C'?['rng','fld','arm','cat']:[];
-    const cands=POS_AB[S.pos].filter(k=>S.ab[k]<70&&!exDef.includes(k));
+    /* 與天才一致：潛力已滿 80 的項目不再占用潛能重新評估的名額。 */
+    const cands=POS_AB[S.pos].filter(k=>S.ab[k]<70&&(S.pot[k]||62)<80&&!exDef.includes(k));
     for(let i=cands.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=cands[i];cands[i]=cands[j];cands[j]=t;}
     const boost=cands.slice(0,2), bl=[];
     boost.forEach(k=>{ S.pot[k]=Math.min(80,(S.pot[k]||62)+10); S.ab[k]=clamp(S.ab[k]+5,1,80);
@@ -238,3 +239,4 @@ export function checkTraitsMid(){
   if(!S.traits.cancer&&!S.traits.franchise&&!S.traits.intlace&&((S.cntSocialBoldFail||0)>10||S.traits.scum)){
     traitCard('cancer','更衣室毒瘤','教練受夠了你的不可控，隊友對你的新聞指指點點。比起成績，球團現在更想清理休息室的氣氛——<b class="dn">季末被交易機率大增、續約條件惡化</b>。','bad'); }
 }
+
