@@ -53,13 +53,15 @@ export function loveEvent(next){
   if(L.st==='single'||L.st==='divorced'){
     const p=pick(datePool());
     const former=L.exes.find(e=>e.name===p);
+    const twiceCaught=!!former&&(L.caught||0)>=2;
+    const confessionChance=former?(twiceCaught?0:30):65;
     card('info',former?'舊情重燃':'場外話題',former
       ?`你和前妻 <b class="hl">${p}</b> 再次被拍到一起出現。記者立刻追了上來，想知道這次見面究竟代表什麼。`
       :`你和啦啦隊女神 <b class="hl">${p}</b> 被拍到球場外同框，緋聞登上娛樂版頭條。${L.exes.length?'（評論區：「離過婚還這麼搶手」）':''}`);
     choose('記者把麥克風遞到你面前：「兩位是在交往嗎？」',[
       {t:former?'再次告白：「我想重新開始」':'大方承認：「請大家祝福我們」',
-       s:former?'她是否願意重新相信你（成功率 30%）':'還要看她那邊敢不敢承認（球團有禁愛令傳聞）',f:()=>{
-        if(chance(former?30:65)){ L.st='dating'; L.partner=p; L.dyrs=0; L.datedTimes=(L.datedTimes||0)+1;
+       s:former?`她是否願意重新相信你（成功率 ${confessionChance}%）`:'還要看她那邊敢不敢承認（球團有禁愛令傳聞）',f:()=>{
+        if(chance(confessionChance)){ L.st='dating'; L.partner=p; L.dyrs=0; L.datedTimes=(L.datedTimes||0)+1;
           const gt=loveGainTxt('sta',1); board(1);
           card('gold',former?'重新開始':'戀情公開',former
             ?`${former.kids>0?'孩子的教養問題':'沒有刪除乾淨的聯絡方式'}，又讓你們搭上了線。你知道你犯過錯，所以你用盡了所有方式，去重建破碎的信任。你在第一次見面的地方重新告白，她懷疑了一下，然後哭了。她點了點頭，勉強嘗試去相信你。<br>${gt}。你們重新交往了。`
@@ -69,7 +71,9 @@ export function loveEvent(next){
             card('gold','隱藏稱號：閨中密友',`第三段戀情，還是走到了同樣的結局。「我愛上了你，你卻只把我當好姊妹。」——有些人註定是別人生命裡的過客。`); board(1); }
         }
         else{ card('bad',former?'回不到從前':'單方面承認',former
-          ?`她沉默了很久，最後只是搖頭：「我們回不去了。」你只能把那句告白收回去。`
+          ?(twiceCaught
+            ?`她深吸了一口氣：「你當我是白癡？」只差沒有甩一巴掌在你臉上。`
+            :`破碎的信任完全無法恢復，她的姊妹要她吃點好的，何必眷戀你這個爛男人？`)
           :`她隔天透過經紀公司否認：「只是普通朋友。」據傳啦啦隊<b class="dn">禁愛令</b>壓力不小。你一個人站在風裡，超級尷尬。`); }
         next(); }},
       {t:'笑而不答，快步走過',main:true,s:'不承認就沒有下文',f:()=>{
@@ -178,4 +182,3 @@ export function loveGainTxt(k,amt){ /* 戀愛事件加點:機制同事件卡(add
   if(over>0)return `${ABL[k]} 已達潛力上限，${Math.round(amt)} 點全數轉為${statBonusTxt(over)}`;
   return abGainTxt(k,amt,0);
 }
-
