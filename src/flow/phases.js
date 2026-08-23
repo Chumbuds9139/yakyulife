@@ -70,8 +70,8 @@ export function phasePre(){
     if(S.six>=5&&!S.traits.genius&&S.age<22){ S.traits.genius=true;
       {
       const exDef=S.pos==='C'?['rng','fld','arm','cat']:[];
-      /* 目前能力低於 70 還不夠：潛力已滿 80 的項目不能再吃掉這次潛力覺醒。 */
-      const cands=POS_AB[S.pos].filter(k=>S.ab[k]<70&&(S.pot[k]||62)<80&&!exDef.includes(k));
+      /* 潛力 70 以上已是高天賦，不再吃掉重新評估名額；最高只會由 69 提升至 79。 */
+      const cands=POS_AB[S.pos].filter(k=>S.ab[k]<70&&(S.pot[k]||62)<70&&!exDef.includes(k));
       for(let i=cands.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=cands[i];cands[i]=cands[j];cands[j]=t;}
       const boost=cands.slice(0,2), bl=[];
       boost.forEach(k=>{ const oldPot=S.pot[k]||62,newPot=Math.min(80,oldPot+10),potGain=newPot-oldPot;

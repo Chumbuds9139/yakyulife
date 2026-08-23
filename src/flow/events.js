@@ -206,8 +206,8 @@ export function allocDone(touched,isDice){
   if(!S.traits.late&&!S.traits.genius&&ovr()<47&&S.age>=25&&S.age<32&&isDice&&gain>=16){
     S.traits.late=true;
     const exDef=S.pos==='C'?['rng','fld','arm','cat']:[];
-    /* 與天才一致：潛力已滿 80 的項目不再占用潛能重新評估的名額。 */
-    const cands=POS_AB[S.pos].filter(k=>S.ab[k]<70&&(S.pot[k]||62)<80&&!exDef.includes(k));
+    /* 與天才一致：潛力 70 以上的高天賦項目不再占用重新評估名額。 */
+    const cands=POS_AB[S.pos].filter(k=>S.ab[k]<70&&(S.pot[k]||62)<70&&!exDef.includes(k));
     for(let i=cands.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=cands[i];cands[i]=cands[j];cands[j]=t;}
     const boost=cands.slice(0,2), bl=[];
     boost.forEach(k=>{ const oldPot=S.pot[k]||62,newPot=Math.min(80,oldPot+10),potGain=newPot-oldPot;
