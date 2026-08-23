@@ -237,7 +237,7 @@ export function renderShareImage(evals,picks,opt){
         .concat(intl.hd.map(t=>({t,w:56,a:'r'}))));
       thRow(cols);
       intl.rows.forEach((r,i)=>{ tdRow(cols,
-        [{t:r.year,year:true,crown:championshipYear(r.year)},{t:r.name,zh:true},{t:r.rank,badge:/冠軍/.test(r.rank)?'gold':/亞軍/.test(r.rank)?'silver':''}]
+        [{t:r.year,year:true,crown:r.rank==='冠軍'},{t:r.name,zh:true},{t:r.rank,badge:/冠軍/.test(r.rank)?'gold':/亞軍/.test(r.rank)?'silver':''}]
           .concat(r.txt),{bg:i%2?C_ROW:null,rh:28}); });
       tdRow(cols,[{t:'通算',zh:true,bold:true,color:C_GOOD},null,null].concat(intl.tot.map(t=>({t,bold:true}))),
         {bg:C_PANEL,topline:true,rh:28});
