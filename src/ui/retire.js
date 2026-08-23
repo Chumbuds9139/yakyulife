@@ -127,10 +127,19 @@ export function rpProData(proLogs){ /* team segments: a new block whenever the o
     else { if(bHR>0&&r.hr===bHR)r.best[7]=true; if(r.ops!=null&&r.ops===bOPS)r.best[5]=true; } }));
   return {hd,blocks};
 }
+export function nextGameEnding(pos){
+  /* 先固定球員身分再組文，結果不留下括號候選字或不連貫的守位敘事。 */
+  const pitcher=pos==='P';
+  const role=pitcher
+    ?{strain:'踏地',first:'第一局，你投出了一次三振。',realize:'回投手丘整理狀態時，你忽然發現——'}
+    :{strain:'滑壘',first:'第一打席，你打出一支平凡的一壘安打。',realize:'站上一壘的那一刻，你忽然發現——'};
+  return {title:'下一場比賽',body:`沒有鏂光燈，沒有滿場的觀眾。你揹著有點髒的球具袋，走進了休息室。<br><br>休息室裡有的孩子，才剛從大學畢業，眼裡依舊閃耀著對職業的嚮往。<br><br>你想起他們看見你的時候，眼神滿是詫異，然後有人小聲地說出你的名字——那個曾經出現在球員卡上、出現在賽後新聞裡的名字。<br><br>那天，休息室變成了一個小小的簽名會。<br><br>球衣是獨立聯盟的，胸前印著的贊助商是巷口的機車行。號碼隨便發的，不是你打了十幾二十年的那一個。<br><br>你花了比以前更久的時間纏繃帶。膝蓋在陰雨天會提醒你，它記得所有你想忘記的${role.strain}。<br><br>比賽在下午三點開打。觀眾席上坐著幾位家長、一隻在陰影下打盹的狗，還有一個推著冰棒車、順便看球的老先生。<br><br>依然有幾個熱情球迷，從年輕時就追著你的比賽。你退休了，他們也有時間了，依然常常到場舉著毛巾，唱著你的應援曲。<br><br>${role.first}沒有人歡呼，只有隊友在休息區敲了敲欄桿。<br><br>${role.realize}<br><br>心跳的頻率，和十六歲那年第一次上場，一樣。<br><br>七局下，兩出局，一分落後。輪到一個剛從大學畢業的孩子打擊。<br><br>他在打擊區裡緊張到握棒的手在抖。你在後面喊了一聲他的名字，說：「看你想看的那顆就好。」<br><br>他真的等到了。球飛過中外野手的頭頂，落地那一秒，整支球隊像瘋了一樣衝出休息區。<br><br>沒有轉播、沒有慢動作重播、沒有隔天的頭條。<br><br>但那個孩子在二壘上，笑得像剛簽下一份千萬合約。<br><br>比賽結束後，大家蹲在地上一起收壘包、拔起邊線的木樁。你把整理好的球具搬上車，動作熟練得像做過一千次。<br><br>那個孩子跑過來，有點害羞地問你：「前輩，你為什麼還要打？」<br><br>你想了很久。<br><br>想到那些傷、那些被下放的季節、那些在二軍球場等待電話的夜晚。想到最後一場職業賽，你在休息區把帽子壓得很低，怕被拍到。<br><br>然後你把袋子的拉鍊拉上，說：<br><br>「因為明天還有下一場。」<br><br>天暗下來了。已經不是職業了，球場只剩下一盞燈。<br><br>你回頭看了一眼。<br><br>紅土被今天的雨打得有點坑漥，明天早上得先整理一下。<br><br>——你的球員生涯結束了。<br><br>你的棒球，還沒有。`};
+}
 export const POST_CAREER_ENDINGS={
   coach:{title:'還在同一片草皮上',body:`球具掛上牆的那天，你以為告別就此完成。<br><br>隔年春訓，你卻換了一件寫著自己名字、卻沒有背號意義的球衣，重新走進熟悉的休息區。手套換成了記事本，揮棒換成了一句句在耳邊的提醒。<br><br>你會在深夜看完三十球的慢動作重播，只為了告訴某個菜鳥：「你的前腳，早了0.2秒。」<br><br>有人說教練是站在光後面的人。但當你看著那個曾經笨拙的孩子，在滿場歡聲中繞過本壘，你忽然明白——<br><br>你從來沒有離開過球場，只是換了一種方式，繼續打球。`},
   scout:{title:'在無人的看台上',body:`你的辦公室，是一張又一張空蕩蕩的鐵椅。<br><br>高中球場、乙組聯賽、鄉下的紅土球場。你帶著測速槍與一本翻爛的筆記本，跑遍那些沒有轉播、沒有掌聲的角落。<br><br>大多數時候，你什麼也沒找到。但偶爾，在某個午後的第七局，會有一顆球從陌生少年的手中飛出，讓你在筆記本上重重畫下一個圈。<br><br>沒有人會記得球探的名字。若干年後，當那個少年站上一軍投手丘，鏡頭只會拍到他。<br><br>但你會坐在電視機前，安靜地笑一下。<br><br>有些人負責發光，有些人負責——在天亮以前，先看見光。`},
-  grassroots:{title:'紅土上的第一步',body:`你回到了故鄉的小學。<br><br>球隊只有十四個人，手套是別人捐的，午餐要靠家長輪流準備。你教他們的第一件事，不是揮棒，是把球具排整齊。<br><br>這裡不會有選秀，不會有合約，不會有滿場的加油聲。有的只是每天放學後那兩個小時，和一整片被夕陽曬得溫熱的紅土。<br><br>有些孩子會走得很遠，有些孩子明年就不打了。你都送到路口為止。<br><br>多年後，某個穿著職業球衣的年輕人，在採訪中被問到誰影響他最深。<br><br>他想了想，說出了一個沒有人聽過的名字。<br><br>那是你，還有那片，永遠等著下一批孩子的紅土。`}
+  grassroots:{title:'紅土上的第一步',body:`你回到了故鄉的小學。<br><br>球隊只有十四個人，手套是別人捐的，午餐要靠家長輪流準備。你教他們的第一件事，不是揮棒，是把球具排整齊。<br><br>這裡不會有選秀，不會有合約，不會有滿場的加油聲。有的只是每天放學後那兩個小時，和一整片被夕陽曬得溫熱的紅土。<br><br>有些孩子會走得很遠，有些孩子明年就不打了。你都送到路口為止。<br><br>多年後，某個穿著職業球衣的年輕人，在採訪中被問到誰影響他最深。<br><br>他想了想，說出了一個沒有人聽過的名字。<br><br>那是你，還有那片，永遠等著下一批孩子的紅土。`},
+  nextGame:()=>nextGameEnding(S.pos)
 };
 export const SECOND_CAREER_ENDINGS=[
   `你加入了乙組業餘棒球隊。平日上班、週末穿上球衣，去年在協會盃敲出再見安打的影片被瘋傳，底下最熱門的留言是：「這揮棒不像業餘的。」——因為本來就不是。你比誰都清楚，愛棒球不一定要靠它吃飯。`,
@@ -145,11 +154,12 @@ export const SECOND_CAREER_ENDINGS=[
 export function usesSecondCareerEnding(age){ return Number(age)<25; }
 export function postCareerEndingKeys(tiers){
   const proStar=!!tiers.NPB||!!tiers.MLB||!!(tiers.CPBL&&tiers.CPBL.i<=1);
-  return proStar?['coach','scout']:['coach','scout','grassroots'];
+  return proStar?['coach','scout','nextGame']:['coach','scout','grassroots','nextGame'];
 }
 export function postCareerEnding(tiers,roll){
   const keys=postCareerEndingKeys(tiers),r=roll===undefined?R():roll;
-  return POST_CAREER_ENDINGS[keys[Math.min(keys.length-1,Math.floor(Math.max(0,r)*keys.length))]];
+  const ending=POST_CAREER_ENDINGS[keys[Math.min(keys.length-1,Math.floor(Math.max(0,r)*keys.length))]];
+  return typeof ending==='function'?ending():ending;
 }
 export function retireScene(tiers){
   /* tiers: {CPBL:{i,sc},NPB:...,MLB:...} 有出賽才有 */
@@ -419,3 +429,4 @@ export function endGame(reason){
     for(const h of heads){ if(h.textContent==='生涯終幕'){ h.scrollIntoView({behavior:'auto',block:'center'}); break; } }
   }catch(e){} }, 250);
 }
+
