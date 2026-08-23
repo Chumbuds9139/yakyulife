@@ -128,24 +128,28 @@ export function ovr(){
   if(S.traits.yips)v-=3; /* 失憶症:心理陰影,系統評價 -3 */
   return v;
 }
-export function playerType(){
+function playerTypeFor(retirement=false){
   const a=S.ab;
   if(S.traits.onetool&&S.toolRole)return S.toolRole+'工具人';
   if(S.pos==='P'){
     const m=Math.max(a.vel,a.ctl,a.brk);
-    if(m<52)return '潛力股';
-    if(a.sta>=m&&a.sta>=62)return '工作馬';
+    if(!retirement&&m<52)return '潛力股';
+    if(retirement?a.sta>m:(a.sta>=m&&a.sta>=62))return '工作馬';
+    if(retirement&&a.vel===a.ctl&&a.ctl===a.brk)return '';
     if(m===a.vel)return '火球男'; if(m===a.brk)return '魔術師'; return '人體Kzone';
   }
   if(S.pos==='C'){ const rest=Math.max(a.con,a.pow,a.spd,a.eye,a.rng,a.fld,a.arm);
-    if(a.cat>=58&&rest<=a.cat-8)return '配球皇帝'; }
+    if((retirement||a.cat>=58)&&rest<=a.cat-8)return '配球皇帝'; }
   const dv=S.pos==='C'?(a.rng+a.fld+a.cat)/3:(a.rng+a.fld+a.arm)/3;
   const cand=[['巨炮型',a.pow],['安打製造機',a.con],['選球大師',a.eye],['飛毛腿',a.spd],['守備達人',dv]];
   cand.sort((x,y)=>y[1]-x[1]);
-  if(cand[0][1]<52)return '潛力股';
-  if(cand[0][1]-cand[1][1]<=3&&cand[0][1]>=60)return '全能型';
+  if(retirement&&cand.every(x=>x[1]===cand[0][1]))return '';
+  if(!retirement&&cand[0][1]<52)return '潛力股';
+  if(cand[0][1]-cand[1][1]<=3&&(retirement||cand[0][1]>=60))return '全能型';
   return cand[0][0];
 }
+export function playerType(){ return playerTypeFor(false); }
+export function retirementPlayerType(){ return playerTypeFor(true); }
 export function abCost(k){ /* 目前這一級要花幾點(須與 addAb 成本公式一致，含體力的例外) */
   const cur=S.ab[k], pk=(S.pot&&S.pot[k])||62, isP=S.pos==='P';
   let c=(isP&&k!=='sta')?(cur>=66?7:cur>=58?4:cur>=50?2:1):(cur>=72?3:cur>=64?2:1);
