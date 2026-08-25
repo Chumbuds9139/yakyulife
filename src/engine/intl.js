@@ -1,5 +1,5 @@
 import {S} from '../core/state.js?v=1.5.9';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.9';
+import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.9';
 import {LV} from '../data/teams.js?v=1.5.9';
 import {card, choose, board} from '../ui/dom.js?v=1.5.9';
 import {tlNote} from '../ui/timeline.js?v=1.5.9';
@@ -7,15 +7,24 @@ import {isSP, fmtIP, outsFromIP, ipFromOuts, normalizeIP, baseballERA} from './s
 import {ovr} from './ability.js?v=1.5.9';
 import {intlFinishIndex} from './championship.js?v=1.5.9';
 import {checkChampionTrait} from '../flow/events.js?v=1.5.9';
+export function intlWalks(st){
+  if(!st)return 0;
+  if(Number.isFinite(st.BB))return Math.max(0,Math.round(st.BB));
+  /* v1.5.8 舊存檔沒有寫入 BB；打者可由當屆 PA−AB 還原，投手則無足夠資料可回推。 */
+  if(Number.isFinite(st.PA)&&Number.isFinite(st.AB))return Math.max(0,Math.round(st.PA-st.AB));
+  return 0;
+}
 export function intlStatLine(st){
   if(S.pos==='P'){
     const era=baseballERA(st);
-    return `出賽 ${st.G}｜${fmtIP(st.IP)} 局｜${st.W} 勝｜${st.SV} 救援｜${st.SO} 三振｜ERA ${era==null?'-':era.toFixed(2)}`;
+    return `出賽 ${st.G}｜${fmtIP(st.IP)} 局｜${st.W} 勝｜${st.SV} 救援｜${st.SO} 三振｜${intlWalks(st)} 保送｜ERA ${era==null?'-':era.toFixed(2)}`;
   }
   const avg=st.AB>0?(st.H/st.AB).toFixed(3).replace(/^0/,''):'-';
-  return `出賽 ${st.G}｜${st.PA} 打席｜打擊率 ${avg}｜${st.H} 安｜${st.HR} 轟｜${st.RBI} 打點`;
+  return `出賽 ${st.G}｜${st.PA} 打席｜打擊率 ${avg}｜${st.H} 安｜${st.HR} 轟｜${st.RBI} 打點｜${intlWalks(st)} 保送`;
 }
 export function addIntlStat(st){
+  /* 載入舊存檔後第一次再打國際賽時，先把過往打者保送補回通算，避免只累加新賽事。 */
+  if(!Number.isFinite(S.intlStat.BB))S.intlStat.BB=(S.intlLog||[]).reduce((n,r)=>n+intlWalks(r.st),0);
   const oldOuts=outsFromIP(S.intlStat.IP);
   Object.keys(st).forEach(k=>{ if(k!=='IP')S.intlStat[k]=(S.intlStat[k]||0)+st[k]; });
   if(Object.prototype.hasOwnProperty.call(st,'IP'))S.intlStat.IP=ipFromOuts(oldOuts+outsFromIP(st.IP));
@@ -80,13 +89,18 @@ export function maybeIntl(done){
           
           const k9=clamp(7.5+dd*0.12+clutch*.5,4,14);
           const era=clamp(3.6-dd*0.16-clutch*.35,0.8,8);
-          intlSt={G:g,IP:ip,SO:Math.round(ip/9*k9),ER:Math.round(era*ip/9),W:i<=2&&chance(45+clutch*8)?1:0,SV:!isSP()&&chance(30+clutch*6)?1:0};
+          /* 與職業球季共用同一把 BB/9、H/9 尺；短期賽按實際局數縮放。 */
+          const bb9=clamp(4.6-(a.ctl-par)*0.13+N0(0.4),1.2,7.5);
+          const h9=clamp(9.2-dd*0.16+N0(0.5),5,13.5);
+          intlSt={G:g,IP:ip,H:Math.round(ip/9*h9),BB:Math.round(ip/9*bb9),SO:Math.round(ip/9*k9),ER:Math.round(era*ip/9),W:i<=2&&chance(45+clutch*8)?1:0,SV:!isSP()&&chance(30+clutch*6)?1:0};
         } else { const dd=(a.con*0.5+a.pow*0.2+a.eye*0.18+a.spd*0.12)-par-0.5; /* 同步賽季 d 公式(含 pow) */
           const g=teamGames, pa=g*ri(3,4); /* 國家隊球星每場先發，出賽數不得超過該名次的實際賽程 */
-          const ab=Math.round(pa*0.86);
+          /* 與職業球季同式：選球直接決定保送率，並由 PA−BB 得到打數。 */
+          const bb=Math.round(pa*clamp(0.062+(a.eye-par)*0.0034,0.045,0.17));
+          const ab=pa-bb;
           const avg=clamp(0.270+dd*0.006+clutch*.015,0.15,0.5), h=Math.round(ab*avg);
           const hr=Math.round(h*clamp(0.06+Math.max(0,a.pow-par)*0.006+clutch*.01,0.03,0.28));
-          intlSt={G:g,PA:pa,AB:ab,H:h,HR:hr,RBI:Math.round((hr*2.1+h*0.35)*(1+clutch*.05))};
+          intlSt={G:g,PA:pa,AB:ab,H:h,HR:hr,RBI:Math.round((hr*2.1+h*0.35)*(1+clutch*.05)),BB:bb};
         }
       }
       addIntlStat(intlSt);
