@@ -89,6 +89,13 @@ export function capTeam(bucket){ /* 該聯盟效力最久的球隊,作為名人�
   for(const k in tb)if(tb[k]>bn){bn=tb[k];best=k;}
   return best;
 }
+export function primaryDposByGames(st){ /* 依該聯盟生涯守備出賽數決定代表守位 */
+  if(!st||!st.DPG)return null;
+  const entries=Object.entries(st.DPG)
+    .filter(([dp,g])=>dp&&dp!=='—'&&Number(g)>0)
+    .sort((a,b)=>b[1]-a[1]);
+  return entries.length?entries[0][0]:null;
+}
 export function defShare(bucket){ /* 守備貢獻占生涯總價值比重 0~1 */
   const st=S.stats[bucket]; if(!st||S.pos==='P')return 0;
   const off=st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3;
@@ -97,7 +104,7 @@ export function defShare(bucket){ /* 守備貢獻占生涯總價值比重 0~1 */
 }
 export function posLegendPhrase(bucket){ /* 依守備占比與獎項決定守位敘述 */
   const share=defShare(bucket), st=S.stats[bucket];
-  const dp=S.dpos||(S.pos==='C'?'C':null);
+  const dp=primaryDposByGames(st)||(S.pos==='C'?'C':null);
   const hasGlove=S.honors.some(h=>h.includes('金手套')||h.includes('守備聖經'));
   if(S.pos==='P'||!dp||dp==='DH')return '';
   const posN=DPN[dp]||'';
