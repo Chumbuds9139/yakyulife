@@ -9,7 +9,7 @@ import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.9';
 import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.9';
 import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.9';
 import {fmtMoney} from '../engine/contract.js?v=1.5.9';
-import {isChampionshipYear} from '../engine/championship.js?v=1.5.9';
+import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.5.9';
 import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.9';
 import {shareImageSheet} from './share-image.js?v=1.5.9';
 /* ================= 結算圖資料建構 =================
@@ -34,6 +34,7 @@ export function rpFamily(){
 export const RP_F3=v=>v==null?'-':v.toFixed(3).replace(/^0/,'');
 export const RP_F2=v=>v==null?'-':v.toFixed(2);
 export function championshipYear(year){ return isChampionshipYear(S.honors,year); }
+export function proChampionshipYear(year){ return isProChampionshipYear(S.honors,year); }
 export function settlementYearHTML(year,isChampion=championshipYear(year)){
   const crown=isChampion?'<span class="champ-crown" title="該年度奪冠" role="img" aria-label="冠軍"></span>':'';
   return `<span class="champ-slot">${crown}</span>${year}`;
@@ -111,7 +112,7 @@ export function rpProData(proLogs){ /* team segments: a new block whenever the o
        SP/MR/CL for pitchers (一軍·先發). r.p is already the position actually played,
        so a forced-DH season reads as DH here exactly as it does in the in-game table. */
     const dp=isP?(r.role?roleN(r.role):''):(r.p||'');
-    cur.rows.push({y:r.y,champ:championshipYear(r.y),age:r.age,lvl:o.lvl+(dp?'·'+dp:''),minor:o.minor,
+    cur.rows.push({y:r.y,champ:proChampionshipYear(r.y),age:r.age,lvl:o.lvl+(dp?'·'+dp:''),minor:o.minor,
       inj:!!r.inj,txt,sv:s.SV||0,era,hr:s.HR||0,ops});
   });
   /* career-best marks: SV + ERA for pitchers, HR + OPS for batters (ties all marked);
@@ -320,7 +321,7 @@ export function endGame(reason){
         if(isP){
           const era = s.IP>0 ? baseballERA(s).toFixed(2) : '-';
           const whip = s.IP>0 ? baseballWHIP(s).toFixed(2) : '-';
-          return `<tr style="${cS}"><td>${settlementYearHTML(r.y)}</td><td>${r.age}</td><td style="text-align:left;white-space:nowrap">${r.tm}</td><td>${s.G}</td><td>${fmtIP(s.IP)}</td><td>${s.W}</td><td>${s.L}</td><td>${s.SV||0}</td><td>${s.HLD||0}</td><td>${s.SO}</td><td>${s.BB||0}</td><td>${era}</td><td>${whip}</td></tr>`;
+          return `<tr style="${cS}"><td>${settlementYearHTML(r.y,proChampionshipYear(r.y))}</td><td>${r.age}</td><td style="text-align:left;white-space:nowrap">${r.tm}</td><td>${s.G}</td><td>${fmtIP(s.IP)}</td><td>${s.W}</td><td>${s.L}</td><td>${s.SV||0}</td><td>${s.HLD||0}</td><td>${s.SO}</td><td>${s.BB||0}</td><td>${era}</td><td>${whip}</td></tr>`;
         } else {
           const obpN = s.PA>0 ? (s.H+s.BB)/s.PA : 0;
           const slgN = slgOf(s);
@@ -328,7 +329,7 @@ export function endGame(reason){
           const obp = s.PA>0 ? obpN.toFixed(3).replace(/^0/,'') : '-';
           const slg = s.AB>0 ? slgN.toFixed(3).replace(/^0/,'') : '-';
           const ops = s.AB>0 ? (obpN+slgN).toFixed(3).replace(/^0/,'') : '-';
-          return `<tr style="${cS}"><td>${settlementYearHTML(r.y)}</td><td>${r.age}</td><td style="text-align:left;white-space:nowrap">${r.tm}${r.p?"·"+r.p:""}</td><td>${s.G}</td><td>${s.PA}</td><td>${avg}</td><td>${obp}</td><td>${slg}</td><td>${ops}</td><td>${s.H}</td><td>${s.HR}</td><td>${s.RBI}</td><td>${s.BB||0}</td><td>${s.SB}</td><td>${s.DEF>0?'+':''}${s.DEF||0}</td></tr>`;
+          return `<tr style="${cS}"><td>${settlementYearHTML(r.y,proChampionshipYear(r.y))}</td><td>${r.age}</td><td style="text-align:left;white-space:nowrap">${r.tm}${r.p?"·"+r.p:""}</td><td>${s.G}</td><td>${s.PA}</td><td>${avg}</td><td>${obp}</td><td>${slg}</td><td>${ops}</td><td>${s.H}</td><td>${s.HR}</td><td>${s.RBI}</td><td>${s.BB||0}</td><td>${s.SB}</td><td>${s.DEF>0?'+':''}${s.DEF||0}</td></tr>`;
         }
       }).join('');
       card('','生涯年表（職業成績）',`<table class="fin">${head}${rows}</table>`);
