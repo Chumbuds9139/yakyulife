@@ -130,10 +130,11 @@ export function ovr(){
 }
 export function playerType(){
   const a=S.ab;
+  const decliningVeteran=S.stage==='PRO'&&(S.age-(S.traits.disc?2:0))>=32;
   if(S.traits.onetool&&S.toolRole)return S.toolRole+'工具人';
   if(S.pos==='P'){
     const m=Math.max(a.vel,a.ctl,a.brk);
-    if(m<52)return '潛力股';
+    if(m<52)return decliningVeteran?'老將':'潛力股';
     if(a.sta>=m&&a.sta>=62)return '工作馬';
     if(m===a.vel)return '火球男'; if(m===a.brk)return '魔術師'; return '人體Kzone';
   }
@@ -142,7 +143,7 @@ export function playerType(){
   const dv=S.pos==='C'?(a.rng+a.fld+a.cat)/3:(a.rng+a.fld+a.arm)/3;
   const cand=[['巨炮型',a.pow],['安打製造機',a.con],['選球大師',a.eye],['飛毛腿',a.spd],['守備達人',dv]];
   cand.sort((x,y)=>y[1]-x[1]);
-  if(cand[0][1]<52)return '潛力股';
+  if(cand[0][1]<52)return decliningVeteran?'老將':'潛力股';
   if(cand[0][1]-cand[1][1]<=3&&cand[0][1]>=60)return '全能型';
   return cand[0][0];
 }
