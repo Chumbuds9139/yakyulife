@@ -22,14 +22,15 @@ export function levelMinAnnual(lv){
   return /^R$|^A[123]$/.test(lv)&&hasMlbService()?MLB_SERVICE_MINOR_MIN:(LEVEL_MIN_ANNUAL[lv]||0);
 }
 export function salaryFor(lv,d){
-  /* 只設最低值、不設最高值：歷史級種子應能持續刷新薪資紀錄。 */
-  const p=Math.max(0,d||0);
+  /* 不設硬上限，但 15 以上只計 35%：歷史級種子仍可刷新紀錄，二次曲線不會失控衝破現實頂薪數倍。 */
+  const raw=Math.max(0,d||0),p=raw<=15?raw:15+(raw-15)*0.35;
   switch(lv){
     case 'CPBL2':case 'NPB2':case 'R':case 'A1':case 'A2':case 'A3':return levelMinAnnual(lv);
-    case 'CPBL1':return Math.round(120+p*65+p*p*3);
-    case 'NPB1':return Math.round(360+p*210+p*p*14);
-    /* MLB 頂端刻意保留高成長：長期 MVP／歷史級球員可突破 20 億年薪。 */
-    case 'MLB':return Math.round(2400+p*1000+p*p*500);
+    case 'CPBL1':return Math.round(120+raw*65+raw*raw*3);
+    /* 日職中段貼近支配下球員平均，頂端可達現實本土巨星的 5～6 億日圓級距。 */
+    case 'NPB1':return Math.round(360+p*280+p*p*36);
+    /* MLB 中位仍受底薪與年資制度保護；長期 MVP／歷史級球員才進入 3,000～5,000 萬美元。 */
+    case 'MLB':return Math.round(2400+p*1400+p*p*600);
   } return 0;
 }
 export const fmtMoney=w=>{ const y=Math.floor(w/10000),m=Math.round(w%10000); return (y?y+'億':'')+(m?m.toLocaleString()+'萬':(y?'':'0萬')); };

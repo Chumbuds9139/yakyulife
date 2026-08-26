@@ -203,6 +203,12 @@ export function pitcherSalaryRole(st,recordedRole){
   if(st&&(st.G||0)>0&&(st.IP||0)/(st.G||1)>=2.5)return 'SP';
   return S.role||'SP';
 }
+/* 日職／大聯盟的核薪不能只看能力值：把帳面成績轉成有限幅度的市場修正。
+   最近三季的 65%／25%／10% 加權仍由 contract.js 處理，因此單季爆發不會直接鎖定歷史級長約。 */
+export function salaryPerformanceAdjustment(st,lv,recordedRoleOrPos){
+  if(lv!=='NPB1'&&lv!=='MLB')return 0;
+  return ({'-1':0,0:-1,1:0,2:1.25,3:3.25})[seasonGrade(st,lv,recordedRoleOrPos)]||0;
+}
 /* 薪資專用球員價值：野手計打擊、守備與守位；投手計球威、角色與實際工作量。 */
 export function seasonSalaryRating(st,lv,recordedRoleOrPos){
   if(!st||!Number.isFinite(st.d))return 0;
@@ -214,7 +220,7 @@ export function seasonSalaryRating(st,lv,recordedRoleOrPos){
     if(role==='SP')adj=clamp(((st.IP||0)/(L.g||1)-0.75)*2,-1,0.75);
     else if(role==='CL')adj=-2+clamp(((st.SV||0)-25)/20,-0.75,0.75);
     else adj=-4+clamp(((st.HLD||0)-20)/20,-0.75,0.75);
-    return +(st.d+adj).toFixed(2);
+    return +(st.d+adj+salaryPerformanceAdjustment(st,lv,role)).toFixed(2);
   }
   const dp=st._dh?'DH':(recordedRoleOrPos||S.dpos||(S.pos==='C'?'C':'DH'));
   const games=Math.max(0,Number(st.G)||0), def=dp==='DH'?0:(Number(st.DEF)||0);
@@ -224,20 +230,20 @@ export function seasonSalaryRating(st,lv,recordedRoleOrPos){
      與 career.js 的 positionScore() 同一套規則。 */
   const full=((LV[lv]||LV[S.lv]||{}).g)||162;
   const posRuns=(POS_ADJ_RUNS[dp]||0)*(games/full);
-  return +(st.d+(def+posRuns)/6).toFixed(2);
+  return +(st.d+(def+posRuns)/6+salaryPerformanceAdjustment(st,lv,dp)).toFixed(2);
 }
 /* 球季帳面成績評等：0=差 1=普通 2=好 3=壓倒性，另有 −1=樣本不足（無法評價）。
    只讀真實數據，完全不看能力值——升降級判定需要「打出來的」跟「體檢數字漂亮」是兩件事。
    以率值(OPS／ERA／WHIP)為主軸，數量型指標(全壘打、救援+中繼)依聯盟場次等比縮放。
    −1 與 1 必須分開：受傷或打席不足的球季無從論斷成績，呼叫端要改用能力判斷，
    不能當成「普通」處理，否則會出現「打擊率 .358 卻被說帳面成績不夠好」的矛盾訊息。 */
-export function seasonGrade(st,lv){
+export function seasonGrade(st,lv,recordedRole){
   if(!st)return -1;
   const g=(LV[lv]||{}).g||130, r=g/130;
   if(S.pos==='P'){
     const era=baseballERA(st), whip=baseballWHIP(st);
     if(era==null||(st.IP||0)<g*0.22)return -1;
-    const bulk=isSP()?((st.IP||0)>=g*0.5):(((st.SV||0)+(st.HLD||0))>=15*r);
+    const bulk=pitcherSalaryRole(st,recordedRole)==='SP'?((st.IP||0)>=g*0.5):(((st.SV||0)+(st.HLD||0))>=15*r);
     if(era<=2.80&&bulk)return 3;
     if(era<=3.50||(whip!=null&&whip<=1.15&&era<=3.75))return 2;
     if(era<=4.35)return 1;
