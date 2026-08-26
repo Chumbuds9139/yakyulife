@@ -248,11 +248,15 @@ export function awards(bucket,st){
     }
   }
 
-  /* 5. 新人王：一般情況依 d 值抽選；橫掃級新人不會因獨立亂數漏獎。 */
+  /* 5. 新人王：三個頂級聯盟的新人年若拿年度 MVP，必定同時拿新人王。 */
+  const leagueRookie=S.stats[bucket].yr===1, rookieAward=`${y} ${lgN}新人王`;
+  const annualMvpAwarded=h.some(x=>x===`${y} ${lgN}年度MVP`);
   const rookieOK=bucket!=='CPBL'||!(S.stats.NPB||S.stats.MLB||S.stats.MINOR);
-  if(S.stats[bucket].yr===1&&rookieOK){
+  if(leagueRookie&&annualMvpAwarded&&!h.includes(rookieAward)){
+    h.push(rookieAward);
+  }else if(leagueRookie&&rookieOK){
     const rkP=rookieAwardGuaranteed(h,y,lgN)?100:awardP(st.d,4,10,30);
-    if(chance(rkP)) h.push(`${y} ${lgN}新人王`);
+    if(chance(rkP)) h.push(rookieAward);
   }
 
   /* 6. 後續獲獎觸發特質 */
