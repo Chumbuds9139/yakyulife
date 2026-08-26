@@ -63,10 +63,10 @@ export function renderShareImage(evals,picks,opt){
   const remTr=(S.removed||[]).map(l=>({label:l,key:'',neg:false,rem:true}));
   function tagColor(o){ /* keep in sync with traitTagStyle() + the .tag defaults */
     if(o.rem)return {bg:'#242424',bd:'#4a4a4a',fg:'#8a8a8a'};
-    if(o.key==='legend'||o.key==='taiwan'||o.key==='pitcherTC'||o.key==='hitterTC')return {bg:'#3a2c05',bd:'#ffc95c',fg:'#ffe08a'}; /* 金(歷史級/Team Taiwan/三冠王) */
+    if(o.key==='legend'||o.key==='taiwan'||o.key==='intlace'||o.key==='pitcherTC'||o.key==='hitterTC')return {bg:'#3a2c05',bd:'#ffc95c',fg:'#ffe08a'}; /* 金 */
     if(o.key==='goldcloth')return {bg:'#3a3505',bd:'#e8d43a',fg:'#fff35a'}; /* 黃 */
     if(o.key==='mrteam')return teamChip(TEAM_COLOR[S.mrTeamName]||'#ffc95c');
-    if(o.key==='genius')return {bg:'#232733',bd:'#c8d0e0',fg:'#e8eef7'}; /* 銀 */
+    if(o.key==='genius'||o.key==='disc'||o.key==='clutch'||o.key==='favorite')return {bg:'#232733',bd:'#c8d0e0',fg:'#e8eef7'}; /* 銀 */
     if(o.neg)return {bg:'#2a0f0f',bd:'#c0392b',fg:'#ff8b7a'};             /* 紅 */
     return {bg:C_P2,bd:C_EDGE,fg:C_ACC};                                  /* 主題色 */
   }

@@ -18,18 +18,18 @@ export function traitName(k){
   return TRAIT_N[k]||k; }
 export function traitTagStyle(k){
   if(TRAIT_KEYS.neg.includes(k))return 'background:#2a0f0f;border-color:#c0392b;color:#ff8b7a'; /* 負向:紅 */
-  if(k==='legend'||k==='taiwan'||k==='pitcherTC'||k==='hitterTC')return 'background:#3a2c05;border-color:#ffc95c;color:#ffe08a'; /* 歷史級/挺台灣/三冠王:金 */
+  if(k==='legend'||k==='taiwan'||k==='intlace'||k==='pitcherTC'||k==='hitterTC')return 'background:#3a2c05;border-color:#ffc95c;color:#ffe08a'; /* 歷史級/挺台灣/國際賽/三冠王:金 */
   if(k==='goldcloth')return 'background:#3a3505;border-color:#e8d43a;color:#fff35a'; /* 黃金聖衣:黃 */
   if(k==='mrteam'){ const c=teamChip(TEAM_COLOR[S.mrTeamName]||'#ffc95c'); return 'background:'+c.bg+';border-color:'+c.bd+';color:'+c.fg; }
-  if(k==='genius')return 'background:#232733;border-color:#c8d0e0;color:#e8eef7'; /* 天才:銀 */
+  if(k==='genius'||k==='disc'||k==='clutch'||k==='favorite')return 'background:#232733;border-color:#c8d0e0;color:#e8eef7'; /* 銀 */
   return ''; /* 正向:預設琥珀 */ }
 export function traitColorRank(k){ /* 依 traitTagStyle 的顏色分類排序用；同色的特性排在一起，結算列表與結算圖共用 */
-  if(k==='legend'||k==='taiwan'||k==='pitcherTC'||k==='hitterTC')return 0; /* 金 */
-  if(k==='goldcloth')return 1; /* 黃 */
-  if(k==='genius')return 2; /* 銀 */
-  if(k==='mrteam')return 3; /* 球隊色 */
+  if(k==='legend'||k==='taiwan'||k==='intlace'||k==='pitcherTC'||k==='hitterTC')return 0; /* 金 */
+  if(k==='mrteam')return 1; /* 球隊色 */
+  if(k==='genius'||k==='disc'||k==='clutch'||k==='favorite')return 2; /* 銀 */
+  if(k==='goldcloth')return 4; /* 黃 */
   if(TRAIT_KEYS.neg.includes(k))return 5; /* 紅(負向) */
-  return 4; /* 預設琥珀(正向) */ }
+  return 3; /* 預設琥珀(正向) */ }
 export function renderTraits(){ /* desktop trait side panel (presentation only) */
   const el=$('trait-tags'),box=$('trait-side'); if(!el||!box)return;
   let h='';
