@@ -223,7 +223,9 @@ export function renderShareImage(evals,picks,opt){
     /* ---- 生涯累積數據 ---- */
     sec('生涯累積數據');
     if(cum.rows.length){
-      const wide={IP:1,ERA:1,WHIP:1,AVG:1,OBP:1,SLG:1,OPS:1};
+      /* PA 可能跨到五位數；不能依賴 IBM Plex Mono 剛好塞進窄欄，否則字型載入失敗
+         回退到較寬的系統等寬字時，10000 會被共用截字邏輯畫成 1000。 */
+      const wide={IP:1,PA:1,ERA:1,WHIP:1,AVG:1,OBP:1,SLG:1,OPS:1};
       const cols=tcols([{t:'League',w:84,a:'l'}].concat(cum.hd.map(t=>({t,w:wide[t]?58:46,a:'r'}))));
       thRow(cols);
       cum.rows.forEach((r,i)=>{ tdRow(cols,
