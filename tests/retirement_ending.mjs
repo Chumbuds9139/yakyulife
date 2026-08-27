@@ -18,6 +18,8 @@ try{
     const retire=await import('./src/ui/retire.js?v=1.5.9');
     const pitcher=retire.nextBaseEnding('P');
     const hitter=retire.nextBaseEnding('SS');
+    const pitcherCoach=retire.jerseyWeightEnding('P');
+    const hitterCoach=retire.jerseyWeightEnding('CF');
     const tiers={CPBL:{i:0,sc:9000}};
     const currentFamily=state.newState('親子測試',0,'P',null);
     currentFamily.love.kids=1;
@@ -28,10 +30,16 @@ try{
     formerFamily.love.exes=[{name:'測試前妻',kids:2}];
     state.setS(formerFamily);
     const withFormerChild=retire.postCareerEndingKeys(tiers);
+    const nationalPlayer=state.newState('國家隊測試',0,'P',null);
+    nationalPlayer.intlCount=1;
+    state.setS(nationalPlayer);
+    const withInternational=retire.postCareerEndingKeys(tiers);
+    const nationalSelected=retire.postCareerEnding(tiers,.999);
     return {
-      pitcher,hitter,
+      pitcher,hitter,pitcherCoach,hitterCoach,
       withCurrentChild,withFormerChild,selected,
-      withoutChild:retire.postCareerEndingKeys(tiers,0),
+      withInternational,nationalSelected,
+      withoutConditions:retire.postCareerEndingKeys(tiers,0,0),
       age24:retire.usesSecondCareerEnding(24),
       age25:retire.usesSecondCareerEnding(25),
     };
@@ -42,14 +50,23 @@ try{
   assert(!result.pitcher.body.includes('最後一個打席'));
   assert(result.hitter.body.includes('最後一個打席'));
   assert(!result.hitter.body.includes('蹲在投手丘上'));
+  assert(result.pitcherCoach.body.includes('被一發全壘打超前'));
+  assert(!result.pitcherCoach.body.includes('漏接一顆平飛球'));
+  assert(result.hitterCoach.body.includes('漏接一顆平飛球'));
+  assert(!result.hitterCoach.body.includes('被一發全壘打超前'));
   assert(result.withCurrentChild.includes('nextBase'));
   assert(result.withFormerChild.includes('nextBase'));
   assert(result.withCurrentChild.includes('coach'));
   assert(result.withCurrentChild.includes('scout'));
-  assert.equal(result.withCurrentChild.length,result.withoutChild.length+1);
-  assert.equal(result.withFormerChild.length,result.withoutChild.length+1);
+  assert.equal(result.withCurrentChild.length,result.withoutConditions.length+1);
+  assert.equal(result.withFormerChild.length,result.withoutConditions.length+1);
   assert.equal(result.selected.title,'下一個壘包');
-  assert(!result.withoutChild.includes('nextBase'));
+  assert(result.withInternational.includes('jerseyWeight'));
+  assert(!result.withInternational.includes('nextBase'));
+  assert.equal(result.withInternational.length,result.withoutConditions.length+1);
+  assert.equal(result.nationalSelected.title,'球衣的重量');
+  assert(!result.withoutConditions.includes('nextBase'));
+  assert(!result.withoutConditions.includes('jerseyWeight'));
   assert.equal(result.age24,true);
   assert.equal(result.age25,false);
   assert.equal(errors.length,0,errors.join('\n'));
