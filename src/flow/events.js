@@ -30,7 +30,8 @@ export function evOdds(){ /* 事件卡成功率:顯示與擲骰共用同一來�
   /* 愛將(2026-08-20 調弱)：出賽保底與守位紅利已經夠有價值，「普通」加成由 20 降為 5——
      原本天才+愛將的普通應對高達 90%。保守與全力不受影響,薪水小倫的 -10 已含在 base 裡。 */
   const normBonus=S.traits.favorite?5:0;
-  return {safe:Math.min(95,base+20), norm:Math.min(95,base+normBonus), bold:base-boldPen+clutchBold};
+  const safePenalty=S.traits.latepractice?5:0;
+  return {safe:Math.min(95,base+20-safePenalty), norm:Math.min(95,base+normBonus), bold:base-boldPen+clutchBold};
 }
 export function eventEligible(ev,state){
   const s=state||S;
@@ -165,6 +166,7 @@ export function resolveEvent(ev,mode,done){
     else S.cntBoldFail++; }
   else { good=chance(od.norm); tag=''; if(good)S.cntNormWin=(S.cntNormWin||0)+1; } /* 愛將:普通成功才算 */
   if(mode==='safe'&&good)S.cntSaveWin=(S.cntSaveWin||0)+1; /* 自律狂:保守成功才算 */
+  recordTrainingSafeFailure(ev,mode,good);
   if((ev.n==='宵夜文化'||ev.n==='場外代言邀約')&&mode!=='safe'&&!good)S.cntSnack++;
   if(mode==='bold'&&!good&&(ev.category==='encounter'||ev.category==='endorsement'))S.cntSocialBoldFail=(S.cntSocialBoldFail||0)+1;
   const plan=eventPlan(ev.category,mode,good,S.traits.clutch?(S.traits.genius?2:1):0), out=[];
@@ -186,6 +188,11 @@ export function resolveEvent(ev,mode,done){
     `${resultText}${/[。！？!?]$/.test(resultText)?'':'。'}${mode==='bold'&&good?'<b class="hl">全力一搏成功！</b>':''}${mode==='bold'&&!good?'<b class="dn">全力一搏失敗……</b>':''}<br>${out.join('｜')||'沒有額外數值變動'}`);
   checkTraitsMid();
   done();
+}
+export function recordTrainingSafeFailure(ev,mode,good){
+  if(mode==='safe'&&!good&&ev&&ev.category==='training'){
+    S.cntTrainingSafeFail=(S.cntTrainingSafeFail||0)+1;
+  }
 }
 /* 賽季中即時可解鎖的特性 */
 export function allocDone(touched,isDice){
@@ -217,6 +224,8 @@ export function allocDone(touched,isDice){
     board(1); }
 }
 export function checkTraitsMid(){
+  if(!S.traits.latepractice&&(S.cntTrainingSafeFail||0)>=20){
+    traitCard('latepractice','練球遲到','你總把保守當成安全牌，卻連最基本的集合時間都抓不準。二十次訓練失敗後，教練不再相信你的「慢慢來」——<b class="dn">往後「保守應對」成功率永久 −5 個百分點</b>。','bad'); }
   if(!S.traits.adking&&(S.cntEndorseBoldWin||0)>=5){
     traitCard('adking','業配王','你在廣告上的時間，比明星還多，從此代言取得金額多10%'); }
   /* 自律狂:25 歲前累積保守「成功」15 次 + 從未外遇被抓 + 宵夜 <5 次 */
