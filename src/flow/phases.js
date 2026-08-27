@@ -144,6 +144,27 @@ export function phaseMid(){
         else amateurSeason(); }}]); }}]);
   }));
 }
+const RAINBOW_RULES={CPBL:['中職',3],NPB:['日職',5],MLB:['大聯盟',5]};
+/* 三聯盟的七彩球衣各自累積；回傳這次新解鎖的聯盟，方便流程顯示一次取得訊息。 */
+export function unlockRainbowLeagues(state=S){
+  const owned=Array.isArray(state.rainbowLeagues)?state.rainbowLeagues.filter(Boolean):[];
+  /* 舊存檔只有單一 rainbowLg，先搬進新陣列，之後仍可解鎖另外兩個聯盟。 */
+  if(state.rainbowLg&&!owned.includes(state.rainbowLg))owned.push(state.rainbowLg);
+  const added=[];
+  Object.entries(RAINBOW_RULES).forEach(([league,[label,minTeams]])=>{
+    const teams=Object.keys((state.teamTally&&state.teamTally[league])||{}).length;
+    if(teams>minTeams&&!owned.includes(label)){
+      owned.push(label);
+      added.push({league,label,teams});
+    }
+  });
+  state.rainbowLeagues=[...new Set(owned)];
+  if(state.rainbowLeagues.length){
+    state.traits.rainbow=true;
+    if(!state.rainbowLg)state.rainbowLg=state.rainbowLeagues[0]; /* 保留舊版欄位供相容 */
+  }
+  return added;
+}
 /* 球隊年資在季末交易前結算：交易屬於下一季異動，剛打完的球季必須記在原隊。 */
 export function updateTeamTenureTraits(){
   if(S.stage!=='PRO'||!S.orgTeam)return;
@@ -176,14 +197,9 @@ export function updateTeamTenureTraits(){
   }
 
   /* ◯◯七彩球衣：同一聯盟生涯效力球隊數超標（中職>3、日職>5、美職>5）。 */
-  if(!S.traits.rainbow){
-    const RB={CPBL:['中職',3],NPB:['日職',5],MLB:['大聯盟',5]};
-    for(const lg in RB){
-      const n=Object.keys((S.teamTally&&S.teamTally[lg])||{}).length;
-      if(n>RB[lg][1]){ S.traits.rainbow=true; S.rainbowLg=RB[lg][0];
-        card('info','隱藏稱號：'+RB[lg][0]+'七彩球衣',`打開衣櫃，${n} 件不同的球衣掛在眼前——${RB[lg][0]}的球隊你快穿過一輪了。球迷笑稱你是「<b class="hl">七彩球衣</b>」：去到哪裡都能活下來，這也是一種本事。`); board(1); break; }
-    }
-  }
+  unlockRainbowLeagues().forEach(({label,teams})=>{
+    card('info','隱藏稱號：'+label+'七彩球衣',`打開衣櫃，${teams} 件不同的球衣掛在眼前——${label}的球隊你快穿過一輪了。球迷笑稱你是「<b class="hl">七彩球衣</b>」：去到哪裡都能活下來，這也是一種本事。`); board(1);
+  });
 }
 /* ---------- 季末 ---------- */
 export function phaseEnd(){

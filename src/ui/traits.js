@@ -1,11 +1,15 @@
 import {S} from '../core/state.js?v=1.5.9';
 import {$, teamChip} from './dom.js?v=1.5.9';
-import {TRAIT_KEYS, TRAIT_N, TRAIT_FX, legendTraitNames, pitcherTCNames, hitterTCNames} from '../data/traits.js?v=1.5.9';
+import {TRAIT_KEYS, TRAIT_N, TRAIT_FX, legendTraitNames, rainbowTraitNames, pitcherTCNames, hitterTCNames} from '../data/traits.js?v=1.5.9';
 import {TEAM_COLOR, teamNick} from '../data/teams.js?v=1.5.9';
 
 export function traitNames(k){
   if(k==='legend'){
     return legendTraitNames(S.legendLeagues,S.legendLeague); /* legendLeague 供舊狀態相容 */
+  }
+  if(k==='rainbow'){
+    const names=rainbowTraitNames(S.rainbowLeagues,S.rainbowLg); /* rainbowLg 供舊狀態相容 */
+    return names.length?names:[TRAIT_N.rainbow];
   }
   if(k==='pitcherTC')return pitcherTCNames(S.pitcherTCLeagues);
   if(k==='hitterTC')return hitterTCNames(S.hitterTCLeagues);
@@ -13,8 +17,7 @@ export function traitNames(k){
 }
 export function traitName(k){
   if(k==='mrteam')return (teamNick(S.mrTeamName||'')||'')+'先生';
-  if(k==='legend'||k==='pitcherTC'||k==='hitterTC')return traitNames(k)[0]||TRAIT_N[k]||k;
-  if(k==='rainbow')return (S.rainbowLg||'')+'七彩球衣';
+  if(k==='legend'||k==='rainbow'||k==='pitcherTC'||k==='hitterTC')return traitNames(k)[0]||TRAIT_N[k]||k;
   return TRAIT_N[k]||k; }
 export function traitTagStyle(k){
   if(TRAIT_KEYS.neg.includes(k))return 'background:#2a0f0f;border-color:#c0392b;color:#ff8b7a'; /* 負向:紅 */

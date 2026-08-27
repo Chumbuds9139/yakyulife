@@ -1,6 +1,6 @@
 import {S} from '../core/state.js?v=1.5.9';
 import {APP_VER, SPONSOR_URL} from '../config.js?v=1.5.9';
-import {renderTraits, traitName} from './traits.js?v=1.5.9';
+import {renderTraits, traitNames} from './traits.js?v=1.5.9';
 import {clearAlloc, allocFullClose} from './alloc.js?v=1.5.9';
 import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.5.9';
 import {DPN, POSN} from '../data/abilities.js?v=1.5.9';
@@ -224,8 +224,8 @@ function secTraits(){
      (see the .bd-tc .f rule) and surfaces the effect on hover, the way #trait-side already does */
   [...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].forEach(k=>{ if(!S.traits||!S.traits[k])return;
     const fx=TRAIT_FX[k]||'';
-    out.push(`<div class="bd-tc${TRAIT_KEYS.neg.includes(k)?' neg':''}" title="${esc(fx)}">`+
-      `<span class="n">${traitName(k)}</span><span class="f">${fx}</span></div>`); });
+    traitNames(k).forEach(name=>out.push(`<div class="bd-tc${TRAIT_KEYS.neg.includes(k)?' neg':''}" title="${esc(fx)}">`+
+      `<span class="n">${name}</span><span class="f">${fx}</span></div>`)); });
   (S.removed||[]).forEach(l=>out.push(
     `<div class="bd-tc off" title="已解除"><span class="n">${l}</span><span class="f">已解除</span></div>`));
   return `<div class="bd-sec sec-t"><div class="bd-sh">隱藏屬性</div>`+
