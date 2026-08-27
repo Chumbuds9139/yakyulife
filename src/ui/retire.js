@@ -167,9 +167,10 @@ export function postCareerEndingKeys(tiers,kids){
   const childCount=kids===undefined
     ?Math.max(0,(S.love&&S.love.kids)||0)+((S.love&&S.love.exes)||[]).reduce((n,ex)=>n+Math.max(0,ex.kids||0),0)
     :Math.max(0,Number(kids)||0);
-  if(childCount>0)return ['nextBase'];
   const proStar=!!tiers.NPB||!!tiers.MLB||!!(tiers.CPBL&&tiers.CPBL.i<=1);
-  return proStar?['coach','scout','nextGame','otherAngle']:['coach','scout','grassroots','nextGame','otherAngle'];
+  const keys=proStar?['coach','scout','nextGame','otherAngle']:['coach','scout','grassroots','nextGame','otherAngle'];
+  if(childCount>0)keys.push('nextBase');
+  return keys;
 }
 export function postCareerEnding(tiers,roll){
   const keys=postCareerEndingKeys(tiers),r=roll===undefined?R():roll;

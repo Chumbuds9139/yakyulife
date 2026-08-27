@@ -23,7 +23,7 @@ try{
     currentFamily.love.kids=1;
     state.setS(currentFamily);
     const withCurrentChild=retire.postCareerEndingKeys(tiers);
-    const selected=retire.postCareerEnding(tiers,0);
+    const selected=retire.postCareerEnding(tiers,.999);
     const formerFamily=state.newState('前段婚姻測試',0,'IF',null);
     formerFamily.love.exes=[{name:'測試前妻',kids:2}];
     state.setS(formerFamily);
@@ -42,8 +42,12 @@ try{
   assert(!result.pitcher.body.includes('最後一個打席'));
   assert(result.hitter.body.includes('最後一個打席'));
   assert(!result.hitter.body.includes('蹲在投手丘上'));
-  assert.deepEqual(result.withCurrentChild,['nextBase']);
-  assert.deepEqual(result.withFormerChild,['nextBase']);
+  assert(result.withCurrentChild.includes('nextBase'));
+  assert(result.withFormerChild.includes('nextBase'));
+  assert(result.withCurrentChild.includes('coach'));
+  assert(result.withCurrentChild.includes('scout'));
+  assert.equal(result.withCurrentChild.length,result.withoutChild.length+1);
+  assert.equal(result.withFormerChild.length,result.withoutChild.length+1);
   assert.equal(result.selected.title,'下一個壘包');
   assert(!result.withoutChild.includes('nextBase'));
   assert.equal(result.age24,true);
