@@ -1,14 +1,27 @@
-/* Theme tokens: one set per body[data-theme]; default = a (深綠記分板).
-   Values mirror the design prototype (yakyulife-app.dc.html helmet style). */
+/* Theme tokens: semantic layer first, legacy aliases second.
+   Legacy selectors keep using --bg/--panel/etc.; new UI migration tasks should use
+   the semantic tokens directly. */
 body{
-  --bg:#081510;--panel:#132920;--panel2:#1a382a;--edge:#2b4d3a;--text:#ece7d6;--dim:#93ab9c;
-  --accent:#ffc95c;--good:#8fd08f;--bad:#e2695c;--info:#7fb3d5;--gold:#ffc95c;--row:#0d2115;--r:10px;
-  --sans:'Noto Sans TC',-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;
+  --space-0:0px;--space-2:2px;--space-4:4px;--space-8:8px;--space-12:12px;--space-16:16px;
+  --space-20:20px;--space-24:24px;--space-32:32px;--space-40:40px;--space-48:48px;--space-64:64px;
+  --font-sans:'Noto Sans TC',-apple-system,'PingFang TC','Microsoft JhengHei',sans-serif;
+  --font-data:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --bg-canvas:#081A12;--surface-default:#112F23;--surface-raised:#1C4231;--surface-interactive:#204A37;
+  --text-primary:#F2EBDD;--text-secondary:#A9B7AE;--text-muted:#8EA295;--text-on-accent:#0B1F17;
+  --border-default:#38654F;--border-strong:#6E987C;--accent-primary:#F4C552;
+  --status-success:#70C88A;--status-danger:#E88B84;--status-info:#6BACD8;--focus-ring:#F4C552;
+  --radius-component:6px;--radius-badge:4px;--radius-pill:999px;--radius-preview:8px;
+  --radius-selection-card:10px;--radius-progress:4px;--progress-track:#081510;
+  --shadow-hud:0 6px 9px rgba(0,0,0,.35);--shadow-action:0 -8px 24px rgba(0,0,0,.35);
+  --bg:var(--bg-canvas);--panel:var(--surface-default);--panel2:var(--surface-raised);--edge:var(--border-default);
+  --text:var(--text-primary);--dim:var(--text-muted);--accent:var(--accent-primary);--good:var(--status-success);
+  --bad:var(--status-danger);--info:var(--status-info);--gold:var(--accent-primary);--row:var(--progress-track);--r:var(--radius-component);
+  --sans:var(--font-sans);
   --head:'Noto Sans TC',sans-serif;
-  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --mono:var(--font-data);
   --disp:'IBM Plex Mono',monospace;
-  --glow:0 0 8px rgba(255,201,92,.35);
-  --btnbg:linear-gradient(#2a5038,#1f3f2c);--btnedge:#3c6a4c;--btntx:#ece7d6;
+  --glow:0 0 8px rgba(244,197,82,.35);
+  --btnbg:var(--surface-interactive);--btnedge:var(--border-strong);--btntx:var(--text-primary);
   --bgfx:radial-gradient(ellipse 120% 60% at 50% -10%,rgba(29,70,48,.5) 0%,transparent 60%);
   --shadow:rgba(0,0,0,.35);
   /* one chevron for every expand/collapse affordance; drawn as a mask so each context
@@ -17,17 +30,32 @@ body{
   /* legacy aliases: older inline templates still reference these */
   --chalk:var(--text);--amber:var(--accent);--blue:var(--info);--clay:var(--accent);
 }
-body[data-theme='b']{--bg:#07090c;--panel:#0c1014;--panel2:#10161c;--edge:#232c36;--text:#d8dde2;--dim:#5c6873;
-  --accent:#ffb32e;--good:#49b675;--bad:#e2695c;--info:#3a7bd5;--gold:#ffb32e;--row:#0b0f14;--r:4px;
+body[data-theme='b']{--bg-canvas:#0B0F12;--surface-default:#10161B;--surface-raised:#1D2B35;--surface-interactive:#22333E;
+  --text-primary:#EDF1EE;--text-secondary:#A4AFB5;--text-muted:#7A8792;--text-on-accent:#0B0F12;
+  --border-default:#334651;--border-strong:#657D8B;--accent-primary:#F0B33E;
+  --status-success:#5FCF8B;--status-danger:#EB665F;--status-info:#4DA3E6;--focus-ring:#F0B33E;--radius-component:4px;
+  --bg:var(--bg-canvas);--panel:var(--surface-default);--panel2:var(--surface-raised);--edge:var(--border-default);
+  --text:var(--text-primary);--dim:var(--text-muted);--accent:var(--accent-primary);--good:var(--status-success);
+  --bad:var(--status-danger);--info:var(--status-info);--gold:var(--accent-primary);--row:var(--bg-canvas);--r:var(--radius-component);
   --head:'DotGothic16',monospace;--disp:'DotGothic16',monospace;
-  --glow:0 0 10px rgba(255,179,46,.6);--btnbg:#132018;--btnedge:#49b675;--btntx:#d8dde2;--bgfx:none;--shadow:rgba(0,0,0,.5)}
-body[data-theme='c']{--bg:#f4efe1;--panel:#faf6ea;--panel2:#ece5d2;--edge:#1e1c18;--text:#1e1c18;--dim:#6f6857;
-  --accent:#b3402f;--good:#2f6b3a;--bad:#b3402f;--info:#35506b;--gold:#b3402f;--row:#ede6d4;--r:0px;
+  --glow:0 0 10px rgba(240,179,62,.6);--btnbg:var(--surface-interactive);--btnedge:var(--border-strong);--btntx:var(--text-primary);--bgfx:none;--shadow:rgba(0,0,0,.5)}
+body[data-theme='c']{--bg-canvas:#F3EDDE;--surface-default:#FBF7EC;--surface-raised:#E4D9C1;--surface-interactive:#F0E6D2;
+  --text-primary:#26231F;--text-secondary:#655E54;--text-muted:#716A60;--text-on-accent:#FBF7EC;
+  --border-default:#9A8D77;--border-strong:#756956;--accent-primary:#974834;
+  --status-success:#2E6B48;--status-danger:#B4232F;--status-info:#315C79;--focus-ring:#9C4A36;--radius-component:0px;
+  --bg:var(--bg-canvas);--panel:var(--surface-default);--panel2:var(--surface-raised);--edge:var(--border-default);
+  --text:var(--text-primary);--dim:var(--text-muted);--accent:var(--accent-primary);--good:var(--status-success);
+  --bad:var(--status-danger);--info:var(--status-info);--gold:var(--accent-primary);--row:var(--surface-interactive);--r:var(--radius-component);
   --head:'Noto Serif TC',serif;--disp:'Noto Serif TC',serif;
-  --glow:none;--btnbg:#1e1c18;--btnedge:#1e1c18;--btntx:#f4efe1;--bgfx:none;--shadow:rgba(30,28,24,.12)}
-body[data-theme='d']{--bg:#f6f7f6;--panel:#ffffff;--panel2:#f2f4f2;--edge:#e2e6e3;--text:#1a201c;--dim:#7a857e;
-  --accent:#0f7b4d;--good:#0f7b4d;--bad:#c0392b;--info:#4a76a8;--gold:#b8862d;--row:#eef1ef;--r:12px;
-  --glow:none;--btnbg:#0f7b4d;--btnedge:#0f7b4d;--btntx:#ffffff;--bgfx:none;--shadow:rgba(26,32,28,.1)}
+  --glow:none;--btnbg:var(--text-primary);--btnedge:var(--border-strong);--btntx:var(--text-on-accent);--bgfx:none;--shadow:rgba(30,28,24,.12)}
+body[data-theme='d']{--bg-canvas:#F7F9F7;--surface-default:#FFFFFF;--surface-raised:#E4EBE6;--surface-interactive:#DDE9E1;
+  --text-primary:#202722;--text-secondary:#5C6A61;--text-muted:#667269;--text-on-accent:#FFFFFF;
+  --border-default:#BBC8BF;--border-strong:#76887C;--accent-primary:#0B784A;
+  --status-success:#22765D;--status-danger:#B5433B;--status-info:#366CA2;--focus-ring:#0B7A4C;--radius-component:12px;
+  --bg:var(--bg-canvas);--panel:var(--surface-default);--panel2:var(--surface-raised);--edge:var(--border-default);
+  --text:var(--text-primary);--dim:var(--text-muted);--accent:var(--accent-primary);--good:var(--status-success);
+  --bad:var(--status-danger);--info:var(--status-info);--gold:var(--accent-primary);--row:var(--surface-interactive);--r:var(--radius-component);
+  --glow:none;--btnbg:var(--accent-primary);--btnedge:var(--accent-primary);--btntx:var(--text-on-accent);--bgfx:none;--shadow:rgba(26,32,28,.1)}
 /* touch-action:manipulation keeps pan + pinch but kills double-tap zoom (tap-heavy game) */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 html,body{height:100%;overscroll-behavior-y:none}

@@ -130,3 +130,28 @@ Before TASK-13 or TASK-14 visual QA, confirm whether this is only a filename iss
 - Product code changed: none.
 - Documentation added: this baseline file.
 - Next allowed task: TASK-02 Semantic Tokens + Four-theme Foundation.
+
+## TASK-02 Result
+
+Implemented on 2026-08-30:
+
+- Added semantic token layer in `css/style.css`.
+- Added exact four-theme values for canvas, surfaces, text, borders, accent, status colors, focus ring, and component radius.
+- Added spacing tokens `0/2/4/8/12/16/20/24/32/40/48/64`.
+- Added role tokens for font families, radii, progress track, HUD shadow, and action shadow.
+- Kept legacy aliases `--bg`, `--panel`, `--panel2`, `--edge`, `--text`, `--dim`, `--accent`, `--good`, `--bad`, `--info`, and `--r`.
+- Updated the Google Fonts request in `index.html` to load IBM Plex Mono weight 600.
+- Updated the stylesheet query string to `css/style.css?v=1.5.9-ui-tokens` so local and deployed browsers do not keep the old token CSS cached.
+
+Observed after TASK-02:
+
+- Four theme semantic tokens matched the handoff spec with no mismatches.
+- Legacy aliases matched their semantic token targets with no mismatches.
+- Only theme `a` kept the ambient radial glow; themes `b/c/d` resolved `--bgfx` to `none`.
+- Theme `b` kept `DotGothic16` head/display identity.
+- Theme `c` kept `Noto Serif TC` head/display identity.
+- Start flow with `?seed=ui-migration-baseline` still reached `2026 年 · 16 歲 · 高一`.
+- First action text remained `▸ 分配訓練成果（4 顆骰）`.
+- Browser console error logs: none.
+
+Next allowed task: TASK-03 Global Layout / RWD Skeleton / Scroll Model.
