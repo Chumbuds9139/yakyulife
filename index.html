@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#081510">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -32,7 +32,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=IBM+Plex+Mono:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=1.5.9-ui-tokens">
+<link rel="stylesheet" href="css/style.css?v=1.5.9-ui-layout">
 </head>
 <body>
 <div id="start">
@@ -132,6 +132,11 @@
     <button id="act-toggle" style="display:none">⌄ 收合選項</button>
     <footer id="act" style="display:none"></footer>
   </div></aside>
+  <footer id="game-footer" aria-label="YaKyoLife">
+    <img class="wm-img" src="assets/wordmark-cream.png" alt="YaKyoLife" decoding="async">
+    <span class="sub">棒球人生模擬器</span>
+    <span class="ver" id="game-ver"></span>
+  </footer>
 </div>
 <div id="modal"><div id="modal-box"></div></div>
 <div id="alloc-full"><div id="af-inner"><div class="af-head"><span class="af-title" id="af-title"></span><button class="btn" id="af-close">收起</button></div><div id="af-body"></div></div></div>

@@ -155,3 +155,41 @@ Observed after TASK-02:
 - Browser console error logs: none.
 
 Next allowed task: TASK-03 Global Layout / RWD Skeleton / Scroll Model.
+
+## TASK-03 Result
+
+Implemented on 2026-08-30:
+
+- Updated the viewport meta tag to remove forced zoom locking while keeping `viewport-fit=cover`.
+- Added a dedicated `#game-footer` inside `#app` for the gameplay lockup and version text.
+- Synced `#game-ver` from `APP_VER` in `src/main.js`.
+- Added footer height tokens and reserved footer space in both mobile flex and desktop grid layouts.
+- Kept desktop `#app` at three columns and added a second grid row for the footer.
+- Kept mobile action controls sticky above the footer, including the collapsed action state.
+- Hid the old compact `#log-mark` footer because the global footer now carries the product/version label.
+- Updated the stylesheet query string to `css/style.css?v=1.5.9-ui-layout`.
+
+Observed after TASK-03:
+
+- Local static test URL `http://127.0.0.1:8125/?seed=ui-migration-baseline` loaded the new layout CSS.
+- Desktop 1280x720:
+  - `#app` grid columns were `250px 631.203px 396.797px`.
+  - `#app` grid rows were `688px 32px`.
+  - `#tl-side` stayed visible.
+  - `#act-toggle` stayed hidden.
+  - `#game-footer` occupied the bottom 32px row.
+  - Browser console error logs: none.
+- Manual mobile-ui mode at 1280x720:
+  - `body.mobile-ui #app` was capped at 560px.
+  - Open action panel bottom aligned at 688px, directly above the 32px footer.
+  - Collapsed action panel height was 41px and stayed directly above the footer.
+  - `#act` became `display:none` only in the collapsed mobile-ui state.
+  - Browser console error logs: none.
+- Scroll clearance check:
+  - Test content exceeded the viewport (`scrollHeight` 866px vs `clientHeight` 720px).
+  - After scrolling to the bottom, the last log card ended above the action panel (`lastCard.bottom` 291.21875px, `#act-side.top` 311.21875px).
+  - `#act-side` still ended directly above `#game-footer`.
+
+Note: in-app browser viewport override did not reduce `innerWidth` below 1280 during this run, so narrow physical widths were checked through CSS/static breakpoint inspection plus manual mobile-ui mode rather than a true 375px browser viewport.
+
+Next allowed task: TASK-04 Option Button / Choice Surface.

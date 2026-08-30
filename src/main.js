@@ -165,7 +165,8 @@ $('btn-start').onclick=()=>{
 })();
 (function(){ const vb=document.getElementById('ver-badge'); if(vb)vb.textContent=APP_VER;
   const tv=document.getElementById('tl-ver'); if(tv)tv.textContent=APP_VER;
-  const lv=document.getElementById('lm-ver'); if(lv)lv.textContent=APP_VER; })();
+  const lv=document.getElementById('lm-ver'); if(lv)lv.textContent=APP_VER;
+  const gv=document.getElementById('game-ver'); if(gv)gv.textContent=APP_VER; })();
 /* touch has no hover: tap the salary cell to reveal the full amount, tap again to close.
    Never dismisses on a timer — the user decides when it goes away. */
 (function(){ const cell=document.getElementById('bd-sal-cell'); if(!cell)return;
