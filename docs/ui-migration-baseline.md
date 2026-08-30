@@ -305,4 +305,29 @@ Observed after TASK-07:
 - `#log-mark` duplicate markup count was 0 in Start and Gameplay checks.
 - Browser console error logs: none.
 
-Next allowed task: TASK-08 Start.
+## TASK-08 Result
+
+Implemented on 2026-08-31:
+
+- Migrated the Start screen main content into the final order: sponsor action, brand, description, Player Data, Position, and World Seed.
+- Moved the sponsor action into the scrollable Start main region while preserving its existing destination.
+- Updated the Start logo display area to 270px x 90px with non-distorting image fitting.
+- Added the `.start-form` grouping and tightened Start form spacing to 24px section gaps, 12px form gaps, and 4px label-to-control gaps.
+- Restyled Player Data, Position, and World Seed controls to use the shared surface / border / radius tokens.
+- Kept existing player generation, position values, editable seed input, regenerate link, start button handler, and footer/community behavior intact.
+- Updated the stylesheet query string to `css/style.css?v=1.5.9-ui-start`.
+
+Observed after TASK-08:
+
+- `node --check src/main.js` and `node --check src/ui/dom.js` passed.
+- `git diff --check` passed with only the existing Windows LF-to-CRLF warning for `css/style.css`.
+- Local static test URL `http://127.0.0.1:8128/?seed=ui-migration-baseline` loaded `css/style.css?v=1.5.9-ui-start`.
+- At 375px and 390px, Start hierarchy and form order matched the spec, with no horizontal overflow or browser console errors.
+- At 375px and 390px, the logo measured 270px x 90px and used `object-fit: contain`, so the asset did not stretch.
+- The sponsor action remained linked to `https://portaly.cc/mrthemost` and scrolled with the Start main content.
+- Seed regenerate changed the editable seed value, and same seed plus same choices produced the same first generated career card across tested viewport widths.
+- Custom name, jersey number, and position choices still carried into the generated career.
+- Display preferences and the four theme options remained reachable from the Start footer; the font-size control stayed two-column.
+- At 1280px, the Start screen stayed centered at 560px wide with no horizontal overflow and no browser console errors.
+
+Next allowed task: TASK-09 Start Preference.
