@@ -25,9 +25,6 @@ body{
   --btnbg:var(--surface-interactive);--btnedge:var(--border-strong);--btntx:var(--text-primary);
   --bgfx:radial-gradient(ellipse 120% 60% at 50% -10%,rgba(29,70,48,.5) 0%,transparent 60%);
   --shadow:rgba(0,0,0,.35);
-  /* one chevron for every expand/collapse affordance; drawn as a mask so each context
-     colours it with currentColor and rotates it with the same rule */
-  --chev:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='7'><path d='M1 1l6 5 6-5' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round'/></svg>");
   /* legacy aliases: older inline templates still reference these */
   --chalk:var(--text);--amber:var(--accent);--blue:var(--info);--clay:var(--accent);
 }
@@ -65,8 +62,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
    body background-image would tile once per viewport and show a seam on scroll */
 body::before{content:'';position:fixed;inset:0;z-index:-1;background:var(--bgfx);pointer-events:none}
 a{color:var(--info)}
-.chev{display:block;width:14px;height:7px;flex:none;background:currentColor;transition:transform .18s;
-  -webkit-mask:var(--chev) no-repeat center/14px 7px;mask:var(--chev) no-repeat center/14px 7px}
+.ph,.ph-bold,.ph-fill{line-height:1}
+.chev{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:none;
+  font-size:24px;color:currentColor;transition:transform .18s}
 .chev.up{transform:rotate(180deg)}
 /* ---------- 版型骨架:手機單欄(預設) / 桌面三欄(>920px) ---------- */
 #app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
@@ -88,11 +86,11 @@ a{color:var(--info)}
 #bd-id{flex:0 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px}
 #bd-name{min-width:0;font-family:var(--head);font-weight:900;font-size:18px;line-height:1;
   letter-spacing:.05em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#bd-role{min-width:0;display:flex;gap:5px}
-.bd-chip{font-size:10.5px;line-height:1.55;padding:1px 7px;border-radius:min(var(--r),5px);
-  min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bd-chip.pos{background:var(--panel2);border:1px solid var(--edge);color:var(--text)}
-.bd-chip.typ{border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)}
+#bd-role{min-width:0;display:flex;gap:var(--space-4)}
+.bd-chip{font-family:var(--mono);font-size:14px;line-height:20px;font-weight:600;padding:0 var(--space-8);
+  border-radius:var(--radius-badge);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bd-chip.pos{background:var(--surface-raised);border:1px solid transparent;color:var(--text-secondary)}
+.bd-chip.typ{background:transparent;border:1px solid var(--accent-primary);color:var(--accent-primary)}
 #bd-team{flex:none;min-width:0;margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
 .bt-lbl{flex:none;white-space:nowrap;font-size:9px;color:var(--dim);letter-spacing:.3em}
 .bt-lbl i,.bt-lbl em{font-style:normal}
@@ -102,11 +100,12 @@ a{color:var(--info)}
 .bt-name.plain{color:var(--accent);font-size:14px;font-weight:700;letter-spacing:.05em}
 /* pro clubs keep the existing white-label treatment: the team colour is the jersey
    primary and only reads at full saturation against white (see teamChip() rationale) */
-.bt-name.chip{background:#ffffff;padding:1px 7px;border-radius:6px;box-shadow:0 2px 4px rgba(0,0,0,.4);font-size:12.5px}
-.bt-badge{flex:none;font-size:10.5px;font-weight:700;padding:1px 8px;
-  border-radius:min(var(--r),4px);white-space:nowrap}
-.bt-badge.top{background:var(--accent);color:var(--bg)} /* 一軍／大聯盟／學生年級:實心 */
-.bt-badge.sub{border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);color:var(--accent)} /* 還沒上去:描邊 */
+.bt-name.chip{background:#ffffff;padding:0 var(--space-8);border-radius:var(--radius-badge);
+  box-shadow:0 2px 4px rgba(0,0,0,.4);font-family:var(--mono);font-size:14px;line-height:20px;font-weight:600}
+.bt-badge{flex:none;font-family:var(--mono);font-size:14px;line-height:20px;font-weight:600;padding:0 var(--space-8);
+  border-radius:var(--radius-badge);white-space:nowrap}
+.bt-badge.top{background:var(--accent-primary);color:var(--text-on-accent)} /* 一軍／大聯盟／學生年級:實心 */
+.bt-badge.sub{background:transparent;border:1px solid var(--accent-primary);color:var(--accent-primary)} /* 還沒上去:描邊 */
 #bd-tj{display:none}
 #btn-menu{flex:none;align-self:center}
 #bd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:9px}
@@ -129,12 +128,14 @@ a{color:var(--info)}
 @media (hover:hover){ #bd-sal-cell:hover .bd-tip{opacity:1} }
 #bd-sal-cell.show .bd-tip,#bd-sal-cell:focus-visible .bd-tip{opacity:1}
 /* ---------- 詳情:第 5 格切換鈕＋展開面板 ---------- */
-#bd-more{background:var(--row);border:1px dashed var(--btnedge);border-radius:var(--r);
+#bd-more{width:var(--space-48);height:var(--space-48);justify-self:center;align-self:center;
+  background:var(--row);border:1px dashed var(--btnedge);border-radius:var(--r);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
   font-family:inherit;padding:0;cursor:pointer}
 #bd-more .lb{font-size:8.5px;color:var(--dim);letter-spacing:.08em}
 #bd-more .chev{color:var(--accent)}
-#bd-more:hover{border-color:var(--accent)}
+#bd-more:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+@media(hover:hover){#bd-more:hover{border-color:var(--accent)}}
 #bd-more[aria-expanded='true']{border-style:solid;border-color:var(--accent)}
 #bd-more[aria-expanded='true'] .lb{color:var(--accent)}
 #bd-more[aria-expanded='true'] .chev{transform:rotate(180deg)}
@@ -144,11 +145,13 @@ a{color:var(--info)}
   border-radius:min(var(--r),8px);padding:11px 12px;max-height:44vh;overflow-y:auto;
   -webkit-overflow-scrolling:touch}
 #board.detail-open #bd-detail{display:block}
-.bd-tabs{display:flex;gap:6px;margin-bottom:10px}
-.bd-tab{flex:none;background:none;border:1px solid var(--edge);border-radius:999px;color:var(--dim);
-  font-family:inherit;font-size:11px;padding:3px 11px;white-space:nowrap;cursor:pointer}
-.bd-tab:hover{color:var(--accent);border-color:var(--accent)}
-.bd-tab.on{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:700}
+.bd-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:var(--space-8);
+  border-bottom:1px solid var(--border-default)}
+.bd-tab{height:44px;background:transparent;border:0;border-bottom:1px solid transparent;border-radius:0;color:var(--text-secondary);
+  font-family:var(--sans);font-size:16px;line-height:26px;font-weight:500;padding:8px var(--space-12);white-space:nowrap;cursor:pointer}
+@media(hover:hover){.bd-tab:hover{color:var(--accent-primary);background:var(--surface-interactive)}}
+.bd-tab:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+.bd-tab.on{background:transparent;border-bottom-color:var(--accent-primary);color:var(--accent-primary);font-weight:700}
 .bd-sec{display:none;min-width:0}
 #bd-detail[data-tab='h'] .sec-h,#bd-detail[data-tab='s'] .sec-s,
 #bd-detail[data-tab='t'] .sec-t,#bd-detail[data-tab='y'] .sec-y{display:block}
@@ -192,15 +195,18 @@ a{color:var(--info)}
 .bd-yr .n{flex:none;width:44px;text-align:right}
 .bd-yr .opt{display:none} /* 齡 and the wider stat columns return on desktop */
 #lamps{display:flex;gap:14px;justify-content:center;margin-top:7px}
-.lamp{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--dim);letter-spacing:.12em}
-.lamp i{width:9px;height:9px;border-radius:50%;background:var(--panel2);border:1px solid var(--edge);display:inline-block}
-.lamp.on{color:var(--text);font-weight:700} .lamp.on i{background:var(--accent);box-shadow:var(--glow);border-color:var(--accent)}
+.lamp{display:flex;align-items:center;gap:var(--space-8);font-size:13px;line-height:20px;color:var(--text-muted);letter-spacing:0}
+.lamp i{width:8px;height:8px;border-radius:50%;background:var(--surface-raised);border:1px solid var(--border-default);display:inline-block}
+.lamp.on{color:var(--text-primary);font-weight:700} .lamp.on i{background:var(--accent-primary);box-shadow:var(--glow);border-color:var(--accent-primary)}
 /* ---------- 生涯時間軸:手機橫向膠囊列 ---------- */
-#tl-strip{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+#tl-strip{display:flex;gap:var(--space-8);overflow-x:auto;margin-top:10px;padding-bottom:2px;-webkit-overflow-scrolling:touch}
 #tl-strip:empty{display:none}
-.tl-chip{font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--edge);border-radius:999px;
-  padding:3px 10px;white-space:nowrap;flex:none;cursor:pointer}
-.tl-chip.now{color:var(--accent);border-color:var(--accent);font-weight:700}
+.tl-chip{height:30px;display:inline-flex;align-items:center;gap:var(--space-4);font-family:var(--mono);
+  font-size:14px;line-height:20px;font-weight:600;color:var(--text-muted);border:1px solid var(--border-default);
+  border-radius:var(--radius-pill);padding:4px var(--space-12);white-space:nowrap;flex:none;cursor:pointer}
+@media(hover:hover){.tl-chip:hover{color:var(--accent-primary);border-color:var(--accent-primary)}}
+.tl-chip:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.tl-chip.now{color:var(--accent-primary);border-color:var(--accent-primary)}
 /* ---------- 生涯時間軸:桌面側欄 ---------- */
 #tl-in{display:flex;flex-direction:column;gap:18px;padding:22px 16px 22px 22px}
 /* Sidebar brand: full-width mini lockup (owner request 2026-08-14, supersedes the 3b
@@ -222,6 +228,7 @@ a{color:var(--info)}
 .tlg{margin-bottom:16px}
 .tlg-h{font-family:var(--head);font-size:10px;letter-spacing:.3em;color:var(--dim);font-weight:700;margin-bottom:9px;padding-left:8px}
 .tl-item{display:flex;align-items:center;gap:10px;margin-bottom:9px;cursor:pointer}
+.tl-item:focus-visible{outline:2px solid var(--focus-ring);outline-offset:3px;border-radius:var(--radius-component)}
 .tl-item .dot{width:10px;height:10px;border-radius:50%;background:var(--panel2);border:2px solid var(--edge);flex:none;margin-left:-13px}
 .tl-item.now .dot{width:16px;height:16px;background:var(--accent);border:3px solid var(--panel);box-shadow:0 0 12px var(--accent);margin-left:-16px}
 .tl-item .t{font-family:var(--mono);font-size:12px;color:var(--dim);line-height:1.45}
@@ -248,8 +255,9 @@ a{color:var(--info)}
 .card.gold h4{color:var(--gold);text-shadow:var(--glow)}
 .card.bad h4{color:var(--bad)} .card.good h4{color:var(--good)} .card.info h4{color:var(--info)}
 .card p{font-size:14px} .card p+p{margin-top:4px}
-.tag{display:inline-block;font-family:var(--mono);font-size:12px;padding:0 6px;border-radius:min(var(--r),4px);
-  background:var(--panel2);border:1px solid var(--edge);color:var(--accent);margin:0 2px}
+.tag{display:inline-block;font-family:var(--mono);font-size:14px;line-height:20px;font-weight:600;
+  padding:0 var(--space-8);border-radius:var(--radius-badge);
+  background:transparent;border:1px solid var(--accent-primary);color:var(--accent-primary);margin:0 2px}
 .up{color:var(--good);font-weight:700}.dn{color:var(--bad);font-weight:700}.hl{color:var(--accent);font-weight:700}
 .statline{font-family:var(--mono);font-size:12.5px;color:var(--text);background:var(--panel2);border:1px dashed var(--edge);
   border-radius:min(var(--r),6px);padding:6px 10px;margin-top:6px;line-height:1.7}
@@ -288,6 +296,8 @@ table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.
 .btn:active{background:var(--surface-raised);transform:scale(.98)}
 @media(hover:hover){.btn:hover{background:var(--surface-interactive);border-color:var(--border-strong)}}
 .btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;box-shadow:0 0 0 1px var(--bg)}
+.btn>.ph,.btn>.ph-bold,.btn>.ph-fill{display:inline-flex;align-items:center;justify-content:center;
+  width:16px;height:16px;font-size:16px;margin-right:var(--space-4);vertical-align:-.13em}
 .btn small{display:block;font-weight:400;font-size:13px;line-height:20px;color:var(--text-secondary);margin-top:var(--space-4);text-align:center}
 .btn.main,.btn.filled{background:var(--surface-interactive);border-color:var(--border-strong);color:var(--text-primary)}
 .btn.main:active,.btn.filled:active{background:var(--surface-raised)}
@@ -422,9 +432,10 @@ body[data-theme='c'] .lockup-sub em,body[data-theme='d'] .lockup-sub em{text-sha
 /* community link: a pill in the quiet bottom band, deliberately lighter than 開始生涯 so it
    does not compete with the primary action, but with a real outline so it reads as tappable */
 #community{text-align:center;margin-top:20px}
-#community a{display:inline-flex;align-items:center;gap:7px;
+#community a{display:inline-flex;align-items:center;gap:var(--space-4);
   border:1px solid var(--edge);border-radius:999px;padding:8px 16px;
   color:var(--text);text-decoration:none;font-size:12.5px;letter-spacing:.06em;transition:.15s}
+#community a .ph,#community a .ph-bold,#community a .ph-fill{width:16px;height:16px;font-size:16px}
 #community a:hover,#community a:focus-visible{color:var(--accent);border-color:var(--accent)}
 /* ---------- 贊助入口 ----------
    首頁右上角常駐膠囊 + 遊戲內選單的連結按鈕，兩處導向同一個贊助頁。
@@ -432,12 +443,12 @@ body[data-theme='c'] .lockup-sub em,body[data-theme='d'] .lockup-sub em{text-sha
    圖示用文字符號 ♥ 而不是彩色 emoji，才會跟著 currentColor 一起變，在淺色主題下不會突兀。 */
 #sponsor-corner{position:absolute;z-index:3;
   top:calc(12px + env(safe-area-inset-top,0px));right:14px;
-  display:inline-flex;align-items:center;gap:6px;
+  display:inline-flex;align-items:center;gap:var(--space-4);
   border:1px solid color-mix(in srgb,var(--accent) 55%,var(--edge));border-radius:999px;
   background:color-mix(in srgb,var(--accent) 10%,var(--panel));
   padding:7px 14px;color:var(--accent);text-decoration:none;
   font-size:12.5px;font-weight:700;letter-spacing:.08em;line-height:1;transition:.15s}
-#sponsor-corner .ic{font-size:13px;line-height:1}
+#sponsor-corner .ic{width:16px;height:16px;font-size:16px;line-height:1}
 #sponsor-corner:hover,#sponsor-corner:focus-visible{border-color:var(--accent);
   background:color-mix(in srgb,var(--accent) 20%,var(--panel));box-shadow:var(--glow)}
 /* 窄螢幕縮一點,避免跟置中的 logo 擠在一起 */
@@ -452,13 +463,13 @@ a.btn#md-sponsor small{color:var(--dim)}
   border-radius:min(var(--r),6px);padding:2px 6px;font-family:inherit;font-size:12px;text-align:center}
 /* logo wordmark image (handoff assets): height is set per context; applyTheme swaps cream/dark src */
 .wm-img{width:auto;display:block}
-/* three-line icon button (1A handoff), replacing the 「選單」 text button */
-#btn-menu{width:36px;height:36px;flex:none;background:none;border:1px solid var(--edge);
+/* Phosphor icon button for the HUD menu control. */
+#btn-menu{width:var(--space-48);height:var(--space-48);flex:none;background:none;border:1px solid var(--edge);
  border-radius:min(var(--r),8px);padding:0;cursor:pointer;
- display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
-#btn-menu i{width:14px;height:2px;border-radius:1px;background:var(--dim);transition:background .15s}
-#btn-menu:hover{border-color:var(--accent)}
-#btn-menu:hover i{background:var(--accent)}
+ display:flex;align-items:center;justify-content:center;color:var(--dim)}
+#btn-menu .ph-bold{font-size:24px}
+#btn-menu:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+@media(hover:hover){#btn-menu:hover{border-color:var(--accent);color:var(--accent)}}
 /* ---------- 主題化對話框(取代原生 confirm) ---------- */
 #modal{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:22px}
 #modal.show{display:flex}
@@ -624,12 +635,8 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
   body:not(.mobile-ui) #bd-id{gap:5px}
   body:not(.mobile-ui) #bd-name{font-size:21px}
   body:not(.mobile-ui) #bd-role{gap:6px}
-  body:not(.mobile-ui) .bd-chip{font-size:11px;padding:1px 8px}
   body:not(.mobile-ui) .bt-name.plain{font-size:15px;letter-spacing:.06em}
-  body:not(.mobile-ui) .bt-name.chip{font-size:14px;padding:2px 8px}
-  body:not(.mobile-ui) .bt-badge{font-size:11px}
-  body:not(.mobile-ui) #btn-menu{width:38px;height:38px;gap:3.5px;margin-left:6px}
-  body:not(.mobile-ui) #btn-menu i{width:15px}
+  body:not(.mobile-ui) #btn-menu{margin-left:6px}
   body:not(.mobile-ui) #bd-grid{grid-template-columns:repeat(4,1fr) 62px;gap:6px;margin-top:12px}
   body:not(.mobile-ui) #bd-more .lb{font-size:10px;letter-spacing:.15em}
   body:not(.mobile-ui) .bd-cell b{font-size:19px}

@@ -220,3 +220,36 @@ Observed after TASK-04:
 - Browser console error logs: none.
 
 Next allowed task: TASK-05 Small Components.
+
+## TASK-05 Result
+
+Implemented on 2026-08-31:
+
+- Added Phosphor Icons web stylesheets through CDN, without adding a bundler or npm pipeline.
+- Replaced static sponsor, community, start, menu, detail, HUD hint, and action-toggle icons with Phosphor glyphs.
+- Kept action and detail click handlers intact.
+- Restyled badge-like elements for `Green Outline`, `Green Solid`, `Gold Outline`, `Gold Solid`, and `White` usage through existing selectors.
+- Restyled timeline year chips to 30px height, 12px horizontal padding, 4px internal gap, IBM Plex Mono `14px / 20px`.
+- Restyled phase lamps as the shared steps indicator with 8px dots and 8px dot-label gap.
+- Restyled detail tabs from filled pills to the shared bottom-border active tab pattern.
+- Fixed detail tab Enter/Space handling so keyboard activation uses the existing tab data and returns focus to the active tab after rerender.
+- Added keyboard role/tabindex and Enter/Space support to existing timeline year navigation, still calling `tlScrollTo(TL[index])`.
+- Fixed the visible HUD detail icon button to a stable 48x48 component box on desktop.
+- Updated the stylesheet query string to `css/style.css?v=1.5.9-ui-small`.
+
+Observed after TASK-05:
+
+- Phosphor icon font loaded for fill and bold glyphs.
+- Start/play, sponsor/heart, community/chat, menu/list, detail/caret, action/caret icons measured at the expected 16px or 24px sizes.
+- Menu and detail icon buttons measured at 48x48 on desktop.
+- Detail tabs measured 44px high with 1px active bottom accent border.
+- Detail tabs changed correctly with Enter and Space in mobile-ui mode, and focus remained visible with a 2px accent ring.
+- Timeline entries and year chips exposed `role="button"` and `tabindex="0"`; Enter activation kept the existing scroll target behavior.
+- Timeline year chip measured 30px high with 4px icon/text gap space and 12px horizontal padding.
+- Phase indicator dot measured 8x8 with an 8px label gap.
+- Theme checks for `a/b/c/d` confirmed selected component states followed semantic tokens.
+- Browser console error logs: none.
+
+Note: in-app browser viewport override still did not reduce `innerWidth` below 1280 during this run, so compact behavior was checked through manual mobile-ui mode and CSS/container rule inspection.
+
+Next allowed task: TASK-06 Event Card.

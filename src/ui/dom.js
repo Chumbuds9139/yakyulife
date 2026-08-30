@@ -112,8 +112,10 @@ export function actToggleSync(){
   /* same chevron as the top bar's hint; it points up while the options are folded away,
      which is the direction they come back from at the bottom of the screen */
   const collapsed=a.classList.contains('collapsed');
-  if(!t.querySelector('.chev'))t.innerHTML='<i class="chev"></i>';
-  t.querySelector('.chev').classList.toggle('up',collapsed);
+  if(!t.querySelector('.chev'))t.innerHTML='<i class="ph-bold ph-caret-down chev" aria-hidden="true"></i>';
+  const ic=t.querySelector('.chev');
+  ic.classList.toggle('ph-caret-up',collapsed);
+  ic.classList.toggle('ph-caret-down',!collapsed);
   t.setAttribute('aria-expanded',String(!collapsed));
   const lbl=collapsed?'展開選項':'收合選項';
   t.setAttribute('aria-label',lbl); t.title=lbl;
@@ -281,8 +283,14 @@ export function detailSync(){
   /* stopPropagation, not just the #bd-detail guard on the board listener: this handler
      replaces the panel's innerHTML, so by the time the click bubbles up the button is
      detached and closest() can no longer tell the board the click came from inside */
-  d.querySelectorAll('.bd-tab').forEach(b=>b.onclick=e=>{
-    e.stopPropagation(); d.dataset.tab=b.dataset.t; detailSync(); });
+  const activateTab=(b,e)=>{
+    const k=b.dataset.t; e.stopPropagation(); d.dataset.tab=k; detailSync();
+    const nb=d.querySelector(`.bd-tab[data-t="${k}"]`); if(nb)nb.focus();
+  };
+  d.querySelectorAll('.bd-tab').forEach(b=>b.onclick=e=>activateTab(b,e));
+  d.querySelectorAll('.bd-tab').forEach(b=>b.onkeydown=e=>{
+    if(e.key!=='Enter'&&e.key!==' ')return;
+    e.preventDefault(); activateTab(b,e); });
   d.scrollTop=sc;
   /* a board() refresh must not yank the 逐年 list back to the player's rookie year */
   const y=d.querySelector('.sec-y'); if(y&&yTop!=null)y.scrollTop=yTop;

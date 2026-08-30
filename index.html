@@ -32,14 +32,17 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=IBM+Plex+Mono:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=1.5.9-ui-button">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="css/style.css?v=1.5.9-ui-small">
 </head>
 <body>
 <div id="start">
   <!-- 贊助入口：與 #start 同層(而非放進 .wrap)，才能固定在畫面右上角不隨內容捲動。
        網址同時寫在 src/config.js 的 SPONSOR_URL（遊戲內選單用），兩處要一起改。 -->
   <a id="sponsor-corner" href="https://portaly.cc/mrthemost" target="_blank" rel="noopener noreferrer"
-     title="支持 YaKyoLife：贊助伺服器與後續開發"><span class="ic" aria-hidden="true">♥</span>贊助支持</a>
+     title="支持 YaKyoLife：贊助伺服器與後續開發"><i class="ph-fill ph-heart ic" aria-hidden="true"></i>贊助支持</a>
   <div class="wrap">
     <h1 id="logo-tap" class="lockup">
       <img class="wm-img" src="assets/wordmark-cream.png" alt="YaKyoLife" decoding="async">
@@ -57,7 +60,7 @@
         <button data-v="P" class="on">投手</button><button data-v="C">捕手</button>
         <button data-v="IF">內野手</button><button data-v="OF">外野手</button>
       </div></div>
-    <button class="btn main" style="margin-top:28px" id="btn-start">開始生涯 ▸ 高一春天</button>
+    <button class="btn main" style="margin-top:28px" id="btn-start"><i class="ph-fill ph-play" aria-hidden="true"></i><span>開始生涯 ▸ 高一春天</span></button>
     <!-- Display preferences sit apart from the career choices above and are collapsed by
          default: none of them affect the run, and all three are also reachable from the
          in-game menu. Native <details> so keyboard and screen-reader behaviour come free. -->
@@ -82,7 +85,7 @@
     <p class="seedline">世界種子
       <input id="seed-show" maxlength="24">
       · <a href="#" id="seed-re">換一個</a><br>相同種子＋相同選擇＝相同人生（可直接輸入朋友的種子碼）</p>
-    <div id="community"><a href="https://discord.gg/UnDYxFtz4U" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">💬</span>加入 Discord 社群</a></div>
+    <div id="community"><a href="https://discord.gg/UnDYxFtz4U" target="_blank" rel="noopener noreferrer"><i class="ph-fill ph-chat-circle-dots" aria-hidden="true"></i>加入 Discord 社群</a></div>
     <footer style="text-align:center;margin-top:22px;color:var(--dim);font-size:12px">Produced by <a href="https://www.threads.com/@mr.themost" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">最先生 Mr.TheMost</a></footer>
     <!-- version lives in the quiet bottom info band, mirroring the in-game sidebar's SEED+version group -->
     <div id="ver-badge" style="text-align:center;margin-top:6px;font-size:10px;letter-spacing:1px;color:var(--dim);opacity:.55;font-family:monospace">v1.5.9</div>
@@ -100,14 +103,14 @@
         <div id="bd-num"><span>NO.</span><b id="bd-jersey">0</b></div>
         <div id="bd-id"><div id="bd-name"></div><div id="bd-role"></div></div>
         <div id="bd-team"></div><span id="bd-tj"></span>
-        <button id="btn-menu" title="選單" aria-label="選單"><i></i><i></i><i></i></button>
+        <button id="btn-menu" title="選單" aria-label="選單"><i class="ph-bold ph-list" aria-hidden="true"></i></button>
       </div>
       <div id="bd-grid">
         <div class="bd-cell"><b id="bd-age">16</b><span>年齡</span></div>
         <div class="bd-cell"><b id="bd-year">2026</b><span>年份</span></div>
         <div class="bd-cell"><b id="bd-ovr">30</b><span>綜合</span></div>
         <div class="bd-cell" id="bd-sal-cell" tabindex="0"><b id="bd-sal">0</b><span id="bd-sal-lbl">生涯薪(萬)</span><i class="bd-tip" id="bd-sal-tip"></i></div>
-        <button id="bd-more" aria-expanded="false" aria-controls="bd-detail" title="詳情"><span class="lb">詳情</span><i class="chev"></i></button>
+        <button id="bd-more" aria-expanded="false" aria-controls="bd-detail" title="詳情"><span class="lb">詳情</span><i class="ph-bold ph-caret-down chev"></i></button>
       </div>
       <div id="bd-detail" data-tab="h"></div>
       <div id="lamps">
@@ -119,7 +122,7 @@
            of its own (the tap target is the bar; #bd-more stays for keyboard and AT).
            It sits directly under the two rows it belongs to and above the year strip, which
            is separate navigation and is deliberately outside the bar's tap area. -->
-      <div id="bd-hint" aria-hidden="true"><i class="chev"></i></div>
+      <div id="bd-hint" aria-hidden="true"><i class="ph-bold ph-caret-down chev"></i></div>
       <div id="tl-strip"></div>
     </header>
     <main id="log"></main>
@@ -129,7 +132,7 @@
   </div>
   <aside id="act-side"><div id="act-in">
     <div id="trait-side"><div class="tt">特質</div><div id="trait-tags"></div></div>
-    <button id="act-toggle" style="display:none">⌄ 收合選項</button>
+    <button id="act-toggle" style="display:none"><i class="ph-bold ph-caret-down chev" aria-hidden="true"></i></button>
     <footer id="act" style="display:none"></footer>
   </div></aside>
   <footer id="game-footer" aria-label="YaKyoLife">
