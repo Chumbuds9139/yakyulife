@@ -193,3 +193,30 @@ Observed after TASK-03:
 Note: in-app browser viewport override did not reduce `innerWidth` below 1280 during this run, so narrow physical widths were checked through CSS/static breakpoint inspection plus manual mobile-ui mode rather than a true 375px browser viewport.
 
 Next allowed task: TASK-04 Option Button / Choice Surface.
+
+## TASK-04 Result
+
+Implemented on 2026-08-30:
+
+- Restyled `.btn` as the shared OptionButton surface.
+- Mapped `.btn.main` / `.btn.filled` to Filled.
+- Kept default `.btn` as Outlined.
+- Added `.btn.ghost` for Ghost without changing existing runtime markup.
+- Added persistent selected support through `.on`, `aria-pressed="true"`, and `aria-selected="true"`.
+- Added `:focus-visible` focus ring using `--focus-ring`.
+- Mapped disabled buttons to muted text and non-active border/surface.
+- Restyled `.seg button` / `.seg button.on` to share the same option selected geometry.
+- Removed allocation undo button inline opacity/cursor styles so disabled appearance comes from shared CSS.
+- Updated the stylesheet query string to `css/style.css?v=1.5.9-ui-button`.
+
+Observed after TASK-04:
+
+- Start page selected position option used 2px accent border and stayed 50px high.
+- Unselected position options used transparent surface, 1px strong border, and also stayed 50px high.
+- Primary start button and first action CTA were Filled, 50px high, with `16px / 24px` button typography.
+- Allocation undo button was disabled, had no onclick handler, used muted text, default border, transparent surface, and kept the same 50px geometry.
+- Keyboard tab focus showed a 2px accent `:focus-visible` outline on `#btn-start`.
+- Theme checks for `a/b/c/d` confirmed button and selected states followed semantic tokens.
+- Browser console error logs: none.
+
+Next allowed task: TASK-05 Small Components.
