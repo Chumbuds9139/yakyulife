@@ -252,4 +252,29 @@ Observed after TASK-05:
 
 Note: in-app browser viewport override still did not reduce `innerWidth` below 1280 during this run, so compact behavior was checked through manual mobile-ui mode and CSS/container rule inspection.
 
-Next allowed task: TASK-06 Event Card.
+## TASK-06 Result
+
+Implemented on 2026-08-31:
+
+- Restyled `.card` as the shared Event Card base using raised surface, semantic border/radius tokens, `12px 16px` padding, `16px / 26px` body type, and secondary body text.
+- Restyled card headings to `16px / 24px`, `1.28px` tracking, 8px marker/title gap, and the required small square marker.
+- Added `.card-title-main` / `.card-title-meta` heading structure for event cards so `事件卡｜名稱（應對）` can preserve the existing title data while rendering the response mode as right-side meta.
+- Mapped `.card.good`, `.card.bad`, `.card.info`, and `.card.gold` to semantic success, danger, info, and accent tokens.
+- Updated Gold / Major event cards to a 2px accent border.
+- Restyled `.statline`, `.hl`, `.up`, `.dn`, and table borders to use semantic tokens within Event Card content.
+- Kept neutral legacy cards on the base Event Card surface without inventing a success/danger/info classification.
+- Updated the stylesheet query string to `css/style.css?v=1.5.9-ui-event-card`.
+
+Observed after TASK-06:
+
+- `node --check src/ui/dom.js` and `node --check src/main.js` passed.
+- `git diff --check` passed with only the existing Windows LF-to-CRLF warning for `css/style.css`.
+- Local static test URL `http://127.0.0.1:8126/?seed=ui-migration-baseline` loaded and started without console errors.
+- At 390px, the first generated card measured `12px` top padding, `16px` horizontal padding, `16px / 26px` body typography, `16px / 24px` title typography, `1.28px` title tracking, 8px heading gap, 12px / 18px marker, 6px radius, and no horizontal overflow.
+- At 375px, generated cards had no horizontal overflow.
+- Four-theme checks for `a/b/c/d` confirmed Event Card radius followed `--radius-component` (`6px / 4px / 0px / 12px`), body text stayed on secondary color, and info heading followed each theme's `--status-info`.
+- CSS rule checks confirmed Good / Bad / Info / Gold mappings and the 2px Gold border.
+
+Note: the browser automation surface is read-oriented and does not permit temporary DOM insertion, so Good / Bad / Info / Gold variant verification used source CSS rule checks plus live computed checks on the generated `.card.info`.
+
+Next allowed task: TASK-07 Footer.

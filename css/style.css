@@ -245,25 +245,32 @@ a{color:var(--info)}
 #log-mark{display:none}
 .yr-block{display:flex;flex-direction:column;gap:var(--space-12)}
 .yr-body{display:flex;flex-direction:column;gap:var(--space-12)}
-.card{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);padding:12px 14px;
+.card{background:var(--surface-raised);border:1px solid var(--border-default);border-radius:var(--radius-component);
+  padding:var(--space-12) var(--space-16);color:var(--text-secondary);font-size:16px;line-height:26px;
   animation:pop .25s ease;overflow-wrap:anywhere;overflow-x:auto}
 @keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.card h4{font-family:var(--head);font-size:12px;letter-spacing:.2em;color:var(--dim);font-weight:700;margin-bottom:6px;
-  display:flex;align-items:center;gap:7px}
-.card h4::before{content:'■';font-size:9px;line-height:1;flex:none}
-.card.gold{border:1.5px solid var(--gold)}
-.card.gold h4{color:var(--gold);text-shadow:var(--glow)}
-.card.bad h4{color:var(--bad)} .card.good h4{color:var(--good)} .card.info h4{color:var(--info)}
-.card p{font-size:14px} .card p+p{margin-top:4px}
+.card h4{font-family:var(--head);font-size:16px;line-height:24px;letter-spacing:.08em;color:var(--text-primary);
+  font-weight:700;margin-bottom:var(--space-4);padding-bottom:var(--space-4);display:flex;align-items:center;gap:var(--space-8)}
+.card h4::before{content:'■';font-family:var(--mono);font-size:12px;line-height:18px;color:var(--text-muted);flex:none}
+.card-title-main{min-width:0}
+.card-title-meta{margin-left:auto;font-family:var(--sans);font-size:13px;line-height:20px;font-weight:400;letter-spacing:0;
+  color:var(--text-secondary);white-space:nowrap}
+.card.gold{border:2px solid var(--accent-primary)}
+.card.gold h4,.card.gold h4::before{color:var(--accent-primary);text-shadow:var(--glow)}
+.card.bad h4,.card.bad h4::before{color:var(--status-danger)}
+.card.good h4,.card.good h4::before{color:var(--status-success)}
+.card.info h4,.card.info h4::before{color:var(--status-info)}
+.card p{font-size:16px;line-height:26px} .card p+p{margin-top:var(--space-8)}
 .tag{display:inline-block;font-family:var(--mono);font-size:14px;line-height:20px;font-weight:600;
   padding:0 var(--space-8);border-radius:var(--radius-badge);
   background:transparent;border:1px solid var(--accent-primary);color:var(--accent-primary);margin:0 2px}
-.up{color:var(--good);font-weight:700}.dn{color:var(--bad);font-weight:700}.hl{color:var(--accent);font-weight:700}
-.statline{font-family:var(--mono);font-size:12.5px;color:var(--text);background:var(--panel2);border:1px dashed var(--edge);
-  border-radius:min(var(--r),6px);padding:6px 10px;margin-top:6px;line-height:1.7}
-table.fin,table.st{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;margin-top:6px}
-table.fin th,table.fin td,table.st th,table.st td{border-bottom:1px solid var(--edge);padding:4px 4px;text-align:right;white-space:nowrap}
-table.fin th,table.st th{color:var(--dim);font-weight:500;letter-spacing:.05em}
+.up{color:var(--status-success);font-weight:700}.dn{color:var(--status-danger);font-weight:700}.hl{color:var(--accent-primary);font-weight:700}
+.statline{font-family:var(--mono);font-size:14px;line-height:22px;color:var(--text-secondary);background:var(--surface-default);
+  border:1px dashed var(--border-default);border-radius:min(var(--radius-component),6px);
+  padding:var(--space-8) var(--space-12);margin-top:var(--space-8)}
+table.fin,table.st{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;margin-top:var(--space-8)}
+table.fin th,table.fin td,table.st th,table.st td{border-bottom:1px solid var(--border-default);padding:4px 4px;text-align:right;white-space:nowrap}
+table.fin th,table.st th{color:var(--text-muted);font-weight:500;letter-spacing:.05em}
 table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.st th:first-child{text-align:left}
 .champ-slot{display:inline-flex;width:10px;height:6px;align-items:center;justify-content:flex-start;vertical-align:1px}
 .champ-crown{display:inline-block;width:8px;height:6px;background:#ffc95c;

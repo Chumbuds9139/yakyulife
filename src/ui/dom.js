@@ -79,8 +79,15 @@ window.addEventListener('beforeunload',function(ev){
   if(!S||S.done||_allowLeave)return;
   ev.preventDefault(); ev.returnValue='';
 });
+function cardTitleHTML(title){
+  const safe=esc(title);
+  const m=String(title).match(/^事件卡｜(.+?)(?:（(.+)）)?$/);
+  if(!m)return `<h4><span class="card-title-main">${safe}</span></h4>`;
+  const name=esc('事件卡｜'+m[1]), meta=m[2]?`<span class="card-title-meta">${esc(m[2])}</span>`:'';
+  return `<h4><span class="card-title-main">${name}</span>${meta}</h4>`;
+}
 export function card(cls,title,html){ const d=document.createElement('div'); d.className='card '+cls;
-  d.innerHTML=(title?`<h4>${title}</h4>`:'')+html; logTarget().appendChild(d);
+  d.innerHTML=(title?cardTitleHTML(title):'')+html; logTarget().appendChild(d);
   renderTraits(); /* settlement-time trait unlocks emit a card without a board() refresh */
   scrollBottom(); }
 export function divider(t){ /* 每個 divider 開啟新的年度摺疊區塊 */ const log=$('log'); const blocks=log.querySelectorAll('.yr-block'); /* 替剛結束的「上一年」加上下拉箭頭標記，但保留展開（不加上 collapsed） */ const prev = blocks[blocks.length - 1]; if(prev){ const h = prev.querySelector('.yr-head'); if(h && prev.querySelector('.yr-body').children.length) h.classList.add('has-body'); } /* 找到「前年」（倒數第二個區塊）並將其摺疊起來 */ const prevPrev = blocks[blocks.length - 2]; if(prevPrev){ prevPrev.classList.add('collapsed'); } /* 建新區塊 */ const block=document.createElement('div'); block.className='yr-block'; const head=document.createElement('div'); head.className='yr-head'; head.textContent=t; const body=document.createElement('div'); body.className='yr-body'; head.onclick=()=>block.classList.toggle('collapsed'); block.appendChild(head); block.appendChild(body); log.appendChild(block); _curYearBody=body;
