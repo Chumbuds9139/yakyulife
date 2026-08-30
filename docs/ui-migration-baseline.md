@@ -277,4 +277,32 @@ Observed after TASK-06:
 
 Note: the browser automation surface is read-oriented and does not permit temporary DOM insertion, so Good / Bad / Info / Gold variant verification used source CSS rule checks plus live computed checks on the generated `.card.info`.
 
-Next allowed task: TASK-07 Footer.
+## TASK-07 Result
+
+Implemented on 2026-08-31:
+
+- Added a dedicated `#start-footer` bottom region for the start screen.
+- Moved the primary start button, display settings control, Discord community action, producer credit, and `#ver-badge` into the start footer.
+- Kept player data, position, and world seed in the start main content, with `#start .wrap` scrolling independently when the footer expands.
+- Restyled the start footer to use `12px` vertical padding, `16px` horizontal padding, an 8px secondary-action gap, 50px action buttons, and `13px / 20px` metadata.
+- Added Enter/Space keyboard activation for the custom animated display-settings summary.
+- Kept existing sponsor and community link targets unchanged.
+- Kept runtime version binding from `APP_VER`; removed only the obsolete `#log-mark` / `#lm-ver` duplicate mobile signoff.
+- Restyled `#game-footer` to the shared gameplay footer rule: 32px height, surface-default background, 1px default top border, 14px horizontal padding, 8px internal gap, 78px × 26px logo display area, and `12px / 18px` muted metadata.
+- Updated the stylesheet query string to `css/style.css?v=1.5.9-ui-footer`.
+
+Observed after TASK-07:
+
+- `node --check src/main.js` and `node --check src/ui/dom.js` passed.
+- `git diff --check` passed with only the existing Windows LF-to-CRLF warning for `css/style.css`.
+- Local static test URL `http://127.0.0.1:8127/?seed=ui-migration-baseline` loaded `css/style.css?v=1.5.9-ui-footer`.
+- At 375px and 390px, Start footer stayed flush with the viewport bottom, start button remained 50px high, and the two secondary footer actions were present.
+- At 375px and 390px, opening display settings expanded the footer while the start main content remained independently scrollable.
+- Display settings opened from keyboard activation on Enter.
+- At 375px and 390px, Gameplay footer measured 32px high, 14px horizontal padding, 8px internal gap, 78px × 26px logo, `12px / 18px` metadata, and runtime version `v1.5.9`.
+- At 375px and 390px, the action sheet ended exactly at the gameplay footer top with 0px gap/overlap.
+- At 1280px, the gameplay footer remained bottom-aligned across the application grid and did not become a side rail.
+- `#log-mark` duplicate markup count was 0 in Start and Gameplay checks.
+- Browser console error logs: none.
+
+Next allowed task: TASK-08 Start.

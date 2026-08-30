@@ -68,6 +68,10 @@ import {startYear} from './flow/phases.js?v=1.5.9';
       anim=body.animate({height:opening?['0px',h+'px']:[h+'px','0px'],
         opacity:opening?[0,1]:[1,0]},{duration:280,easing:'ease'});
       anim.onfinish=()=>{ body.style.overflow=''; anim=null; if(!opening)det.open=false; };
+    });
+    sum.addEventListener('keydown',ev=>{
+      if(ev.key!=='Enter'&&ev.key!==' ')return;
+      ev.preventDefault(); sum.click();
     }); })();
   let t='a'; try{t=localStorage.getItem(THEME_KEY)||'a';}catch(e){}
   document.querySelectorAll('#seg-theme button').forEach(b=>b.onclick=()=>applyTheme(b.dataset.t));
@@ -168,7 +172,6 @@ $('btn-start').onclick=()=>{
 })();
 (function(){ const vb=document.getElementById('ver-badge'); if(vb)vb.textContent=APP_VER;
   const tv=document.getElementById('tl-ver'); if(tv)tv.textContent=APP_VER;
-  const lv=document.getElementById('lm-ver'); if(lv)lv.textContent=APP_VER;
   const gv=document.getElementById('game-ver'); if(gv)gv.textContent=APP_VER; })();
 /* touch has no hover: tap the salary cell to reveal the full amount, tap again to close.
    Never dismisses on a timer — the user decides when it goes away. */
