@@ -35,7 +35,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
-<link rel="stylesheet" href="css/style.css?v=1.5.9-ui-start">
+<link rel="stylesheet" href="css/style.css?v=1.5.9-ui-start-pref">
 </head>
 <body>
 <div id="start">
@@ -69,6 +69,21 @@
         <p class="seed-hint">相同種子＋相同選擇＝相同人生（可直接輸入朋友的種子碼）</p>
       </div>
     </div>
+    <div id="disp-body" class="start-preferences" hidden>
+      <div class="field"><label>佈景主題</label>
+        <div class="seg two" id="seg-theme">
+          <button data-t="a" class="on">深綠記分板</button><button data-t="b">電子看板</button>
+          <button data-t="c">報紙版面</button><button data-t="d">現代儀表板</button>
+        </div></div>
+      <div class="field" id="fld-big"><label>字級</label>
+        <div class="seg two" id="seg-big">
+          <button data-b="0" class="on">標準</button><button data-b="1">大字</button>
+        </div></div>
+      <div class="field" id="fld-ui"><label>介面版型</label>
+        <div class="seg two" id="seg-ui">
+          <button data-u="0" class="on">電腦版</button><button data-u="1">手機版</button>
+        </div></div>
+    </div>
   </div>
   <footer id="start-footer">
     <button class="btn main" id="btn-start"><i class="ph-fill ph-play" aria-hidden="true"></i><span>開始生涯 ▸ 高一春天</span></button>
@@ -77,22 +92,7 @@
          default: none of them affect the run, and all three are also reachable from the
          in-game menu. Native <details> so keyboard and screen-reader behaviour come free. -->
       <details id="fld-display">
-        <summary><i class="ph-fill ph-palette" aria-hidden="true"></i>顯示設定<span class="sum" id="disp-sum"></span></summary>
-        <div id="disp-body">
-          <div class="field"><label>佈景主題</label>
-            <div class="seg two" id="seg-theme">
-              <button data-t="a" class="on">深綠記分板</button><button data-t="b">電子看板</button>
-              <button data-t="c">報紙版面</button><button data-t="d">現代儀表板</button>
-            </div></div>
-          <div class="field" id="fld-big"><label>字級</label>
-            <div class="seg two" id="seg-big">
-              <button data-b="0" class="on">標準</button><button data-b="1">大字</button>
-            </div></div>
-          <div class="field" id="fld-ui"><label>介面版型</label>
-            <div class="seg two" id="seg-ui">
-              <button data-u="0" class="on">電腦版</button><button data-u="1">手機版</button>
-            </div></div>
-        </div>
+        <summary aria-controls="disp-body" aria-expanded="false"><i class="ph-fill ph-palette" aria-hidden="true"></i>顯示設定<span class="sum" id="disp-sum"></span></summary>
       </details>
       <div id="community"><a href="https://discord.gg/UnDYxFtz4U" target="_blank" rel="noopener noreferrer"><i class="ph-fill ph-chat-circle-dots" aria-hidden="true"></i>加入 Discord</a></div>
     </div>
@@ -150,6 +150,6 @@
 <div id="alloc-full"><div id="af-inner"><div class="af-head"><span class="af-title" id="af-title"></span><button class="btn" id="af-close">收起</button></div><div id="af-body"></div></div></div>
 <!-- GitHub Pages sits behind a long-lived CDN cache. The entry point and every
      relative import carry this release token so browsers cannot mix versions. -->
-<script type="module" src="src/main.js?v=1.5.9"></script>
+<script type="module" src="src/main.js?v=1.5.9-ui-start-pref"></script>
 </body>
 </html>

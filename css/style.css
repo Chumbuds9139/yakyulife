@@ -438,12 +438,12 @@ body[data-theme='c'] .lockup-sub em,body[data-theme='d'] .lockup-sub em{text-sha
 #fld-display>summary .ph,#fld-display>summary .ph-bold,#fld-display>summary .ph-fill{width:16px;height:16px;font-size:16px;line-height:1}
 #fld-display>summary:hover{background:var(--surface-interactive);border-color:var(--border-strong)}
 #fld-display>summary:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;box-shadow:0 0 0 1px var(--bg)}
-#fld-display[open]{grid-column:1/-1}
 #fld-display[open]>summary{border:2px solid var(--accent-primary);padding:11px 7px;background:var(--surface-interactive)}
 #fld-display>summary .sum{display:none}
-#disp-body{padding-top:var(--space-8)}
-
-#disp-body .field:first-child{margin-top:10px}
+.start-preferences{display:flex;flex-direction:column;gap:var(--space-12);margin-top:var(--space-24)}
+.start-preferences[hidden]{display:none}
+.start-preferences .field{margin-top:0}
+.start-preferences .field label{margin-bottom:var(--space-8)}
 .seedline{font-family:var(--sans);font-size:12px;color:var(--dim);margin-top:0}
 /* community link: a pill in the quiet bottom band, deliberately lighter than 開始生涯 so it
    does not compete with the primary action, but with a real outline so it reads as tappable */

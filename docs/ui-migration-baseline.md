@@ -330,4 +330,30 @@ Observed after TASK-08:
 - Display preferences and the four theme options remained reachable from the Start footer; the font-size control stayed two-column.
 - At 1280px, the Start screen stayed centered at 560px wide with no horizontal overflow and no browser console errors.
 
-Next allowed task: TASK-09 Start Preference.
+## TASK-09 Result
+
+Implemented on 2026-08-31:
+
+- Moved the expanded display-preference content into the Start main scroll area while keeping the Display Settings toggle in the Start footer.
+- Preserved the existing `#fld-display` details toggle and preference handlers for theme, big-text, and UI-layout mode.
+- Kept Career Form order stable as Player Data → Position → World Seed.
+- Kept the Theme section label as `佈景主題`, with the existing `data-t` values `a/b/c/d`.
+- Restyled the preference section to use a 2-column theme grid, 2-button font grid, 8px label-to-grid gap, and 8px option gap.
+- Preserved the desktop-only UI-layout preference row; it remains hidden on compact widths and visible at desktop width.
+- Updated cache keys to `css/style.css?v=1.5.9-ui-start-pref` and `src/main.js?v=1.5.9-ui-start-pref`.
+
+Observed after TASK-09:
+
+- `node --check src/main.js` and `node --check src/ui/prefs.js` passed.
+- `git diff --check` passed with only the existing Windows LF-to-CRLF warning for `css/style.css`.
+- Local static test URL `http://127.0.0.1:8129/?seed=task09-qa` loaded the TASK-09 CSS and main JS cache keys.
+- At 375px and 390px, opening and closing Display Settings did not change Career Form order.
+- At 375px and 390px, the expanded preference body lived under `#start .wrap`, the footer height stayed fixed, and there was no horizontal overflow.
+- At 375px and 390px, Theme grid and Font Size grid were 2 columns with 8px gaps; selected theme used the shared 2px selected border.
+- At compact widths, the desktop-only UI-layout row remained hidden; at 1280px it remained visible.
+- Scrolling the expanded Start main moved Sponsor out of view while the footer stayed bottom-aligned.
+- Theme changes did not alter the editable seed value, and the same seed plus same player choices produced the same first generated career card across tested themes.
+- Keyboard opening Display Settings moved focus to the selected theme option, scrolled the Start main content into view, and Space on the summary closed the panel.
+- Browser console error logs: none.
+
+Next allowed task: TASK-10 HUD.
