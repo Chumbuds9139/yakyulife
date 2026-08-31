@@ -214,7 +214,10 @@ export function phaseEnd(){
     S.salary+=sal;
     /* 球季成績先於季末結算寫入；把本年度薪資／業外收入補回同一列，供結算圖使用。 */
     const seasonLog=[...(S.log||[])].reverse().find(r=>r.st&&r.y===S.year);
-    if(seasonLog){ seasonLog.salary=sal; seasonLog.outsideIncome=outside; }
+    /* 一併記下這一季是由哪一份合約給付的，結算年表才分得出
+       「同一份合約的第幾年」與「另外簽的單年約」。 */
+    if(seasonLog){ seasonLog.salary=sal; seasonLog.outsideIncome=outside;
+      seasonLog.ctId=(S.ct&&S.ct.__ctid)||null; }
     let extra='';
     if(LV[S.lv].top&&S.seasonFactor>0){
       const tp=LV[S.lv].top;

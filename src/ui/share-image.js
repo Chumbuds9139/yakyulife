@@ -303,7 +303,8 @@ export function renderShareImage(evals,picks,opt){
             c.fillStyle=C_ROW; c.fillRect(PADX,y,CW,20);
             c.fillStyle=C_ACC; c.fillRect(PADX,y,3,20);
             c.font='700 11.5px '+F_SANS; c.fillStyle=C_ACC;
-            mid(`合約　${ct.yrs} 年 × ${fmtMoney(ct.annual)}`,PADX+10,y+10);
+            mid(ct.annual!=null?`合約　${ct.yrs} 年 × ${fmtMoney(ct.annual)}`
+                              :`合約　${ct.yrs} 年`,PADX+10,y+10);
             c.font='500 11.5px '+F_SANS; c.fillStyle=C_DIM; c.textAlign='right';
             mid(`總額 ${fmtMoney(ct.total)}`,W-PADX-7,y+10);
             c.textAlign='left'; y+=20;

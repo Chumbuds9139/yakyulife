@@ -70,8 +70,12 @@ export function makeContract(yrs,mult,lv,d,annual,extra,kind){
      rating 一併留著，之後要換別的判準也不必重跑。
      純紀錄，不參與任何計算。 */
   if(Array.isArray(S.contracts)){
+    /* id 讓每個球季能精準指回自己的合約。用「年薪相同」去配對是不可靠的：
+       升上一軍時 contractAnnual() 會用層級底薪墊高實付金額，同一份合約的
+       兩年就會出現不同數字；反過來兩份金額碰巧相同的單年約也會被併成一份。 */
+    const id=S.contracts.length+1; ct.__ctid=id;
     S.contracts.push({
-      y:S.year, age:S.age, org:S.org, lv:targetLv, team:S.orgTeam||'',
+      id, y:S.year, age:S.age, org:S.org, lv:targetLv, team:S.orgTeam||'',
       yrs:ct.yrs, annual:pay, total:pay*ct.yrs, mult:m,
       rating, market:calcContractAnnual(targetLv,rating,1),
       kind:kind||'簽約', bonus:0,

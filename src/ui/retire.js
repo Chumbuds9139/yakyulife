@@ -145,32 +145,26 @@ export function rpSalaryData(proLogs){
     return {y:r.y,age:r.age,team:o.team,lvl:o.lvl+(isP&&r.role?'·'+roleN(r.role):!isP&&r.p?'·'+r.p:''),inj:!!r.inj,
       pay:Number.isFinite(r.salary)?Math.round(r.salary):null,txt};
   });
-  /* 合約區間：優先用簽約當下留下的實際紀錄（S.contracts，見 contract.js 的
-     makeContract），對不上才退回從年薪推導。推導在「兩份金額相同又相鄰的
-     單年約」會失真，所以只當作舊存檔的備援。 */
-  const recs=(Array.isArray(S.contracts)?S.contracts:[]).filter(c=>c&&c.yrs>=2&&c.annual>0);
-  let used=false;
-  recs.forEach(c=>{
-    /* 合約在簽約年的「之後」生效，所以掛在第一個晚於簽約年、年薪吻合的球季上 */
-    const row=rows.find(r=>r.y>c.y&&r.pay===c.annual&&!r.contract)
-             ||rows.find(r=>r.y>=c.y&&r.pay===c.annual&&!r.contract);
-    /* ⚠ 只把「要畫出來的」欄位交給顯示層：年數、年薪、總額。
-       rating／market／mult／kind／bonus 一律留在 S.contracts 供分析，
-       刻意不往這裡帶——行情與溢價是給開發者判讀合約盤不盤用的，
-       不是要給玩家看的數字，讓玩家自己從年薪與成績去感覺。
-       之後若有人想在結算畫面加上溢價，請先確認那是產品決定，而不是
-       因為資料剛好就在手邊。 */
-    if(row){ row.contract={yrs:c.yrs,annual:c.annual,total:c.total}; used=true; }
-  });
-  if(!used){
-    for(let i=0;i<rows.length;){
-      const a=rows[i], pay=a.pay; let j=i+1;
-      if(Number.isFinite(pay)&&pay>0){
-        while(j<rows.length&&rows[j].team===a.team&&rows[j].pay===pay)j++;
-        if(j-i>=2)a.contract={yrs:j-i,annual:pay,total:pay*(j-i)};
-      }
-      i=Math.max(j,i+1);
+  /* 合約分段：用付薪當下標記的 ctId 分組，每一份合約都自成一段——包含單年約。
+     單年約如果不獨立標出來，視覺上會被上一條多年約的帶子吃掉，看起來像是
+     那份合約的一部分，盤不盤就完全看不出來了。
+
+     顯示的年數與總額一律取「這段實際打了幾季、實際領了多少」，不是簽約當下的
+     帳面值。兩者會不一樣：升上一軍時 contractAnnual() 會用層級底薪墊高實付，
+     中途被交易或釋出則會少領幾年。畫面上的數字必須跟同一張表的逐年欄位對得起來。
+     簽約當下的帳面內容完整留在 S.contracts 供分析。 */
+  const src=(proLogs||[]);
+  for(let i=0;i<rows.length;){
+    const id=src[i]&&src[i].ctId;
+    let j=i+1;
+    if(id!=null){ while(j<rows.length&&src[j]&&src[j].ctId===id)j++; }
+    const seg=rows.slice(i,j).filter(r=>Number.isFinite(r.pay));
+    if(seg.length){
+      const total=seg.reduce((a,r)=>a+r.pay,0);
+      const same=seg.every(r=>r.pay===seg[0].pay);
+      rows[i].contract={yrs:j-i,total,annual:same?seg[0].pay:null};
     }
+    i=Math.max(j,i+1);
   }
   return {hd,rows};
 }
