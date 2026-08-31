@@ -140,8 +140,8 @@ export function phaseMid(){
   board(1);
   if(S.skipMid){ S.ironStreak=0; nextStep(); return; }
   loveEvent(()=>drawEvents(()=>{
-    choose('',[{t:'▸ 季中健康檢查',main:true,f:()=>{ rollInjury();
-      choose('',[{t:'▸ 查看球季表現',main:true,f:()=>{
+    choose('季中健康檢查',[{t:'<i class="ph-bold ph-stethoscope" aria-hidden="true"></i>查看報告',main:true,f:()=>{ rollInjury();
+      choose('球季表現',[{t:'<i class="ph-fill ph-baseball" aria-hidden="true"></i>查看結果',main:true,f:()=>{
         if(S.stage==='PRO')proSeason();
         else amateurSeason(); }}]); }}]);
   }));

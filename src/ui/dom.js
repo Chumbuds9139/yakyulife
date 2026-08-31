@@ -40,11 +40,10 @@ export function teamChip(hex){
 export function modalOpen(html,cls){ const m=$('modal'); if(!m)return; const b=$('modal-box');
   b.className=cls||''; b.innerHTML=html; m.classList.add('show'); }
 export function modalClose(){ const m=$('modal'); if(m)m.classList.remove('show'); }
-/* the wordmark tracks the theme (applyTheme rewrites every .wm-img src), so read the source
-   off one that is already in the document rather than hardcoding a file here */
+/* Keep dynamically-rendered brand rows on the same stable owner-provided logo as the shell. */
 export function brandHTML(){
   const wm=document.querySelector('.wm-img');
-  const src=wm?wm.getAttribute('src'):'assets/wordmark-cream.png';
+  const src=wm?wm.getAttribute('src'):'assets/yakyolife-logo.svg';
   return `<img class="wm-img" src="${src}" alt="YaKyoLife"><span class="sub">棒球人生模擬器</span>`+
     `<span class="ver">${APP_VER}</span>`;
 }
