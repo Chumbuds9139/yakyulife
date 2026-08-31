@@ -154,8 +154,13 @@ export function rpSalaryData(proLogs){
     /* 合約在簽約年的「之後」生效，所以掛在第一個晚於簽約年、年薪吻合的球季上 */
     const row=rows.find(r=>r.y>c.y&&r.pay===c.annual&&!r.contract)
              ||rows.find(r=>r.y>=c.y&&r.pay===c.annual&&!r.contract);
-    if(row){ row.contract={yrs:c.yrs,annual:c.annual,total:c.total,kind:c.kind,
-                           bonus:c.bonus||0,market:c.market,mult:c.mult}; used=true; }
+    /* ⚠ 只把「要畫出來的」欄位交給顯示層：年數、年薪、總額。
+       rating／market／mult／kind／bonus 一律留在 S.contracts 供分析，
+       刻意不往這裡帶——行情與溢價是給開發者判讀合約盤不盤用的，
+       不是要給玩家看的數字，讓玩家自己從年薪與成績去感覺。
+       之後若有人想在結算畫面加上溢價，請先確認那是產品決定，而不是
+       因為資料剛好就在手邊。 */
+    if(row){ row.contract={yrs:c.yrs,annual:c.annual,total:c.total}; used=true; }
   });
   if(!used){
     for(let i=0;i<rows.length;){
