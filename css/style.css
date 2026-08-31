@@ -312,7 +312,10 @@ table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.
 #act>.title{display:none}
 /* 手機版摺疊列只放事件名稱，引言仍要看得到，否則玩家讀不到事件在講什麼。
    名稱在摺疊列已經有了，這裡就不重複。 */
-body.mobile-ui #act>.title{display:block;margin-bottom:var(--space-12)}
+/* 置中：SCREEN_10 量測的引言文字左右留白為 44 / 49px（面板寬 423），
+   中心偏離畫面中線僅 3px，是置中而非靠左。摺疊列標題與所有選項也都置中，
+   只有這一行靠左會很突兀。桌機版的 .title 同時含名稱與引言，維持原本的靠左。 */
+body.mobile-ui #act>.title{display:block;margin-bottom:var(--space-12);text-align:center}
 body.mobile-ui #act>.title .ev-h{display:none}
 #act>.title .ev-h{display:block}
 #act>.title small{display:block;font-family:var(--sans);font-size:13px;line-height:20px;
