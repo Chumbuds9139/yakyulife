@@ -130,6 +130,22 @@ export function rpProData(proLogs){ /* team segments: a new block whenever the o
     else { if(bHR>0&&r.hr===bHR)r.best[7]=true; if(r.ops!=null&&r.ops===bOPS)r.best[5]=true; } }));
   return {hd,blocks};
 }
+export function rpSalaryData(proLogs){
+  const isP=S.pos==='P';
+  const hd=isP?['年薪','G','IP','W-L','SV','ERA']
+             :['年薪','G','PA','AVG','HR','RBI','OPS'];
+  const rows=(proLogs||[]).map(r=>{ const s=r.st||blankStat(),o=rpOrgOf(r);
+    let txt;
+    if(isP){
+      txt=[Number.isFinite(r.salary)?fmtMoney(Math.round(r.salary)):'—',s.G,fmtIP(s.IP),`${s.W}-${s.L}`,s.SV||0,RP_F2(baseballERA(s))];
+    }else{
+      const obp=s.PA>0?(s.H+s.BB)/s.PA:null,slg=s.AB>0?slgOf(s):null,ops=(obp!=null&&slg!=null)?obp+slg:null;
+      txt=[Number.isFinite(r.salary)?fmtMoney(Math.round(r.salary)):'—',s.G,s.PA,RP_F3(s.AB>0?s.H/s.AB:null),s.HR||0,s.RBI||0,RP_F3(ops)];
+    }
+    return {y:r.y,age:r.age,team:o.team,lvl:o.lvl+(isP&&r.role?'·'+roleN(r.role):!isP&&r.p?'·'+r.p:''),inj:!!r.inj,txt};
+  });
+  return {hd,rows};
+}
 export function nextGameEnding(pos){
   /* 先固定球員身分再組文，結果不留下括號候選字或不連貫的守位敘事。 */
   const pitcher=pos==='P';
@@ -434,11 +450,15 @@ export function endGame(reason){
   if(S.traits.championmaker)picks.push('他走到哪裡就贏到哪裡，優勝請負人真的不是叫假的');
   if(S.love.st==='married'&&S.love.kids>=2)picks.push('引退後好好陪家人吧，孩子們等你很久了');
   card('info','球迷看板・引退串',picks.map(p=>'「'+p.replace(/{n}/g,S.name)+'」').join('<br>'));
+  let endingForShare;
   if(usesSecondCareerEnding(S.age)){
     const second=SECOND_CAREER_ENDINGS[Math.floor(R()*SECOND_CAREER_ENDINGS.length)];
-    card('gold','第二人生',second.replace(/{n}/g,S.name)+`<br><br><span class="sub">離開球場的人生，也是人生。${S.name}，辛苦了。</span>`);
+    const body=second.replace(/{n}/g,S.name)+`<br><br><span class="sub">離開球場的人生，也是人生。${S.name}，辛苦了。</span>`;
+    endingForShare={title:'第二人生',body};
+    card('gold','第二人生',body);
   }else{
     const ending=postCareerEnding(tiersByLg);
+    endingForShare=ending;
     card('gold','退役後・〈'+ending.title+'〉',ending.body);
   }
   /* 一鍵分享 */
@@ -449,7 +469,7 @@ export function endGame(reason){
       <button class="btn" id="sh-url"><i class="ph-bold ph-link" aria-hidden="true"></i>複製重播連結</button>
     </div>`;
   $('log').appendChild(sh);
-  sh.querySelector('#sh-img').onclick=()=>shareImageSheet(evals,picks);
+  sh.querySelector('#sh-img').onclick=()=>shareImageSheet(evals,picks,endingForShare);
   sh.querySelector('#sh-url').onclick=e=>{
     const btn=e.currentTarget;
     const url=OFFICIAL_URL+'?seed='+SEED;

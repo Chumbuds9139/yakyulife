@@ -95,8 +95,10 @@ export function phasePre(){
   /* 大學季前：是否投入選秀與旅外（大二～大四） */
   if(S.stage==='U'&&S.stageYr>=2){
     const o=ovr();
+    /* 接受任何職業去向後，都要把本年已建立的「大學」時間軸改成實際職業身分。 */
+    const finishDecision=()=>{ if(S.stage==='PRO')tlRestage(); afterAsk(); };
     const opts=[
-      {t:'投入中華職棒選秀',s:`目前綜合 ${o}｜年齡加權：越年輕評價越高`,f:()=>runDraft(true,afterAsk)}
+      {t:'投入中華職棒選秀',s:`目前綜合 ${o}｜年齡加權：越年輕評價越高`,f:()=>runDraft(true,finishDecision)}
     ];
     /* 年齡懲罰：每長一歲，門檻微調，但簽約金大幅縮水 */
     const agePenalty = Math.max(0, S.age - 18);
@@ -106,7 +108,7 @@ export function phasePre(){
     const bonusMiLB = Math.max(150, 1500 - agePenalty * 350); // 美職簽約金逐年大減
     /* the season was already pushed as a college year; tlRestage() moves it to the new
        league so a short overseas stint still shows up as its own era on the career card */
-    const goPro=()=>{ tlRestage(); afterAsk(); };
+    const goPro=finishDecision;
     if(o>=reqNPB)opts.push({t:'洽談旅日合約',s:`休學挑戰日職｜大齡影響簽約金`,f:()=>{
       S.stage='PRO'; S.team=''; S.svc=0; S.faElig=false;
       pickOfferUI('日職球團報價','NPB',makeOffers('NPB',2,bonusNPB,2,3,'NPB2',null),goPro);}});
@@ -210,6 +212,9 @@ export function phaseEnd(){
     if(!S.ct)S.ct=makeContract(1,1,S.lv,currentSalaryRating(S.lastD||0));
     const sal=contractAnnual(); /* 合約保證年薪：不因本季表現、受傷或能力變動而重算 */
     S.salary+=sal;
+    /* 球季成績先於季末結算寫入；把本年度薪資／業外收入補回同一列，供結算圖使用。 */
+    const seasonLog=[...(S.log||[])].reverse().find(r=>r.st&&r.y===S.year);
+    if(seasonLog){ seasonLog.salary=sal; seasonLog.outsideIncome=outside; }
     let extra='';
     if(LV[S.lv].top&&S.seasonFactor>0){
       const tp=LV[S.lv].top;

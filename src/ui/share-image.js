@@ -8,7 +8,7 @@ import {$, teamChip, modalOpen, modalClose} from './dom.js?v=1.5.9';
 import {THEME_NAMES} from './prefs.js?v=1.5.9';
 import {traitNames, traitColorRank} from './traits.js?v=1.5.9';
 import {fmtMoney} from '../engine/contract.js?v=1.5.9';
-import {rpTagline, rpFamily, RP_F3, RP_F2, rpCumData, rpIntlData, rpHonorItems, rpOrgOf, rpProData, championshipYear} from './retire.js?v=1.5.9';
+import {rpTagline, rpFamily, RP_F3, RP_F2, rpCumData, rpIntlData, rpHonorItems, rpOrgOf, rpProData, rpSalaryData, championshipYear} from './retire.js?v=1.5.9';
 /* 結算圖（Canvas 產生 PNG，回傳 data URL 供面板顯示與儲存）
    Single-sheet settlement layout from the design handoff, drawn 1:1 at the
    design's 820px width. The layout is rendered twice: a measure pass on a
@@ -39,14 +39,17 @@ export function readTheme(t){
 }
 export function renderShareImage(evals,picks,opt){
   opt=opt||{};
+  const mode=['stats','salary','ending'].includes(opt.mode)?opt.mode:'stats';
   const isP=S.pos==='P';
   const tiers=(evals||[]).map(t=>String(t).replace(/<[^>]+>/g,''));
   const hist=S.log.slice(), amaLogs=hist.filter(r=>!r.st), proLogs=hist.filter(r=>r.st);
   const cum=rpCumData(), honors=rpHonorItems();
   const pro=proLogs.length?rpProData(proLogs):null;
+  const salary=proLogs.length?rpSalaryData(proLogs):null;
   const intl=S.intlCount>0?rpIntlData():null;
   const fans=(picks||[]).map(p=>'「'+p.replace(/{n}/g,S.name)+'」');
-  const showFans=opt.fans!==false&&fans.length>0;
+  const showFans=(mode==='ending'||opt.fans===true)&&fans.length>0;
+  const ending=opt.ending||{title:'引退之後',body:'這段棒球人生，已經走到終點。'};
   const W=820,PADX=36,CW=W-PADX*2,scale=2;
   /* Canvas colors/fonts follow the theme the player picked for the image, which is not
      necessarily the one the page is wearing (opt.theme omitted = the active one). */
@@ -161,7 +164,7 @@ export function renderShareImage(evals,picks,opt){
       c.textAlign='left';
     }
     /* ---- 生涯評價 ---- */
-    if(tiers.length){
+    if(mode==='stats'&&tiers.length){
       y+=18; c.strokeStyle=C_EDGE; c.lineWidth=1;
       c.beginPath(); c.moveTo(PADX,y+.5); c.lineTo(W-PADX,y+.5); c.stroke();
       y+=16;
@@ -174,7 +177,7 @@ export function renderShareImage(evals,picks,opt){
       c.strokeStyle=C_EDGE; c.lineWidth=1; c.beginPath();
       c.moveTo(PADX+20+tw+8,y+6.5); c.lineTo(W-PADX,y+6.5); c.stroke();
       y+=22; };
-    if(tiers.length){
+    if(mode==='stats'&&tiers.length){
       sec('生涯評價',true);
       tiers.forEach(t=>{ drawBall(c,PADX+8.5,y+11,17);
         c.font='700 16px '+F_SANS; c.fillStyle=C_ACC; mid(t,PADX+26,y+11); y+=24; });
@@ -220,6 +223,7 @@ export function renderShareImage(evals,picks,opt){
         while(c.measureText(t).width>maxw&&t.length>1)t=t.slice(0,-1);
         mid(t,cc.a==='l'?cc.x+7+crownPad:cc.x+cc.w-7,cyR); });
       c.textAlign='left'; y+=rh; }
+    if(mode==='stats'){
     /* ---- 生涯累積數據 ---- */
     sec('生涯累積數據');
     if(cum.rows.length){
@@ -284,6 +288,33 @@ export function renderShareImage(evals,picks,opt){
           {bg:i%2?C_ROW:null,rh:21,fs:12,color:r.inj?C_BAD:null,bold:r.inj}); });
       });
     }
+    }else if(mode==='salary'){
+      /* ---- 生涯合約薪資與當季表現 ---- */
+      sec('生涯合約薪資與成績');
+      if(salary&&salary.rows.length){
+        const defs=isP
+          ?[{t:'年',w:48,a:'l'},{t:'齡',w:34,a:'r'},{t:'球隊／層級',w:150,a:'l',zh:true},{t:'年薪',w:108,a:'r',zh:true},{t:'G',w:45,a:'r'},{t:'IP',w:60,a:'r'},{t:'W-L',w:55,a:'r'},{t:'SV',w:45,a:'r'},{t:'ERA',w:55,a:'r'}]
+          :[{t:'年',w:48,a:'l'},{t:'齡',w:34,a:'r'},{t:'球隊／層級',w:150,a:'l',zh:true},{t:'年薪',w:108,a:'r',zh:true},{t:'G',w:45,a:'r'},{t:'PA',w:55,a:'r'},{t:'AVG',w:55,a:'r'},{t:'HR',w:45,a:'r'},{t:'RBI',w:48,a:'r'},{t:'OPS',w:55,a:'r'}];
+        const cols=tcols(defs); thRow(cols);
+        salary.rows.forEach((r,i)=>{ tdRow(cols,
+          [{t:r.y,year:true},r.age,{t:r.team+'·'+r.lvl,zh:true}].concat(r.txt.map((t,j)=>({t,zh:j===0}))),
+          {bg:i%2?C_ROW:null,rh:23,fs:12,color:r.inj?C_BAD:null,bold:r.inj}); });
+      }else{
+        c.font='13px '+F_SANS; c.fillStyle=C_DIM; mid('（無職業合約與成績紀錄）',PADX,y+9); y+=22;
+      }
+    }else{
+      /* ---- 引退結局 ---- */
+      sec('引退結局 · 〈'+String(ending.title||'引退之後')+'〉');
+      const holder=document.createElement('div');
+      String(ending.body||'').split(/<br\s*\/?\s*>/i).forEach(raw=>{
+        holder.innerHTML=raw; const paragraph=(holder.textContent||'').trim();
+        if(!paragraph){ y+=8; return; }
+        const lines=wrap(c,paragraph,'14px '+F_SANS,CW-14);
+        c.font='14px '+F_SANS; c.fillStyle=C_TX;
+        lines.forEach(l=>{ c.fillText(l,PADX+7,y+17); y+=24; });
+        y+=5;
+      });
+    }
     /* ---- 球迷看板・引退串 ---- */
     if(showFans){
       sec('球迷看板 · 引退串');
@@ -343,24 +374,22 @@ export function shareImageFileName(name=S.name,seed=SEED){
 }
 const SH_THEMES=['a','b','c','d'];
 /* Options survive re-opening the panel; the rendered PNGs are kept too, so flipping back to
-   a theme already seen is instant. The whole space is 4 themes x 2, and each entry is a
+   a theme already seen is instant. The whole space is 4 themes x 3, and each entry is a
    base64 string rather than a live bitmap, so the ceiling is small enough to leave uncapped.
    Neither is persisted: a career settles once, and the next run should start from whatever
    theme that player is actually looking at. */
 let shOpt=null;
 let shCareerKey=null;
 const shCache=new Map();
-/* 結算圖面板：開啟即以目前佈景畫好，換主題或開關球迷看板都在原地重畫 */
-export function shareImageSheet(evals,picks){
+/* 結算圖面板：開啟即以目前佈景畫好，換主題或內容版型都在原地重畫 */
+export function shareImageSheet(evals,picks,ending){
   const careerKey=SEED+'|'+S.name+'|'+S.year;
   if(!shOpt||shCareerKey!==careerKey){
-    shCareerKey=careerKey; shOpt={theme:document.body.dataset.theme||'a',fans:false}; shCache.clear();
+    shCareerKey=careerKey; shOpt={theme:document.body.dataset.theme||'a',mode:'stats'}; shCache.clear();
   }
-  const fanN=(picks||[]).length;
   const st=shOpt;
-  if(!fanN)st.fans=false;
   const fileName=shareImageFileName();
-  const key=()=>st.theme+(st.fans?'+f':'-f');
+  const key=()=>st.theme+'|'+st.mode;
   const cur=()=>shCache.get(key());
   /* One scroll surface only: the box is a flex column whose middle section scrolls, so the
      preview never becomes a scroller nested inside another one. The actions sit in a pinned
@@ -377,7 +406,12 @@ export function shareImageSheet(evals,picks){
       <div class="seg two sh-seg" id="sh-seg">${SH_THEMES.map(t=>{ const p=readTheme(t);
         return `<button data-st="${t}" style="background:${p.bg};color:${p.text}">`+
           `<span class="sh-sw" style="background:${p.accent}"></span><span class="sh-nm"></span></button>`; }).join('')}</div>
-      ${fanN?`<div class="sh-lab">收錄內容</div><button class="btn sh-chk" id="sh-fans" role="checkbox" aria-checked="false"></button>`:''}
+      <div class="sh-lab">圖表內容</div>
+      <div class="sh-mode" id="sh-mode">
+        <button class="btn" data-sm="stats">成績年表</button>
+        <button class="btn" data-sm="salary">合約與成績</button>
+        <button class="btn" data-sm="ending">結局與留言</button>
+      </div>
     </div>
     <div class="sh-foot">
       <button class="btn main" id="sh-save"><i class="ph-fill ph-share-network" aria-hidden="true"></i>儲存 / 分享圖片</button>
@@ -395,10 +429,10 @@ export function shareImageSheet(evals,picks){
       b.style.boxShadow=on?'0 0 0 2px '+p.accent:'none';
       b.querySelector('.sh-nm').textContent=THEME_NAMES[b.dataset.st]+(on?' ✓':'');
     });
-    const f=$('sh-fans');
-    if(f){ f.classList.toggle('on',st.fans);
-      f.setAttribute('aria-checked',String(st.fans));
-      f.innerHTML='<span class="sh-box" aria-hidden="true"></span><span>球迷看板・引退串</span><small>共 '+fanN+' 則留言</small>'; }
+    $('sh-mode').querySelectorAll('[data-sm]').forEach(b=>{
+      const on=b.dataset.sm===st.mode; b.classList.toggle('main',on);
+      b.setAttribute('aria-pressed',String(on));
+    });
   };
   const paint=async()=>{
     syncCtl();
@@ -409,14 +443,15 @@ export function shareImageSheet(evals,picks){
     /* yield a task so 產生中… actually paints before the render blocks the thread */
     await new Promise(r=>setTimeout(r,0));
     if(my!==seq)return;
-    const url=renderShareImage(evals,picks,{theme:st.theme,fans:st.fans});
+    const url=renderShareImage(evals,picks,{theme:st.theme,mode:st.mode,ending});
     shCache.set(k,url);
     if(my!==seq)return;
     pic.src=url; frame.classList.remove('busy');
   };
   $('sh-seg').querySelectorAll('[data-st]').forEach(b=>b.onclick=()=>{
     if(st.theme===b.dataset.st)return; st.theme=b.dataset.st; paint(); });
-  const fb=$('sh-fans'); if(fb)fb.onclick=()=>{ st.fans=!st.fans; paint(); };
+  $('sh-mode').querySelectorAll('[data-sm]').forEach(b=>b.onclick=()=>{
+    if(st.mode===b.dataset.sm)return; st.mode=b.dataset.sm; paint(); });
   const more=$('sh-more');
   frame.onclick=()=>{ if(frame.classList.contains('busy'))return;
     const clip=frame.classList.toggle('clip');

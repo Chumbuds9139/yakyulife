@@ -5,6 +5,7 @@ import {LV} from '../data/teams.js?v=1.5.9';
 import {card} from '../ui/dom.js?v=1.5.9';
 import {tlNote} from '../ui/timeline.js?v=1.5.9';
 import {isSP, slgOf, baseballERA} from './season.js?v=1.5.9';
+import {isCareerScoringAward} from './award-rules.js?v=1.5.9';
 import {traitCard, removeTrait} from '../flow/events.js?v=1.5.9';
 /* 獎項機率同時有硬下限與必得上限；數值越低越好的獎項（ERA）用 lower=true。 */
 export function awardP(value,hardLow,autoWin,base=25,lower=false){
@@ -20,6 +21,27 @@ export function rookieAwardGuaranteed(honors,year,leagueName){
   const elite=sameLeagueAwards.some(x=>/年度MVP|最佳投手|最佳打者|賽揚/.test(x));
   const titleCount=sameLeagueAwards.filter(x=>/(勝投王|防禦率王|三振王|救援王|中繼王|打擊王|全壘打王|盜壘王|打點王|上壘王)$/.test(x)).length;
   return elite||titleCount>=2;
+}
+/* 新人資格以「曾站上更高聯盟」為準：小聯盟／二軍經歷不會取消中職新人資格，
+   但打過日職或大聯盟後返台，以及打過大聯盟後轉戰日職，均不再是新人。 */
+export function rookieLeagueEligible(bucket,stats=S.stats){
+  if(bucket==='CPBL')return !(stats&&stats.NPB)&&!(stats&&stats.MLB);
+  if(bucket==='NPB')return !(stats&&stats.MLB);
+  return bucket==='MLB';
+}
+/* 新人王至少要有一段可評價的一軍球季；門檻依聯盟場次等比縮放。 */
+export function rookieWorkloadEligible(bucket,st,pos,role){
+  pos=pos||(S&&S.pos); role=role||(S&&S.role);
+  const games=((LV[({CPBL:'CPBL1',NPB:'NPB1',MLB:'MLB'})[bucket]]||{}).g)||120;
+  if(pos==='P'){
+    if(role==='SP')return (st.G||0)>=Math.ceil(games*.08)&&(st.IP||0)>=Math.ceil(games*.40);
+    return (st.G||0)>=Math.ceil(games*.25)&&(st.IP||0)>=Math.ceil(games*.12);
+  }
+  return (st.G||0)>=Math.ceil(games*.40)&&(st.PA||0)>=Math.ceil(games*1.50);
+}
+export function canUnlockPhoenix(added,state=S){
+  if(!state.traits.glass||state.traits.phoenix||state.glassYear===state.year)return false;
+  return (added||[]).some(x=>isCareerScoringAward(String(x).replace(/^\d{4}\s+/,'')));
 }
 export function pitcherAwardName(bucket){
   const leagueName={CPBL:'中職',NPB:'日職',MLB:'大聯盟'}[bucket];
@@ -248,11 +270,11 @@ export function awards(bucket,st){
     }
   }
 
-  /* 5. 新人王：三個頂級聯盟的新人年若拿年度 MVP，必定同時拿新人王。 */
+  /* 5. 新人王：先通過聯盟資歷與實際工作量，再判定獲獎；年度 MVP 只在合格後保底。 */
   const leagueRookie=S.stats[bucket].yr===1, rookieAward=`${y} ${lgN}新人王`;
   const annualMvpAwarded=h.some(x=>x===`${y} ${lgN}年度MVP`);
-  const rookieOK=bucket!=='CPBL'||!(S.stats.NPB||S.stats.MLB||S.stats.MINOR);
-  if(leagueRookie&&annualMvpAwarded&&!h.includes(rookieAward)){
+  const rookieOK=rookieLeagueEligible(bucket,S.stats)&&rookieWorkloadEligible(bucket,st,S.pos,S.role);
+  if(leagueRookie&&rookieOK&&annualMvpAwarded&&!h.includes(rookieAward)){
     h.push(rookieAward);
   }else if(leagueRookie&&rookieOK){
     const rkP=rookieAwardGuaranteed(h,y,lgN)?100:awardP(st.d,4,10,30);
@@ -265,10 +287,9 @@ export function awards(bucket,st){
     const topAw=added.find(x=>/年度MVP/.test(x))||added.find(x=>/最佳投手|最佳打者|王/.test(x))||added.find(x=>/新人王/.test(x))||added[0];
     tlNote(3,topAw.slice(5));
     if(S.traits.yips){ removeTrait('yips','失憶症'); card('good','走出陰影','站上大舞台拿下獎項的那一刻，腦海裡的雜音消失了——<b class="hl">失憶症痊癒</b>。'); }
-    if(S.traits.glass&&!S.traits.phoenix){ const big=added.some(x=>/MVP|最佳投手|最佳打者|打擊王|全壘打王|新人王/.test(x));
-      if(big){ S.traits.phoenix=true; removeTrait('glass','玻璃人');
+    if(canUnlockPhoenix(added)){ S.traits.phoenix=true; removeTrait('glass','玻璃人');
         S.pool+=8;
-        card('gold','隱藏屬性解鎖：浴火重生','那些殺不死你的，真的讓你更強大了。受傷的地方逐漸痊癒，長成了更強壯的形狀。——<b class="hl">玻璃人懲罰解除，受傷率恢復正常，並獲得一大筆能力點</b>。'); } }
+        card('gold','隱藏屬性解鎖：浴火重生','那些殺不死你的，真的讓你更強大了。受傷的地方逐漸痊癒，長成了更強壯的形狀。——<b class="hl">玻璃人懲罰解除，受傷率恢復正常，並獲得一大筆能力點</b>。'); }
     const annualMvp=added.some(x=>/年度MVP/.test(x));
     if(annualMvp&&S.age>=35&&!S.traits.oldghost&&!S.oldGhostUsed){
       S.oldGhostPending=true;

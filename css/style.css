@@ -574,6 +574,8 @@ a.btn#md-sponsor small{color:var(--dim)}
 .sh-frame:not(.clip) .sh-more{position:static;background:var(--panel);padding:7px 0}
 .sh-seg button{display:flex;align-items:center;gap:8px;text-align:left;font-size:13px;padding:12px 10px;line-height:1.25}
 .sh-seg .sh-sw{width:4px;height:20px;border-radius:2px;flex:none}
+.sh-mode{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sh-mode .btn{min-width:0;margin-top:0;padding:11px 5px;text-align:center;font-size:12px;line-height:1.35}
 .btn.sh-chk{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:var(--space-8);
   padding:var(--space-16);border-radius:var(--radius-selection-card);text-align:left}
 .btn.sh-chk small{grid-column:2;justify-self:start;margin-top:0;text-align:left}
@@ -588,6 +590,7 @@ a.btn#md-sponsor small{color:var(--dim)}
 .sh-row{display:flex;gap:8px;margin-top:8px}
 .sh-row .btn{flex:1;text-align:center;margin-top:0}
 body.big-text .sh-seg button{font-size:17.4px}
+body.big-text .sh-mode .btn{font-size:15px}
 /* ================= 大字模式（設定：字級） =================
    Additive only: none of the base declarations above are edited, so syncing with
    upstream stays conflict-free. Card body text comes from body{font-size:15px} by

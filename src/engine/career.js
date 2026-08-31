@@ -4,6 +4,7 @@ import {DPN, POSN, POS_ADJ_RUNS, POS_TIER_K, POS_TIER_STR} from '../data/abiliti
 import {LG_N} from '../data/teams.js?v=1.5.9';
 import {TIER_TH, LEAGUE_K, MILESTONE_DEF, HOF_TH_K} from '../data/economy.js?v=1.5.9';
 import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.9';
+import {isCareerScoringAward} from './award-rules.js?v=1.5.9';
 /* ================= 生涯終章 ================= */
 const BUCKET_G={CPBL:120,NPB:143,MLB:162};
 /* 守位分：守位難度(POS_ADJ_RUNS 以「每 162 場」計)換算成該聯盟的實際球季長度。
@@ -119,8 +120,9 @@ export function honorScore(bucket){
     if(!h.includes(lg))return;
     const m=String(h).match(/^(\d{4})\s+(.+)$/); if(!m)return;
     const award=m[2];
-    /* 仍完整顯示於履歷，但不納入生涯評價。 */
-    if(/明星賽|新人王|中職總冠軍|世界大賽冠軍|日本一$/.test(award))return;
+    /* 仍完整顯示於履歷，但不納入生涯評價。浴火重生也共用這把尺，
+       避免新人王／明星賽／球隊冠軍等零分獎項誤觸發。 */
+    if(!isCareerScoringAward(award))return;
     if(!years.has(m[1]))years.set(m[1],[]);
     years.get(m[1]).push(award);
   });

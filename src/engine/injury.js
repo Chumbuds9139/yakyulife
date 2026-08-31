@@ -141,7 +141,7 @@ export function rollInjury(){
       /* 玻璃人與鐵人互為對立體質，不可並存：本來是鐵人的話直接被玻璃人覆蓋過去。 */
       const wasIron=!!S.traits.iron;
       if(wasIron)removeTrait('iron','鐵人');
-      S.traits.glass=true;
+      S.traits.glass=true; S.glassYear=S.year;
       S.removed=(S.removed||[]).filter(x=>x!=='玻璃人'); /* 曾被鐵人蓋掉又碎回來:清掉刪除線紀錄 */
       if(wasIron)
         card('bad','隱藏素質覆蓋：鐵人 → 玻璃人','大量的出賽，開始讓你原本如機器人般的身體出現變化，身體逐漸脆弱，最後變為易碎品。<br><b class="dn">鐵人解除</b>，未來每季受傷機率<b class="dn">不低於 40%</b>。');
