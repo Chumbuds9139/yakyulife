@@ -111,7 +111,11 @@ function showEvent(ev,after){
     const c=ev.choices[mode];
     return {t:c.label,warn,main,center:true,s:`成功率 ${od[mode]}%｜${scale}`,f:()=>resolveEvent(ev,mode,after)};
   });
-  choose(`事件｜${EVENT_CATEGORY_NAMES[ev.category]}｜${ev.n}<br><small>${ev.intro}</small>`,opts);
+  /* 名稱與引言拆成兩個元素：摺疊列只取 .ev-h（名稱），引言留給內文。
+     原本靠 <br> 分行，但 actToggleSync() 是用 textContent 取字，<br> 會被吃掉，
+     兩段黏成一長串再被截斷，手機上就變成一行讀不完的省略號。 */
+  choose(`<span class="ev-h">事件｜${EVENT_CATEGORY_NAMES[ev.category]}｜${ev.n}</span>`+
+         `<small>${ev.intro}</small>`,opts);
 }
 export function drawEventCards(sequence,state){
   const used=new Set();

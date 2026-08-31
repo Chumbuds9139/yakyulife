@@ -141,7 +141,9 @@ export function actToggleSync(){
   if(!t.querySelector('.act-title'))t.innerHTML='<span class="act-title"></span><i class="ph-bold ph-caret-down chev" aria-hidden="true"></i>';
   const title=a.querySelector(':scope > .title');
   const first=a.querySelector('button,.btn');
-  const txt=(title&&title.textContent.trim())||(first&&first.textContent.trim().replace(/\s+/g,' '))||'目前行動';
+  /* 事件標題含引言時只取名稱那一段（.ev-h）；textContent 會把兩段黏在一起。 */
+  const head=title&&title.querySelector('.ev-h');
+  const txt=(head&&head.textContent.trim())||(title&&title.textContent.trim())||(first&&first.textContent.trim().replace(/\s+/g,' '))||'目前行動';
   t.querySelector('.act-title').textContent=txt;
   const ic=t.querySelector('.chev');
   ic.classList.toggle('ph-caret-up',collapsed);

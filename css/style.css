@@ -301,12 +301,22 @@ table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.
 #act-toggle{display:none;width:100%;min-height:var(--space-48);background:none;border:0;
   color:var(--text-secondary);cursor:pointer;flex:none;align-items:center;justify-content:center;
   gap:var(--space-4);padding:var(--space-12) var(--space-16)}
-#act-toggle .act-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+/* 事件名稱可以很長（「休賽季自主訓練」這類還會帶分類前綴），一行截斷會讀不到
+   重點。改成允許換行，最多兩行，第三行才用省略號收尾。 */
+#act-toggle .act-title{min-width:0;overflow:hidden;white-space:normal;text-align:center;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow-wrap:anywhere;
   font-family:var(--sans);font-size:16px;line-height:24px;font-weight:700;color:var(--text-primary)}
 #act-toggle:hover{color:var(--accent);opacity:1}
 #act{padding:0 var(--space-16) var(--space-12)}
 #act .title{font-family:var(--head);font-size:12px;letter-spacing:.2em;color:var(--dim);margin-bottom:8px;font-weight:700}
 #act>.title{display:none}
+/* 手機版摺疊列只放事件名稱，引言仍要看得到，否則玩家讀不到事件在講什麼。
+   名稱在摺疊列已經有了，這裡就不重複。 */
+body.mobile-ui #act>.title{display:block;margin-bottom:var(--space-12)}
+body.mobile-ui #act>.title .ev-h{display:none}
+#act>.title .ev-h{display:block}
+#act>.title small{display:block;font-family:var(--sans);font-size:13px;line-height:20px;
+  letter-spacing:0;color:var(--text-secondary);font-weight:400;margin-top:var(--space-4)}
 #act>.btn:first-child,#act>.title:first-child+.btn{margin-top:0}
 #act.collapsed{display:none!important}
 .btn{display:block;width:100%;box-sizing:border-box;background:transparent;border:1px solid var(--border-strong);color:var(--text-primary);
