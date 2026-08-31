@@ -1,6 +1,6 @@
-import {R, ri} from './rng.js?v=1.5.10';
-import {POS_AB} from '../data/abilities.js?v=1.5.10';
-import {LV} from '../data/teams.js?v=1.5.10';
+import {R, ri} from './rng.js?v=1.5.11';
+import {POS_AB} from '../data/abilities.js?v=1.5.11';
+import {LV} from '../data/teams.js?v=1.5.11';
 
 /* ================= 遊戲狀態 ================= */
 export let S=null, stepQ=[];

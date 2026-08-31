@@ -1,12 +1,12 @@
-import {S} from '../core/state.js?v=1.5.10';
-import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.10';
-import {LV} from '../data/teams.js?v=1.5.10';
-import {card, choose, board} from '../ui/dom.js?v=1.5.10';
-import {tlNote} from '../ui/timeline.js?v=1.5.10';
-import {isSP, fmtIP, outsFromIP, ipFromOuts, normalizeIP, baseballERA} from './season.js?v=1.5.10';
-import {ovr} from './ability.js?v=1.5.10';
-import {intlFinishIndex} from './championship.js?v=1.5.10';
-import {checkChampionTrait} from '../flow/events.js?v=1.5.10';
+import {S} from '../core/state.js?v=1.5.11';
+import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.11';
+import {LV} from '../data/teams.js?v=1.5.11';
+import {card, choose, board} from '../ui/dom.js?v=1.5.11';
+import {tlNote} from '../ui/timeline.js?v=1.5.11';
+import {isSP, fmtIP, outsFromIP, ipFromOuts, normalizeIP, baseballERA} from './season.js?v=1.5.11';
+import {ovr} from './ability.js?v=1.5.11';
+import {intlFinishIndex} from './championship.js?v=1.5.11';
+import {checkChampionTrait} from '../flow/events.js?v=1.5.11';
 export function intlWalks(st){
   if(!st)return 0;
   if(Number.isFinite(st.BB))return Math.max(0,Math.round(st.BB));
