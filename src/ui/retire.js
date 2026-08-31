@@ -142,8 +142,22 @@ export function rpSalaryData(proLogs){
       const obp=s.PA>0?(s.H+s.BB)/s.PA:null,slg=s.AB>0?slgOf(s):null,ops=(obp!=null&&slg!=null)?obp+slg:null;
       txt=[Number.isFinite(r.salary)?fmtMoney(Math.round(r.salary)):'—',s.G,s.PA,RP_F3(s.AB>0?s.H/s.AB:null),s.HR||0,s.RBI||0,RP_F3(ops)];
     }
-    return {y:r.y,age:r.age,team:o.team,lvl:o.lvl+(isP&&r.role?'·'+roleN(r.role):!isP&&r.p?'·'+r.p:''),inj:!!r.inj,txt};
+    return {y:r.y,age:r.age,team:o.team,lvl:o.lvl+(isP&&r.role?'·'+roleN(r.role):!isP&&r.p?'·'+r.p:''),inj:!!r.inj,
+      pay:Number.isFinite(r.salary)?Math.round(r.salary):null,txt};
   });
+  /* 合約區間（純推導、不動任何遊戲資料）：年薪是 contractAnnual() 給付的保證年薪，
+     合約期間內固定且不因表現或傷病重算，所以「同一支球隊 × 同一筆年薪的連續球季」
+     就是同一份合約。只標 2 年以上——單年約的內容就是那一列的年薪本身。
+     代價：兩份金額剛好相同又相鄰的單年約會被併成一份，實務上極罕見。 */
+  for(let i=0;i<rows.length;){
+    const a=rows[i], pay=a.pay; let j=i+1;
+    if(Number.isFinite(pay)&&pay>0){
+      while(j<rows.length&&rows[j].team===a.team&&rows[j].pay===pay)j++;
+      const n=j-i;
+      if(n>=2)a.contract={yrs:n,annual:pay,total:pay*n};
+    }
+    i=Math.max(j,i+1);
+  }
   return {hd,rows};
 }
 export function nextGameEnding(pos){

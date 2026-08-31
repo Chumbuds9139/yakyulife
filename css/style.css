@@ -536,7 +536,10 @@ a.btn#md-sponsor small{color:var(--dim)}
 /* Phones get the whole screen rather than a centred card: #modal's own padding plus the
    card inset cost ~44px of height, which is the scarcest thing on a small handset.
    position:fixed breaks out of that padded flex parent without touching #modal itself. */
-@media (max-width:560px),(max-height:720px){
+/* 只有「窄」螢幕才整頁接管。原本 (max-height:720px) 是單獨的條件，於是任何
+   矮但寬的桌機視窗也會被判定成手機，結算圖就攤成整個螢幕寬。矮桌機視窗改由
+   #modal-box 既有的 max-height + 內部捲動處理即可。 */
+@media (max-width:560px),(max-width:820px) and (max-height:720px){
   #modal-box.sh-sheet{position:fixed;inset:0;width:auto;max-width:none;height:auto;max-height:none;
     border-radius:0;border-width:0}
 }

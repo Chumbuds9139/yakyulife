@@ -296,7 +296,19 @@ export function renderShareImage(evals,picks,opt){
           ?[{t:'年',w:48,a:'l'},{t:'齡',w:34,a:'r'},{t:'球隊／層級',w:150,a:'l',zh:true},{t:'年薪',w:108,a:'r',zh:true},{t:'G',w:45,a:'r'},{t:'IP',w:60,a:'r'},{t:'W-L',w:55,a:'r'},{t:'SV',w:45,a:'r'},{t:'ERA',w:55,a:'r'}]
           :[{t:'年',w:48,a:'l'},{t:'齡',w:34,a:'r'},{t:'球隊／層級',w:150,a:'l',zh:true},{t:'年薪',w:108,a:'r',zh:true},{t:'G',w:45,a:'r'},{t:'PA',w:55,a:'r'},{t:'AVG',w:55,a:'r'},{t:'HR',w:45,a:'r'},{t:'RBI',w:48,a:'r'},{t:'OPS',w:55,a:'r'}];
         const cols=tcols(defs); thRow(cols);
-        salary.rows.forEach((r,i)=>{ tdRow(cols,
+        salary.rows.forEach((r,i)=>{
+          /* 合約起始年之前插一條說明帶：這幾年是同一份合約，總額一次講清楚 */
+          if(r.contract){
+            const ct=r.contract;
+            c.fillStyle=C_ROW; c.fillRect(PADX,y,CW,20);
+            c.fillStyle=C_ACC; c.fillRect(PADX,y,3,20);
+            c.font='700 11.5px '+F_SANS; c.fillStyle=C_ACC;
+            mid(`合約　${ct.yrs} 年 × ${fmtMoney(ct.annual)}`,PADX+10,y+10);
+            c.font='500 11.5px '+F_SANS; c.fillStyle=C_DIM; c.textAlign='right';
+            mid(`總額 ${fmtMoney(ct.total)}`,W-PADX-7,y+10);
+            c.textAlign='left'; y+=20;
+          }
+          tdRow(cols,
           [{t:r.y,year:true},r.age,{t:r.team+'·'+r.lvl,zh:true}].concat(r.txt.map((t,j)=>({t,zh:j===0}))),
           {bg:i%2?C_ROW:null,rh:23,fs:12,color:r.inj?C_BAD:null,bold:r.inj}); });
       }else{
@@ -466,7 +478,9 @@ export function shareImageSheet(evals,picks,ending){
       const blob=await (await fetch(u)).blob();
       const file=new File([blob],fileName,{type:'image/png'});
       if(navigator.canShare&&navigator.canShare({files:[file]})){
-        await navigator.share({files:[file],title:'棒球生涯結算',text:S.name+' 的棒球人生'});
+        /* 只分享圖片本身：帶 title/text 會讓部分平台把文字一起貼進貼文或訊息，
+           使用者要的是乾淨的一張圖。 */
+        await navigator.share({files:[file]});
         return;
       }
     }catch(e){ if(e&&e.name==='AbortError')return; /* 使用者取消,不用退回 */ }
