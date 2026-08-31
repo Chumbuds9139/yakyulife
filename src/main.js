@@ -1,13 +1,13 @@
-import {SEED, setSeed, seedInit} from './core/rng.js?v=1.5.9';
-import {S, setS, newState} from './core/state.js?v=1.5.9';
-import {APP_VER} from './config.js?v=1.5.9';
-import {POSN} from './data/abilities.js?v=1.5.9';
-import {LV} from './data/teams.js?v=1.5.9';
-import {$, card, modalClose, actToggleSync, creditsModal} from './ui/dom.js?v=1.5.9';
-import {THEME_KEY, BIG_KEY, applyTheme, applyMobileUI, applyBigText, updDispSum} from './ui/prefs.js?v=1.5.9';
-import {allocFullClose} from './ui/alloc.js?v=1.5.9';
-import {TL, resetTL, renderTimeline, tlScrollTo} from './ui/timeline.js?v=1.5.9';
-import {startYear} from './flow/phases.js?v=1.5.9';
+import {SEED, setSeed, seedInit} from './core/rng.js?v=1.5.10';
+import {S, setS, newState} from './core/state.js?v=1.5.10';
+import {APP_VER} from './config.js?v=1.5.10';
+import {POSN} from './data/abilities.js?v=1.5.10';
+import {LV} from './data/teams.js?v=1.5.10';
+import {$, card, modalClose, actToggleSync} from './ui/dom.js?v=1.5.10';
+import {THEME_KEY, BIG_KEY, applyTheme, applyMobileUI, applyBigText, updDispSum} from './ui/prefs.js?v=1.5.10';
+import {allocFullClose} from './ui/alloc.js?v=1.5.10';
+import {TL, resetTL, renderTimeline, tlScrollTo} from './ui/timeline.js?v=1.5.10';
+import {startYear} from './flow/phases.js?v=1.5.10';
 
 /* ================= 開場設定 ================= */
 /* iOS Safari zoom guards. Pinch: Safari ignores maximum-scale/user-scalable, so the
@@ -178,8 +178,7 @@ $('btn-start').onclick=()=>{
 })();
 (function(){ const vb=document.getElementById('ver-badge'); if(vb)vb.textContent=APP_VER;
   const tv=document.getElementById('tl-ver'); if(tv)tv.textContent=APP_VER;
-  const gv=document.getElementById('game-ver'); if(gv)gv.textContent=APP_VER;
-  const cb=document.getElementById('credits-btn'); if(cb)cb.onclick=creditsModal; })();
+  const gv=document.getElementById('game-ver'); if(gv)gv.textContent=APP_VER; })();
 /* touch has no hover: tap the salary cell to reveal the full amount, tap again to close.
    Never dismisses on a timer — the user decides when it goes away. */
 (function(){ const cell=document.getElementById('bd-sal-cell'); if(!cell)return;

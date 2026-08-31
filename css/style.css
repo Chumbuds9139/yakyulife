@@ -844,24 +844,15 @@ html{scrollbar-width:none;-ms-overflow-style:none}
   padding:0 0 var(--space-8)}
 
 /* ---------- 特別感謝 ---------- */
-/* 頁尾的文字鈕：靜態時跟版號一樣安靜，只有 hover/focus 才亮起來，
-   不跟遊戲本身的操作按鈕搶注意力。 */
-.foot-link{background:none;border:0;padding:0 0 0 var(--space-8);cursor:pointer;
-  border-left:1px solid var(--border-default);
-  color:var(--text-muted);font-family:var(--sans);font-size:12px;line-height:18px;
-  font-weight:500;letter-spacing:.02em;white-space:nowrap;flex:none;
-  transition:color .15s}
-@media(hover:hover){.foot-link:hover{color:var(--accent)}}
-.foot-link:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:4px}
-.md-credits .cr-h{font-family:var(--head);font-size:13px;letter-spacing:.28em;text-indent:.28em;
+.md-thanks .cr-h{font-family:var(--head);font-size:13px;letter-spacing:.28em;text-indent:.28em;
   color:var(--accent);text-align:center;margin:var(--space-16) 0 var(--space-12);font-weight:700}
-.md-credits .cr-list{list-style:none;margin:0;padding:0;
+.md-thanks .cr-list{list-style:none;margin:0;padding:0;
   display:flex;flex-direction:column;gap:var(--space-12)}
-.md-credits .cr-list li{display:flex;flex-direction:column;gap:var(--space-2);
+.md-thanks .cr-list li{display:flex;flex-direction:column;gap:var(--space-2);
   background:var(--surface-raised);border:1px solid var(--border-default);
   border-radius:var(--radius-component);padding:var(--space-12) var(--space-16)}
-.md-credits .cr-list b{color:var(--accent);font-size:15px;line-height:22px;font-weight:700}
-.md-credits .cr-roster{color:var(--text-primary);font-size:13px;line-height:20px}
-.md-credits .cr-what{color:var(--text-secondary);font-size:13px;line-height:20px}
-.md-credits .cr-you{text-align:center;color:var(--text-primary);font-size:14px;line-height:22px;
+.md-thanks .cr-list b{color:var(--accent);font-size:15px;line-height:22px;font-weight:700}
+.md-thanks .cr-roster{color:var(--text-primary);font-size:13px;line-height:20px}
+.md-thanks .cr-what{color:var(--text-secondary);font-size:13px;line-height:20px}
+.md-thanks .cr-you{text-align:center;color:var(--text-primary);font-size:14px;line-height:22px;
   margin:var(--space-16) 0 0}

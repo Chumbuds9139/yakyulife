@@ -1,17 +1,17 @@
-import {S} from '../core/state.js?v=1.5.9';
-import {APP_VER, SPONSOR_URL} from '../config.js?v=1.5.9';
-import {renderTraits, traitNames} from './traits.js?v=1.5.9';
-import {clearAlloc, allocFullClose} from './alloc.js?v=1.5.9';
-import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.5.9';
-import {DPN, POSN} from '../data/abilities.js?v=1.5.9';
-import {TEAM_COLOR, LV} from '../data/teams.js?v=1.5.9';
-import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js?v=1.5.9';
-import {playerName, stageLabel} from '../core/state.js?v=1.5.9';
-import {salParts, fmtMoney} from '../engine/contract.js?v=1.5.9';
-import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js?v=1.5.9';
-import {honorGroups, yearRanges} from '../engine/career.js?v=1.5.9';
-import {isChampionshipYear} from '../engine/championship.js?v=1.5.9';
-import {playerType, ovr} from '../engine/ability.js?v=1.5.9';
+import {S} from '../core/state.js?v=1.5.10';
+import {APP_VER, SPONSOR_URL} from '../config.js?v=1.5.10';
+import {renderTraits, traitNames} from './traits.js?v=1.5.10';
+import {clearAlloc, allocFullClose} from './alloc.js?v=1.5.10';
+import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.5.10';
+import {DPN, POSN} from '../data/abilities.js?v=1.5.10';
+import {TEAM_COLOR, LV} from '../data/teams.js?v=1.5.10';
+import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js?v=1.5.10';
+import {playerName, stageLabel} from '../core/state.js?v=1.5.10';
+import {salParts, fmtMoney} from '../engine/contract.js?v=1.5.10';
+import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js?v=1.5.10';
+import {honorGroups, yearRanges} from '../engine/career.js?v=1.5.10';
+import {isChampionshipYear} from '../engine/championship.js?v=1.5.10';
+import {playerType, ovr} from '../engine/ability.js?v=1.5.10';
 
 export const $=id=>document.getElementById(id);
 export let _curYearBody=null; /* 當前年度的內容容器 */
@@ -57,11 +57,13 @@ export function menuModal(){
     ${wide?`<button class="btn" id="md-ui" style="text-align:center">${mob?'切回電腦版介面':'改用手機版介面'}</button>`:''}
     <a class="btn" id="md-sponsor" href="${SPONSOR_URL}" target="_blank" rel="noopener noreferrer" style="text-align:center;margin-top:14px"><span aria-hidden="true">♥</span> 贊助支持<small>贊助伺服器與後續開發</small></a>
     <button class="btn warn" id="md-restart0" style="text-align:center;margin-top:14px">重新開始</button>
+    <button class="btn" id="md-credits" style="text-align:center;margin-top:14px">特別感謝</button>
     <button class="btn" id="md-close" style="text-align:center;margin-top:14px">關閉</button>`);
   $('md-theme').onclick=themeModal;
   $('md-big').onclick=()=>{ applyBigText(!big); menuModal(); };
   const mu=$('md-ui'); if(mu)mu.onclick=()=>{ applyMobileUI(!mob); menuModal(); };
   $('md-restart0').onclick=restartModal;
+  $('md-credits').onclick=creditsModal;
   $('md-close').onclick=modalClose;
 }
 /* 特別感謝：資料寫在這裡而不是 HTML，之後要加人只改這一份陣列。 */
@@ -79,7 +81,7 @@ export function creditsModal(){
     <h3 class="cr-h">特別感謝</h3>
     <ul class="cr-list">${rows}</ul>
     <p class="cr-you">還有每個認真體驗這款遊戲的你們</p>
-    <button class="btn" id="cr-close" style="text-align:center;margin-top:14px">關閉</button>`,'md-credits');
+    <button class="btn" id="cr-close" style="text-align:center;margin-top:14px">關閉</button>`,'md-thanks');
   $('cr-close').onclick=modalClose;
 }
 export function restartModal(){
