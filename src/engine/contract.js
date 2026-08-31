@@ -54,10 +54,34 @@ export function contractAnnual(){
   if(S.ct)S.ct.annual=annual; /* 舊狀態第一次讀取時鎖定，後續年度不再隨成績浮動 */
   return annual;
 }
-export function makeContract(yrs,mult,lv,d,annual,extra){
+export function makeContract(yrs,mult,lv,d,annual,extra,kind){
   const m=mult||1,targetLv=lv||S.lv;
-  const pay=Math.round(Math.max(levelMinAnnual(targetLv),Number.isFinite(annual)?annual:calcContractAnnual(targetLv,d===undefined?currentSalaryRating(S.lastD||0):d,m)));
-  return Object.assign({yrs:yrs||1,mult:m,annual:pay},extra||{});
+  const rating=(d===undefined?currentSalaryRating(S.lastD||0):d);
+  const pay=Math.round(Math.max(levelMinAnnual(targetLv),Number.isFinite(annual)?annual:calcContractAnnual(targetLv,rating,m)));
+  const ct=Object.assign({yrs:yrs||1,mult:m,annual:pay},extra||{});
+  /* ── 生涯合約紀錄 ────────────────────────────────
+     在簽約的當下就把這份合約留檔，而不是事後從年薪反推。反推會在
+     「兩份金額相同又相鄰的單年約」等情況失真，而這份紀錄要拿來判斷
+     一張合約盤不盤，資料本身就必須跟遊戲當下完全一致。
+
+     market 是「同一個薪資評價在該層級的行情價」（mult=1）。
+     annual / market 就是這張合約相對行情的溢價倍率：
+       > 1 玩家賺到、= 1 照行情、< 1 被壓價。
+     rating 一併留著，之後要換別的判準也不必重跑。
+     純紀錄，不參與任何計算。 */
+  if(Array.isArray(S.contracts)){
+    S.contracts.push({
+      y:S.year, age:S.age, org:S.org, lv:targetLv, team:S.orgTeam||'',
+      yrs:ct.yrs, annual:pay, total:pay*ct.yrs, mult:m,
+      rating, market:calcContractAnnual(targetLv,rating,1),
+      kind:kind||'簽約', bonus:0,
+    });
+  }
+  return ct;
+}
+/* 最近一筆合約紀錄（簽約金要等報價流程結算完才知道，回頭補上）。 */
+export function lastContractRecord(){
+  return (Array.isArray(S.contracts)&&S.contracts.length)?S.contracts[S.contracts.length-1]:null;
 }
 /* 日美入札讓渡金（萬台幣）。以 1 美元＝30 台幣換算 MLB 制度的 2,500／5,000 萬美元級距。 */
 export function postingReleaseFee(guaranteed){
@@ -246,7 +270,7 @@ export function buyoutRemaining(rate,includeCurrent){ /* 合約剩餘年數給�
   if(total>0){ S.salary+=total;
     if(rate>=1) card('gold','合約全額給付',`合約還有 <b class="hl">${remain} 年</b>，但這次不是你要走——球團主動終止合約，依約剩餘薪資<b class="hl">十成全額</b>給付，<b class="hl">${fmtMoney(total)}</b> 一次入帳。白紙黑字的長約，在此刻護住了你。`);
     else card('gold','合約買斷',`你仍在合約中，球團依約買斷剩餘 <b class="hl">${remain} 年</b>合約——雙方談定以 <b class="hl">七成</b> 價碼結清，<b class="hl">${fmtMoney(total)}</b> 一次入帳。合約精神，該給的一毛不少。`); }
-  S.ct=makeContract(1,S.ct.mult,S.lv,S.lastD||0,yearly); /* 給付後合約結清 */
+  S.ct=makeContract(1,S.ct.mult,S.lv,S.lastD||0,yearly,null,'買斷結清'); /* 給付後合約結清 */
   return total;
 }
 /* 引退時若沒回中職,補一場大巨蛋開球告別 */
@@ -317,7 +341,7 @@ export function signTo(org,lv,team,yrs,mult,annual){
   if(newTeam !== S.orgTeam){ S.teamSeasons=0; S.teamYears=0; S.teamStarYears=0; S.franchiseActive=false; S.champThisTeam=false; S.champTeam=null; tlNote(2,'加盟 '+newTeam); }
   S.orgTeam = newTeam;
   if(org==='CPBL')S.lastCpblTeam=newTeam;
-  S.ct=makeContract(yrs||2,mult||1,lv,contractD,annual);
+  S.ct=makeContract(yrs||2,mult||1,lv,contractD,annual,null,'簽約');
   if(org!=='NPB')S.npbYears=0;
   card('info','簽約',`與 <b class="hl">${S.teamName()}</b> 簽下固定年薪 <b class="hl">${fmtMoney(S.ct.annual)}</b> × <b class="hl">${S.ct.yrs} 年</b>，合約薪資總額 <b class="hl">${fmtMoney(S.ct.annual*S.ct.yrs)}</b>。`); board(2);
 }
@@ -329,6 +353,7 @@ export function pickOfferUI(title,org,offers,after){
       s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(annual)} × ${of.yrs} 年｜合約薪資總額 ${fmtMoney(annual*of.yrs)}`,
       f:()=>{ S.salary+=of.bonus;
         signTo(org,lv,of.team,of.yrs,of.mult||1,annual);
+        const rec=lastContractRecord(); if(rec)rec.bonus=of.bonus;
         card('gold','簽約金',`入袋 <b class="hl">${fmtMoney(of.bonus)}</b>。`); after(); }
     };
   }));
@@ -408,7 +433,7 @@ export function extensionOffer(o){
   termChoice(o,d,`母隊提前延長續約 · ${S.teamName()}（原合約剩 1 年）`,(y,m,annual,total)=>{
     const effectiveYear=S.year+1, team=S.teamName();
     /* 提前續約直接覆蓋剩餘舊約；下一球季起領新約，不額外多綁舊約年數。 */
-    S.ct=makeContract(y,m,S.lv,d,annual,{extOffered:true});
+    S.ct=makeContract(y,m,S.lv,d,annual,{extOffered:true},'延長合約');
     card('gold','延長續約',`為了提前留下你，<b class="hl">${team}</b>決定提前續約，開了一筆固定年薪 <b class="hl">${fmtMoney(annual)}</b> × <b class="hl">${y} 年</b>的新約（合約總額 <b class="hl">${fmtMoney(total)}</b>），並且從 <b class="hl">${effectiveYear} 年</b>生效！`); board(1);
     crossOffers(o);
   }, ()=>{ /* 拒絕延長:維持原合約繼續跑 */
@@ -427,7 +452,7 @@ export function faFlow(o){
   const faOpts=[
     {t:`與 ${S.teamName()} 續約`,main:true,s:'接著選擇長約或短約',
      f:()=>termChoice(o,d,`與 ${S.teamName()} 續約 · 選擇合約類型`,(y,m,annual,total)=>{
-       S.ct=makeContract(y,m,S.lv,d,annual,{extOffered:false});
+       S.ct=makeContract(y,m,S.lv,d,annual,{extOffered:false},'延長合約');
        card('info','續約',`與 <b class="hl">${S.teamName()}</b> 完成續約：固定年薪 <b class="hl">${fmtMoney(annual)}</b> × <b class="hl">${y} 年</b>，合約總額 <b class="hl">${fmtMoney(total)}</b>。`); advance(); })},
     {t:'跳出合約，測試自由市場',warn:true,s:'成績不佳可能乏人問津，只能回原隊減薪',f:()=>faMarket(o,d)}];
   /* 5a 旅外球員合約到期:多一個返台加盟中職的選項(落葉歸根) */
@@ -490,7 +515,7 @@ export function faMarket(o,d,settings){
     const fallbackAnnual=calcContractAnnual(S.lv,mp.rating,+(0.70*mp.aav).toFixed(2));
     choose('沒有球隊開價',[
       {t:`回 ${S.teamName()} 減薪簽約`,main:true,s:`固定年薪 ${fmtMoney(fallbackAnnual)} × 1 年｜合約總額 ${fmtMoney(fallbackAnnual)}`,
-       f:()=>{ S.ct=makeContract(1,0.7,S.lv,mp.rating,fallbackAnnual); card('bad','減薪合約',`低著頭回到 <b class="hl">${S.teamName()}</b>，簽下固定年薪 <b class="hl">${fmtMoney(S.ct.annual)}</b>的一年約。`); advance(); }},
+       f:()=>{ S.ct=makeContract(1,0.7,S.lv,mp.rating,fallbackAnnual,null,'減薪合約'); card('bad','減薪合約',`低著頭回到 <b class="hl">${S.teamName()}</b>，簽下固定年薪 <b class="hl">${fmtMoney(S.ct.annual)}</b>的一年約。`); advance(); }},
       {t:'就此引退',warn:true,f:()=>endGame('FA 市場乏人問津，'+S.year+' 年黯然引退。')}]);
     return;
   }
@@ -522,7 +547,7 @@ export function faMarket(o,d,settings){
   const finalOpt=cold
     ?{t:'就此引退',warn:true,s:'不接受任何報價，結束球員生涯',f:retireFromMarket}
     :{t:`回原隊（${S.teamName()}）1 年約`,s:`固定年薪 ${fmtMoney(calcContractAnnual(S.lv,mp.rating,+(0.90*mp.aav).toFixed(2)))} × 1 年｜合約總額 ${fmtMoney(calcContractAnnual(S.lv,mp.rating,+(0.90*mp.aav).toFixed(2)))}`,
-      f:()=>{ const annual=calcContractAnnual(S.lv,mp.rating,+(0.90*mp.aav).toFixed(2)); S.ct=makeContract(1,0.9,S.lv,mp.rating,annual); card('info','回歸',`重回 <b class="hl">${S.teamName()}</b>，固定年薪 <b class="hl">${fmtMoney(S.ct.annual)}</b>。`); advance(); }};
+      f:()=>{ const annual=calcContractAnnual(S.lv,mp.rating,+(0.90*mp.aav).toFixed(2)); S.ct=makeContract(1,0.9,S.lv,mp.rating,annual,null,'折衷續約'); card('info','回歸',`重回 <b class="hl">${S.teamName()}</b>，固定年薪 <b class="hl">${fmtMoney(S.ct.annual)}</b>。`); advance(); }};
   choose(`${cold?'球團冷處理後的':'自由市場'}報價一覽（依國家分列）<div style="margin-top:8px;color:var(--dim);font-size:13px">目前年薪：<b class="hl">${fmtMoney(contractAnnual())}</b>${mp.label?`｜<span class="dn">${mp.label}</span>`:''}</div>`,[...offerOpts,finalOpt]);
 }
 export function ageGateUSA(o,minReq){ /* 旅美/日職跳大聯盟:年齡越大越難,28 歲後幾乎關窗 */

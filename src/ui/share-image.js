@@ -380,9 +380,12 @@ function ensureFonts(P){
 }
 function download(url,fileName){ const a=document.createElement('a'); a.href=url; a.download=fileName;
   document.body.appendChild(a); a.click(); a.remove(); }
-export function shareImageFileName(name=S.name,seed=SEED){
+/* 三種圖表內容各存成不同檔名，一次下載三張才不會互相覆蓋。 */
+export const SH_MODE_SUFFIX={stats:'_stats',salary:'_salary',ending:'_ending'};
+export function shareImageFileName(name=S.name,seed=SEED,mode){
   const safe=value=>String(value??'').trim().replace(/[\\/:*?"<>|]/g,'_').slice(0,64)||'unknown';
-  return `棒球生涯結算_${safe(name)}_${safe(seed)}.png`;
+  const suffix=SH_MODE_SUFFIX[mode]||'';
+  return `棒球生涯結算_${safe(name)}_${safe(seed)}${suffix}.png`;
 }
 const SH_THEMES=['a','b','c','d'];
 /* Options survive re-opening the panel; the rendered PNGs are kept too, so flipping back to
@@ -400,7 +403,8 @@ export function shareImageSheet(evals,picks,ending){
     shCareerKey=careerKey; shOpt={theme:document.body.dataset.theme||'a',mode:'stats'}; shCache.clear();
   }
   const st=shOpt;
-  const fileName=shareImageFileName();
+  /* 檔名隨當前圖表內容變動，所以是函式而不是開面板時就固定的字串 */
+  const fileName=()=>shareImageFileName(S.name,SEED,st.mode);
   const key=()=>st.theme+'|'+st.mode;
   const cur=()=>shCache.get(key());
   /* One scroll surface only: the box is a flex column whose middle section scrolls, so the
@@ -470,13 +474,13 @@ export function shareImageSheet(evals,picks,ending){
     more.textContent=clip?'點圖展開':'點圖收合'; };
   $('sh-close').onclick=modalClose;
   $('sh-x').onclick=modalClose;
-  $('sh-dl').onclick=()=>{ const u=cur(); if(u)download(u,fileName); };
+  $('sh-dl').onclick=()=>{ const u=cur(); if(u)download(u,fileName()); };
   /* 分享:優先 Web Share(可存相簿),不支援則退回下載 */
   $('sh-save').onclick=async ()=>{
     const u=cur(); if(!u)return;
     try{
       const blob=await (await fetch(u)).blob();
-      const file=new File([blob],fileName,{type:'image/png'});
+      const file=new File([blob],fileName(),{type:'image/png'});
       if(navigator.canShare&&navigator.canShare({files:[file]})){
         /* 只分享圖片本身：帶 title/text 會讓部分平台把文字一起貼進貼文或訊息，
            使用者要的是乾淨的一張圖。 */
@@ -484,7 +488,7 @@ export function shareImageSheet(evals,picks,ending){
         return;
       }
     }catch(e){ if(e&&e.name==='AbortError')return; /* 使用者取消,不用退回 */ }
-    download(u,fileName); /* 不支援 Web Share → 退回下載 */
+    download(u,fileName()); /* 不支援 Web Share → 退回下載 */
   };
   paint();
 }

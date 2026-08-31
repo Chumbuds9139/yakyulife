@@ -145,18 +145,27 @@ export function rpSalaryData(proLogs){
     return {y:r.y,age:r.age,team:o.team,lvl:o.lvl+(isP&&r.role?'·'+roleN(r.role):!isP&&r.p?'·'+r.p:''),inj:!!r.inj,
       pay:Number.isFinite(r.salary)?Math.round(r.salary):null,txt};
   });
-  /* 合約區間（純推導、不動任何遊戲資料）：年薪是 contractAnnual() 給付的保證年薪，
-     合約期間內固定且不因表現或傷病重算，所以「同一支球隊 × 同一筆年薪的連續球季」
-     就是同一份合約。只標 2 年以上——單年約的內容就是那一列的年薪本身。
-     代價：兩份金額剛好相同又相鄰的單年約會被併成一份，實務上極罕見。 */
-  for(let i=0;i<rows.length;){
-    const a=rows[i], pay=a.pay; let j=i+1;
-    if(Number.isFinite(pay)&&pay>0){
-      while(j<rows.length&&rows[j].team===a.team&&rows[j].pay===pay)j++;
-      const n=j-i;
-      if(n>=2)a.contract={yrs:n,annual:pay,total:pay*n};
+  /* 合約區間：優先用簽約當下留下的實際紀錄（S.contracts，見 contract.js 的
+     makeContract），對不上才退回從年薪推導。推導在「兩份金額相同又相鄰的
+     單年約」會失真，所以只當作舊存檔的備援。 */
+  const recs=(Array.isArray(S.contracts)?S.contracts:[]).filter(c=>c&&c.yrs>=2&&c.annual>0);
+  let used=false;
+  recs.forEach(c=>{
+    /* 合約在簽約年的「之後」生效，所以掛在第一個晚於簽約年、年薪吻合的球季上 */
+    const row=rows.find(r=>r.y>c.y&&r.pay===c.annual&&!r.contract)
+             ||rows.find(r=>r.y>=c.y&&r.pay===c.annual&&!r.contract);
+    if(row){ row.contract={yrs:c.yrs,annual:c.annual,total:c.total,kind:c.kind,
+                           bonus:c.bonus||0,market:c.market,mult:c.mult}; used=true; }
+  });
+  if(!used){
+    for(let i=0;i<rows.length;){
+      const a=rows[i], pay=a.pay; let j=i+1;
+      if(Number.isFinite(pay)&&pay>0){
+        while(j<rows.length&&rows[j].team===a.team&&rows[j].pay===pay)j++;
+        if(j-i>=2)a.contract={yrs:j-i,annual:pay,total:pay*(j-i)};
+      }
+      i=Math.max(j,i+1);
     }
-    i=Math.max(j,i+1);
   }
   return {hd,rows};
 }

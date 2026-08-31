@@ -209,7 +209,7 @@ export function phaseEnd(){
   const outside=Math.round(S.yearOutsideIncome||0);
   const outsideText=outside?`<br>業外收入：<b class="hl">+${fmtMoney(outside)}</b>`:'';
   if(S.stage==='PRO'){
-    if(!S.ct)S.ct=makeContract(1,1,S.lv,currentSalaryRating(S.lastD||0));
+    if(!S.ct)S.ct=makeContract(1,1,S.lv,currentSalaryRating(S.lastD||0),undefined,null,'預設約');
     const sal=contractAnnual(); /* 合約保證年薪：不因本季表現、受傷或能力變動而重算 */
     S.salary+=sal;
     /* 球季成績先於季末結算寫入；把本年度薪資／業外收入補回同一列，供結算圖使用。 */
@@ -245,7 +245,7 @@ export function annualHomecomingEligible(org,lv){
   return (org==='MiLB'&&!!LV[lv]&&!LV[lv].top)||(org==='NPB'&&lv==='NPB2');
 }
 export function finishContractYear(o){
-  if(!S.ct)S.ct=makeContract(2,1,S.lv,currentSalaryRating(S.lastD||0));
+  if(!S.ct)S.ct=makeContract(2,1,S.lv,currentSalaryRating(S.lastD||0),undefined,null,'預設約');
   S.ct.yrs--;
   if(S.ct.annualSchedule&&S.ct.annualSchedule.length)S.ct.annualSchedule.shift();
   /* 母隊延長/換約時機:多年約跑到倒數第二年、或最後一張約剩1年,可談延長 */
@@ -257,9 +257,9 @@ export function finishContractYear(o){
       if(S.faElig){ faFlow(o); return; }
       /* 菜鳥5年內:球團行使續約權,續短約,薪資不低於層級基數 */
       const renewalProfile=contractMarketProfile(S.lastD||0), renewalD=renewalProfile.rating, renewalAnnual=controlledAnnual(S.lv,renewalD,renewalProfile.aav);
-      S.ct=makeContract(ri(1,2),1,S.lv,renewalD,renewalAnnual,{extOffered:false,controlled:true});
+      S.ct=makeContract(ri(1,2),1,S.lv,renewalD,renewalAnnual,{extOffered:false,controlled:true},'球團續約');
       card('info','球團續約',`你仍在選秀球隊掌控期（服務 ${S.svc}/5 年），球團依服務年資與近年表現行使續約權——固定年薪 <b class="hl">${fmtMoney(S.ct.annual)}</b> × <b class="hl">${S.ct.yrs} 年</b>，合約總額 <b class="hl">${fmtMoney(S.ct.annual*S.ct.yrs)}</b>。`); board(1);
-    } else { S.ct=makeContract(ri(1,2),1,S.lv,currentSalaryRating(S.lastD||0)); } /* 非頂級層級 */
+    } else { S.ct=makeContract(ri(1,2),1,S.lv,currentSalaryRating(S.lastD||0),undefined,null,'球團續約'); } /* 非頂級層級 */
   }
   /* 仍在海外養成層級時，每個球季結束都讓玩家重新決定是否返台。
      日職二軍與小聯盟相同，不因身處支配下體系就鎖死去向。 */
