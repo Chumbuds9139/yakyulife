@@ -442,22 +442,23 @@ export function endGame(reason){
     card('gold','退役後・〈'+ending.title+'〉',ending.body);
   }
   /* 一鍵分享 */
-  const sh=document.createElement('div'); sh.className='card';
-  sh.innerHTML=`<div class="title">分享這段生涯</div>
-    <div class="row2" style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn main" id="sh-img" style="flex:1">📸 產生結算圖</button>
-      <button class="btn" id="sh-url" style="flex:1">🔗 複製重播連結</button>
+  const sh=document.createElement('div'); sh.className='card share-career';
+  sh.innerHTML=`<div class="share-career-title">分享這段生涯</div>
+    <div class="row2 share-career-actions">
+      <button class="btn main" id="sh-img"><i class="ph-fill ph-image-square" aria-hidden="true"></i>產生結算圖</button>
+      <button class="btn" id="sh-url"><i class="ph-bold ph-link" aria-hidden="true"></i>複製重播連結</button>
     </div>`;
   $('log').appendChild(sh);
   sh.querySelector('#sh-img').onclick=()=>shareImageSheet(evals,picks);
   sh.querySelector('#sh-url').onclick=e=>{
+    const btn=e.currentTarget;
     const url=OFFICIAL_URL+'?seed='+SEED;
-    const okmsg=()=>{e.target.textContent='✅ 已複製';setTimeout(()=>e.target.textContent='🔗 複製重播連結',1600);};
+    const okmsg=()=>{btn.textContent='已複製';setTimeout(()=>btn.innerHTML='<i class="ph-bold ph-link" aria-hidden="true"></i>複製重播連結',1600);};
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(okmsg,()=>prompt('手動複製連結：',url));
     else prompt('手動複製連結：',url);
   };
   choose('',[
-    {t:'⚾ 開啟新的人生（新種子）',main:true,f:()=>{location.href=location.pathname;}},
+    {t:'<i class="ph-fill ph-play" aria-hidden="true"></i>開啟新的人生（新種子）',main:true,f:()=>{location.href=location.pathname;}},
     {t:'用同一個種子重來',s:'seed: '+SEED,f:()=>{location.href=location.pathname+'?seed='+SEED;}}]);
   /* 結算定錨:蓋過預設的捲到底,把「生涯終幕」分界線置中——上半屏留給引退當下的
      年末事件,下半屏是結算第一行。block:'start' 會把分界線整個藏進 sticky 的 #board

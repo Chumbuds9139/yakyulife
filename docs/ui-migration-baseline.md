@@ -356,4 +356,42 @@ Observed after TASK-09:
 - Keyboard opening Display Settings moved focus to the selected theme option, scrolled the Start main content into view, and Space on the summary closed the panel.
 - Browser console error logs: none.
 
-Next allowed task: TASK-10 HUD.
+## TASK-10 to TASK-20 Result
+
+Implemented on 2026-08-31 as the final mobile gameplay UI pass:
+
+- TASK-10 HUD: compact HUD now uses the final 48px jersey plate, 48px menu/detail controls, four stat cells plus detail button, semantic surface/border tokens, and hidden legacy full-bar hint/year strip on compact layout.
+- TASK-11 Event Log: compact event log keeps 16px horizontal edges, 12px card rhythm, and updates year headers to centered `14px / 22px` text with a 20px caret target.
+- TASK-12 Detail: detail panel remains inline under the HUD with 12px/16px padding, 44px tabs, 12px tab-to-content spacing, and the existing desktop detail behavior preserved.
+- TASK-13 Action Sheet: compact action sheet uses the final 48px toggle row, title text sync, sticky footer clearance, internal scroll cap, and hidden duplicate in-panel title.
+- TASK-14 Action Point: allocation rows now use 8px vertical rhythm, fixed dice spacing, and selection-card radius without layout jumps.
+- TASK-15 Action Event and TASK-16 Action Health/Season: existing option ordering and handlers were preserved while the shared action shell now provides the final compact sizing.
+- TASK-17 End and TASK-18 Share Dialog: settlement share actions now use the final share card classes, Phosphor icons, checkbox semantics for fan-board inclusion, and compact dialog spacing.
+- TASK-19 Desktop Polish: desktop grid, timeline side rail, right action column, and footer behavior were preserved.
+- TASK-20 Regression: verified representative compact and desktop paths against `?seed=ui-migration-baseline`.
+
+Observed after TASK-10 to TASK-20:
+
+- Local static test URL `http://127.0.0.1:8131/?seed=ui-migration-baseline` loaded `css/style.css?v=1.5.9-ui-complete` and `src/main.js?v=1.5.9-ui-complete`.
+- At 375px and 390px:
+  - HUD height was 133px.
+  - Jersey plate was 48x48 and no longer showed the legacy `NO` label.
+  - Stat grid columns were four equal cells plus a 48px detail button with 8px gaps.
+  - Detail button measured 48x48 and exposed `aria-label="詳情"`.
+  - Legacy `#bd-hint` and compact `#tl-strip` were hidden.
+  - Year header measured `14px / 22px`, centered, with a 4px caret gap.
+  - Detail tabs measured 44px high with 12px spacing before content.
+  - Action toggle measured 48px high, displayed the current action title, collapsed/expanded correctly, and ended with 0px gap to the gameplay footer.
+  - Allocation dice and ability rows used 8px rhythm with no horizontal overflow.
+  - Browser console error logs: none.
+- At 1280px:
+  - App grid stayed `250px / main / action`.
+  - Timeline side rail remained visible.
+  - Compact action toggle remained hidden.
+  - Game footer stayed in the bottom grid row.
+  - Browser console error logs: none.
+- Static checks confirmed the final settlement share card, share-image dialog controls, Phosphor icon replacements, and fan-board checkbox semantics.
+- `node --check` passed for `src/main.js`, `src/ui/dom.js`, `src/ui/retire.js`, and `src/ui/share-image.js`.
+- `git diff --check` passed with only the existing Windows LF-to-CRLF warning for `css/style.css`.
+
+Note: the existing `tests/*.mjs` Playwright regressions could not run in this environment because they hard-code `C:\Program Files\Google\Chrome\Application\chrome.exe`, which is not present here. The browser-plugin UI checks above were used instead.

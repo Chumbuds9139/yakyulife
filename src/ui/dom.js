@@ -119,7 +119,11 @@ export function actToggleSync(){
   /* same chevron as the top bar's hint; it points up while the options are folded away,
      which is the direction they come back from at the bottom of the screen */
   const collapsed=a.classList.contains('collapsed');
-  if(!t.querySelector('.chev'))t.innerHTML='<i class="ph-bold ph-caret-down chev" aria-hidden="true"></i>';
+  if(!t.querySelector('.act-title'))t.innerHTML='<span class="act-title"></span><i class="ph-bold ph-caret-down chev" aria-hidden="true"></i>';
+  const title=a.querySelector(':scope > .title');
+  const first=a.querySelector('button,.btn');
+  const txt=(title&&title.textContent.trim())||(first&&first.textContent.trim().replace(/\s+/g,' '))||'目前行動';
+  t.querySelector('.act-title').textContent=txt;
   const ic=t.querySelector('.chev');
   ic.classList.toggle('ph-caret-up',collapsed);
   ic.classList.toggle('ph-caret-down',!collapsed);

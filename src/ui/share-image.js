@@ -366,7 +366,7 @@ export function shareImageSheet(evals,picks){
      preview never becomes a scroller nested inside another one. The actions sit in a pinned
      footer instead of at the end of the scroll, which is what keeps 儲存 reachable while the
      expanded image runs past the viewport. */
-  modalOpen(`<div class="sh-head"><h3>結算圖</h3><button class="sh-x" id="sh-x" aria-label="關閉">✕</button></div>
+  modalOpen(`<div class="sh-head"><h3>結算圖</h3><button class="sh-x" id="sh-x" aria-label="關閉"><i class="ph-bold ph-x" aria-hidden="true"></i></button></div>
     <div class="sh-body">
       <div class="sh-frame clip busy" id="sh-frame">
         <img id="sh-pic" alt="結算圖">
@@ -377,11 +377,11 @@ export function shareImageSheet(evals,picks){
       <div class="seg two sh-seg" id="sh-seg">${SH_THEMES.map(t=>{ const p=readTheme(t);
         return `<button data-st="${t}" style="background:${p.bg};color:${p.text}">`+
           `<span class="sh-sw" style="background:${p.accent}"></span><span class="sh-nm"></span></button>`; }).join('')}</div>
-      ${fanN?`<div class="sh-lab">收錄內容</div><button class="btn sh-chk" id="sh-fans"></button>`:''}
+      ${fanN?`<div class="sh-lab">收錄內容</div><button class="btn sh-chk" id="sh-fans" role="checkbox" aria-checked="false"></button>`:''}
     </div>
     <div class="sh-foot">
-      <button class="btn main" id="sh-save">💾 儲存 / 分享圖片</button>
-      <div class="sh-row"><button class="btn" id="sh-dl">下載到裝置</button><button class="btn" id="sh-close">關閉</button></div>
+      <button class="btn main" id="sh-save"><i class="ph-fill ph-share-network" aria-hidden="true"></i>儲存 / 分享圖片</button>
+      <div class="sh-row"><button class="btn" id="sh-dl"><i class="ph-bold ph-download-simple" aria-hidden="true"></i>下載到裝置</button><button class="btn" id="sh-close"><i class="ph-bold ph-x" aria-hidden="true"></i>關閉</button></div>
       <div class="sh-hint">若按鈕無效，長按上方圖片也可儲存</div>
     </div>`,'sh-sheet');
   const frame=$('sh-frame'), pic=$('sh-pic');
@@ -397,7 +397,8 @@ export function shareImageSheet(evals,picks){
     });
     const f=$('sh-fans');
     if(f){ f.classList.toggle('on',st.fans);
-      f.innerHTML=(st.fans?'☑':'☐')+' 球迷看板・引退串<small>共 '+fanN+' 則留言</small>'; }
+      f.setAttribute('aria-checked',String(st.fans));
+      f.innerHTML='<span class="sh-box" aria-hidden="true"></span><span>球迷看板・引退串</span><small>共 '+fanN+' 則留言</small>'; }
   };
   const paint=async()=>{
     syncCtl();
