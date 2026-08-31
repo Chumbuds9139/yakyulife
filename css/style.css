@@ -784,3 +784,58 @@ body.big-text #alloc-full .af-title{font-size:17.4px}
     border-left:1px solid var(--edge);padding-left:7px;white-space:nowrap}
   #bd-detail .bd-mark .ver{font-family:var(--mono);font-size:9px;color:var(--dim);letter-spacing:.05em}
 }
+
+/* ==========================================================================
+   捲軸一律不顯示（v1.5.9 UI）
+   使用者要求：任何介面都不要在旁邊出現捲軸。仍然可以捲動，只是不畫那條軌道。
+   直向與橫向都蓋掉——#tl-strip、.sec-y 這類橫向捲動區同樣適用。
+   ========================================================================== */
+html{scrollbar-width:none;-ms-overflow-style:none}
+*,*::before,*::after{scrollbar-width:none;-ms-overflow-style:none}
+*::-webkit-scrollbar{width:0;height:0;background:transparent}
+*::-webkit-scrollbar-thumb,*::-webkit-scrollbar-track{background:transparent}
+
+/* ==========================================================================
+   開場畫面：矮視窗也要一屏放得下
+   問題：#start .wrap 的垂直節奏是固定的 24px，加上桌機版額外的 64px 上留白，
+   在 720p 桌機視窗與 667px 高的手機都會溢出（實測 +39px 與 +86px），
+   於是開場就出現內部捲動。這裡不改版面結構，只在視窗變矮時等比收斂節奏。
+   仍然使用既有的 --space-* token，不用魔術數字。
+   ========================================================================== */
+@media (max-height:820px){
+  body:not(.mobile-ui) #start .wrap{padding-top:var(--space-24)}
+  #start h1.lockup{margin-top:var(--space-8)}
+  .lockup .wm-img{height:72px}
+  #start .sub{margin-top:var(--space-12)}
+  .start-form{margin-top:var(--space-16)}
+  .start-form{gap:var(--space-8)}
+}
+@media (max-height:700px){
+  body:not(.mobile-ui) #start .wrap{padding-top:var(--space-12)}
+  #start h1.lockup{margin-top:0;gap:var(--space-8)}
+  .lockup .wm-img{height:60px}
+  #start .sub{margin-top:var(--space-8);font-size:13px;line-height:20px}
+  .start-form{margin-top:var(--space-12)}
+  .field input,.player-id-input input{padding-top:var(--space-8);padding-bottom:var(--space-8)}
+  .seg button{padding-top:var(--space-8);padding-bottom:var(--space-8)}
+}
+@media (max-height:660px){
+  body:not(.mobile-ui) #start .wrap{padding-top:var(--space-8)}
+  #start .wrap{padding-bottom:var(--space-12)}
+  .lockup .wm-img{height:52px}
+  #start h1.lockup{gap:var(--space-4)}
+  .lockup-sub em{font-size:13px;letter-spacing:.3em;text-indent:.3em}
+  #start .sub{margin-top:var(--space-4)}
+  .start-form{margin-top:var(--space-8);gap:var(--space-8)}
+  .field label{margin-bottom:var(--space-2)}
+}
+/* 空的顯示設定面板不該還占著 24px 的上留白（極矮視窗差這一格就溢出） */
+#disp-body:empty{margin-top:0}
+/* 320×568 這種極端尺寸：標語讓位，優先保證表單與按鈕完整可見 */
+@media (max-height:600px){
+  #start .sub{display:none}
+  #start h1.lockup{margin-top:0}
+}
+/* 分配面板的操作提示（SCREEN_09 的說明列）：標題只留區塊名，提示獨立一行 */
+.al-hint{font-size:13px;line-height:20px;color:var(--text-secondary);text-align:center;
+  padding:0 0 var(--space-8)}

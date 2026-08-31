@@ -80,7 +80,7 @@ export function phasePre(){
       card('gold','隱藏素質解鎖：天才','22 歲前五度擲出高標值！從今以後，每一顆訓練骰<b class="hl">永久固定 4 點以上</b>，事件卡好結果機率提升至 <b class="hl">70%</b>。'+(bl.length?`天賦覺醒，潛能重新被評估：${bl.join('、')}。`:'')+'天賦，是藏不住的。');
       board(1);
     } }
-    choose('',[{t:`▸ 分配訓練成果（${dice.length} 顆骰）`,main:true,f:()=>dposReview(()=>allocUI({dice},'分配訓練成果（點骰套用｜球探量表：'+(S.pos==='P'?'60/70/75':'70/75')+' 以上成長遞減）',()=>nextStep()))}]);
+    choose('分配訓練成果',[{t:'<i class="ph-bold ph-gear" aria-hidden="true"></i>開始分配',main:true,f:()=>dposReview(()=>allocUI({dice},'分配訓練成果（點骰套用｜球探量表：'+(S.pos==='P'?'60/70/75':'70/75')+' 以上成長遞減）',()=>nextStep()))}]);
   };
   /* 投手開季：投球強度(續航+TJ 量表) */
   const preAsk=afterAsk;
@@ -237,7 +237,7 @@ export function phaseEnd(){
   if(S.stage==='PRO')updateTeamTenureTraits();
   const go=()=>S.stage==='PRO'?offseasonTradeCheck(()=>movement()):movement();
   if(S.pool>0){ const p=S.pool; S.pool=0;
-    choose('',[{t:`▸ 分配能力點（${p} 點·大賽／國際賽成果）`,main:true,f:()=>allocUI({pool:p},'季末能力點分配（大賽／國際賽成果）',go)}]); }
+    choose(`分配能力點（${p} 點）`,[{t:'<i class="ph-bold ph-gear" aria-hidden="true"></i>開始分配',main:true,f:()=>allocUI({pool:p},'季末能力點分配（大賽／國際賽成果）',go)}]); }
   else go();
 }
 /* ---------- 升降級與去向 ---------- */
