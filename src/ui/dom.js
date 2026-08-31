@@ -64,6 +64,24 @@ export function menuModal(){
   $('md-restart0').onclick=restartModal;
   $('md-close').onclick=modalClose;
 }
+/* 特別感謝：資料寫在這裡而不是 HTML，之後要加人只改這一份陣列。 */
+export const CREDITS=[
+  {who:'Howar31', what:'給予的技術支持'},
+  {who:'ktlin850722', what:'UI／UX 支援'},
+  {who:'米蟲小組', roster:'安安、阿軒、阿傑、阿豪、阿榮、阿吉、胡立歐、達鬨、KT',
+   what:'在遊戲開發給予的建議與測試'},
+];
+export function creditsModal(){
+  const rows=CREDITS.map(c=>
+    `<li><b>${c.who}</b>${c.roster?`<span class="cr-roster">${c.roster}</span>`:''}`+
+    `<span class="cr-what">${c.what}</span></li>`).join('');
+  modalOpen(`<div class="md-brand">${brandHTML()}</div>
+    <h3 class="cr-h">特別感謝</h3>
+    <ul class="cr-list">${rows}</ul>
+    <p class="cr-you">還有每個認真體驗這款遊戲的你們</p>
+    <button class="btn" id="cr-close" style="text-align:center;margin-top:14px">關閉</button>`,'md-credits');
+  $('cr-close').onclick=modalClose;
+}
 export function restartModal(){
   modalOpen(`<h3>重新開始</h3><p>確定要放棄這段人生，從頭開始嗎？</p>
     <button class="btn warn" id="md-restart" style="text-align:center">放棄這段人生，重新開始</button>
