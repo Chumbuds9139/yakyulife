@@ -424,7 +424,10 @@ export function termChoice(o,d,baseTitle,onPick,onReject,rejectLabel,rejectDesc,
   if(onReject)opts.push({t:rejectLabel||'拒絕，維持現狀',s:rejectDesc||'不接受這份合約',f:onReject});
   const health=mp.label?`｜<span class="dn">${mp.label}</span>`:'';
   const guarantee=extensionProtection&&extensionProtection.total?`｜原約剩餘保障：<b class="hl">${fmtMoney(extensionProtection.total)}</b>`:'';
-  choose(`${baseTitle}<div style="margin-top:8px;color:var(--dim);font-size:13px">目前年薪：<b class="hl">${fmtMoney(now)}</b>${guarantee}｜市場依最近三季加權估值${health}</div>`,opts);
+  /* 大標到「目前年薪」之前為止（摺疊列只取 .ev-h），年薪／保障／市場備註走小標。
+     原本兩段在同一個字串裡，textContent 會把它們黏成一長串印在摺疊列上。 */
+  choose(`<span class="ev-h">${baseTitle}</span>`+
+    `<small>目前年薪：<b class="hl">${fmtMoney(now)}</b>${guarantee}｜市場依最近三季加權估值${health}</small>`,opts);
 }
 /* 母隊延長續約:提前綁約 */
 export function extensionOffer(o){
@@ -552,7 +555,8 @@ export function faMarket(o,d,settings){
     ?{t:'就此引退',warn:true,s:'不接受任何報價，結束球員生涯',f:retireFromMarket}
     :{t:`回原隊（${S.teamName()}）1 年約`,s:`固定年薪 ${fmtMoney(calcContractAnnual(S.lv,mp.rating,+(0.90*mp.aav).toFixed(2)))} × 1 年｜合約總額 ${fmtMoney(calcContractAnnual(S.lv,mp.rating,+(0.90*mp.aav).toFixed(2)))}`,
       f:()=>{ const annual=calcContractAnnual(S.lv,mp.rating,+(0.90*mp.aav).toFixed(2)); S.ct=makeContract(1,0.9,S.lv,mp.rating,annual,null,'折衷續約'); card('info','回歸',`重回 <b class="hl">${S.teamName()}</b>，固定年薪 <b class="hl">${fmtMoney(S.ct.annual)}</b>。`); advance(); }};
-  choose(`${cold?'球團冷處理後的':'自由市場'}報價一覽（依國家分列）<div style="margin-top:8px;color:var(--dim);font-size:13px">目前年薪：<b class="hl">${fmtMoney(contractAnnual())}</b>${mp.label?`｜<span class="dn">${mp.label}</span>`:''}</div>`,[...offerOpts,finalOpt]);
+  choose(`<span class="ev-h">${cold?'球團冷處理後的':'自由市場'}報價一覽（依國家分列）</span>`+
+    `<small>目前年薪：<b class="hl">${fmtMoney(contractAnnual())}</b>${mp.label?`｜<span class="dn">${mp.label}</span>`:''}</small>`,[...offerOpts,finalOpt]);
 }
 export function ageGateUSA(o,minReq){ /* 旅美/日職跳大聯盟:年齡越大越難,28 歲後幾乎關窗 */
   const age=S.age;

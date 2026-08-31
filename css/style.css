@@ -315,11 +315,25 @@ table.fin td:first-child,table.fin th:first-child,table.st td:first-child,table.
 /* 置中：SCREEN_10 量測的引言文字左右留白為 44 / 49px（面板寬 423），
    中心偏離畫面中線僅 3px，是置中而非靠左。摺疊列標題與所有選項也都置中，
    只有這一行靠左會很突兀。桌機版的 .title 同時含名稱與引言，維持原本的靠左。 */
-body.mobile-ui #act>.title{display:block;margin-bottom:var(--space-12);text-align:center}
-body.mobile-ui #act>.title .ev-h{display:none}
 #act>.title .ev-h{display:block}
 #act>.title small{display:block;font-family:var(--sans);font-size:13px;line-height:20px;
   letter-spacing:0;color:var(--text-secondary);font-weight:400;margin-top:var(--space-4)}
+/* 只有大標、沒有小標的面板（分配訓練成果、球季表現…）在摺疊列上已經印過一次，
+   內文再印一次就是重複——收起來。.solo 由 actToggleSync() 依有沒有 <small> 標記。
+   兩種情形都算手機排版（都會出現摺疊列）：視窗窄於 921px，或使用者手動切到手機版，
+   所以下面兩組規則內容一樣，只是選擇器不同——只寫 body.mobile-ui 的話，
+   真的用手機開的玩家反而看不到引言。順序必須排在上面兩條之後：媒體查詢不加權重，
+   同分時看誰寫在後面。 */
+@media(max-width:920px){
+  #act>.title{display:block;margin-bottom:var(--space-12);text-align:center}
+  #act>.title .ev-h{display:none}
+  #act>.title.solo{display:none}
+  #act>.title small{margin-top:0}
+}
+body.mobile-ui #act>.title{display:block;margin-bottom:var(--space-12);text-align:center}
+body.mobile-ui #act>.title .ev-h{display:none}
+body.mobile-ui #act>.title.solo{display:none}
+body.mobile-ui #act>.title small{margin-top:0}
 #act>.btn:first-child,#act>.title:first-child+.btn{margin-top:0}
 #act.collapsed{display:none!important}
 .btn{display:block;width:100%;box-sizing:border-box;background:transparent;border:1px solid var(--border-strong);color:var(--text-primary);

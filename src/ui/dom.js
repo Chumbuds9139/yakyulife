@@ -145,6 +145,9 @@ export function actToggleSync(){
   const head=title&&title.querySelector('.ev-h');
   const txt=(head&&head.textContent.trim())||(title&&title.textContent.trim())||(first&&first.textContent.trim().replace(/\s+/g,' '))||'目前行動';
   t.querySelector('.act-title').textContent=txt;
+  /* 手機版的摺疊列已經印過大標了，內文只需要留小標。沒有小標的面板（分配訓練成果、
+     球季表現這種）整塊標成 .solo，交給 CSS 在手機版收起來，不要同一句話印兩次。 */
+  if(title)title.classList.toggle('solo',!title.querySelector('small'));
   const ic=t.querySelector('.chev');
   ic.classList.toggle('ph-caret-up',collapsed);
   ic.classList.toggle('ph-caret-down',!collapsed);
