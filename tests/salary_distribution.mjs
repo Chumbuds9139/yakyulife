@@ -5,7 +5,7 @@ const url=process.env.YAKYOLIFE_URL||'http://127.0.0.1:8124/';
 const samplesPerBand=Number(process.env.SALARY_SAMPLES||100);
 const browser=await chromium.launch({
   headless:true,
-  executablePath:'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  executablePath:process.env.CHROME_PATH||'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   args:['--disable-gpu'],
 });
 
