@@ -19,6 +19,8 @@ assert.ok(CPBL_TEAMS.length >= 6);
 
 setS(newState('test', 1, 'B', null));
 assert.equal(stageLabel(), '高一');
+assert.deepEqual(Object.keys(S.stats).sort(), ['CORP','CPBL','INDEP','MINOR','MLB','NPB']);
+assert.deepEqual(Object.keys(S.teamTally).sort(), ['CORP','CPBL','INDEP','MLB','NPB']);
 S.stage = 'PRO';
 S.lv = 'NPB_TRAIN';
 assert.equal(S.org, 'NPB');
