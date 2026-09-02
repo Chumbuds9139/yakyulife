@@ -47,7 +47,7 @@ export function runDraft(fromSchool,cb){
         card('info',goUni?'重返校園':'重返業餘',`你對選秀順位並不滿意，決定${goUni?(fresh?'進入大學繼續深造':'留在校隊繼續磨練'):'回到業餘棒球'}，明年再挑戰日職。`);
         if(fresh){ S.stage='U'; S.stageYr=0; S.team=pick(JP_UNI); }
         else if(goUni){ S.stage='U'; S.stageYr=0; S.team=pick(JP_UNI); }
-        else if(S.age<=25){ enterJapaneseAmateur(pick(['CORP','INDEP']),pick(pick(['CORP','INDEP'])==='CORP'?JP_CORP:JP_INDEP)); }
+        else if(S.age<=25){ const org=pick(['CORP','INDEP']); enterJapaneseAmateur(org,pick(org==='CORP'?JP_CORP:JP_INDEP)); }
         if(fromSchool) cb(); else advance();
       }}]);
     return;
