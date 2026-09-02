@@ -8,7 +8,6 @@ export function setS(v){ S=v; }
 export function newState(name,jersey,pos,role){
   const ab={}; POS_AB[pos].forEach(k=>ab[k]=ri(20,32));
   if(pos==='P'){ab.vel+=ri(0,6);ab.brk+=ri(0,4);} else {ab.con+=ri(0,6);ab.pow+=ri(0,4);}
-  /* OOTP 式潛力天花板:洗牌後 1 項頂尖工具、1 項優質、1 項中上,其餘平庸 */
   const pot={}, sh=(pos==='C'?POS_AB[pos].filter(k=>k!=='rng'):POS_AB[pos].slice());
   for(let i=sh.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=sh[i];sh[i]=sh[j];sh[j]=t;}
   if(pos==='P'){
@@ -17,34 +16,28 @@ export function newState(name,jersey,pos,role){
     sh.forEach((k,i)=>{ pot[k]= i===0?ri(72,80) : i===1?ri(64,74) : i===2?ri(56,68) : ri(46,62); });
     if(pos==='C')pot.rng=ri(32,40);
   }
-  /* 日本高校分級（隱藏）:T1 名門 +6 / T2 中堅 ±0 / T3 弱旅 -6 */
-  const hsMap={
-    '早稻田實業':1,'智辯和歌山':1,'明德義塾':2,'東海大相模':2,'聖光学院':3,'作新学院':3
-  };
+  /* 日本高校固定分級（隱藏）: T1 名門 +6 / T2 中堅 ±0 / T3 地方校 -6 */
+  const hsMap={'早稻田實業':1,'智辯和歌山':1,'明德義塾':2,'東海大相模':2,'聖光学院':3,'作新学院':3};
   const schools=Object.keys(hsMap);
   const myTeam=schools[Math.floor(R()*schools.length)];
-  return {name,jersey,pos,role:role||null,age:16,year:2026,stage:'HS',stageYr:1,pot,
+  return {name,jersey,pos,role:pos==='P'?null:null,age:16,year:2026,stage:'HS',stageYr:1,pot,
     hsMap,hsTier:hsMap[myTeam],team:myTeam,potSum0:Object.values(pot).reduce((a,b)=>a+b,0),
-    league:null,org:null,orgTeam:null,teamTally:{CORP:{},INDEP:{},NPB:{},CPBL:{},MLB:{}},
+    league:null,org:null,orgTeam:null,lastCpblTeam:null,teamTally:{CORP:{},INDEP:{},CPBL:{},NPB:{},MLB:{}},
     ab,traits:{genius:false,glass:false,iron:false,scum:false,
       late:false,disc:false,academy:false,intlace:false,franchise:false,clutch:false,favorite:false,phoenix:false,combo:false,onetool:false,rubber:false,legend:false,
       oldghost:false,adking:false,miraclegen:false,strongpitch:false,stronghit:false,championmaker:false,
-      yips:false,distract:false,cancer:false,ambience:false,goldcloth:false,thief:false,latepractice:false,mrteam:false,confidante:false,smallschool:false,grinder:false,rainbow:false,[...]
-    removed:[],
-    cntSave:0,cntSaveWin:0,cntTrainingSafeFail:0,cntNormWin:0,cntSnack:0,cntBoldWin:0,cntBoldFail:0,cntSocialBoldFail:0,cntEndorseBoldWin:0,
+      yips:false,distract:false,cancer:false,ambience:false,goldcloth:false,thief:false,latepractice:false,mrteam:false,confidante:false,smallschool:false,grinder:false,rainbow:false,taiwan:false,pitcherTC:false,hitterTC:false},
+    removed:[],cntSave:0,cntSaveWin:0,cntTrainingSafeFail:0,cntNormWin:0,cntSnack:0,cntBoldWin:0,cntBoldFail:0,cntSocialBoldFail:0,cntEndorseBoldWin:0,
     hsChampions:0,oldGhostPending:false,oldGhostUsed:false,samePick:0,samePickKey:null,
     teamSeasons:0,teamYears:0,teamStarYears:0,franchiseActive:false,franchiseTeamName:null,
-    six:0,bigInj:0,glassYear:null,ironStreak:0,npbYears:0,corpYears:0,indepYears:0,
+    six:0,bigInj:0,glassYear:null,ironStreak:0,npbYears:0,
     injNext:0,tmpInj:0,rehab:0,marketInjury:'healthy',salary:0,outsideIncome:0,yearOutsideIncome:0,pool:0,pendStat:0,seasonFactor:1,
-    stats:{CORP:null,INDEP:null,NPB:null,CPBL:null,MLB:null},contracts:[],honors:[],legendLeagues:[],rainbowLeagues:[],pitcherTCLeagues:[],hitterTCLeagues:[],intlCount:0,intlLock:null,intlStat:{G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,IP:0,W:0,L:0,SV:0,SO:0,ER:0}
-  }
+    stats:{CORP:null,INDEP:null,CPBL:null,NPB:null,MLB:null,MINOR:null},contracts:[],honors:[],legendLeagues:[],rainbowLeagues:[],pitcherTCLeagues:[],hitterTCLeagues:[],intlCount:0,intlLock:null,intlStat:{G:0,PA:0,AB:0,H:0,HR:0,RBI:0,BB:0,IP:0,SO:0,ER:0,W:0,SV:0},intlLog:[],intlBest:null,dpos:null,dposYears:{},roleYears:{},tradeRefuse:0,champThisTeam:false,svc:0,svcOrg:null,faElig:false,tradeHeat:0,complainCount:0,demotionRefused:false,tj:0,tjCount:0,tjCrises:0,effort:'普通',tjSuccess:0,lastLv:null,love:{st:'single',partner:null,kids:0,caught:0,affairs:0,exes:[],dyrs:0,datedTimes:0},traits2:{},log:[],ct:null,done:false};
 }
-
 export function playerName(){ return `${S.name} #${S.jersey}`; }
 export function blankStat(){return {yr:0,G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,AS:0,DEF:0,DPG:{}};}
 export function bucketOf(lv){ const l=lv&&LV[lv]; return l&&l.top?l.top:'MINOR'; }
 export function nextStep(){ if(S.done){ stepQ=[]; return; } const f=stepQ.shift(); if(f)f(); }
-
 export function stageLabel(){
   if(S.stage==='HS')return '高'+['一','二','三'][S.stageYr-1];
   if(S.stage==='U')return '大'+['一','二','三','四'][S.stageYr-1];
@@ -57,8 +50,7 @@ export function stageLabel(){
     if(S.lv==='CPBL2')return '中職二軍／培養型';
     if(S.lv==='CPBL1')return '中職一軍／洋將';
     if(S.lv==='MLB')return 'MLB';
-    const l=LV[S.lv];
-    if(l)return l.n;
+    const l=LV[S.lv]; if(l)return l.n;
   }
   return '進行中';
 }
