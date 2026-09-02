@@ -16,8 +16,8 @@ try{
     s.teamName=function(){ return this.orgTeam+(this.lv==='NPB1'?'一軍':'二軍'); };
     Object.keys(s.ab).forEach(k=>s.ab[k]=80);
     state.setS(s); timeline.resetTL(); phases.startYear();
-    const draft=[...document.querySelectorAll('#act button')].find(b=>b.textContent.includes('投入日職選秀'));
-    if(!draft)throw new Error('找不到大學季前日職選秀按鈕');
+    const draft=[...document.querySelectorAll('#act button')].find(b=>b.textContent.includes('投入中華職棒選秀'));
+    if(!draft)throw new Error('找不到大學季前選秀按鈕');
     draft.click();
     await new Promise(r=>setTimeout(r,20));
     const latest=timeline.TL[timeline.TL.length-1];
