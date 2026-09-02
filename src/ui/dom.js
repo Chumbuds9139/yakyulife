@@ -1,5 +1,5 @@
 import {S} from '../core/state.js?v=1.5.11';
-import {APP_VER, SPONSOR_URL} from '../config.js?v=1.5.11';
+import {APP_VER} from '../config.js?v=1.5.11';
 import {renderTraits, traitNames} from './traits.js?v=1.5.11';
 import {clearAlloc, allocFullClose} from './alloc.js?v=1.5.11';
 import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.5.11';
@@ -54,35 +54,14 @@ export function menuModal(){
   modalOpen(`<div class="md-brand">${brandHTML()}</div>
     <button class="btn" id="md-theme" style="text-align:center">切換佈景主題</button>
     <button class="btn" id="md-big" style="text-align:center">${big?'切回標準字級':'改用大字級'}</button>
-    ${wide?`<button class="btn" id="md-ui" style="text-align:center">${mob?'切回電腦版介面':'改用手機版介面'}</button>`:''}
-    <a class="btn" id="md-sponsor" href="${SPONSOR_URL}" target="_blank" rel="noopener noreferrer" style="text-align:center;margin-top:14px"><span aria-hidden="true">♥</span> 贊助支持<small>贊助伺服器與後續開發</small></a>
+    ${wide?`<button class="btn" id="md-ui" style="text-align:center;margin-top:14px">${mob?'切回電腦版介面':'改用手機版介面'}</button>`:''}
     <button class="btn warn" id="md-restart0" style="text-align:center;margin-top:14px">重新開始</button>
-    <button class="btn" id="md-credits" style="text-align:center;margin-top:14px">特別感謝</button>
     <button class="btn" id="md-close" style="text-align:center;margin-top:14px">關閉</button>`);
   $('md-theme').onclick=themeModal;
   $('md-big').onclick=()=>{ applyBigText(!big); menuModal(); };
   const mu=$('md-ui'); if(mu)mu.onclick=()=>{ applyMobileUI(!mob); menuModal(); };
   $('md-restart0').onclick=restartModal;
-  $('md-credits').onclick=creditsModal;
   $('md-close').onclick=modalClose;
-}
-/* 特別感謝：資料寫在這裡而不是 HTML，之後要加人只改這一份陣列。 */
-export const CREDITS=[
-  {who:'Howar31', what:'給予的技術支持'},
-  {who:'ktlin850722', what:'UI／UX 支援'},
-  {who:'米蟲小組', roster:'安安、阿軒、阿傑、阿豪、阿榮、阿吉、胡立歐、達鬨、KT',
-   what:'在遊戲開發給予的建議與測試'},
-];
-export function creditsModal(){
-  const rows=CREDITS.map(c=>
-    `<li><b>${c.who}</b>${c.roster?`<span class="cr-roster">${c.roster}</span>`:''}`+
-    `<span class="cr-what">${c.what}</span></li>`).join('');
-  modalOpen(`<div class="md-brand">${brandHTML()}</div>
-    <h3 class="cr-h">特別感謝</h3>
-    <ul class="cr-list">${rows}</ul>
-    <p class="cr-you">還有每個認真體驗這款遊戲的你們</p>
-    <button class="btn" id="cr-close" style="text-align:center;margin-top:14px">關閉</button>`,'md-thanks');
-  $('cr-close').onclick=modalClose;
 }
 export function restartModal(){
   modalOpen(`<h3>重新開始</h3><p>確定要放棄這段人生，從頭開始嗎？</p>

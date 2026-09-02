@@ -1,6 +1,6 @@
 import {S} from '../core/state.js?v=1.5.11';
 import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.11';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS} from '../data/teams.js?v=1.5.11';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.5.11';
 import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.11';
 import {card, choose, board} from '../ui/dom.js?v=1.5.11';
 import {tlNote} from '../ui/timeline.js?v=1.5.11';
@@ -277,10 +277,11 @@ export function buyoutRemaining(rate,includeCurrent){ /* 合約剩餘年數給�
   S.ct=makeContract(1,S.ct.mult,S.lv,S.lastD||0,yearly,null,'買斷結清'); /* 給付後合約結清 */
   return total;
 }
-/* 引退時若沒回中職,補一場大巨蛋開球告別 */
+/* 引退時若曾經打過中職、但退休當下人不在中職，補一場台北大巨蛋開球告別；
+   從沒踏進中職的生涯（例如純日職／純美職）就不套用這段彩蛋。 */
 export function daibaFarewell(cont){
-  if(S.stage==='PRO'&&S.org!=='CPBL'&&!S._daiba){ S._daiba=true;
-    card('gold','最後一球',`雖然沒能回到家鄉獻技，你還是接受了邀請，回到 <b class="hl">臺北大巨蛋</b> 當一日中職球員。開球儀式上，四萬人的注視下，你投出了生涯的最後一球——不為勝負，只為那個曾經在紅土上作夢的自己。`);
+  if(S.stage==='PRO'&&S.org!=='CPBL'&&S.lastCpblTeam&&!S._daiba){ S._daiba=true;
+    card('gold','最後一球',`雖然沒能在 <b class="hl">${S.lastCpblTeam}</b> 完成告別賽，台北大巨蛋還是邀你回去，當一日中職球員開球。四萬人的注視下，你投出了生涯的最後一球——不為勝負，只為那個曾經在紅土上作夢的自己。`);
   }
   cont();
 }
@@ -297,9 +298,7 @@ export function handleDemotion(o,path,idx){
       if(S.org==='MiLB'){
         if(o>=LV.NPB1.min&&chance(Math.round(60*ageGateJP())))alts.push({t:'跳槽日職一軍',s:'旅日合約',f:()=>{buyoutRemaining();signTo('NPB','NPB1',returnTeam('NPB').team);advance();}});
         else if(o>=LV.NPB2.min&&chance(50))alts.push({t:'轉戰日職二軍（支配下）',f:()=>{buyoutRemaining();signTo('NPB','NPB2',returnTeam('NPB').team);advance();}});
-        if(o>=LV.CPBL1.min)alts.push({t:'返台加盟中職一軍',s:'落葉歸根',f:()=>{buyoutRemaining();signTo('CPBL','CPBL1',returnTeam('CPBL').team);advance();}});
-      }else if(S.org==='NPB'&&o>=LV.CPBL1.min&&chance(70)){
-        alts.push({t:'返台加盟中職一軍',f:()=>{buyoutRemaining();signTo('CPBL','CPBL1',returnTeam('CPBL').team);advance();}});
+        else alts.push(...homecomingFallbackOptions(o,{pre:buyoutRemaining,done:advance}));
       }
       if(alts.length){
         card('bad','降級通知',`成績未達標，球團打算將你下放 <b class="dn">${LV[path[t]].n}</b>——但消息一出，其他聯盟的邀請也到了。`);
@@ -330,8 +329,7 @@ export function outOfOrg(o){
   /* 遭原聯盟釋出，尋找重疊層級合約 */
   const offers=[];
   if(S.org!=='NPB'&&o>=44)offers.push({t:'日職二軍（支配下）合約',f:()=>{buyoutRemaining(1);signTo('NPB','NPB2',returnTeam('NPB').team);}});
-  if(S.org!=='CPBL'){ if(o>=41)offers.push({t:'中職一軍合約',f:()=>{buyoutRemaining(1);signTo('CPBL','CPBL1',returnTeam('CPBL').team);}});
-    else if(o>=30)offers.push({t:'中職二軍合約',f:()=>{buyoutRemaining(1);signTo('CPBL','CPBL2',returnTeam('CPBL').team);}}); }
+  offers.push(...homecomingFallbackOptions(o,{pre:()=>buyoutRemaining(1)}));); }
   if(!offers.length){ buyoutRemaining(1); daibaFarewell(()=>endGame('遭球團釋出且無人問津，'+S.year+' 年黯然引退。')); return; }
   card('bad','戰力外通告',`未達 ${S.org==='NPB'?'日職':'原聯盟'}留用門檻，遭到釋出。所幸還有球隊捎來邀請——`);
   if(S.age>=33){ offers.push({t:'就此引退',warn:true,f:()=>{buyoutRemaining(1);daibaFarewell(()=>endGame('收到戰力外通告後，'+S.year+' 年選擇引退。'));}}); }
@@ -381,6 +379,34 @@ export function returnHomeSign(from,org,lv,intro,o){
   }else{
     card('info','新東家',`<b class="hl">${dest.team}</b> 以${detail}簽下你，你將在${LV[lv].n}展開全新的一章。`);
   }
+}
+/* ---------- 日職路走不通時的其他出路 ----------
+   日本出身球員的預設順位是先設法回日職；只有在日職沒人要時，才輪到這裡：
+   社會人／獨立聯盟是留在日本國內的路，中職洋將則是跨海挑戰。
+   三個選項各自用 chance() 模擬「球團願不願意開價」，門檻不到或運氣不好就不會出現，
+   全部落空時呼叫端要自己準備「留在原地」或「引退」的收尾。 */
+export function homecomingFallbackOptions(o,cfg){
+  const pre=(cfg&&cfg.pre)||null, done=(cfg&&cfg.done)||null;
+  const run=fn=>{ if(pre)pre(); fn(); if(done)done(); };
+  const opts=[];
+  if(o>=LV.CORP.min&&chance(75))opts.push({t:'加入社會人球隊',s:'職棒沒有位置，社會人球隊向你招手',f:()=>run(()=>{
+    const team=pick(CORPORATE_TEAMS);
+    S.org='CORP'; S.lv='CORP'; S.orgTeam=team; S.team=team; S.svc=0; S.faElig=false;
+    S.ct=makeContract(1,1,'CORP',0,48,null,'業餘球團合約');
+    card('info','加盟社會人',`職業球團都沒有留位置給你，社會人球隊卻向你伸出手——你決定加入 <b class="hl">${team}</b>，在企業隊延續棒球生涯。`); board(2);
+  })});
+  if(o>=LV.INDEP.min&&chance(80))opts.push({t:'加入獨立聯盟',s:'獨立聯盟球隊願意給你舞台',f:()=>run(()=>{
+    const team=pick(INDEP_TEAMS);
+    S.org='INDEP'; S.lv='INDEP'; S.orgTeam=team; S.team=team; S.svc=0; S.faElig=false;
+    S.ct=makeContract(1,1,'INDEP',0,36,null,'業餘球團合約');
+    card('info','加盟獨立聯盟',`沒有職棒球團開價，獨立聯盟球隊卻願意給你舞台——你決定加入 <b class="hl">${team}</b>，繼續留在球場上。`); board(2);
+  })});
+  if(o>=LV.CPBL1.min&&chance(60))opts.push({t:'挑戰中職洋將名額',s:'台灣中華職棒開出洋將合約',f:()=>run(()=>{
+    const dest=returnTeam('CPBL');
+    signTo('CPBL','CPBL1',dest.team,ri(1,2),1,undefined,true);
+    card('info','海外挑戰',`台灣中華職棒的 <b class="hl">${dest.team}</b> 開出洋將合約，邀你跨海挑戰——你把握這個機會，前進台灣職棒。`); board(2);
+  })});
+  return opts;
 }
 /* 多隊報價選擇:opts=[{team,bonus,yrs,mult,lv}] */
 export function pickOfferUI(title,org,offers,after){
@@ -503,13 +529,8 @@ export function faFlow(o){
         `雖然大聯盟的合約書就攤在桌上，但在幾個輾轉難眠的夜裡，你還是把筆放了下來。橫越太平洋的十幾個小時、一年有兩百天在陌生的旅館醒來——你想的已經不是可以在大聯盟達成甚麼成就，而是離家近一點。長考之後，你決定把天賦帶回亞洲職棒的最高殿堂：<b class="hl">日本職棒</b>。`);
         advance(); }});
   }
-  /* 5b 旅外球員合約到期:多一個返台加盟中職的選項(落葉歸根) */
-  if(S.org!=='CPBL'&&o>=LV.CPBL1.min){
-    faOpts.push({t:'返台加盟中職一軍',s:'落葉歸根，回到熟悉的主場',
-      f:()=>{ returnHomeSign(S.org,'CPBL','CPBL1',
-        `結束海外的挑戰，你把行李箱從衣櫃頂端搬了下來。護照上那些出入境章記錄了你走過的地方，但這一次，飛機降落的是熟悉的桃園機場。你決定回到家鄉球迷面前，把剩下的棒球打完。`);
-        advance(); }});
-  }
+  /* 5b 日職路走不通時，海外／國內的其他出路（社會人／獨立聯盟／中職洋將） */
+  if(S.org!=='CPBL')faOpts.push(...homecomingFallbackOptions(o,{done:advance}));
   choose(`合約到期 · 取得自由球員（FA）資格（球隊奪冠率 ${teamChampRate(S.orgTeam)}%）`,faOpts);
 }
 export function marketRetirementText(){
@@ -520,20 +541,9 @@ export function marketRetirementText(){
 }
 export function retireFromMarket(){ daibaFarewell(()=>endGame(marketRetirementText())); }
 export function homecomingAfterRejectedOffer(o){
-  const homeLv=o>=LV.CPBL1.min?'CPBL1':'CPBL2';
-  /* 先擲好去哪一隊,按鈕才寫得出隊名——90% 回母隊,10% 談不攏改投他隊(見 returnTeam)。 */
-  const dest=returnTeam('CPBL');
-  const annual=calcContractAnnual(homeLv,marketRating(S.lastD||0,homeLv),1);
-  const from=S.org;
-  choose(`落葉歸根 · 球團評估從${LV[homeLv].n}出發`,[
-    {t:`返台加盟 ${dest.team}（${LV[homeLv].n}）`,main:true,
-      s:`綜合 ${o}｜一軍門檻 ${LV.CPBL1.min}｜固定年薪 ${fmtMoney(annual)} × 1 年`,f:()=>{
-        returnHomeSign(from,'CPBL',homeLv,
-          `你婉拒了海外的合約，把球具收一收，決定回到出發的地方，從 <b class="hl">${LV[homeLv].n}</b>重新開始。`,
-          {dest,yrs:1,mult:1,annual});
-        advance(); }},
-    {t:'就此引退',warn:true,s:'不再簽下新合約，結束球員生涯',f:retireFromMarket}
-  ]);
+  const opts=homecomingFallbackOptions(o,{done:advance});
+  opts.push({t:'就此引退',warn:true,s:'不再簽下新合約，結束球員生涯',f:retireFromMarket});
+  choose(`何去何從 · 婉拒報價後，綜合能力 ${o}`,opts);
 }
 export function faMarket(o,d,settings){
   const org=S.org, lv=S.lv, offers=[];
@@ -596,7 +606,7 @@ export function faMarket(o,d,settings){
           S.lv=savedLv;
           if(org==='CPBL')retireFromMarket();
           else homecomingAfterRejectedOffer(o);
-        },org==='CPBL'?'拒絕合約，宣布引退':'落葉歸根',org==='CPBL'?'不接受這份合約，直接結束球員生涯':'婉拒這份合約，查看返台層級或選擇引退',of.mult||1,false); }}));
+        },org==='CPBL'?'拒絕合約，宣布引退':'婉拒，另尋出路',org==='CPBL'?'不接受這份合約，直接結束球員生涯':'婉拒這份合約，看看還有沒有其他球隊願意開價',of.mult||1,false); }}));
   const finalOpt=cold
     ?{t:'就此引退',warn:true,s:'不接受任何報價，結束球員生涯',f:retireFromMarket}
     :{t:`回原隊（${S.teamName()}）1 年約`,s:`固定年薪 ${fmtMoney(calcContractAnnual(S.lv,mp.rating,+(0.90*mp.aav).toFixed(2)))} × 1 年｜合約總額 ${fmtMoney(calcContractAnnual(S.lv,mp.rating,+(0.90*mp.aav).toFixed(2)))}`,

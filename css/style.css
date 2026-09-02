@@ -488,35 +488,12 @@ body[data-theme='c'] .lockup-sub em,body[data-theme='d'] .lockup-sub em{text-sha
 .start-preferences .field{margin-top:0}
 .start-preferences .field label{margin-bottom:var(--space-8)}
 .seedline{font-family:var(--sans);font-size:12px;color:var(--dim);margin-top:0}
-/* community link: a pill in the quiet bottom band, deliberately lighter than 開始生涯 so it
-   does not compete with the primary action, but with a real outline so it reads as tappable */
-#community{min-width:0;text-align:center;margin-top:0}
-#community a{min-height:50px;display:flex;align-items:center;justify-content:center;gap:var(--space-8);
-  border:1px solid var(--border-strong);border-radius:var(--r);padding:12px 8px;
-  color:var(--text-primary);text-decoration:none;font-size:16px;line-height:24px;font-weight:700;letter-spacing:0;transition:.15s}
-#community a .ph,#community a .ph-bold,#community a .ph-fill{width:16px;height:16px;font-size:16px}
-#community a:hover{background:var(--surface-interactive);border-color:var(--border-strong)}
-#community a:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;box-shadow:0 0 0 1px var(--bg)}
 .start-meta{display:flex;align-items:center;justify-content:center;gap:var(--space-12);margin-top:var(--space-12);
   color:var(--text-muted);font-size:13px;line-height:20px;font-weight:500;letter-spacing:0}
 .start-meta a{color:var(--accent-primary);text-decoration:none}
 .start-meta a:hover,.start-meta a:focus-visible{text-decoration:underline}
 #ver-badge{font-family:var(--mono);color:var(--text-muted);letter-spacing:.02em}
-/* ---------- 贊助入口 ----------
-   首頁膠囊屬於可捲動 main + 遊戲內選單的連結按鈕，兩處導向同一個贊助頁。 */
-#sponsor-corner{align-self:flex-end;height:30px;display:inline-flex;align-items:center;gap:var(--space-4);
-  border:1px solid var(--accent-primary);border-radius:var(--radius-pill);
-  background:color-mix(in srgb,var(--accent-primary) 10%,var(--surface-default));
-  padding:4px var(--space-12);color:var(--accent-primary);text-decoration:none;
-  font-family:var(--mono);font-size:14px;font-weight:600;letter-spacing:0;line-height:20px;transition:.15s}
-#sponsor-corner .ic{width:16px;height:16px;font-size:16px;line-height:1}
-#sponsor-corner:hover,#sponsor-corner:focus-visible{border-color:var(--accent);
-  background:color-mix(in srgb,var(--accent) 20%,var(--panel));box-shadow:var(--glow)}
-/* 選單內的贊助按鈕沿用 .btn 外觀,但因為是 <a> 必須蓋掉底線與 a 的預設連結色 */
 a.btn{text-decoration:none;color:var(--text)}
-a.btn#md-sponsor{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,var(--edge))}
-a.btn#md-sponsor:hover,a.btn#md-sponsor:focus-visible{border-color:var(--accent)}
-a.btn#md-sponsor small{color:var(--dim)}
 .seedline b{color:var(--accent)}
 .seed-input-row{display:grid;grid-template-columns:minmax(0,1fr) 100px;min-height:44px;
   background:var(--surface-default);border:1px solid var(--border-default);border-radius:var(--radius-component);

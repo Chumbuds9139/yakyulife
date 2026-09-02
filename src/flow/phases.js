@@ -11,7 +11,7 @@ import {rollInjury, tjCap} from '../engine/injury.js?v=1.5.11';
 import {isMrTeamEligible} from '../engine/tenure.js?v=1.5.11';
 import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.5.11';
 import {championshipChance} from '../engine/championship.js?v=1.5.11';
-import {buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, signTo, teamChampRate} from '../engine/contract.js?v=1.5.11';
+import {ageGateJP, buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, homecomingFallbackOptions, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, returnTeam, signTo, teamChampRate} from '../engine/contract.js?v=1.5.11';
 import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.5.11';
 import {loveEvent} from './love.js?v=1.5.11';
 import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.5.11';
@@ -122,12 +122,32 @@ export function phasePre(){
   }
   if(S.stage==='PRO'&&S.age>=36&&S.rehab===0){
     const oldOpts=[{t:'再戰一年',main:true,f:afterAsk}];
-    /* 旅外老將(衰退期):放棄現有合約,落葉歸根返台;ovr<30(真的打不動)不給 */
-    if(S.org!=='CPBL'&&ovr()>=LV.CPBL2.min){
-      oldOpts.push({t:'放棄合約，落葉歸根',s:'狀態不再，仍想把最後的球打給家鄉看',f:()=>{
-        card('good','落葉歸根',`狀態雖然已經不在巔峰，但家鄉球隊仍然向你招手——他們要的不是你的實力，是你在國際賽、在海外聯賽建立起的回憶。你決定放棄合約，回家，把職業生涯最後幾年奉獻給大家。`);
-        signTo('CPBL','CPBL1'); tlRestage(); afterAsk(); /* spring move: this season is already CPBL */
-      }});
+    /* 旅美老將(衰退期):放棄現有合約，設法回日本打最後幾年；日職沒人要，再考慮其他出路。
+       身在日職的老將已經在家鄉，不套用這條——直接引退或再戰一年就好。 */
+    if(S.org==='MiLB'){
+      const o=ovr();
+      if(o>=LV.INDEP.min){
+        oldOpts.push({t:'放棄合約，設法回日本',s:'想把職業生涯最後幾年留給日本球迷',f:()=>{
+          if(o>=LV.NPB1.min&&chance(Math.round(50*ageGateJP()))){
+            signTo('NPB','NPB1',returnTeam('NPB').team);
+            card('good','回到日本',`狀態雖然已經不在巔峰，但日職球團看重的是你在海外累積的經驗與名氣——你決定放棄合約，回到日本，把職業生涯最後幾年留給球迷。`);
+            tlRestage(); afterAsk();
+          }else if(o>=LV.NPB2.min&&chance(45)){
+            signTo('NPB','NPB2',returnTeam('NPB').team);
+            card('good','回到日本',`一軍球團暫時沒有位置，但二軍球隊願意給你舞台——你決定放棄合約，回到日本，從支配下球員重新出發。`);
+            tlRestage(); afterAsk();
+          }else{
+            const opts=homecomingFallbackOptions(o,{done:()=>{tlRestage();afterAsk();}});
+            if(opts.length){
+              card('info','日職沒有回音','你試著聯繫日本職棒球團，但沒有球隊願意開價——所幸還有其他邀約。');
+              choose('還有其他選擇',opts);
+            }else{
+              card('bad','四處碰壁','日職球團沒有回應，其他聯盟也沒有球隊聯繫你，只能繼續留在原地。');
+              afterAsk();
+            }
+          }
+        }});
+      }
     }
     oldOpts.push({t:'召開引退記者會',warn:true,s:'結束選手生涯',f:()=>{buyoutRemaining(0.7,true);daibaFarewell(()=>endGame('功成身退，於 '+S.year+' 年宣布引退。'));}});
     choose('又是一年春訓，身體大不如前了',oldOpts);
@@ -245,7 +265,9 @@ export function phaseEnd(){
 }
 /* ---------- 升降級與去向 ---------- */
 export function annualHomecomingEligible(org,lv){
-  return (org==='MiLB'&&!!LV[lv]&&!LV[lv].top)||(org==='NPB'&&lv==='NPB2');
+  /* 只有旅美（小聯盟）才談得上「回不回得去日本」；日職二軍本來就在日本國內，
+     不該每季都跳出「返台」選項。 */
+  return org==='MiLB'&&!!LV[lv]&&!LV[lv].top;
 }
 export function finishContractYear(o){
   if(!S.ct)S.ct=makeContract(2,1,S.lv,currentSalaryRating(S.lastD||0),undefined,null,'預設約');
@@ -264,18 +286,33 @@ export function finishContractYear(o){
       card('info','球團續約',`你仍在選秀球隊掌控期（服務 ${S.svc}/5 年），球團依服務年資與近年表現行使續約權——固定年薪 <b class="hl">${fmtMoney(S.ct.annual)}</b> × <b class="hl">${S.ct.yrs} 年</b>，合約總額 <b class="hl">${fmtMoney(S.ct.annual*S.ct.yrs)}</b>。`); board(1);
     } else { S.ct=makeContract(ri(1,2),1,S.lv,currentSalaryRating(S.lastD||0),undefined,null,'球團續約'); } /* 非頂級層級 */
   }
-  /* 仍在海外養成層級時，每個球季結束都讓玩家重新決定是否返台。
-     日職二軍與小聯盟相同，不因身處支配下體系就鎖死去向。 */
+  /* 仍在小聯盟養成層級時，每個球季結束都讓玩家重新決定要不要試著回日本。
+     順位固定：先設法回日職，日職沒人要才輪到社會人／獨立聯盟／中職洋將；
+     四處碰壁的話就只能繼續留在小聯盟拚下去，不會被強制引退。 */
   if(annualHomecomingEligible(S.org,S.lv)){
-    const homeLv=o>=LV.CPBL1.min?'CPBL1':'CPBL2';
-    const inJapan=S.org==='NPB';
-    choose(inJapan?'旅日生涯抉擇':'旅美生涯抉擇',[
-      {t:inJapan?'繼續挑戰日職':'繼續挑戰小聯盟',main:true,
-       s:inJapan?`留在${LV[S.lv].n}，繼續爭取升上一軍`:`留在${LV[S.lv].n}，繼續朝大聯盟前進`,f:()=>crossOffers(o)},
-      {t:`返台加盟中職（${LV[homeLv].n}）`,s:`結束${inJapan?'旅日':'小聯盟'}挑戰，回到台灣延續職業生涯`,f:()=>{
-        signTo('CPBL',homeLv);
-        card('good','返鄉',`你決定結束${inJapan?'旅日':'旅美'}挑戰，回到台灣，從<b class="hl">${LV[homeLv].n}</b>延續職業生涯。`);
-        advance();
+    const tryJapan=()=>{
+      if(o>=LV.NPB1.min&&chance(Math.round(50*ageGateJP()))){
+        signTo('NPB','NPB1',returnTeam('NPB').team);
+        card('gold','轉戰日職一軍',`你決定結束小聯盟的挑戰，帶著累積的經驗回到日本，挑戰日職一軍。`); advance(); return true;
+      }
+      if(o>=LV.NPB2.min&&chance(45)){
+        signTo('NPB','NPB2',returnTeam('NPB').team);
+        card('info','轉戰日職二軍',`你決定結束小聯盟的挑戰，回到日本，從日職二軍的支配下球員重新出發。`); advance(); return true;
+      }
+      return false;
+    };
+    choose('旅美生涯抉擇',[
+      {t:'繼續挑戰小聯盟',main:true,s:`留在${LV[S.lv].n}，繼續朝大聯盟前進`,f:()=>crossOffers(o)},
+      {t:'考慮回日本發展',s:'先設法談日職合約，若無人問津再考慮其他出路',f:()=>{
+        if(tryJapan())return;
+        const opts=homecomingFallbackOptions(o,{done:advance});
+        if(opts.length){
+          card('info','日職沒有回音','你試著聯繫日本職棒球團，但沒有球隊願意開出合約——所幸還有其他邀約。');
+          choose('還有其他選擇',opts);
+        }else{
+          card('bad','四處碰壁','日職球團沒有回應，其他聯盟也沒有球隊聯繫你。看來，你只能繼續留在小聯盟拚下去。');
+          crossOffers(o);
+        }
       }}
     ]);
     return;
