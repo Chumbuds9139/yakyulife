@@ -19,7 +19,7 @@ assert.ok(INDEP_TEAMS.length >= 3);
 assert.ok(CORPORATE_TEAMS.length >= 3);
 assert.ok(CPBL_TEAMS.length >= 6);
 
-setS(newState('test', 1, 'B', null));
+setS(newState('test', 1, 'C', null));
 assert.equal(stageLabel(), '高一');
 assert.deepEqual(Object.keys(S.stats).sort(), ['CORP','CPBL','INDEP','MINOR','MLB','NPB']);
 assert.deepEqual(Object.keys(S.teamTally).sort(), ['CORP','CPBL','INDEP','MLB','NPB']);
