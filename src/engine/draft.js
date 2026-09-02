@@ -4,13 +4,20 @@ import {card, choose, board, menuModal} from '../ui/dom.js?v=1.5.11';
 import {tlNote} from '../ui/timeline.js?v=1.5.11';
 import {ovr, playerType} from './ability.js?v=1.5.11';
 import {primaryPos} from './career.js?v=1.5.11';
-import {fmtMoney, makeOffers, pickOfferUI, signTo} from './contract.js?v=1.5.11';
+import {fmtMoney, makeContract, makeOffers, pickOfferUI, signTo} from './contract.js?v=1.5.11';
 import {startYear} from '../flow/phases.js?v=1.5.11';
 import {endGame} from '../ui/retire.js?v=1.5.11';
 /* ---------- 日本版：選秀與生涯路口 ---------- */
 const JP_UNI=['早稻田大學','慶應義塾大學','明治大學','東洋大學','中央大學'];
 const JP_CORP=['豐田戰鷹','鐵道工業','JR東北'];
 const JP_INDEP=['群馬星雲','栃木勇者','茨城之星'];
+
+function enterJapaneseAmateur(org,team){
+  const lv=org==='CORP'?'CORP':'INDEP';
+  S.stage='PRO'; S.stageYr=0; S.org=org; S.lv=lv; S.orgTeam=team; S.team=team; S.svc=0; S.faElig=false;
+  S.ct=makeContract(1,1,lv,0,undefined,null,'業餘球團合約');
+  tlNote(3,org==='CORP'?'加盟社會人':'加盟獨立聯盟');
+}
 
 export function runDraft(fromSchool,cb){
   const o=ovr(); const score=o+Math.max(0,22-S.age)*2+ri(-4,4);
@@ -25,7 +32,6 @@ export function runDraft(fromSchool,cb){
   const team=pick(NPB_TEAMS_FALLBACK());
   const accept=()=>{
     S.stage='PRO'; S.team=''; S.salary+=bonus; S.svc=0; S.faElig=false;
-    /* 日本職棒主線：新進球員先從育成或二軍體系開始 */
     const lv=o>=56?'NPB2':'NPB_TRAIN';
     signTo('NPB',lv,team,ri(2,3),1);
     card('gold','日本職棒選秀會',`第 <b class="hl">${rd}</b> 輪獲 <b class="hl">${team}</b> 指名！簽約金約 <b class="hl">${fmtMoney(bonus)}</b>。${lv==='NPB2'?'進入二軍體系。':'先從育成球員開始。'}`);
@@ -41,7 +47,7 @@ export function runDraft(fromSchool,cb){
         card('info',goUni?'重返校園':'重返業餘',`你對選秀順位並不滿意，決定${goUni?(fresh?'進入大學繼續深造':'留在校隊繼續磨練'):'回到業餘棒球'}，明年再挑戰日職。`);
         if(fresh){ S.stage='U'; S.stageYr=0; S.team=pick(JP_UNI); }
         else if(goUni){ S.stage='U'; S.stageYr=0; S.team=pick(JP_UNI); }
-        else if(S.age<=25){ S.stage=pick(['CORP','INDEP']); S.stageYr=0; S.team=pick(S.stage==='CORP'?JP_CORP:JP_INDEP); }
+        else if(S.age<=25){ enterJapaneseAmateur(pick(['CORP','INDEP']),pick(pick(['CORP','INDEP'])==='CORP'?JP_CORP:JP_INDEP)); }
         if(fromSchool) cb(); else advance();
       }}]);
     return;
@@ -49,7 +55,6 @@ export function runDraft(fromSchool,cb){
   accept();
 }
 
-/* 保留現有資料層的隊伍來源；若未來擴充選秀 pool，只需修改此函式。 */
 function NPB_TEAMS_FALLBACK(){
   return ['東京巨人','關西虎','橫濱星海','廣島鯉','中部龍','東京燕','九州鷹','北方鬥士','東濱海洋','東北金鷲','關西牛','中部獅'];
 }
@@ -62,8 +67,8 @@ export function pathChoiceHS(){
     {t:'投入日本職棒選秀',s:'目前綜合 '+o,f:()=>runDraft(false,r=>{
       if(r==='fail')choose('落榜之後',[
         {t:'改就讀大學',main:true,f:()=>{S.stage='U';S.stageYr=0;S.team=pick(JP_UNI);advance();}},
-        {t:'加入社會人棒球',f:()=>{S.stage='CORP';S.stageYr=0;S.team=pick(JP_CORP);advance();}},
-        {t:'加入獨立聯盟',f:()=>{S.stage='INDEP';S.stageYr=0;S.team=pick(JP_INDEP);advance();}}
+        {t:'加入社會人棒球',f:()=>{enterJapaneseAmateur('CORP',pick(JP_CORP));advance();}},
+        {t:'加入獨立聯盟',f:()=>{enterJapaneseAmateur('INDEP',pick(JP_INDEP));advance();}}
       ]);
       else advance(); })}];
   if(o>=44)opts.push({t:'洽談日職合約',s:'從育成／二軍體系出發｜目標是一軍登錄',f:()=>{
@@ -81,8 +86,8 @@ export function pathChoiceU4(){
   const o=ovr();
   const opts=[{t:'投入日本職棒選秀',main:true,s:'綜合 '+o+'｜大學畢業年齡加權下降',f:()=>runDraft(false,r=>{
     if(r==='fail')choose('落榜之後',[
-      {t:'加入社會人棒球',f:()=>{S.stage='CORP';S.stageYr=0;S.team=pick(JP_CORP);advance();}},
-      {t:'加入獨立聯盟',f:()=>{S.stage='INDEP';S.stageYr=0;S.team=pick(JP_INDEP);advance();}},
+      {t:'加入社會人棒球',f:()=>{enterJapaneseAmateur('CORP',pick(JP_CORP));advance();}},
+      {t:'加入獨立聯盟',f:()=>{enterJapaneseAmateur('INDEP',pick(JP_INDEP));advance();}},
       {t:'高掛球鞋',warn:true,f:()=>endGame('大學畢業選秀落榜，決定告別球場。')}]);
     else advance(); })}];
 
