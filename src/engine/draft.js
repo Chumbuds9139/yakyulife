@@ -13,9 +13,9 @@ const JP_CORP=['豐田戰鷹','鐵道工業','JR東北'];
 const JP_INDEP=['群馬星雲','栃木勇者','茨城之星'];
 
 function enterJapaneseAmateur(org,team){
-  const lv=org==='CORP'?'CORP':'INDEP';
+  const lv=org==='CORP'?'CORP':'INDEP', annual=org==='CORP'?48:36;
   S.stage='PRO'; S.stageYr=0; S.org=org; S.lv=lv; S.orgTeam=team; S.team=team; S.svc=0; S.faElig=false;
-  S.ct=makeContract(1,1,lv,0,undefined,null,'業餘球團合約');
+  S.ct=makeContract(1,1,lv,0,annual,null,'業餘球團合約');
   tlNote(3,org==='CORP'?'加盟社會人':'加盟獨立聯盟');
 }
 
