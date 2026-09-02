@@ -72,15 +72,19 @@ jobs:
           tar -cf - \
             --exclude=./.git --exclude=./.github --exclude=./tests \
             --exclude=./docs --exclude=./node_modules --exclude=./_site \
+            --exclude=./CNAME \
             . | tar -xf - -C _site
-          test -f _site/CNAME || { echo "✗ CNAME 不見了，中止部署"; exit 1; }
           test -f _site/index.html || { echo "✗ index.html 不見了，中止部署"; exit 1; }
           echo "將上線的頂層項目："
           ls -1 _site
 
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+
       - id: deployment
         uses: actions/deploy-pages@v4
