@@ -9,50 +9,41 @@ export function newState(name,jersey,pos,role){
   const ab={}; POS_AB[pos].forEach(k=>ab[k]=ri(20,32));
   if(pos==='P'){ab.vel+=ri(0,6);ab.brk+=ri(0,4);} else {ab.con+=ri(0,6);ab.pow+=ri(0,4);}
   /* OOTP 式潛力天花板:洗牌後 1 項頂尖工具、1 項優質、1 項中上,其餘平庸 */
-  /* 捕手沿用一般野手的 8 項潛力分配，但以配球取代守備範圍的席位；額外的守備範圍只給低上限。 */
   const pot={}, sh=(pos==='C'?POS_AB[pos].filter(k=>k!=='rng'):POS_AB[pos].slice());
   for(let i=sh.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=sh[i];sh[i]=sh[j];sh[j]=t;}
   if(pos==='P'){
-    /* 投手只有 4 項能力,天花板更集中:1 項招牌武器,其餘明顯壓低,避免動輒雙 70/四滿天賦 */
     sh.forEach((k,i)=>{ pot[k]= i===0?ri(70,80) : i===1?ri(58,68) : i===2?ri(50,60) : ri(44,54); });
   } else {
     sh.forEach((k,i)=>{ pot[k]= i===0?ri(72,80) : i===1?ri(64,74) : i===2?ri(56,68) : ri(46,62); });
-    if(pos==='C')pot.rng=ri(32,40); /* 不參與頂尖工具洗牌，初始守備範圍潛力永不超過 40 */
+    if(pos==='C')pot.rng=ri(32,40);
   }
-  
   /* 日本高校分級（隱藏）:T1 名門 +6 / T2 中堅 ±0 / T3 弱旅 -6 */
   const hsMap={
-    '早稻田實業':1,     /* T1 名門：甲子園常客、大型進学校 */
-    '智辯和歌山':1,     /* T1 名門 */
-    '明德義塾':2,       /* T2 中堅：安定の野球校 */
-    '東海大相模':2,     /* T2 中堅 */
-    '聖光学院':3,       /* T3 弱旅：地方校 */
-    '作新学院':3        /* T3 弱旅 */
+    '早稻田實業':1,'智辯和歌山':1,'明德義塾':2,'東海大相模':2,'聖光学院':3,'作新学院':3
   };
   const schools=Object.keys(hsMap);
   const myTeam=schools[Math.floor(R()*schools.length)];
-  
-  return {name,jersey,pos,role:pos==='P'?null:null,age:16,year:2026,stage:'HS',stageYr:1,pot,
+  return {name,jersey,pos,role:role||null,age:16,year:2026,stage:'HS',stageYr:1,pot,
     hsMap,hsTier:hsMap[myTeam],team:myTeam,potSum0:Object.values(pot).reduce((a,b)=>a+b,0),
-    league:null,org:null,orgTeam:null,teamTally:{CORP:{},INDEP:{},NPB:{},MLB:{}},
+    league:null,org:null,orgTeam:null,teamTally:{CORP:{},INDEP:{},NPB:{},CPBL:{},MLB:{}},
     ab,traits:{genius:false,glass:false,iron:false,scum:false,
       late:false,disc:false,academy:false,intlace:false,franchise:false,clutch:false,favorite:false,phoenix:false,combo:false,onetool:false,rubber:false,legend:false,
       oldghost:false,adking:false,miraclegen:false,strongpitch:false,stronghit:false,championmaker:false,
       yips:false,distract:false,cancer:false,ambience:false,goldcloth:false,thief:false,latepractice:false,mrteam:false,confidante:false,smallschool:false,grinder:false,rainbow:false,[...]
-    removed:[], /* 被覆蓋/解除的特性,結算畫刪除線 */
+    removed:[],
     cntSave:0,cntSaveWin:0,cntTrainingSafeFail:0,cntNormWin:0,cntSnack:0,cntBoldWin:0,cntBoldFail:0,cntSocialBoldFail:0,cntEndorseBoldWin:0,
     hsChampions:0,oldGhostPending:false,oldGhostUsed:false,samePick:0,samePickKey:null,
     teamSeasons:0,teamYears:0,teamStarYears:0,franchiseActive:false,franchiseTeamName:null,
     six:0,bigInj:0,glassYear:null,ironStreak:0,npbYears:0,corpYears:0,indepYears:0,
     injNext:0,tmpInj:0,rehab:0,marketInjury:'healthy',salary:0,outsideIncome:0,yearOutsideIncome:0,pool:0,pendStat:0,seasonFactor:1,
-    stats:{CORP:null,INDEP:null,NPB:null,MLB:null},contracts:[],honors:[],legendLeagues:[],rainbowLeagues:[],pitcherTCLeagues:[],hitterTCLeagues:[],intlCount:0,intlLock:null,intlStat:{G:0,PA:0,AB:[...]
+    stats:{CORP:null,INDEP:null,NPB:null,CPBL:null,MLB:null},contracts:[],honors:[],legendLeagues:[],rainbowLeagues:[],pitcherTCLeagues:[],hitterTCLeagues:[],intlCount:0,intlLock:null,intlStat:{G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,IP:0,W:0,L:0,SV:0,SO:0,ER:0}
   }
 }
 
 export function playerName(){ return `${S.name} #${S.jersey}`; }
 export function blankStat(){return {yr:0,G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,AS:0,DEF:0,DPG:{}};}
-export function bucketOf(lv){ const l=lv&&LV[lv]; return l&&l.top?l.top:'MINOR'; } /* 業餘引退時 lv 為空,歸類 MINOR */
-export function nextStep(){ if(S.done){ stepQ=[]; return; } /* 已引退:清空後續步驟,不再跑續約/結算 */ const f=stepQ.shift(); if(f)f(); }
+export function bucketOf(lv){ const l=lv&&LV[lv]; return l&&l.top?l.top:'MINOR'; }
+export function nextStep(){ if(S.done){ stepQ=[]; return; } const f=stepQ.shift(); if(f)f(); }
 
 export function stageLabel(){
   if(S.stage==='HS')return '高'+['一','二','三'][S.stageYr-1];
@@ -63,6 +54,8 @@ export function stageLabel(){
     if(S.lv==='NPB_TRAIN')return 'NPB育成';
     if(S.lv==='NPB2')return 'NPB二軍';
     if(S.lv==='NPB1')return 'NPB一軍';
+    if(S.lv==='CPBL2')return '中職二軍／培養型';
+    if(S.lv==='CPBL1')return '中職一軍／洋將';
     if(S.lv==='MLB')return 'MLB';
     const l=LV[S.lv];
     if(l)return l.n;
