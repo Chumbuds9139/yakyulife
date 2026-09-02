@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
-import {LV, PATHS, NPB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, CPBL_TEAMS} from '../src/data/teams.js';
-import {newState, setS, stageLabel, S, bucketOf} from '../src/core/state.js';
+
+globalThis.location={search:''};
+const {LV, PATHS, NPB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, CPBL_TEAMS}=await import('../src/data/teams.js');
+const {newState, setS, stageLabel, S, bucketOf}=await import('../src/core/state.js');
 
 assert.deepEqual(PATHS.NPB, ['NPB_TRAIN','NPB2','NPB1','MLB']);
 assert.deepEqual(PATHS.CORP, ['CORP','NPB2','NPB1']);
