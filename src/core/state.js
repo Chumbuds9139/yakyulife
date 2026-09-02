@@ -14,6 +14,8 @@ function bindLevelOrg(state){
     get(){ return current; },
     set(v){ current=v; const l=LV[v]; if(l&&l.org)state.org=l.org; }
   });
+  const l=LV[current];
+  if(l&&l.org)state.org=l.org;
   return state;
 }
 
