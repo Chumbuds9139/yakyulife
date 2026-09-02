@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -23,6 +23,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: 套用這次指定的程式修改
+        if: hashFiles('.github/apply-career-update.py') != ''
+        run: |
+          python3 .github/apply-career-update.py
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout HEAD^ -- .github/workflows/pages.yml
+          git rm .github/apply-career-update.py
+          git add css/style.css index.html src/config.js src/engine/contract.js src/flow/phases.js src/ui/dom.js .github/workflows/pages.yml
+          git commit -m "調整旅外生涯去向與移除贊助入口"
+          git push origin HEAD:main
 
       - uses: actions/setup-node@v4
         with:
@@ -65,6 +77,14 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: 確保部署的是最新 main
+        run: |
+          git fetch origin main
+          git reset --hard origin/main
 
       - name: 組出要上線的檔案
         run: |
