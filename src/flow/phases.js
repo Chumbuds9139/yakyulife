@@ -98,7 +98,7 @@ export function phasePre(){
     /* 接受任何職業去向後，都要把本年已建立的「大學」時間軸改成實際職業身分。 */
     const finishDecision=()=>{ if(S.stage==='PRO')tlRestage(); afterAsk(); };
     const opts=[
-      {t:'投入中華職棒選秀',s:`目前綜合 ${o}｜年齡加權：越年輕評價越高`,f:()=>runDraft(true,finishDecision)}
+      {t:'投入日本職棒選秀',s:`目前綜合 ${o}｜年齡加權：越年輕評價越高`,f:()=>runDraft(true,finishDecision)}
     ];
     /* 年齡懲罰：每長一歲，門檻微調，但簽約金大幅縮水 */
     const agePenalty = Math.max(0, S.age - 18);
