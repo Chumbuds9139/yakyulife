@@ -11,13 +11,13 @@ try{
     const state=await import('./src/core/state.js?v=1.5.11');
     const timeline=await import('./src/ui/timeline.js?v=1.5.11');
     const phases=await import('./src/flow/phases.js?v=1.5.11');
-    const s=state.newState('大學選秀測試',13,'IF',null);
+    const s=state.newState('大學選秀測試',13,'C',null);
     s.stage='U'; s.stageYr=3; s.age=21; s.year=2031; s.team='早稻田大學';
     s.teamName=function(){ return this.orgTeam+(this.lv==='NPB1'?'一軍':'二軍'); };
     Object.keys(s.ab).forEach(k=>s.ab[k]=80);
     state.setS(s); timeline.resetTL(); phases.startYear();
-    const draft=[...document.querySelectorAll('#act button')].find(b=>b.textContent.includes('投入日職選秀'));
-    if(!draft)throw new Error('找不到大學季前日職選秀按鈕');
+    const draft=[...document.querySelectorAll('#act button')].find(b=>b.textContent.includes('投入中華職棒選秀'));
+    if(!draft)throw new Error('找不到大學季前選秀按鈕');
     draft.click();
     await new Promise(r=>setTimeout(r,20));
     const latest=timeline.TL[timeline.TL.length-1];
