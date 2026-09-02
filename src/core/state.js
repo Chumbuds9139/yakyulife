@@ -36,7 +36,12 @@ export function newState(name,jersey,pos,role){
 }
 export function playerName(){ return `${S.name} #${S.jersey}`; }
 export function blankStat(){return {yr:0,G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,AS:0,DEF:0,DPG:{}};}
-export function bucketOf(lv){ const l=lv&&LV[lv]; return l&&l.top?l.top:'MINOR'; }
+export function bucketOf(lv){
+  if(lv==='NPB_TRAIN'||lv==='NPB2'||lv==='NPB1')return 'NPB';
+  if(lv==='CPBL2'||lv==='CPBL1')return 'CPBL';
+  if(lv==='MLB')return 'MLB';
+  const l=lv&&LV[lv]; return l&&l.top?l.top:'MINOR';
+}
 export function nextStep(){ if(S.done){ stepQ=[]; return; } const f=stepQ.shift(); if(f)f(); }
 export function stageLabel(){
   if(S.stage==='HS')return '高'+['一','二','三'][S.stageYr-1];
