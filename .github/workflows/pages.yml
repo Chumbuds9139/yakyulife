@@ -30,9 +30,9 @@ jobs:
           python3 .github/apply-career-update.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout HEAD^ -- .github/workflows/pages.yml
-          git rm .github/apply-career-update.py
-          git add css/style.css index.html src/config.js src/engine/contract.js src/flow/phases.js src/ui/dom.js .github/workflows/pages.yml
+          git rm .github/apply-career-update.py .github/apply-career-update.trigger
+          git add css/style.css index.html src/config.js src/engine/contract.js src/flow/phases.js src/ui/dom.js
+          git add .github/workflows/pages.yml
           git commit -m "調整旅外生涯去向與移除贊助入口"
           git push origin HEAD:main
 
