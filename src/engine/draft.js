@@ -37,10 +37,10 @@ export function runDraft(fromSchool,cb){
   
   const bonus=[0,1800,1000,600,500,350,300,250,150,120,100][rd]||100;
   const team=pick(NPB_TEAMS);
+  const lv=o>=56?'NPB2':'NPB_TRAIN';
   
   const accept=()=>{
     S.stage='PRO'; S.team=''; S.salary+=bonus; S.svc=0; S.faElig=false;
-    const lv=o>=56?'NPB2':'NPB_TRAIN';
     signTo('NPB',lv,team,ri(2,3),1);
     card('gold','日本職棒選秀會',`第 <b class="hl">${rd}</b> 輪獲 <b class="hl">${team}</b> 指名！簽約金約 <b class="hl">${fmtMoney(bonus)}</b>。${lv==='NPB2'?'進入二軍體系':'進入育成體系'}出發。`);
     tlNote(4,'日職選秀第'+rd+'輪');
@@ -74,7 +74,7 @@ export function pathChoiceHS(){
     {t:'就讀大學（延長養成）',s:'一年僅 2 場大賽加點｜大二起每年可投入日職選秀',f:()=>{
       S.stage='U'; S.stageYr=0; S.team=pick(JP_UNI);
       card('info','升學',`進入 <b class="hl">${S.team}</b> 棒球隊。`); 
-      advance(); 
+      advance();
     }},
     {t:'投入日本職棒選秀',s:'目前綜合 '+o,f:()=>runDraft(false,r=>{
       if(r==='fail')choose('落榜之後',[
@@ -90,16 +90,16 @@ export function pathChoiceHS(){
     S.stage='PRO';
     pickOfferUI('日本職棒球團的育成報價','NPB',makeOffers('NPB',ri(2,3),800,3,3,'NPB_TRAIN',null),()=>{
       card('gold','加入日職','目標：一軍初登場。'); 
-      advance(); 
-    }); 
+      advance();
+    });
   }});
   
   if(o>=50)opts.push({t:'洽談旅美合約',main:true,s:`從${o>=54?' 1A ':'新人聯盟'}出發，逐級挑戰大聯盟`,f:()=>{
     S.stage='PRO';
     pickOfferUI('大聯盟球團的國際簽約報價','MiLB',makeOffers('MiLB',ri(2,3),1500,3,4,o>=54?'A1':'R',null),()=>{
       card('gold','旅美','美國的紅土，等著你去征服。'); 
-      advance(); 
-    }); 
+      advance();
+    });
   }});
   
   choose(`高中畢業 · 綜合能力 ${o} · 人生的第一個路口`,opts);
@@ -114,7 +114,7 @@ export function pathChoiceU4(){
         {t:'加入獨立聯盟',f:()=>{enterJapaneseAmateur('INDEP',pick(INDEP_TEAMS));advance();}},
         {t:'高掛球鞋',warn:true,f:()=>endGame('大學畢業選秀落榜，決定告別球場。')}
       ]);
-      else advance(); 
+      else advance();
     })}
   ];
 
