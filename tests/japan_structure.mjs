@@ -52,4 +52,9 @@ assert.equal(S.org, 'INDEP');
 S.lv = 'NPB1';
 assert.equal(S.org, 'NPB');
 
+setS({lv:'NPB2',org:'CORP'});
+assert.equal(S.org, 'NPB');
+setS({lv:'CPBL2',org:'NPB'});
+assert.equal(S.org, 'CPBL');
+
 console.log('Japan structure smoke test: PASS');
