@@ -20,6 +20,6 @@ CPBL 不再作為日本主線的起點，而是獨立的海外市場；日本職
 
 本專案採用 [CC BY-NC 4.0](http://creativecommons.org/licenses/by-nc/4.0/) 授權條款。原作與第三方素材仍應遵守各自的著作權與授權條件。
 
-## 開發分支
+## 目前版本
 
-目前日本版開發集中於 `japan-branch-v1`；`main` 保留原有主線，待日本版完成驗證後再決定是否合併。
+日本版 V1 已合併到 `main`，GitHub Pages 由 `main` 自動測試並部署；`japan-branch-v1` 保留作為第一版開發歷史與後續修正參考。
