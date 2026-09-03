@@ -1,17 +1,17 @@
-import {S, blankStat, bucketOf} from '../core/state.js?v=1.5.11';
-import {R, ri, SEED} from '../core/rng.js?v=1.5.11';
-import {OFFICIAL_URL} from '../config.js?v=1.5.11';
-import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, teamNick} from '../data/teams.js?v=1.5.11';
-import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.11';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.5.11';
-import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.11';
-import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.11';
-import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.11';
-import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.11';
-import {fmtMoney} from '../engine/contract.js?v=1.5.11';
-import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.5.11';
-import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.11';
-import {shareImageSheet} from './share-image.js?v=1.5.11';
+import {S, blankStat, bucketOf} from '../core/state.js?v=1.5.16';
+import {R, ri, SEED} from '../core/rng.js?v=1.5.16';
+import {OFFICIAL_URL} from '../config.js?v=1.5.16';
+import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, teamNick} from '../data/teams.js?v=1.5.16';
+import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.16';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.5.16';
+import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.16';
+import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.16';
+import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.16';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.16';
+import {fmtMoney} from '../engine/contract.js?v=1.5.16';
+import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.5.16';
+import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.16';
+import {shareImageSheet} from './share-image.js?v=1.5.16';
 /* ================= 結算圖資料建構 =================
    Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
    All values come from S.*; the in-game settlement cards are untouched. */
@@ -186,7 +186,7 @@ export function jerseyWeightEnding(pos){
   const painfulMemory=pos==='P'
     ?'你在國際賽最後一局被一發全壘打超前'
     :'你在國際賽最後一局漏接一顆平飛球';
-  return {title:'球衣的重量',body:`國家隊的辦公室，冷氣吹著，但你卻滿頭大汗，看著桌上堆著三十幾份球員資料。<br><br>你接下這個位子的那天，記者問你：「壓力會不會很大？」<br><br>你說：「還好。」<br><br>其實你回家之後失眠了四個晚上。<br><br>集訓第一天，你站在球員面前。<br><br>眼前這些人，有的在美國打球，有的是聯盟的全壘打王，有的還是才剛進職棒。他們有各自的球隊、各自的教練、各自的習慣。接下來幾個星期，你要讓他們變成同一支球隊。<br><br>你沒有講什麼熱血的話。你只說了三件事：<br><br>「第一，恭喜你們要代表國家出賽。」<br><br>「第二，就算在集訓階段被淘汰，你們也是很棒很棒的球員，只要全力以赴就好。」<br><br>「第三，如果你上場的時候手在抖，那很好。要永遠記住身上這件球衣的重量。」<br><br>集訓開始，你除了帶球隊，還要觀察那些仍在海外、不能即時回國參加集訓的選手狀況。<br><br>到了熱身賽，你們打了國內季外無敵的強隊，也對上提早來台灣準備的國家隊，有勝有敗。不變的是，永遠都有記者拍著你在休息室苦惱的樣子。<br><br>你想起十九歲第一次入選青棒國家隊，那時候你站在最邊邊，緊張到國歌唱錯字。你想起有一年，${painfulMemory}，回國之後有半年不敢看網路。<br><br>你也想起那些沒被選上的人。那些跟你一樣努力，只是差一點的人。<br><br>那件球衣，其實不只是你的。<br><br>八強戰，第九局，一分落後，兩出局，二、三壘有人。<br><br>上來的是個剛旅外的孩子，臉上還充滿著稚氣。<br><br>還有你也曾經擁有過的企圖心。<br><br>「換代打嗎？這是他第一次一級國際賽，沒什麼經驗，前面打擊也沒有安打……」<br><br>「我之前很多經驗時還不是會輸球。」你搖了搖頭：「看看他的表情，讓他打，我扛。」<br><br>投手投出第一顆球，他奮力一揮。<br><br>那顆球飛得不高，但夠遠。<br><br>落地的時候，休息區的人全部衝出去。你站在原地沒有動，只是把帽子壓低了一點，怕鏡頭拍到。<br><br>因為你眼眶熱了。<br><br>不是為了這場勝利，是為了那個孩子——他剛剛完成的，是你年輕時沒能完成的事。<br><br>賽後訪問，記者問你：「教練，你覺得這支球隊最強的是什麼？」<br><br>你想了想。<br><br>「不是速度，也不是打擊。」<br><br>「是他們每一個人，身上的球衣，有台灣的重量，更有台灣的力量。」<br><br>回程的飛機上，大家都睡了。<br><br>距離台灣還很遠，但你卻睡不著。<br><br>你想到那些年，你每一次參加國家隊。你知道這會讓你那年的賽季比較辛苦，也知道可能會影響你的未來。<br><br>但你永遠義無反顧、全力以赴，就跟這些已經睡著的孩子一樣。<br><br>因為你知道，身上這件球衣代表著什麼。<br><br>而你把這件球衣傳承下去，就和前輩傳承給你一樣。`};
+  return {title:'球衣的重量',body:`國家隊的辦公室，冷氣吹著，但你卻滿頭大汗，看著桌上堆著三十幾份球員資料。<br><br>你接下這個位子的那天，記者問你：「壓力會不會很大？」<br><br>你說：「還好。」<br><br>其實你回家之後失眠了四個晚上。<br><br>集訓第一天，你站在球員面前。<br><br>眼前這些人，有的在美國打球，有的是聯盟的全壘打王，有的還是才剛進職棒。他們有各自的球隊、各自的教練、各自的習慣。接下來幾個星期，你要讓他們變成同一支球隊。<br><br>你沒有講什麼熱血的話。你只說了三件事：<br><br>「第一，恭喜你們要代表國家出賽。」<br><br>「第二，就算在集訓階段被淘汰，你們也是很棒很棒的球員，只要全力以赴就好。」<br><br>「第三，如果你上場的時候手在抖，那很好。要永遠記住身上這件球衣的重量。」<br><br>集訓開始，你除了帶球隊，還要觀察那些仍在海外、不能即時回國參加集訓的選手狀況。<br><br>到了熱身賽，你們打了國內季外無敵的強隊，也對上提早來日本準備的其他國家隊，有勝有敗。不變的是，永遠都有記者拍著你在休息室苦惱的樣子。<br><br>你想起十九歲第一次入選青棒國家隊，那時候你站在最邊邊，緊張到國歌唱錯字。你想起有一年，${painfulMemory}，回國之後有半年不敢看網路。<br><br>你也想起那些沒被選上的人。那些跟你一樣努力，只是差一點的人。<br><br>那件球衣，其實不只是你的。<br><br>八強戰，第九局，一分落後，兩出局，二、三壘有人。<br><br>上來的是個剛旅外的孩子，臉上還充滿著稚氣。<br><br>還有你也曾經擁有過的企圖心。<br><br>「換代打嗎？這是他第一次一級國際賽，沒什麼經驗，前面打擊也沒有安打……」<br><br>「我之前很多經驗時還不是會輸球。」你搖了搖頭：「看看他的表情，讓他打，我扛。」<br><br>投手投出第一顆球，他奮力一揮。<br><br>那顆球飛得不高，但夠遠。<br><br>落地的時候，休息區的人全部衝出去。你站在原地沒有動，只是把帽子壓低了一點，怕鏡頭拍到。<br><br>因為你眼眶熱了。<br><br>不是為了這場勝利，是為了那個孩子——他剛剛完成的，是你年輕時沒能完成的事。<br><br>賽後訪問，記者問你：「教練，你覺得這支球隊最強的是什麼？」<br><br>你想了想。<br><br>「不是速度，也不是打擊。」<br><br>「是他們每一個人，身上的球衣，有日本的重量，更有日本的力量。」<br><br>回程的飛機上，大家都睡了。<br><br>距離日本還很遠，但你卻睡不著。<br><br>你想到那些年，你每一次參加國家隊。你知道這會讓你那年的賽季比較辛苦，也知道可能會影響你的未來。<br><br>但你永遠義無反顧、全力以赴，就跟這些已經睡著的孩子一樣。<br><br>因為你知道，身上這件球衣代表著什麼。<br><br>而你把這件球衣傳承下去，就和前輩傳承給你一樣。`};
 }
 export const POST_CAREER_ENDINGS={
   coach:{title:'還在同一片草皮上',body:`球具掛上牆的那天，你以為告別就此完成。<br><br>隔年春訓，你卻換了一件寫著自己名字、卻沒有背號意義的球衣，重新走進熟悉的休息區。手套換成了記事本，揮棒換成了一句句在耳邊的提醒。<br><br>你會在深夜看完三十球的慢動作重播，只為了告訴某個菜鳥：「你的前腳，早了0.2秒。」<br><br>有人說教練是站在光後面的人。但當你看著那個曾經笨拙的孩子，在滿場歡聲中繞過本壘，你忽然明白——<br><br>你從來沒有離開過球場，只是換了一種方式，繼續打球。`},
@@ -239,17 +239,17 @@ export function retireScene(tiers){
   let txt='';
   if(lg==='CPBL'){
     if(i===0)txt=`引退戰選在<b class="hl">臺北大巨蛋</b>。四萬人把巨蛋塞得水洩不通，外野看板掛滿你生涯每一年的照片。九局下最後一個打席結束，全場燈光暗下，只剩一道追光打在你身上——隊友哭成一團，對手全員列隊脫帽，天團在二壘後方唱起你的應援曲改編的慢版。你繞場一周，把手套輕輕放在本壘板上。轉播單位說，這是中職史上收視最高的一場例行賽。`;
-    else if(i===1)txt=`球團為你舉辦了引退儀式。主場滿場，大螢幕播放生涯回顧影片，從高中木棒聯賽夢碎到${S.pos==='P'?'職棒初登板':'職棒初安打'}，一幕一幕。老隊友從各地回來替你獻花，總教練在致詞時哽咽到說不下去。最後你脫下球帽向四個方向的看板深深鞠躬，應援團的鼓聲直到你走進休息室都沒有停。`;
+    else if(i===1)txt=`球團為你舉辦了引退儀式。主場滿場，大螢幕播放生涯回顧影片，從高校歲月到${S.pos==='P'?'職棒初登板':'職棒初安打'}，一幕一幕。老隊友從各地回來替你獻花，總教練在致詞時哽咽到說不下去。最後你脫下球帽向四個方向的看板深深鞠躬，應援團的鼓聲直到你走進休息室都沒有停。`;
     else if(i===2)txt=`${S.pos==='P'?'球季最後一個主場日，球團安排你先發登板。投完第一局後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你投出的每一顆全力的球」。':'球季最後一個主場日，球團安排你先發打第一棒。第一個打席結束後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你的每一次全力奔跑」。'}`;
     else txt=`你在球團官網的一則新聞稿裡宣布引退。發文的那個晚上，還是有幾十個老球迷湧進你的社群留言：「辛苦了」。職業棒球就是這樣——不是每個人都有儀式，但每個認真打過球的人，都有人記得。`;
   }else if(lg==='NPB'){
-    if(i<=1)txt=`球團為你安排了<b class="hl">引退試合</b>。最後一個守備半局結束，你被單獨留在場上，兩軍球員沿著邊線列隊。花束贈呈、監督擁抱、隊友把你高高拋起——三次、四次、五次的<b class="hl">胴上げ</b>。你抱著花束繞場一周，看台上的日本球迷舉著用中文寫的「謝謝」毛巾。引退記者會上你說：「能在這裡打球，是我人生最驕傲的事。」隔天所有體育報頭版都是你被拋在空中的那張照片。`;
-    else if(i===2)txt=`最終戰賽後，球團在場邊為你舉行了簡短的引退セレモニー：花束、紀念框裱的球衣、與監督的合影。廣播念出你的生涯成績時，客場球迷也起立鼓掌。記者會上有記者用不太標準的中文問你「還會回來嗎」，你笑著點頭。`;
-    else txt=`你透過球團發表引退聲明。整理置物櫃的那天，翻譯陪你走完最後一段球員通道，警衛伯伯跟你深深鞠了一躬。異鄉打拚的日子結束了，行李箱裡裝著幾件捨不得丟的練習衫。`;
+    if(i<=1)txt=`球團為你安排了<b class="hl">引退試合</b>。最後一個守備半局結束，你被單獨留在場上，兩軍球員沿著邊線列隊。花束贈呈、監督擁抱、隊友把你高高拋起——三次、四次、五次的<b class="hl">胴上げ</b>。你抱著花束繞場一周，看台上的球迷舉著寫著「ありがとう」的毛巾。引退記者會上你說：「能在這裡打球，是我人生最驕傲的事。」隔天所有體育報頭版都是你被拋在空中的那張照片。`;
+    else if(i===2)txt=`最終戰賽後，球團在場邊為你舉行了簡短的引退儀式：花束、紀念框裱的球衣、與監督的合影。廣播念出你的生涯成績時，客場球迷也起立鼓掌。記者會上有人問你「還會回來嗎」，你笑著點頭。`;
+    else txt=`你透過球團發表引退聲明。整理置物櫃的那天，球團職員陪你走完最後一段球員通道，警衛伯伯跟你深深鞠了一躬。職棒生涯結束了，行李箱裡裝著幾件捨不得丟的練習衫。`;
   }else if(lg==='MLB'){
-    if(i<=1)txt=`主場最終戰，你最後一個打席前，全場觀眾起立鼓掌長達三分鐘，主審退到一旁靜靜等待。打席結束，你被換下場，隊友全部走出休息室與你擁抱，大螢幕播放致敬影片——<b class="hl">Curtain Call</b>，你走出休息室向全場揮帽致意兩次。賽後記者會擠滿各國媒體，台灣的轉播單位做了整夜特別節目。`;
+    if(i<=1)txt=`主場最終戰，你最後一個打席前，全場觀眾起立鼓掌長達三分鐘，主審退到一旁靜靜等待。打席結束，你被換下場，隊友全部走出休息室與你擁抱，大螢幕播放致敬影片——<b class="hl">Curtain Call</b>，你走出休息室向全場揮帽致意兩次。賽後記者會擠滿各國媒體，日本的轉播單位做了整夜特別節目。`;
     else if(i===2)txt=`球隊在你生涯最後一個系列賽前於場邊舉行了簡單儀式：致贈裱框球衣與紀念浮雕，隊友列隊擊掌。當地報紙寫道：「他不是超級巨星，但他是每個總教練都想要的那種球員。」`;
-    else txt=`你在社群媒體上發了一張空蕩球場的照片，配文只有一句英文：「Thank you, baseball.」按讚數在台灣時間的深夜默默破了十萬。`;
+    else txt=`你在社群媒體上發了一張空蕩球場的照片，配文只有一句英文：「Thank you, baseball.」按讚數在日本時間的深夜默默破了十萬。`;
   }else{
     txt=`沒有鎂光燈。你把釘鞋擦乾淨放進袋子，跟隊友一一擁抱，走出球場時回頭看了記分板最後一眼。二軍球場的夕陽跟十年前一樣好看。`;
   }
@@ -405,11 +405,11 @@ export function endGame(reason){
     if(S.pos==='P'){
       const rows=il.map(r=>{ const st=r.st, era=RP_F2(baseballERA(st)); return `<tr><td>${settlementYearHTML(r.year,r.rank==='冠軍')}</td><td style="text-align:left;white-space:nowrap">${r.name}</td><td>${r.rank}</td><td>${st.G}</td><td>${fmtIP(st.IP)}</td><td>${st.W}</td><td>${st.SV}</td><td>${st.SO}</td><td>${walks(st)}</td><td>${era}</td></tr>`; }).join('');
       const era=RP_F2(baseballERA(IS));
-      intlTable=`<h4 style="margin:12px 0 4px">國際賽逐屆成績（中華隊 ${S.intlCount} 屆）</h4><table class="fin"><tr><th>年度</th><th>賽事</th><th>結果</th><th>G</th><th>IP</th><th>W</th><th>SV</th><th>SO</th><th>BB</th><th>ERA</th></tr>${rows}<tr><th colspan="3">國際賽通算</th><td>${IS.G}</td><td>${fmtIP(IS.IP)}</td><td>${IS.W}</td><td>${IS.SV}</td><td>${IS.SO}</td><td>${totalBB}</td><td>${era}</td></tr></table>`;
+      intlTable=`<h4 style="margin:12px 0 4px">國際賽逐屆成績（日本代表 ${S.intlCount} 屆）</h4><table class="fin"><tr><th>年度</th><th>賽事</th><th>結果</th><th>G</th><th>IP</th><th>W</th><th>SV</th><th>SO</th><th>BB</th><th>ERA</th></tr>${rows}<tr><th colspan="3">國際賽通算</th><td>${IS.G}</td><td>${fmtIP(IS.IP)}</td><td>${IS.W}</td><td>${IS.SV}</td><td>${IS.SO}</td><td>${totalBB}</td><td>${era}</td></tr></table>`;
     } else {
       const rows=il.map(r=>{ const st=r.st, avg=st.AB>0?(st.H/st.AB).toFixed(3).replace(/^0/,''):'-'; return `<tr><td>${settlementYearHTML(r.year,r.rank==='冠軍')}</td><td style="text-align:left;white-space:nowrap">${r.name}</td><td>${r.rank}</td><td>${st.G}</td><td>${st.PA}</td><td>${avg}</td><td>${st.H}</td><td>${st.HR}</td><td>${st.RBI}</td><td>${walks(st)}</td></tr>`; }).join('');
       const avg=IS.AB>0?(IS.H/IS.AB).toFixed(3).replace(/^0/,''):'-';
-      intlTable=`<h4 style="margin:12px 0 4px">國際賽逐屆成績（中華隊 ${S.intlCount} 屆）</h4><table class="fin"><tr><th>年度</th><th>賽事</th><th>結果</th><th>G</th><th>PA</th><th>AVG</th><th>H</th><th>HR</th><th>RBI</th><th>BB</th></tr>${rows}<tr><th colspan="3">國際賽通算</th><td>${IS.G}</td><td>${IS.PA}</td><td>${avg}</td><td>${IS.H}</td><td>${IS.HR}</td><td>${IS.RBI}</td><td>${totalBB}</td></tr></table>`;
+      intlTable=`<h4 style="margin:12px 0 4px">國際賽逐屆成績（日本代表 ${S.intlCount} 屆）</h4><table class="fin"><tr><th>年度</th><th>賽事</th><th>結果</th><th>G</th><th>PA</th><th>AVG</th><th>H</th><th>HR</th><th>RBI</th><th>BB</th></tr>${rows}<tr><th colspan="3">國際賽通算</th><td>${IS.G}</td><td>${IS.PA}</td><td>${avg}</td><td>${IS.H}</td><td>${IS.HR}</td><td>${IS.RBI}</td><td>${totalBB}</td></tr></table>`;
     }
   }
   card('','生涯累積數據',(tables||'<p>（無職業層級出賽紀錄）</p>')+intlTable);
@@ -450,7 +450,7 @@ export function endGame(reason){
     picks.push(oldGhostFans[Math.floor(R()*oldGhostFans.length)]);
   }
   if(S.traits.genius&&best<=1)picks.push('學生時代就是天才，還好沒有養壞，真的打出來了');
-  if(S.honors.some(h=>h.includes('經典賽冠軍')))picks.push('經典賽奪冠那一夜，全台灣都沒睡。謝謝你');
+  if(S.honors.some(h=>h.includes('經典賽冠軍')))picks.push('經典賽奪冠那一夜，全日本都沒睡。謝謝你');
   if(S.love.caught)picks.push('球打得還可以啦，但私生活真的有夠亂的，新聞比他的嗨賴還多');
   if(S.traits.scum)picks.push('實在很不想恭喜他引退，想到他做過的事情，吼，想到就氣。');
   if(S.traits.franchise)picks.push(S.franchiseActive?'一隊一人，退休號碼準備掛上去了。謝謝你留下來':'雖然你離開了，但還是謝謝你那段時間帶給我們球隊的希望');
@@ -494,14 +494,19 @@ export function endGame(reason){
   sh.querySelector('#sh-img').onclick=()=>shareImageSheet(evals,picks,endingForShare);
   sh.querySelector('#sh-url').onclick=e=>{
     const btn=e.currentTarget;
-    const url=OFFICIAL_URL+'?seed='+SEED;
+    const url=OFFICIAL_URL+'?seed='+encodeURIComponent(SEED)+(S&&S.pos?'&pos='+encodeURIComponent(S.pos):'');
     const okmsg=()=>{btn.textContent='已複製';setTimeout(()=>btn.innerHTML='<i class="ph-bold ph-link" aria-hidden="true"></i>複製重播連結',1600);};
     if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(okmsg,()=>prompt('手動複製連結：',url));
     else prompt('手動複製連結：',url);
   };
   choose('',[
     {t:'<i class="ph-fill ph-play" aria-hidden="true"></i>開啟新的人生（新種子）',main:true,f:()=>{location.href=location.pathname;}},
-    {t:'用同一個種子重來',s:'seed: '+SEED,f:()=>{location.href=location.pathname+'?seed='+SEED;}}]);
+    {t:'用同一個種子重來',s:'seed: '+SEED,f:()=>{
+      const q=new URLSearchParams();
+      q.set('seed',SEED);
+      if(S&&S.pos)q.set('pos',S.pos);
+      location.href=location.pathname+'?'+q.toString();
+    }}]);
   /* 結算定錨:蓋過預設的捲到底,把「生涯終幕」分界線置中——上半屏留給引退當下的
      年末事件,下半屏是結算第一行。block:'start' 會把分界線整個藏進 sticky 的 #board
      後面(量測:標題 top=0、頂欄 bottom=173,最後一張年末卡在 -85~-10px 畫面外)。 */

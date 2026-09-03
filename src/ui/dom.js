@@ -1,17 +1,17 @@
-import {S} from '../core/state.js?v=1.5.11';
-import {APP_VER} from '../config.js?v=1.5.11';
-import {renderTraits, traitNames} from './traits.js?v=1.5.11';
-import {clearAlloc, allocFullClose} from './alloc.js?v=1.5.11';
-import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.5.11';
-import {DPN, POSN} from '../data/abilities.js?v=1.5.11';
-import {TEAM_COLOR, LV} from '../data/teams.js?v=1.5.11';
-import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js?v=1.5.11';
-import {playerName, stageLabel} from '../core/state.js?v=1.5.11';
-import {salParts, fmtMoney} from '../engine/contract.js?v=1.5.11';
-import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js?v=1.5.11';
-import {honorGroups, yearRanges} from '../engine/career.js?v=1.5.11';
-import {isChampionshipYear} from '../engine/championship.js?v=1.5.11';
-import {playerType, ovr} from '../engine/ability.js?v=1.5.11';
+import {S, nextStep, playerName, stageLabel} from '../core/state.js?v=1.5.16';
+import {APP_VER} from '../config.js?v=1.5.16';
+import {SEED} from '../core/rng.js?v=1.5.16';
+import {renderTraits, traitNames} from './traits.js?v=1.5.16';
+import {clearAlloc, allocFullClose} from './alloc.js?v=1.5.16';
+import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.5.16';
+import {DPN, POSN} from '../data/abilities.js?v=1.5.16';
+import {TEAM_COLOR, LV} from '../data/teams.js?v=1.5.16';
+import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js?v=1.5.16';
+import {salParts, fmtMoney} from '../engine/contract.js?v=1.5.16';
+import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js?v=1.5.16';
+import {honorGroups, yearRanges} from '../engine/career.js?v=1.5.16';
+import {isChampionshipYear} from '../engine/championship.js?v=1.5.16';
+import {playerType, ovr} from '../engine/ability.js?v=1.5.16';
 
 export const $=id=>document.getElementById(id);
 export let _curYearBody=null; /* 當前年度的內容容器 */
@@ -64,10 +64,16 @@ export function menuModal(){
   $('md-close').onclick=modalClose;
 }
 export function restartModal(){
-  modalOpen(`<h3>重新開始</h3><p>確定要放棄這段人生，從頭開始嗎？</p>
+  modalOpen(`<h3>重新開始</h3><p>確定要放棄這段人生，從頭開始嗎？重整不會保存進度；同一種子可重播。</p>
     <button class="btn warn" id="md-restart" style="text-align:center">放棄這段人生，重新開始</button>
     <button class="btn" id="md-cancel" style="text-align:center">繼續目前的生涯</button>`);
-  $('md-restart').onclick=()=>{ _allowLeave=true; location.href=location.pathname; };
+  $('md-restart').onclick=()=>{
+    _allowLeave=true;
+    const q=new URLSearchParams();
+    q.set('seed',SEED);
+    if(S&&S.pos)q.set('pos',S.pos);
+    location.href=location.pathname+'?'+q.toString();
+  };
   $('md-cancel').onclick=menuModal;
 }
 /* Accidental-reload guard: pull-to-refresh / F5 / tab close mid-game triggers the
@@ -138,7 +144,17 @@ export function choose(title,opts){
   actClear(); const a=$('act');
   a.classList.remove('collapsed'); /* 新選項出現時自動展開 */
   if(title)a.innerHTML=`<div class="title">${title}</div>`;
-  opts.forEach(o=>{ const b=document.createElement('button');
+  const list=Array.isArray(opts)?opts.filter(o=>o&&o.t&&typeof o.f==='function'):[];
+  if(!list.length){
+    const b=document.createElement('button');
+    b.className='btn main';
+    b.textContent='繼續';
+    b.onclick=()=>{ actClear(); nextStep(); };
+    a.appendChild(b);
+    actToggleSync(); scrollBottom();
+    return;
+  }
+  list.forEach(o=>{ const b=document.createElement('button');
     b.className='btn'+(o.main?' main':'')+(o.warn?' warn':'')+(o.center?' center':'');
     b.innerHTML=o.t+(o.s?`<small>${o.s}</small>`:'');
     b.onclick=()=>{ actClear(); o.f(); }; a.appendChild(b); });
@@ -148,7 +164,7 @@ export function choose(title,opts){
    隊名在職業階段沿用原本的隊色圓點＋白底標籤，非職業維持琥珀色文字；層級徽章文案就是
    stageLabel()，站上該條路的頂端(學生年級／中職一軍／日職一軍／大聯盟)填實心金底，
    還沒上去的(業餘、二軍、小聯盟)只描邊。 */
-const LV_SHORT={CPBL2:'二軍',NPB2:'二軍',R:'新人'}; /* 手機版:聯盟由隊名交代,徽章只留層級 */
+const LV_SHORT={CPBL2:'二軍',NPB2:'二軍',NPB_TRAIN:'育成',R:'新人'}; /* 手機版:聯盟由隊名交代,徽章只留層級 */
 function affiliationHTML(){
   const student=(S.stage==='HS'||S.stage==='U');
   const proTeam=(S.stage==='PRO'&&S.orgTeam)?S.orgTeam:'';
