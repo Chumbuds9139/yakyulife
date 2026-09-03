@@ -1,0 +1,35 @@
+/* Japan fork UI polish: keep the author control aligned with the display-settings control. */
+#start-footer .start-secondary{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+#start-footer .start-secondary #author-credit{
+  margin-top:0 !important;
+  min-height:42px;
+  height:42px;
+  padding-top:0;
+  padding-bottom:0;
+  line-height:40px;
+}
+#start-footer .start-secondary #fld-display{
+  margin:0;
+}
+
+/* The easter egg is a state attribute, not a normal positive trait. */
+#trait-side .special-attribute{
+  border-color:var(--accent-primary);
+  background:color-mix(in srgb,var(--accent-primary) 10%,transparent);
+}
+#trait-side .special-attribute .tag{
+  background:var(--accent-primary);
+  border-color:var(--accent-primary);
+  color:var(--text-on-accent);
+  font-weight:900;
+}
+#trait-side .special-attribute .td{
+  color:var(--accent-primary);
+  font-weight:700;
+}
