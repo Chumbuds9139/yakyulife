@@ -25,36 +25,12 @@ jobs:
         with:
           node-version: '22'
       - name: 檢查所有 JavaScript 語法
-        run: find src -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+        run: |
+          find src -type f -name '*.js' -print0 | xargs -0 -n1 node --experimental-default-type=module --check
       - name: 安裝 Playwright 與 Chromium
         run: |
           npm install --no-save playwright
           npx playwright install --with-deps chromium
-      - name: 起本機伺服器並定位瀏覽器 parser 錯誤
-        run: |
-          python3 -m http.server 8124 --bind 127.0.0.1 &
-          for i in $(seq 1 40); do curl -sf http://127.0.0.1:8124/ >/dev/null && break; sleep 0.5; done
-          CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
-          export CHROME_PATH
-          node <<'NODE'
-          const {chromium}=require('playwright');
-          (async()=>{
-            const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH,args:['--disable-gpu']});
-            const page=await browser.newPage();
-            await page.goto('http://127.0.0.1:8124/probe.html').catch(()=>{});
-            const src=await page.evaluate(()=>fetch('/src/ui/dom.js?v=1.5.11').then(r=>r.text()));
-            const stripped=src.replace(/^\s*import[\\s\\S]*?;\s*$/gm,'').replace(/^\s*export\s+/gm,'');
-            try{ new Function(stripped); console.log('DOM_SCRIPT_PARSE_OK'); }
-            catch(error){ console.log('DOM_SCRIPT_PARSE_ERROR',error.message,error.stack||''); process.exitCode=1; }
-            const out=[];
-            for(const mod of ['./src/ui/dom.js?v=1.5.11','./src/engine/season.js?v=1.5.11','./src/engine/contract.js?v=1.5.11']){
-              try{await import(mod);out.push({mod,ok:true});}catch(error){out.push({mod,ok:false,message:error.message,stack:error.stack});}
-            }
-            console.log(JSON.stringify(out,null,2));
-            await browser.close();
-            if(out.some(x=>!x.ok))process.exitCode=1;
-          })().catch(error=>{console.error(error);process.exitCode=1;});
-          NODE
       - name: 起本機伺服器並跑 tests/
         run: |
           python3 -m http.server 8124 --bind 127.0.0.1 &
