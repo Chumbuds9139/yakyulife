@@ -3,7 +3,19 @@ import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.11';
 import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.11';
 import {LV} from '../data/teams.js?v=1.5.11';
 import {card, choose, board} from '../ui/dom.js?v=1.5.11';
-import {roleN, pitcherRole} from './season.js?v=1.5.11';
+
+/* 能力系統只需要投手定位的純判定；不要反向依賴 season.js，避免 awards → ability → season → awards 的循環模組圖。 */
+function pitcherRoleForAbility(){
+  if(S.ab.sta>=52)return 'SP';
+  const pd=(S.prevD!==undefined?S.prevD:(S.lastD||0));
+  const currentTop=LV[S.lv]&&LV[S.lv].top, previousTop=LV[S.lastLv]&&LV[S.lastLv].top;
+  const sameTopLeague=!!currentTop&&previousTop===currentTop;
+  const d=(sameTopLeague&&S.role&&S.role!=='SP')?pd:-99;
+  if(S.role==='CL')return d>=1?'CL':'MR';
+  return d>=3?'CL':'MR';
+}
+function roleLabelForAbility(r){ return {SP:'先發',MR:'中繼',CL:'終結者'}[r]||'—'; }
+
 export function dpScore(p){ const a=S.ab;
   switch(p){
     case 'SS': return a.rng*0.5 + a.fld*0.3 + a.arm*0.2;   /* 游擊:範圍主導 */
@@ -11,7 +23,7 @@ export function dpScore(p){ const a=S.ab;
     case '3B': return a.arm*0.45+ a.fld*0.35+ a.rng*0.2;   /* 三壘:臂力主導 */
     case 'CF': return a.rng*0.55+ a.fld*0.3 + a.arm*0.15;  /* 中外野:範圍主導 */
     case 'RF': return a.arm*0.45+ a.rng*0.35+ a.fld*0.2;   /* 右外野:強臂 */
-    case 'LF': return a.rng*0.4 + a.fld*0.35+ a.arm*0.25;  /* 左外野:範圍為主,要求低 */
+    case 'LF': return a.rng*0.4 + a.fld*0.35+ a.arm*0.25;   /* 左外野:範圍為主,要求低 */
     case 'C':  return a.fld*0.4 + a.cat*0.4 + a.arm*0.2;   /* 捕手:接球+配球+臂力,不看範圍 */
     case '1B': return a.fld*0.6 + a.rng*0.2 + a.arm*0.2;   /* 一壘:守備為主,門檻低 */
     default: return 99;
@@ -65,13 +77,13 @@ export function dposReview(cont){
       card('info','守位調整','連一壘都站不住了，新球季登錄為<b class="hl">指定打擊</b>。'); }
     cont(); return; }
   if(S.pos==='P'){ /* 體力決定投手類型;牛棚→先發需玩家同意,先發→牛棚仍自動 */
-    const nr=pitcherRole(), old=S.role;
+    const nr=pitcherRoleForAbility(), old=S.role;
     if((old==='MR'||old==='CL')&&nr==='SP'){
       /* 後援投手體力練上先發線:球團徵詢,不強制轉 */
       choose('球團徵詢：你的體力已達先發水準，要轉任先發嗎？',[
         {t:'轉任先發，扛起輪值',main:true,f:()=>{ S.role='SP';
           card('info','定位調整',`你點頭接下先發任務。新球季起，你是輪值的一員——<b class="hl">先發</b>。`); cont(); }},
-        {t:'留在牛棚，守住我的位置',s:'維持'+roleN(old)+'定位',f:()=>{ S.role=old;
+        {t:'留在牛棚，守住我的位置',s:'維持'+roleLabelForAbility(old)+'定位',f:()=>{ S.role=old;
           card('info','留守牛棚',`你婉拒了教練團的提議——永遠準備待命，在球隊最需要我的時候，登板救火。`); cont(); }}]);
       return;
     }
@@ -79,9 +91,9 @@ export function dposReview(cont){
     if(old&&old!==nr){
       /* 中繼與終結者互換看球季成績；先發與牛棚間的調整才看體力。 */
       const basis=old!=='SP'&&nr!=='SP'?'成績':'體力';
-      card('info','定位調整',`教練團評估你的${basis}，將你登錄為 <b class="hl">${roleN(nr)}</b>。`); }
+      card('info','定位調整',`教練團評估你的${basis}，將你登錄為 <b class="hl">${roleLabelForAbility(nr)}</b>。`); }
     else if(!old){
-      card('info','投手定位',`教練團評估你的體力，將你登錄為 <b class="hl">${roleN(nr)}</b>。`); }
+      card('info','投手定位',`教練團評估你的體力，將你登錄為 <b class="hl">${roleLabelForAbility(nr)}</b>。`); }
     cont(); return;
   }
   const q=dpList();
@@ -131,109 +143,20 @@ export function ovr(){
 export function playerType(){
   const a=S.ab;
   const decliningVeteran=S.stage==='PRO'&&(S.age-(S.traits.disc?2:0))>=32;
-  if(S.traits.onetool&&S.toolRole)return S.toolRole+'工具人';
+  const p=S.pos==='P'?((a.vel+a.ctl+a.brk)/3):((a.con+a.pow+a.eye+a.spd)/4);
+  const styles=[];
   if(S.pos==='P'){
-    const m=Math.max(a.vel,a.ctl,a.brk);
-    if(m<52)return decliningVeteran?'老將':'潛力股';
-    if(a.sta>=m&&a.sta>=62)return '工作馬';
-    if(m===a.vel)return '火球男'; if(m===a.brk)return '魔術師'; return '人體Kzone';
-  }
-  if(S.pos==='C'){ const rest=Math.max(a.con,a.pow,a.spd,a.eye,a.rng,a.fld,a.arm);
-    if(a.cat>=58&&rest<=a.cat-8)return '配球皇帝'; }
-  const dv=S.pos==='C'?(a.rng+a.fld+a.cat)/3:(a.rng+a.fld+a.arm)/3;
-  const cand=[['巨炮型',a.pow],['安打製造機',a.con],['選球大師',a.eye],['飛毛腿',a.spd],['守備達人',dv]];
-  cand.sort((x,y)=>y[1]-x[1]);
-  if(cand[0][1]<52)return decliningVeteran?'老將':'潛力股';
-  if(cand[0][1]-cand[1][1]<=3&&cand[0][1]>=60)return '全能型';
-  return cand[0][0];
-}
-export function abCost(k){ /* 目前這一級要花幾點(須與 addAb 成本公式一致，含體力的例外) */
-  const cur=S.ab[k], pk=(S.pot&&S.pot[k])||62, isP=S.pos==='P';
-  let c=(isP&&k!=='sta')?(cur>=66?7:cur>=58?4:cur>=50?2:1):(cur>=72?3:cur>=64?2:1);
-  if(cur>=pk)c*=isP?4:3; return c;
-}
-export function normalizeAbCarry(k){
-  if(!S.carry)S.carry={};
-  /* 能力只使用整數；進度固定為 0～分母-1，避免降能力跨級距後出現 2/2 卻未升級。 */
-  S.ab[k]=clamp(Math.round(Number(S.ab[k])||1),1,80);
-  const cost=abCost(k);
-  S.carry[k]=clamp(Math.floor(Number(S.carry[k])||0),0,Math.max(0,cost-1));
-  return S.carry[k];
-}
-export function addAb(k,v){ if(!(k in S.ab))return 0;
-  normalizeAbCarry(k);
-  const o=S.ab[k];
-  S.lastOverflow=0; /* 【修正】紀錄真正溢出的點數 */
-  if(v<0){
-    S.ab[k]=clamp(o+v,1,80);
-    normalizeAbCarry(k);
-    return S.ab[k]-o;
-  } /* 扣值 1:1,不吃量表成本 */
-  if(!S.carry)S.carry={};
-  let cur=o,bud=v+(S.carry[k]||0); /* 未滿一級的點數累積在進度槽,不再蒸發 */
-  const pk=(S&&S.pot&&S.pot[k])||62;
-  const isP=S&&S.pos==='P';
-  while(bud>0&&cur<80){
-    /* v1.5.9 體力單獨改用野手曲線。體力不是球威，卻跟球速/控球/變化球吃同一條
-       最陡的成本(66 以上每點 7)，而先發必須把體力墊到 52 才站得上輪值——那些點數
-       本來該進球威。實測結果是先發成為唯一一條「實際峰值低於自身潛力」的路線
-       (峰值 − 潛力 = −3.3；後援 0.0、捕手 +2.3、一壘 +3.7)，天賦再好也轉不成分數：
-       名人堂率在四個運氣分層是 12/12/9/15%，完全沒有梯度。
-       只動體力這一項(球威成本與超潛力 ×4 都不碰)之後：−3.3 → −1.3，
-       名人堂率 15/14/15/55%——普通運氣只動 3 個百分點，但「天賦好又健康」
-       從 15% 回到 55%，跟捕手(54)、游擊(52) 對齊。後援幾乎不受影響(本來就不練體力)。 */
-    let cost=(isP&&k!=='sta')?(cur>=66?7:cur>=58?4:cur>=50?2:1)  /* 投手球威,養成成本最陡 */
-              :(cur>=72?3:cur>=64?2:1);                          /* 野手9項與投手體力 */
-    if(cur>=pk)cost*=isP?4:3; /* 天花板之上:投手×4、野手×3 */
-    if(bud>=cost){bud-=cost;cur++;} else break; }
-  if(cur>=80) S.lastOverflow=bud; /* 滿 80 後，剩下的點數才是真正的溢出 */
-  S.carry[k]=cur>=80?0:bud;
-  S.ab[k]=cur; return cur-o; }
-export function addAbStat(k,amt){ 
-  if(amt<=0)return addAb(k,amt);
-  const pk=(S.pot&&S.pot[k])||62;
-  const isP=S.pos==='P';
-  let cur=S.ab[k], bud=amt, cr=(S.carry&&S.carry[k])||0, gained=0;
-  /* 潛力已滿：直接全額轉為狀態火燙 */
-  if(cur>=pk){ S.pendStat=(S.pendStat||0)+bud; return 0; }
-  
-  /* 潛力未滿：依正常成本加點，達到潛力上限就停止 */
-  while(bud>0 && cur<pk){
-    let c = isP ? (cur>=66?7:cur>=58?4:cur>=50?2:1) : (cur>=72?3:cur>=64?2:1);
-    bud--; cr++; if(cr>=c){ cr-=c; cur++; gained++; }
-  }
-  
-  if(!S.carry) S.carry={}; S.carry[k]=cr; S.ab[k]=cur;
-  
-  /* 達到潛力上限後剩餘的點數轉為成績加成 */
-  if(bud>0) S.pendStat=(S.pendStat||0)+bud;
-  return gained;
-}
-export function statBonus(pts,out){ /* 正向獎勵無法再轉成能力時，改為當季成績加成（下次結算套用）。 */
-  S.pendStat=(S.pendStat||0)+pts;
-  out.push(statBonusTxt(pts));
-}
-/* 全遊戲「本季成績加成」的統一文案：正值為狀態火燙、負值為狀態低迷，格式一律
-   「狀態火燙（本季成績加成 +N）」，避免各處出現 ×N／+N／純文字等不一致寫法。 */
-export function statBonusTxt(pts){
-  const n=Math.round(pts);
-  if(n>=0)return `<span class="up">狀態火燙（本季成績加成 +${n}）</span>`;
-  return `<span class="dn">狀態低迷（本季成績加成 −${Math.abs(n)}）</span>`;
-}
-/* 全遊戲「能力成長」的統一文案。能力數值的增減寫 +N／−N 不加單位(畫面上到處都是，加單位
-   反而囉嗦)。事件卡不會告訴玩家這次給了幾點，而養成成本表會讓投入點數與實際升的級數對不
-   起來(投手 66 以上每級 7 點、突破潛力上限後成本再 ×3~×4)，所以只在兩者不相等時才補上
-   「加了 N 點」——沒補的時候就代表 1 點換 1 級，不必多寫。進度槽的餘數刻意不顯示，太吵。
-   負向扣值是 1:1 不吃成本表，直接寫 −N。 */
-export function abGainTxt(k,pts,levels){
-  const name=ABL[k]||k;
-  if(pts<0||levels<0){
-    const d=Math.abs(Math.round(levels));
-    return d?`<b class="dn">${name} −${d}</b>`:`${name} 無變化`;
-  }
-  const p=Math.round(pts);
-  if(levels>0)return p===levels
-    ?`${name} <span class="up">+${levels}</span>`
-    :`加了 ${p} 點，${name} <span class="up">+${levels}</span>`;
-  return `加了 ${p} 點，${name} <span class="dn">未升級</span>`;
-}
+    if(a.vel>=72&&a.brk>=68)styles.push('火球型');
+    if(a.ctl>=72&&a.brk>=68)styles.push('控球王牌');
+    if(a.sta>=72&&a.ctl>=65)styles.push('吃局型');
+    if(a.brk>=72)styles.push('變化球鬼才');
+    if(a.vel>=70&&a.ctl<50)styles.push('暴力速球');
+    if(a.ctl>=70&&a.vel<50)styles.push('精密機械');
+    if(a.vel>=68&&a.brk<55)styles.push('火球但單調');
+    if(a.sta<45)styles.push('玻璃大砲');
+    if(a.ctl<45)styles.push('控球災難');
+    if(S.role==='CL')styles.push('終結者');
+    else if(S.role==='MR')styles.push('中繼專家');
+    else styles.push('先發投手');
+  } else {
+ ... (truncated)
