@@ -12,6 +12,8 @@ import {endGame} from '../ui/retire.js?v=1.5.11';
 /* ---------- 日本版：選秀與生涯路口 ---------- */
 const JP_UNI=['早稻田大學','慶應義塾大學','明治大學','東洋大學','中央大學'];
 
+export function enteredNpbDraft(){ return !!(S&&S.npbDraftEntered); }
+
 function enterJapaneseAmateur(org,team){
   const lv=org==='CORP'?'CORP':'INDEP';
   const annual=org==='CORP'?48:36;
@@ -21,7 +23,7 @@ function enterJapaneseAmateur(org,team){
 }
 
 /* 社會人／獨立聯盟的 NPB 去向是「球團取得球員」的事件，不再視為一般升降級。
-   打完一季後一律可投入日職選秀；表現夠好時十二球團可能遞來合約／買斷。
+   打完一季後若尚未參加過日職選秀，可投入一次；表現夠好時十二球團可能遞來合約／買斷。
    每次成功轉入都明確寫入 NPB 球團，避免球員帶著業餘隊名卻顯示在 NPB。 */
 function amateurOffseasonDecision(){
   if(S.org!=='CORP'&&S.org!=='INDEP')return false;
@@ -30,12 +32,14 @@ function amateurOffseasonDecision(){
   const buyoutChance=clampChance((o-(corp?47:44))*5+25);
   const opts=[];
 
-  opts.push({t:'投入日本職棒選秀',main:true,s:`綜合 ${o}｜${corp?'社會人':'獨立聯盟'}投入日職選秀`,f:()=>runDraft(false,r=>{
-    if(r==='fail'){
-      card('info','今年未獲 NPB 指名',`${corp?'社會人':'獨立聯盟'}生涯繼續，下一年度仍可再戰。`);
-      startYear();
-    }else startYear();
-  })});
+  if(!enteredNpbDraft()){
+    opts.push({t:'投入日本職棒選秀',main:true,s:`綜合 ${o}｜${corp?'社會人':'獨立聯盟'}投入日職選秀（生涯僅一次）`,f:()=>runDraft(false,r=>{
+      if(r==='fail'){
+        card('info','今年未獲 NPB 指名',`${corp?'社會人':'獨立聯盟'}生涯繼續。日職選秀每人一生只有一次，之後要等十二球團主動接觸。`);
+        startYear();
+      }else startYear();
+    })});
+  }
 
   if(chance(buyoutChance)){
     const lv=o>=56?'NPB2':'NPB_TRAIN';
@@ -60,12 +64,13 @@ function amateurOffseasonDecision(){
 function clampChance(v){return Math.max(8,Math.min(78,v));}
 
 export function runDraft(fromSchool,cb){
+  S.npbDraftEntered=true;
   const o=ovr();
   const score=o+Math.max(0,22-S.age)*2+ri(-4,4);
   const rd=score>=56?1:score>=49?2:score>=43?ri(3,4):score>=37?ri(5,7):score>=30?ri(8,10):0;
   if(rd===0){
     card('bad','日職選秀落榜',`唱名一輪又一輪，始終沒有你的名字。（綜合 ${o}｜年齡加權後評價 ${score}）`);
-    if(fromSchool){ card('info','','可以回到校隊，明年再來。'); cb(); }
+    if(fromSchool){ card('info','','可以回到校隊繼續磨練。日職選秀每人一生只有一次。'); cb(); }
     else cb('fail');
     return;
   }
@@ -81,10 +86,10 @@ export function runDraft(fromSchool,cb){
   if(rd>=3 && S.age<20){
     choose(`日本職棒選秀會 · 第 ${rd} 輪獲 ${team} 指名`,[
       {t:'接受指名，加盟球隊',main:true,s:`簽約金 ${fmtMoney(bonus)}｜${lv==='NPB2'?'二軍':'育成'}出發`,f:accept},
-      {t:(S.stage==='HS'||(S.stage==='U'&&S.stageYr<4))?'重返校園，再拚一年':'重返業餘，再拚一年',warn:true,s:'放棄本次指名，明年重新參加日職選秀',f:()=>{
+      {t:(S.stage==='HS'||(S.stage==='U'&&S.stageYr<4))?'重返校園，再拚一年':'重返業餘，再拚一年',warn:true,s:'放棄本次指名｜日職選秀不再重來',f:()=>{
         const goUni=(S.stage==='HS')||(S.stage==='U'&&S.stageYr<4);
         const fresh=(S.stage==='HS');
-        card('info',goUni?'重返校園':'重返業餘',`你對選秀順位不滿意。${goUni?(fresh?'決定進入大學繼續深造':'留在校隊繼續磨練'):'選擇投身社會人球界或獨立聯盟'}，明年重新參加日職選秀。`);
+        card('info',goUni?'重返校園':'重返業餘',`你對選秀順位不滿意。${goUni?(fresh?'決定進入大學繼續深造':'留在校隊繼續磨練'):'選擇投身社會人球界或獨立聯盟'}。日職選秀每人一生只有一次，之後要等球團合約或其他出路。`);
         if(fresh||goUni){ S.stage='U'; S.stageYr=0; S.team=pick(JP_UNI); }
         else if(S.age<=25) enterJapaneseAmateur(pick(['CORP','INDEP']),pick(CORPORATE_TEAMS.concat(INDEP_TEAMS)));
         if(fromSchool) cb(); else advance();
@@ -97,15 +102,17 @@ export function runDraft(fromSchool,cb){
 export function pathChoiceHS(){
   const o=ovr();
   const opts=[
-    {t:'就讀大學（延長養成）',s:'一年僅 2 場大賽加點｜大二起每年可投入日職選秀',f:()=>{ S.stage='U'; S.stageYr=0; S.team=pick(JP_UNI); card('info','升學',`進入 <b class="hl">${S.team}</b> 棒球隊。`); advance(); }},
-    {t:'投入日本職棒選秀',s:'目前綜合 '+o,f:()=>runDraft(false,r=>{
+    {t:'就讀大學（延長養成）',s:'一年僅 2 場大賽加點｜大二起可投入日職選秀（僅一次）',f:()=>{ S.stage='U'; S.stageYr=0; S.team=pick(JP_UNI); card('info','升學',`進入 <b class="hl">${S.team}</b> 棒球隊。`); advance(); }}
+  ];
+  if(!enteredNpbDraft()){
+    opts.push({t:'投入日本職棒選秀',s:'目前綜合 '+o+'｜生涯僅一次',f:()=>runDraft(false,r=>{
       if(r==='fail')choose('落榜之後',[
         {t:'改就讀大學',main:true,f:()=>{S.stage='U';S.stageYr=0;S.team=pick(JP_UNI);advance();}},
         {t:'加入社會人棒球',f:()=>{enterJapaneseAmateur('CORP',pick(CORPORATE_TEAMS));advance();}},
         {t:'加入獨立聯盟',f:()=>{enterJapaneseAmateur('INDEP',pick(INDEP_TEAMS));advance();}}
       ]); else advance();
-    })}
-  ];
+    })});
+  }
   if(o>=50)opts.push({t:'洽談旅美合約',main:true,s:`從${o>=54?' 1A ':'新人聯盟'}出發，逐級挑戰大聯盟`,f:()=>{
     S.stage='PRO';
     pickOfferUI('大聯盟球團的國際簽約報價','MiLB',makeOffers('MiLB',ri(2,3),1500,3,4,o>=54?'A1':'R',null),()=>{ card('gold','旅美','美國的紅土，等著你去征服。'); advance(); });
@@ -115,15 +122,20 @@ export function pathChoiceHS(){
 
 export function pathChoiceU4(){
   const o=ovr();
-  const opts=[
-    {t:'投入日本職棒選秀',main:true,s:'綜合 '+o+'｜大學畢業年齡加權下降',f:()=>runDraft(false,r=>{
+  const opts=[];
+  if(!enteredNpbDraft()){
+    opts.push({t:'投入日本職棒選秀',main:true,s:'綜合 '+o+'｜大學畢業年齡加權下降｜生涯僅一次',f:()=>runDraft(false,r=>{
       if(r==='fail')choose('落榜之後',[
         {t:'加入社會人棒球',f:()=>{enterJapaneseAmateur('CORP',pick(CORPORATE_TEAMS));advance();}},
         {t:'加入獨立聯盟',f:()=>{enterJapaneseAmateur('INDEP',pick(INDEP_TEAMS));advance();}},
         {t:'高掛球鞋',warn:true,f:()=>endGame('大學畢業選秀落榜，決定告別球場。')}
       ]); else advance();
-    })}
-  ];
+    })});
+  }else{
+    opts.push({t:'加入社會人棒球',main:true,f:()=>{enterJapaneseAmateur('CORP',pick(CORPORATE_TEAMS));advance();}});
+    opts.push({t:'加入獨立聯盟',f:()=>{enterJapaneseAmateur('INDEP',pick(INDEP_TEAMS));advance();}});
+    opts.push({t:'高掛球鞋',warn:true,f:()=>endGame('大學畢業，決定告別球場。')});
+  }
   const agePenalty=Math.max(0,S.age-18),reqMiLB=50+Math.floor(agePenalty/2),bonusMiLB=Math.max(150,1500-agePenalty*350);
   if(o>=reqMiLB)opts.push({t:'洽談旅美合約',s:'大齡底薪簽約（Senior Sign）',f:()=>{S.stage='PRO';pickOfferUI('大聯盟球團報價','MiLB',makeOffers('MiLB',2,bonusMiLB,3,4,o>=55?'A1':'R',null),advance);}});
   choose(`大學畢業 · 綜合能力 ${o}`,opts);

@@ -6,7 +6,7 @@ export function intlInviteCopy(wbc){
   const name=intlEventName(wbc);
   return {
     name,
-    title:`日本代表邀請你參加${name}，你要參加嗎？`,
+    title:`日本代表邀請你參加${name}`,
     accept:'披上國家隊戰袍',
     decline:'考量身體狀況婉拒',
     acceptHint:'自願參賽｜依成績獲得能力點｜下季受傷機率 +10%',
