@@ -1,0 +1,75 @@
+name: Repair JP migration
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply Japanese career fixes and attribution cleanup
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          def replace(path, old, new):
+              p=Path(path); s=p.read_text(encoding='utf-8')
+              if old not in s:
+                  raise SystemExit(f'Missing expected text in {path}: {old}')
+              p.write_text(s.replace(old,new), encoding='utf-8')
+
+          # NPB is a terminal Japanese top league. MLB is an overseas offer,
+          # not an automatic level in the Japanese promotion ladder.
+          replace('src/data/teams.js',
+                  "NPB:['NPB_TRAIN','NPB2','NPB1','MLB'],",
+                  "NPB:['NPB_TRAIN','NPB2','NPB1'],")
+
+          # Remove leftover Taiwan-era wording from the Japanese university path.
+          replace('src/flow/phases.js', '洽談旅日合約', '洽談日職合約')
+          replace('src/flow/phases.js', '休學挑戰日職', '提前挑戰日職')
+          replace('src/flow/phases.js', '再次投入中職選秀', '再次參加日本職棒選秀')
+
+          # Keep CPBL as an overseas market; only the stale wording is changed.
+          replace('src/engine/contract.js', "s:'旅日合約'", "s:'日職合約'")
+
+          # Share links should point to this fork's project site, not the original site.
+          replace('src/config.js',
+                  "export const OFFICIAL_URL='https://www.yakyolife.com/';",
+                  "export const OFFICIAL_URL='https://chumbuds9139.github.io/yakyulife/';")
+
+          # Preserve required attribution while removing author promotion/community links.
+          p=Path('README.md'); s=p.read_text(encoding='utf-8')
+          marker='## 授權\n\n'
+          attribution='**原作者：LeoGGcat（原作 YaKy⚾Life）**。本分支在原作基礎上進行日本棒球世界觀與生涯流程改編。\n\n'
+          if attribution not in s:
+              if marker not in s: raise SystemExit('README license section not found')
+              s=s.replace(marker, marker+attribution, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+          echo '--- syntax checks ---'
+          node --check src/data/teams.js
+          node --check src/flow/phases.js
+          node --check src/engine/contract.js
+          node --check src/config.js
+
+          echo '--- migration assertions ---'
+          ! grep -n "NPB:\['NPB_TRAIN','NPB2','NPB1','MLB'\]" src/data/teams.js
+          ! grep -Rni -E '洽談旅日合約|休學挑戰日職|再次投入中職選秀|s:\x27旅日合約\x27' src --include='*.js'
+          grep -n '原作者：LeoGGcat' README.md
+
+          git config user.name 'Chumbuds9139'
+          git config user.email 'andycandy0429@gmail.com'
+          git add src/data/teams.js src/flow/phases.js src/engine/contract.js src/config.js README.md
+          git commit -m 'fix: stop automatic NPB to MLB promotion and preserve attribution'
+          git push origin main
+
+          # Remove temporary inspection/repair workflows in the same commit after the
+          # repair has been pushed. The current run continues even after its workflow file is deleted.
+          git rm -f .github/workflows/inspect-jp-transition.yml .github/workflows/repair-jp-migration.yml
+          git commit -m 'chore: remove temporary migration repair workflows'
+          git push origin main
