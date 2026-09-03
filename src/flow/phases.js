@@ -100,6 +100,11 @@ export function phasePre(){
     const opts=[
       {t:'投入日本職棒選秀',s:`目前綜合 ${o}｜年齡加權：越年輕評價越高`,f:()=>runDraft(true,finishDecision)}
     ];
+    /* 依原遊戲邏輯保留旅美合約；日本職棒則統一透過日職選秀。 */
+    const agePenalty=Math.max(0,S.age-18);
+    const reqMiLB=50+Math.floor(agePenalty/2);
+    const bonusMiLB=Math.max(150,1500-agePenalty*350);
+    const goPro=finishDecision;
     if(o>=reqMiLB)opts.push({t:'洽談旅美合約',s:`休學挑戰小聯盟｜大齡影響簽約金`,f:()=>{
       S.stage='PRO'; S.team=''; S.svc=0; S.faElig=false;
       pickOfferUI('大聯盟球團報價','MiLB',makeOffers('MiLB',2,bonusMiLB,3,4,o>=55?'A1':'R',null),goPro);}});
