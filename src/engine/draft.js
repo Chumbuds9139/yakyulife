@@ -86,14 +86,7 @@ export function pathChoiceHS(){
     })}
   ];
   
-  if(o>=44)opts.push({t:'洽談日職合約',s:'從育成體系出發｜目標是一軍登錄',f:()=>{
-    S.stage='PRO';
-    pickOfferUI('日本職棒球團的育成報價','NPB',makeOffers('NPB',ri(2,3),800,3,3,'NPB_TRAIN',null),()=>{
-      card('gold','加入日職','目標：一軍初登場。'); 
-      advance();
-    });
-  }});
-  
+  /* 高中生進 NPB 統一走選秀；不再另開一條「洽談日職合約」捷徑。 */
   if(o>=50)opts.push({t:'洽談旅美合約',main:true,s:`從${o>=54?' 1A ':'新人聯盟'}出發，逐級挑戰大聯盟`,f:()=>{
     S.stage='PRO';
     pickOfferUI('大聯盟球團的國際簽約報價','MiLB',makeOffers('MiLB',ri(2,3),1500,3,4,o>=54?'A1':'R',null),()=>{
@@ -118,15 +111,11 @@ export function pathChoiceU4(){
     })}
   ];
 
-  /* 大四畢業（約 22 歲），套用年齡懲罰 */
+  /* 大四畢業仍可依原遊戲邏輯直接洽談旅美合約；日職則統一走日本職棒選秀。 */
   const agePenalty=Math.max(0,S.age-18);
-  const reqNPB=44+Math.floor(agePenalty/2);
   const reqMiLB=50+Math.floor(agePenalty/2);
-  const bonusNPB=Math.max(100,800-agePenalty*180);
   const bonusMiLB=Math.max(150,1500-agePenalty*350);
   
-  if(o>=reqNPB)opts.push({t:'洽談日職合約',s:'大齡新秀，簽約行情較低',f:()=>{S.stage='PRO';
-    pickOfferUI('日本職棒球團報價','NPB',makeOffers('NPB',2,bonusNPB,2,3,'NPB2',null),advance);}});
   if(o>=reqMiLB)opts.push({t:'洽談旅美合約',s:'大齡底薪簽約（Senior Sign）',f:()=>{S.stage='PRO';
     pickOfferUI('大聯盟球團報價','MiLB',makeOffers('MiLB',2,bonusMiLB,3,4,o>=55?'A1':'R',null),advance);}});
   
