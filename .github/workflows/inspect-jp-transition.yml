@@ -10,12 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect transition context
+      - name: Inspect transition references
         shell: bash
         run: |
-          echo '--- contract.js 515-695 ---'
-          nl -ba src/engine/contract.js | sed -n '515,695p'
-          echo '--- phases.js 90-125 ---'
-          nl -ba src/flow/phases.js | sed -n '90,125p'
-          echo '--- attribution/contact remnants ---'
-          grep -Rni -E 'discord|贊助|sponsor|ko-fi|buymeacoffee|paypal' --exclude-dir=.git . | head -n 200 || true
+          echo '--- direct NPB -> MLB / MiLB transition references ---'
+          grep -Rni -E "NPB1.*MLB|MLB.*NPB1|S\\.lv.*MLB|S\\.lv.*NPB1|signTo\\('MiLB'.*MLB|signTo\\('MLB'" src --include='*.js' || true
+          echo '--- promotion / level-change references ---'
+          grep -Rni -E "S\\.lv=|S\\.org=|lv='MLB'|lv=\"MLB\"|org='MiLB'|org=\"MiLB\"" src --include='*.js' | head -n 250 || true
