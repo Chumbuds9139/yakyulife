@@ -40,6 +40,10 @@ jobs:
         with:
           node-version: '22'
 
+      - name: 檢查所有 JavaScript 語法
+        run: |
+          find src -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+
       - name: 安裝 Playwright 與 Chromium
         run: |
           npm install --no-save playwright
@@ -55,6 +59,36 @@ jobs:
           CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
           export CHROME_PATH
           echo "Chromium: $CHROME_PATH"
+          node <<'NODE'
+          const {chromium}=require('playwright');
+          const modules=[
+            './src/core/state.js?v=1.5.11',
+            './src/engine/award-rules.js?v=1.5.11',
+            './src/engine/awards.js?v=1.5.11',
+            './src/engine/career.js?v=1.5.11',
+            './src/ui/retire.js?v=1.5.11',
+            './src/ui/share-image.js?v=1.5.11',
+            './src/flow/phases.js?v=1.5.11',
+            './src/engine/draft.js?v=1.5.11',
+            './src/engine/contract.js?v=1.5.11',
+          ];
+          (async()=>{
+            const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH,args:['--disable-gpu']});
+            const page=await browser.newPage();
+            await page.goto('http://127.0.0.1:8124/?module-probe=1',{waitUntil:'domcontentloaded'});
+            const result=await page.evaluate(async(mods)=>{
+              const out=[];
+              for(const mod of mods){
+                try{ await import(mod); out.push({mod,ok:true}); }
+                catch(error){ out.push({mod,ok:false,message:error.message,stack:error.stack}); }
+              }
+              return out;
+            },modules);
+            console.log(JSON.stringify(result,null,2));
+            await browser.close();
+            if(result.some(x=>!x.ok))process.exit(1);
+          })().catch(error=>{console.error(error);process.exit(1);});
+          NODE
           fail=0
           for f in tests/*.mjs; do
             if node "$f" >/tmp/out.txt 2>&1; then
