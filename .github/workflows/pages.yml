@@ -1,6 +1,4 @@
 # 部署到 GitHub Pages
-#
-# 日本版開發分支也跑同一套回歸測試，但正式部署仍只在 main。
 name: Deploy Pages
 
 on:
@@ -23,87 +21,47 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: 套用這次指定的程式修改
-        if: hashFiles('.github/apply-career-update.py') != ''
-        run: |
-          python3 .github/apply-career-update.py
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git rm .github/apply-career-update.py .github/apply-career-update.trigger
-          git add css/style.css index.html src/config.js src/engine/contract.js src/flow/phases.js src/ui/dom.js
-          git add .github/workflows/pages.yml
-          git commit -m "調整旅外生涯去向與移除贊助入口"
-          git push origin HEAD:main
-
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-
       - name: 檢查所有 JavaScript 語法
-        run: |
-          find src -type f -name '*.js' -print0 | xargs -0 -n1 node --check
-
+        run: find src -type f -name '*.js' -print0 | xargs -0 -n1 node --check
       - name: 安裝 Playwright 與 Chromium
         run: |
           npm install --no-save playwright
           npx playwright install --with-deps chromium
-
-      - name: 起本機伺服器並跑 tests/
+      - name: 起本機伺服器並定位瀏覽器 parser 錯誤
         run: |
           python3 -m http.server 8124 --bind 127.0.0.1 &
-          for i in $(seq 1 40); do
-            curl -sf http://127.0.0.1:8124/ >/dev/null && break
-            sleep 0.5
-          done
+          for i in $(seq 1 40); do curl -sf http://127.0.0.1:8124/ >/dev/null && break; sleep 0.5; done
           CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
           export CHROME_PATH
-          echo "Chromium: $CHROME_PATH"
           node <<'NODE'
           const {chromium}=require('playwright');
-          const modules=[
-            './src/core/state.js?v=1.5.11',
-            './src/data/abilities.js?v=1.5.11',
-            './src/ui/dom.js?v=1.5.11',
-            './src/ui/timeline.js?v=1.5.11',
-            './src/flow/events.js?v=1.5.11',
-            './src/engine/ability.js?v=1.5.11',
-            './src/engine/season.js?v=1.5.11',
-            './src/engine/award-rules.js?v=1.5.11',
-            './src/engine/awards.js?v=1.5.11',
-            './src/engine/career.js?v=1.5.11',
-            './src/ui/retire.js?v=1.5.11',
-            './src/ui/share-image.js?v=1.5.11',
-            './src/flow/phases.js?v=1.5.11',
-            './src/engine/draft.js?v=1.5.11',
-            './src/engine/contract.js?v=1.5.11',
-          ];
           (async()=>{
             const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH,args:['--disable-gpu']});
             const page=await browser.newPage();
-            await page.goto('http://127.0.0.1:8124/probe.html',{waitUntil:'domcontentloaded'}).catch(()=>{});
-            const result=await page.evaluate(async(mods)=>{
-              const out=[];
-              for(const mod of mods){
-                try{ await import(mod); out.push({mod,ok:true}); }
-                catch(error){ out.push({mod,ok:false,message:error.message,stack:error.stack}); }
-              }
-              return out;
-            },modules);
-            console.log(JSON.stringify(result,null,2));
+            await page.goto('http://127.0.0.1:8124/probe.html').catch(()=>{});
+            const src=await page.evaluate(()=>fetch('/src/ui/dom.js?v=1.5.11').then(r=>r.text()));
+            const stripped=src.replace(/^\s*import[\\s\\S]*?;\s*$/gm,'').replace(/^\s*export\s+/gm,'');
+            try{ new Function(stripped); console.log('DOM_SCRIPT_PARSE_OK'); }
+            catch(error){ console.log('DOM_SCRIPT_PARSE_ERROR',error.message,error.stack||''); process.exitCode=1; }
+            const out=[];
+            for(const mod of ['./src/ui/dom.js?v=1.5.11','./src/engine/season.js?v=1.5.11','./src/engine/contract.js?v=1.5.11']){
+              try{await import(mod);out.push({mod,ok:true});}catch(error){out.push({mod,ok:false,message:error.message,stack:error.stack});}
+            }
+            console.log(JSON.stringify(out,null,2));
             await browser.close();
-            if(result.some(x=>!x.ok))process.exit(1);
-          })().catch(error=>{console.error(error);process.exit(1);});
+            if(out.some(x=>!x.ok))process.exitCode=1;
+          })().catch(error=>{console.error(error);process.exitCode=1;});
           NODE
+      - name: 起本機伺服器並跑 tests/
+        run: |
+          python3 -m http.server 8124 --bind 127.0.0.1 &
+          for i in $(seq 1 40); do curl -sf http://127.0.0.1:8124/ >/dev/null && break; sleep 0.5; done
           fail=0
           for f in tests/*.mjs; do
-            if node "$f" >/tmp/out.txt 2>&1; then
-              echo "PASS  $f"
-            else
-              echo "FAIL  $f"
-              sed 's/^/        /' /tmp/out.txt | head -20
-              fail=1
-            fi
+            if node "$f" >/tmp/out.txt 2>&1; then echo "PASS  $f"; else echo "FAIL  $f"; sed 's/^/        /' /tmp/out.txt | head -20; fail=1; fi
           done
           exit $fail
 
@@ -120,31 +78,20 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-
       - name: 確保部署的是最新 main
         run: |
           git fetch origin main
           git reset --hard origin/main
-
       - name: 組出要上線的檔案
         run: |
           mkdir -p _site
-          tar -cf - \
-            --exclude=./.git --exclude=./.github --exclude=./tests \
-            --exclude=./docs --exclude=./node_modules --exclude=./_site \
-            --exclude=./CNAME \
-            . | tar -xf - -C _site
+          tar -cf - --exclude=./.git --exclude=./.github --exclude=./tests --exclude=./docs --exclude=./node_modules --exclude=./_site --exclude=./CNAME . | tar -xf - -C _site
           test -f _site/index.html || { echo "✗ index.html 不見了，中止部署"; exit 1; }
-          echo "將上線的頂層項目："
-          ls -1 _site
-
       - uses: actions/configure-pages@v5
         with:
           enablement: true
-
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
-
       - id: deployment
         uses: actions/deploy-pages@v4
