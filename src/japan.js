@@ -37,6 +37,11 @@ function localizeJapanText(root){
   for(const n of nodes){let t=n.nodeValue;for(const [a,b] of r)t=t.split(a).join(b);if(t!==n.nodeValue)n.nodeValue=t;}
 }
 
+function normalizeJapanContract(){
+  if(!S||S.org!=='NPB'||S.lv!=='NPB_TRAIN'||!S.ct)return;
+  if(!Number.isFinite(S.ct.annual)||S.ct.annual<240)S.ct.annual=240;
+}
+
 function maybeJapanMlbFarewell(){
   if(mlbJapanFarewellShown||!S||!S.done)return;
   const mlb=S.stats?.MLB, npb=S.stats?.NPB, cpbl=S.stats?.CPBL;
@@ -47,9 +52,11 @@ function maybeJapanMlbFarewell(){
 }
 
 const observer=new MutationObserver(ms=>{
+  normalizeJapanContract();
   ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)localizeJapanText(n);}));
   maybeJapanMlbFarewell();
 });
 observer.observe(document.body,{childList:true,subtree:true});
 localizeJapanText(document.body);
+normalizeJapanContract();
 maybeJapanMlbFarewell();
