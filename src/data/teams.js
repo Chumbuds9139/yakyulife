@@ -42,7 +42,6 @@ export const LV={
   NPB_TRAIN:{n:'NPB育成',par:50,min:47,g:100,rot:6,org:'NPB'},
   NPB2:{n:'NPB二軍',par:53,min:50,g:100,rot:6,org:'NPB'},
   NPB1:{n:'NPB一軍',par:60,min:57,g:143,rot:6,org:'NPB',top:'NPB'},
-  /* CPBL 僅作海外市場相容層，不出現在日本主線 PATHS */
   CPBL2:{n:'中職二軍／培養型',par:48,min:45,g:100,rot:6,org:'CPBL'},
   CPBL1:{n:'中職一軍／洋將',par:56,min:53,g:120,rot:6,org:'CPBL',top:'CPBL'},
   R:{n:'新人聯盟',par:41,min:39,g:55,rot:5,org:'MiLB'},
@@ -54,12 +53,13 @@ export const LV={
 
 export function spLoad(lv){ const L=LV[lv]; if(!L)return 1; return ((L.g||120)/(L.rot||5))/24; }
 
-/* 日本版升降級路徑；CPBL 不列入主線 */
+/* 日本版升降級路徑；社會人／獨立聯盟不再自動升入 NPB。
+   進入 NPB 必須經由日本職棒選秀或球團正式合約／買斷事件。 */
 export const PATHS={
   HS:['HS'],
   U:['U'],
-  CORP:['CORP','NPB2','NPB1'],
-  INDEP:['INDEP','NPB2','NPB1'],
+  CORP:['CORP'],
+  INDEP:['INDEP'],
   NPB:['NPB_TRAIN','NPB2','NPB1'],
   MiLB:['R','A1','A2','A3','MLB']
 };
