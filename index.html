@@ -32,63 +32,62 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
-<link rel="stylesheet" href="css/style.css?v=1.5.11-ui-complete">
-<link rel="stylesheet" href="css/japan-ui-fixes.css?v=1.5.12-jp-ui">
+<link rel="stylesheet" href="css/style.css?v=1.5.12">
+<link rel="stylesheet" href="css/japan-ui-fixes.css?v=1.5.12">
 </head>
 <body>
 <div id="start">
   <div class="wrap">
-<h1 id="logo-tap" class="lockup">
+    <h1 id="logo-tap" class="lockup">
       <img class="wm-img" src="assets/yakyolife-logo.svg" alt="YaKyoLife" decoding="async">
       <span class="lockup-sub"><i></i><em>棒球人生模擬器</em><i></i></span>
     </h1>
-    <p class="sub">高中、大學、社會人與獨立聯盟養成 → 日本職棒選秀・旅美 → 國際賽 → 衰退與引退。每一顆骰子都算數。</p>
-    <div class="start-form">
-      <div class="field"><label for="in-name">球員資料</label>
-        <div class="player-id-input">
-          <input id="in-name" maxlength="10" placeholder="姓名" aria-label="球員姓名" autocomplete="off">
-          <div class="jersey-input"><span aria-hidden="true">#</span><input id="in-number" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="背號" aria-label="背號" autocomplete="off"></div>
+    <p class="sub">高校養成 → 日本職棒選秀・旅美 → 國際賽 → 衰退與引退。每一顆骰子都算數。</p>
+    <div class="start-sheet">
+      <div class="start-form">
+        <div class="field"><label for="in-name">球員資料</label>
+          <div class="player-id-input">
+            <input id="in-name" maxlength="10" placeholder="姓名" aria-label="球員姓名" autocomplete="off">
+            <div class="jersey-input"><span aria-hidden="true">#</span><input id="in-number" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" placeholder="背號" aria-label="背號" autocomplete="off"></div>
+          </div>
+        </div>
+        <div class="field"><label>守位</label>
+          <div class="seg" id="seg-pos">
+            <button type="button" data-v="P" class="on">投手</button><button type="button" data-v="C">捕手</button>
+            <button type="button" data-v="IF">內野手</button><button type="button" data-v="OF">外野手</button>
+          </div>
+        </div>
+        <div class="field seedline"><label for="seed-show">世界種子</label>
+          <div class="seed-input-row">
+            <input id="seed-show" maxlength="24">
+            <a href="#" id="seed-re"><i class="ph-bold ph-arrow-clockwise" aria-hidden="true"></i>換一個</a>
+          </div>
+          <p class="seed-hint">相同種子＋相同選擇＝相同人生（可直接輸入朋友的種子碼）</p>
         </div>
       </div>
-      <div class="field"><label>守位</label>
-        <div class="seg" id="seg-pos">
-          <button data-v="P" class="on">投手</button><button data-v="C">捕手</button>
-          <button data-v="IF">內野手</button><button data-v="OF">外野手</button>
-        </div>
+      <details id="fld-display">
+        <summary aria-controls="disp-body" aria-expanded="false"><i class="ph-fill ph-palette" aria-hidden="true"></i>顯示設定<span class="sum" id="disp-sum"></span></summary>
+      </details>
+      <div id="disp-body" class="start-preferences" hidden>
+        <div class="field"><label>佈景主題</label>
+          <div class="seg two" id="seg-theme">
+            <button type="button" data-t="a" class="on">深綠記分板</button><button type="button" data-t="b">電子看板</button>
+            <button type="button" data-t="c">報紙版面</button><button type="button" data-t="d">現代儀表板</button>
+          </div></div>
+        <div class="field" id="fld-big"><label>字級</label>
+          <div class="seg two" id="seg-big">
+            <button type="button" data-b="0" class="on">標準</button><button type="button" data-b="1">大字</button>
+          </div></div>
+        <div class="field" id="fld-ui"><label>介面版型</label>
+          <div class="seg two" id="seg-ui">
+            <button type="button" data-u="0" class="on">電腦版</button><button type="button" data-u="1">手機版</button>
+          </div></div>
       </div>
-      <div class="field seedline"><label for="seed-show">世界種子</label>
-        <div class="seed-input-row">
-          <input id="seed-show" maxlength="24">
-          <a href="#" id="seed-re"><i class="ph-bold ph-arrow-clockwise" aria-hidden="true"></i>換一個</a>
-        </div>
-        <p class="seed-hint">相同種子＋相同選擇＝相同人生（可直接輸入朋友的種子碼）</p>
-      </div>
-    </div>
-    <div id="disp-body" class="start-preferences" hidden>
-      <div class="field"><label>佈景主題</label>
-        <div class="seg two" id="seg-theme">
-          <button data-t="a" class="on">深綠記分板</button><button data-t="b">電子看板</button>
-          <button data-t="c">報紙版面</button><button data-t="d">現代儀表板</button>
-        </div></div>
-      <div class="field" id="fld-big"><label>字級</label>
-        <div class="seg two" id="seg-big">
-          <button data-b="0" class="on">標準</button><button data-b="1">大字</button>
-        </div></div>
-      <div class="field" id="fld-ui"><label>介面版型</label>
-        <div class="seg two" id="seg-ui">
-          <button data-u="0" class="on">電腦版</button><button data-u="1">手機版</button>
-        </div></div>
     </div>
   </div>
   <footer id="start-footer">
     <button class="btn main" id="btn-start"><i class="ph-fill ph-play" aria-hidden="true"></i><span>開始生涯 ▸ 高一春天</span></button>
-    <div class="start-secondary">
-      <details id="fld-display">
-        <summary aria-controls="disp-body" aria-expanded="false"><i class="ph-fill ph-palette" aria-hidden="true"></i>顯示設定<span class="sum" id="disp-sum"></span></summary>
-      </details>
-      <a class="btn" id="author-credit" href="https://github.com/LeoGGcat/yakyulife" target="_blank" rel="noopener noreferrer">原作者：最先生</a>
-    </div>
-    <div class="start-meta"><span id="ver-badge">v1.5.11</span></div>
+    <div class="start-meta"><span id="ver-badge">v1.5.12</span><a id="author-credit" href="https://github.com/LeoGGcat/yakyulife" target="_blank" rel="noopener noreferrer">原作者：最先生</a></div>
   </footer>
 </div>
 <div id="app">
@@ -136,8 +135,8 @@
 </div>
 <div id="modal"><div id="modal-box"></div></div>
 <div id="alloc-full"><div id="af-inner"><div class="af-head"><span class="af-title" id="af-title"></span><button class="btn" id="af-close">收起</button></div><div id="af-body"></div></div></div>
-<script type="module" src="src/japan.js?v=1.5.11"></script>
-<script type="module" src="src/cpbl-recovery.js?v=1.5.12-cpbl"></script>
-<script type="module" src="src/main.js?v=1.5.11"></script>
+<script type="module" src="src/japan.js?v=1.5.12"></script>
+<script type="module" src="src/cpbl-recovery.js?v=1.5.12"></script>
+<script type="module" src="src/main.js?v=1.5.12"></script>
 </body>
 </html>

@@ -7,6 +7,8 @@ import {isSP, fmtIP, outsFromIP, ipFromOuts, normalizeIP, baseballERA} from './s
 import {ovr} from './ability.js?v=1.5.11';
 import {intlFinishIndex} from './championship.js?v=1.5.11';
 import {checkChampionTrait} from '../flow/events.js?v=1.5.11';
+import {intlInviteCopy, intlEventName} from '../data/intl-copy.js?v=1.5.12';
+export {intlInviteCopy, intlEventName};
 
 export function intlWalks(st){
   if(!st)return 0;
@@ -65,9 +67,11 @@ export function maybeIntl(done){
   if(S.lv==='MLB')p12=false;
   const intlFmt=intlFormat(wbc);
   if(S.stage!=='PRO'||(!wbc&&!p12)||ovr()<intlFmt.minOvr||S.seasonFactor<0.5||S.rehab>0||S.skipMid){done();return;}
-  const name=wbc?'世界棒球經典賽':'世界12強賽';
+  const copy=intlInviteCopy(wbc);
+  const name=copy.name;
+  S.intlLock=null; /* 舊存檔可能殘留列管年；日本版不再使用。 */
 
-  /* 日本球員沒有兵役列管：代表隊是生涯選擇，不存在五年強制徵召或列管鎖定。 */
+  /* 日本球員沒有兵役：代表隊是生涯選擇，不存在五年強制報到或列管鎖定。 */
   const participate=()=>{
     const teamStrength=japanIntlStrength(S.year,wbc);
     const personal=Math.round((ovr()-52)*0.45);
@@ -117,7 +121,7 @@ export function maybeIntl(done){
     if(i<=1)S.intlTop4=(S.intlTop4||0)+1;
     if(!S.traits.intlace&&S.intlCount>=3&&(S.intlTop4||0)>=2){
       S.traits.intlace=true;
-      card('gold','隱藏屬性解鎖：國際賽之鬼','只要穿上代表隊球衣，你的痛覺就會消失——你是為大場面而生的男人。<b class="hl">國際賽不再增加受傷風險，且每次徵召能力點保底 +2</b>。');
+      card('gold','隱藏屬性解鎖：國際賽之鬼','只要穿上代表隊球衣，你的痛覺就會消失——你是為大場面而生的男人。<b class="hl">國際賽不再增加受傷風險，且每次參賽能力點保底 +2</b>。');
     }
     if(i<=2)S.honors.push(`${S.year} ${name}${rk}`);
     if(i===0){tlNote(3,(wbc?'經典賽':'12強')+'冠軍');checkChampionTrait();}
@@ -128,10 +132,10 @@ export function maybeIntl(done){
     done();
   };
 
-  choose(`日本代表徵召 · ${name}`,[
-    {t:'披上日本代表戰袍',main:true,s:'自願參賽｜依成績獲得能力點｜下季受傷機率 +10%',f:participate},
-    {t:'婉拒本次代表隊徵召',s:'完全自由選擇，不影響日後再次受邀',f:()=>{
-      card('info','日本代表徵召',`你決定這次不參加<b class="hl">${name}</b>。這是你的生涯選擇；未來國際賽仍可再次接受代表隊邀請。`);
+  choose(copy.title,[
+    {t:copy.accept,main:true,s:copy.acceptHint,f:participate},
+    {t:copy.decline,s:copy.declineHint,f:()=>{
+      card('info',copy.declineCardTitle,copy.declineBody);
       done();
     }}
   ]);

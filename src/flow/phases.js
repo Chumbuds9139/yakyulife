@@ -332,7 +332,11 @@ export function movement(){
   }
   if(S.skipMid){ finishContractYear(o); return; } /* 復健年不升降級，但照常累積年資、消耗合約年度與處理到期續約。 */
   if(o<30){ buyoutRemaining(1); endGame('能力已跌破中職二軍最低水準，'+S.year+' 年球季後遭釋出，被迫引退。'); return; }
-  const path=PATHS[S.org], idx=path.indexOf(S.lv);
+  const path=PATHS[S.org];
+  /* 中職洋將等海外市場若漏登 PATHS，不能讓 indexOf 把整個季末流程炸掉（行動面板已被上一顆按鈕清掉）。 */
+  if(!path){ finishContractYear(o); return; }
+  const idx=path.indexOf(S.lv);
+  if(idx<0){ finishContractYear(o); return; }
   let minReq=LV[S.lv].min;
   if(S.org==='NPB'&&S.npbYears>=8){ minReq-=4; }
   const perf=(S.seasonFactor>=0.5)?(S.lastD||0):null; /* 傷缺季不看成績 */

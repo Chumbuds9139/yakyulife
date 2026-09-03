@@ -6,11 +6,18 @@ const {LV, PATHS, NPB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, CPBL_TEAMS}=await imp
 const {OFFICIAL_URL}=await import('../src/config.js');
 
 assert.deepEqual(PATHS.NPB, ['NPB_TRAIN','NPB2','NPB1']);
+assert.deepEqual(PATHS.CPBL, ['CPBL2','CPBL1']);
 assert.deepEqual(PATHS.CORP, ['CORP']);
 assert.deepEqual(PATHS.INDEP, ['INDEP']);
 assert.equal(PATHS.NPB.includes('MLB'), false);
 assert.equal(PATHS.NPB.includes('CPBL1'), false);
 assert.equal(PATHS.NPB.includes('CPBL2'), false);
+/* 每個層級都必須能在 PATHS[org] 找到自己。漏登時 movement() 會對 undefined.indexOf 拋錯，
+   行動面板已被上一顆按鈕清掉，中職洋將季末就卡死。 */
+for(const [lv,meta] of Object.entries(LV)){
+  assert.ok(PATHS[meta.org], `PATHS missing org ${meta.org} (lv ${lv})`);
+  assert.ok(PATHS[meta.org].includes(lv), `${lv} missing from PATHS.${meta.org}`);
+}
 assert.equal(LV.NPB_TRAIN.org, 'NPB');
 assert.equal(LV.NPB2.org, 'NPB');
 assert.equal(LV.NPB1.org, 'NPB');
