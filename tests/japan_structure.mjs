@@ -6,8 +6,8 @@ const {LV, PATHS, NPB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, CPBL_TEAMS}=await imp
 const {OFFICIAL_URL}=await import('../src/config.js');
 
 assert.deepEqual(PATHS.NPB, ['NPB_TRAIN','NPB2','NPB1']);
-assert.deepEqual(PATHS.CORP, ['CORP','NPB2','NPB1']);
-assert.deepEqual(PATHS.INDEP, ['INDEP','NPB2','NPB1']);
+assert.deepEqual(PATHS.CORP, ['CORP']);
+assert.deepEqual(PATHS.INDEP, ['INDEP']);
 assert.equal(PATHS.NPB.includes('MLB'), false);
 assert.equal(PATHS.NPB.includes('CPBL1'), false);
 assert.equal(PATHS.NPB.includes('CPBL2'), false);
@@ -52,11 +52,9 @@ assert.equal(state.bucketOf('MLB'), 'MLB');
 
 state.S.lv = 'CORP';
 assert.equal(state.S.org, 'CORP');
-state.S.lv = 'NPB2';
-assert.equal(state.S.org, 'NPB');
 state.S.lv = 'INDEP';
 assert.equal(state.S.org, 'INDEP');
-state.S.lv = 'NPB1';
+state.S.lv = 'NPB2';
 assert.equal(state.S.org, 'NPB');
 
 state.setS({lv:'NPB2',org:'CORP'});
