@@ -7,29 +7,26 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="YaKyoLife - 棒球人生模擬器">
-<title>YaKyoLife - 棒球人生模擬器</title>
-<meta name="description" content="從高中三大賽到名人堂，一場種子化的台灣棒球員生涯模擬，每一個決定都將決定棒球員的未來。">
-<link rel="canonical" href="https://www.yakyolife.com/">
+<meta name="apple-mobile-web-app-title" content="YaKyoLife - 日本棒球人生模擬器">
+<title>YaKyoLife - 日本棒球人生模擬器</title>
+<meta name="description" content="日本棒球人生模擬器：從高中、大學、社會人與獨立聯盟走向日本職棒、旅美與國際賽。">
+<link rel="canonical" href="https://chumbuds9139.github.io/yakyulife/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="YaKyoLife">
 <meta property="og:locale" content="zh_TW">
-<meta property="og:url" content="https://www.yakyolife.com/">
-<meta property="og:title" content="YaKyoLife - 棒球人生模擬器">
-<meta property="og:description" content="從高中三大賽到名人堂，一場種子化的台灣棒球員生涯模擬，每一個決定都將決定棒球員的未來。">
-<meta property="og:image" content="https://www.yakyolife.com/og.png">
+<meta property="og:url" content="https://chumbuds9139.github.io/yakyulife/">
+<meta property="og:title" content="YaKyoLife - 日本棒球人生模擬器">
+<meta property="og:description" content="日本棒球人生模擬器：從高中、大學、社會人與獨立聯盟走向日本職棒、旅美與國際賽。">
+<meta property="og:image" content="https://chumbuds9139.github.io/yakyulife/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="YaKyoLife 棒球人生模擬器">
+<meta property="og:image:alt" content="YaKyoLife 日本棒球人生模擬器">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="YaKyoLife - 棒球人生模擬器">
-<meta name="twitter:description" content="從高中三大賽到名人堂，一場種子化的台灣棒球員生涯模擬，每一個決定都將決定棒球員的未來。">
-<meta name="twitter:image" content="https://www.yakyolife.com/og.png">
-<!-- favicon: bare full-bleed ball (owner request; matches the pre-logo-system tab icon).
-     The dark-bg 3c app icon stays on apple-touch-icon and the PWA manifest. -->
+<meta name="twitter:title" content="YaKyoLife - 日本棒球人生模擬器">
+<meta name="twitter:description" content="日本棒球人生模擬器：從高中、大學、社會人與獨立聯盟走向日本職棒、旅美與國際賽。">
+<meta name="twitter:image" content="https://chumbuds9139.github.io/yakyulife/og.png">
 <link rel="icon" type="image/png" href="assets/favicon-64.png">
 <link rel="apple-touch-icon" href="assets/app-icon-180.png">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=IBM+Plex+Mono:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
@@ -44,7 +41,7 @@
       <img class="wm-img" src="assets/yakyolife-logo.svg" alt="YaKyoLife" decoding="async">
       <span class="lockup-sub"><i></i><em>棒球人生模擬器</em><i></i></span>
     </h1>
-    <p class="sub">高中三年養成 → 選秀・旅日・旅美 → 國際賽 → 衰退與引退。每一顆骰子都算數。</p>
+    <p class="sub">高中、大學、社會人與獨立聯盟養成 → 日本職棒選秀・旅美 → 國際賽 → 衰退與引退。每一顆骰子都算數。</p>
     <div class="start-form">
       <div class="field"><label for="in-name">球員資料</label>
         <div class="player-id-input">
@@ -85,13 +82,11 @@
   <footer id="start-footer">
     <button class="btn main" id="btn-start"><i class="ph-fill ph-play" aria-hidden="true"></i><span>開始生涯 ▸ 高一春天</span></button>
     <div class="start-secondary">
-    <!-- Display preferences sit apart from the career choices above and are collapsed by
-         default: none of them affect the run, and all three are also reachable from the
-         in-game menu. Native <details> so keyboard and screen-reader behaviour come free. -->
       <details id="fld-display">
         <summary aria-controls="disp-body" aria-expanded="false"><i class="ph-fill ph-palette" aria-hidden="true"></i>顯示設定<span class="sum" id="disp-sum"></span></summary>
       </details>
-</div>
+      <a class="btn" id="author-credit" href="https://github.com/LeoGGcat/yakyulife" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:12px">原作者：最先生</a>
+    </div>
     <div class="start-meta"><span id="ver-badge">v1.5.11</span></div>
   </footer>
 </div>
@@ -122,10 +117,6 @@
         <span class="lamp" id="lp1"><i></i>賽季中</span>
         <span class="lamp" id="lp2"><i></i>季末</span>
       </div>
-      <!-- compact bar only: a hint that the whole bar opens the detail panel, not a control
-           of its own (the tap target is the bar; #bd-more stays for keyboard and AT).
-           It sits directly under the two rows it belongs to and above the year strip, which
-           is separate navigation and is deliberately outside the bar's tap area. -->
       <div id="bd-hint" aria-hidden="true"><i class="ph-bold ph-caret-down chev"></i></div>
       <div id="tl-strip"></div>
     </header>
@@ -144,9 +135,7 @@
 </div>
 <div id="modal"><div id="modal-box"></div></div>
 <div id="alloc-full"><div id="af-inner"><div class="af-head"><span class="af-title" id="af-title"></span><button class="btn" id="af-close">收起</button></div><div id="af-body"></div></div></div>
-<!-- GitHub Pages sits behind a long-lived CDN cache. The entry point and every
-     relative import carry this release token so browsers cannot mix versions. -->
-<script type="module" src="src/japan.js?v=1.5.11-jp"></script>
-<script type="module" src="src/main.js?v=1.5.11-ui-complete"></script>
+<script type="module" src="src/japan.js?v=1.5.12-jp"></script>
+<script type="module" src="src/main.js?v=1.5.12-ui"></script>
 </body>
 </html>
