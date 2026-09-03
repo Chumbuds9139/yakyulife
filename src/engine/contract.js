@@ -1,6 +1,6 @@
 import {S} from '../core/state.js?v=1.5.11';
 import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.11';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.5.11';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.11';
 import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.11';
 import {card, choose, board} from '../ui/dom.js?v=1.5.11';
 import {tlNote} from '../ui/timeline.js?v=1.5.11';
@@ -328,7 +328,7 @@ export function handleDemotion(o,path,idx){
 export function outOfOrg(o){
   /* 遭原聯盟釋出，尋找重疊層級合約 */
   const offers=[];
-  if(S.org!=='NPB'&&o>=44)offers.push({t:'日職二軍（支配下）合約',f:()=>{buyoutRemaining(1);signTo('NPB','NPB2',returnTeam('NPB').team);}});
+  if(S.org!=='NPB'&&S.org!=='CORP'&&S.org!=='INDEP'&&o>=44)offers.push({t:'日職二軍（支配下）合約',f:()=>{buyoutRemaining(1);signTo('NPB','NPB2',returnTeam('NPB').team);}});
   offers.push(...homecomingFallbackOptions(o,{pre:()=>buyoutRemaining(1)}));
   if(!offers.length){ buyoutRemaining(1); daibaFarewell(()=>endGame('遭球團釋出且無人問津，'+S.year+' 年黯然引退。')); return; }
   card('bad','戰力外通告',`未達 ${S.org==='NPB'?'日職':'原聯盟'}留用門檻，遭到釋出。所幸還有球隊捎來邀請——`);
@@ -339,8 +339,13 @@ export function teamListOf(org){ return org==='CPBL'?CPBL_TEAMS:org==='NPB'?NPB_
 export function signTo(org,lv,team,yrs,mult,annual,quiet){
   const sourceLv=S.lastLv||S.lv,contractD=ratingAtLevel(currentSalaryRating(S.lastD||0),sourceLv,lv);
   S.org=org; S.lv=lv;
-  /* 【修正】先決定新球隊是誰，比對不一樣才把年資歸零，最後再蓋掉 S.orgTeam */
-  const newTeam = team || pick(teamListOf(org));
+  /* 【修正】先決定新球隊是誰，比對不一樣才把年資歸零，最後再蓋掉 S.orgTeam。
+     職業聯盟不能沿用社會人／獨立聯盟隊名，否則 HUD 會把豐田戰鷹顯示成日職二軍。 */
+  let newTeam = team || pick(teamListOf(org));
+  if(org==='NPB'||org==='CPBL'||org==='MiLB'){
+    const list=teamListOf(org);
+    if(isAmateurClub(newTeam)||!list.includes(newTeam))newTeam=pick(list);
+  }
   if(newTeam !== S.orgTeam){ S.teamSeasons=0; S.teamYears=0; S.teamStarYears=0; S.franchiseActive=false; S.champThisTeam=false; S.champTeam=null; tlNote(2,'加盟 '+newTeam); }
   S.orgTeam = newTeam;
   if(org==='CPBL')S.lastCpblTeam=newTeam;
