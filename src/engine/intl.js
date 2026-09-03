@@ -7,7 +7,7 @@ import {isSP, fmtIP, outsFromIP, ipFromOuts, normalizeIP, baseballERA} from './s
 import {ovr} from './ability.js?v=1.5.11';
 import {intlFinishIndex} from './championship.js?v=1.5.11';
 import {checkChampionTrait} from '../flow/events.js?v=1.5.11';
-import {intlInviteCopy, intlEventName} from '../data/intl-copy.js?v=1.5.12';
+import {intlInviteCopy, intlEventName} from '../data/intl-copy.js?v=1.5.14';
 export {intlInviteCopy, intlEventName};
 
 export function intlWalks(st){

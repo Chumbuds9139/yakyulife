@@ -92,14 +92,15 @@ export function phasePre(){
         {t:'養生球',s:'成績保守｜省手臂（TJ 累積 ×0.80）',f:()=>{S.effort='養生球';preAsk();}}]);
     };
   }
-  /* 大學季前：日本職棒選秀／旅外（大二～大四） */
+  /* 大學季前：日本職棒選秀／旅外（大二～大四）。日職選秀每人一生只有一次。 */
   if(S.stage==='U'&&S.stageYr>=2){
     const o=ovr();
     /* 接受任何職業去向後，都要把本年已建立的「大學」時間軸改成實際職業身分。 */
     const finishDecision=()=>{ if(S.stage==='PRO')tlRestage(); afterAsk(); };
-    const opts=[
-      {t:'投入日本職棒選秀',s:`目前綜合 ${o}｜年齡加權：越年輕評價越高`,f:()=>runDraft(true,finishDecision)}
-    ];
+    const opts=[];
+    if(!S.npbDraftEntered){
+      opts.push({t:'投入日本職棒選秀',s:`目前綜合 ${o}｜年齡加權：越年輕評價越高｜生涯僅一次`,f:()=>runDraft(true,finishDecision)});
+    }
     /* 依原遊戲邏輯保留旅美合約；日本職棒則統一透過日職選秀。 */
     const agePenalty=Math.max(0,S.age-18);
     const reqMiLB=50+Math.floor(agePenalty/2);
@@ -108,6 +109,7 @@ export function phasePre(){
     if(o>=reqMiLB)opts.push({t:'洽談旅美合約',s:`休學挑戰小聯盟｜大齡影響簽約金`,f:()=>{
       S.stage='PRO'; S.team=''; S.svc=0; S.faElig=false;
       pickOfferUI('大聯盟球團報價','MiLB',makeOffers('MiLB',2,bonusMiLB,3,4,o>=55?'A1':'R',null),goPro);}});
+    if(!opts.length){ afterAsk(); return; }
     /* 續留選項固定放在所有選秀／旅外選項之後。 */
     opts.push({t:'留在大學繼續磨練',main:true,f:afterAsk});
     choose(`大${['一','二','三','四'][S.stageYr-1]}季前 · 升學與職棒的十字路口`,opts);
@@ -318,9 +320,11 @@ export function movement(){
   if(S.stage==='U'){ if(S.stageYr<4)advance(); else pathChoiceU4(); return; }
   if(S.stage==='AMA'){
     if(S.age>=26){ endGame('選秀多年落榜，'+S.year+' 年結束球員身分，轉任基層教練。'); return; }
-    choose('業餘年度結束',[
-      {t:'再次參加日本職棒選秀',main:true,f:()=>runDraft(false,()=>advance())},
-      {t:'高掛球鞋',warn:true,f:()=>endGame('在業餘球隊劃下句點。')}]);
+    const amaOpts=[];
+    if(!S.npbDraftEntered)amaOpts.push({t:'參加日本職棒選秀',main:true,f:()=>runDraft(false,()=>advance())});
+    else amaOpts.push({t:'再留一年',main:true,f:()=>advance()});
+    amaOpts.push({t:'高掛球鞋',warn:true,f:()=>endGame('在業餘球隊劃下句點。')});
+    choose('業餘年度結束',amaOpts);
     return;
   }
   /* 社會人／獨立聯盟不是 NPB 農場，季末不走 PATHS 升降、也不因戰力外直接進日職二軍。

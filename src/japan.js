@@ -39,7 +39,7 @@ function installAbilityLock(){
   Object.defineProperty(S,'ct',{configurable:true,enumerable:true,get(){return ctRef;},set(v){ctRef=normalizeCt(v);}});
   if(ctRef)ctRef=normalizeCt(ctRef);
 
-  card('gold','隱藏屬性解鎖：無敵','你在角色創建時輸入了傳說中的守位密碼。<b class="hl">無敵</b> 已啟用：能力與潛力永久鎖定 80、受傷率 0%、TJ 量表鎖定 0、代言收入 +100%、事件卡成功率 100%、國家隊與職業隊奪冠率 100%、交易保護、招牌溢價 +100%。<br><span class="dim">TJ 是 Tommy John 風險量表，不是兵役；日本版沒有兵役／列管系統，也不會把任何一般正面特質加入你的球員。</span>');
+  card('gold','隱藏屬性解鎖：無敵','你在角色創建時輸入了傳說中的守位密碼。<b class="hl">無敵</b> 已啟用：能力與潛力永久鎖定 80、受傷率 0%、TJ 量表鎖定 0、代言收入 +100%、事件卡成功率 100%、國家隊與職業隊奪冠率 100%、交易保護、招牌溢價 +100%。');
   board(0);
 }
 
