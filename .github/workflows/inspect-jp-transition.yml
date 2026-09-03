@@ -10,12 +10,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect transition and attribution text
+      - name: Inspect transition context
         shell: bash
         run: |
-          echo '--- contract.js NPB/MLB lines ---'
-          grep -n -E 'NPB|MLB|crossOffers|outOfOrg|pickOfferUI|signTo' src/engine/contract.js | tail -n 120 || true
-          echo '--- phases.js NPB/MLB lines ---'
-          grep -n -E 'NPB|MLB|中華職棒|旅日|Discord|贊助|sponsor' src/flow/phases.js | tail -n 120 || true
-          echo '--- all attribution/contact remnants ---'
+          echo '--- contract.js 515-695 ---'
+          nl -ba src/engine/contract.js | sed -n '515,695p'
+          echo '--- phases.js 90-125 ---'
+          nl -ba src/flow/phases.js | sed -n '90,125p'
+          echo '--- attribution/contact remnants ---'
           grep -Rni -E 'discord|贊助|sponsor|ko-fi|buymeacoffee|paypal' --exclude-dir=.git . | head -n 200 || true
