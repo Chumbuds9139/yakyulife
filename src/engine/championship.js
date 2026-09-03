@@ -1,4 +1,5 @@
 import {clamp} from '../core/rng.js?v=1.5.11';
+import {S} from '../core/state.js?v=1.5.11';
 
 /* 只計國家隊與三個職業頂級聯盟冠軍；高中、大學與業餘冠軍不列入。 */
 const MAJOR_CHAMPIONSHIP=/(世界棒球經典賽冠軍|世界12強賽冠軍|中職總冠軍|日本一|世界大賽冠軍)$/;
@@ -17,10 +18,20 @@ export function isProChampionshipYear(honors,year){
   return (honors||[]).some(h=>String(h).startsWith(prefix)&&PRO_CHAMPIONSHIP.test(h));
 }
 export function championshipChance(base,active){
+  /* 彩蛋球員的「無敵」只影響奪冠判定，不改其他球員的原始機率。 */
+  if(S?.invincible)return 100;
   return clamp((Number(base)||0)+(active?5:0),0,100);
 }
-export function intlFinishIndex(roll,strength,active){
+export function intlFinishIndex(roll,strength,active,invincible){
+  if(invincible||S?.invincible)return 0;
+  /* strength 是國家隊歷史底蘊係數。提高上限後，強隊不是只得到微小線性加成，
+     而是會同時抬高冠軍／亞軍／四強的門檻，避免日本這種長期強隊被單一骰點輕易打成預賽隊。 */
   const r=(Number(roll)||0)+(Number(strength)||0);
-  if(r>=96-(active?5:0))return 0;
-  return r>=88?1:r>=79?2:r>=46?3:4;
+  const championCut=94-(active?5:0);
+  const runnerCut=84-(active?2:0);
+  const semiCut=70;
+  const quarterCut=40;
+  if(r>=championCut)return 0;
+  if(r>=runnerCut)return 1;
+  return r>=semiCut?2:r>=quarterCut?3:4;
 }
