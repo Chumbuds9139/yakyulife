@@ -329,7 +329,7 @@ export function outOfOrg(o){
   /* 遭原聯盟釋出，尋找重疊層級合約 */
   const offers=[];
   if(S.org!=='NPB'&&o>=44)offers.push({t:'日職二軍（支配下）合約',f:()=>{buyoutRemaining(1);signTo('NPB','NPB2',returnTeam('NPB').team);}});
-  offers.push(...homecomingFallbackOptions(o,{pre:()=>buyoutRemaining(1)}));); }
+  offers.push(...homecomingFallbackOptions(o,{pre:()=>buyoutRemaining(1)}));
   if(!offers.length){ buyoutRemaining(1); daibaFarewell(()=>endGame('遭球團釋出且無人問津，'+S.year+' 年黯然引退。')); return; }
   card('bad','戰力外通告',`未達 ${S.org==='NPB'?'日職':'原聯盟'}留用門檻，遭到釋出。所幸還有球隊捎來邀請——`);
   if(S.age>=33){ offers.push({t:'就此引退',warn:true,f:()=>{buyoutRemaining(1);daibaFarewell(()=>endGame('收到戰力外通告後，'+S.year+' 年選擇引退。'));}}); }
