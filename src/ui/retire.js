@@ -456,7 +456,7 @@ export function endGame(reason){
   if(S.traits.franchise)picks.push(S.franchiseActive?'一隊一人，退休號碼準備掛上去了。謝謝你留下來':'雖然你離開了，但還是謝謝你那段時間帶給我們球隊的希望');
   if(S.traits.legend)picks.push('這種千年一遇的球員，能夠看到他的比賽，真的是最幸福的事情');
   if(S.traits.intlace)picks.push('穿上國家隊球衣的那個男人，永遠的國家英雄');
-  if(S.traits.taiwan)picks.push('六度披上國家隊戰袍，從不推辭。他比劃胸口的那一幕，我手機桌布放到現在');
+  if(S.traits.samurai)picks.push('六度披上國家隊戰袍，從不推辭。他比劃胸口的那一幕，我手機桌布放到現在');
   if(S.traits.disc)picks.push('自律到可怕，凌晨四點的球場都認得他');
   if(S.traits.favorite)picks.push('他真的很有教練愛欸，我一度懷疑他有總A裸照');
   if(S.traits.cancer)picks.push('真的是休息室毒瘤，巨嬰就趕快退休吧');

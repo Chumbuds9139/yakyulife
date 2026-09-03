@@ -105,6 +105,7 @@ export function afterGamble(kind,cont){
   cont();
 }
 export function injuryProb(){ /* 基礎風險從 24 降為 15，減少動不動就受傷的頻率 */
+  if(S.perfectLock)return 0;
   let p=15+S.injNext;
   if(S.age>=35)p+=12; else if(S.age>=32)p+=6;
   if(S.traits.academy&&S.age<25)p-=5; /* 學院派:25歲前科學化管理 */

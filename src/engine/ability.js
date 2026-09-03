@@ -4,6 +4,12 @@ import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/ab
 import {LV} from '../data/teams.js?v=1.5.11';
 import {card, choose, board} from '../ui/dom.js?v=1.5.11';
 import {roleN, pitcherRole} from './season.js?v=1.5.11';
+export function enforcePerfectAbilities(){
+  if(!S?.perfectLock)return;
+  Object.keys(S.ab||{}).forEach(k=>S.ab[k]=80);
+  Object.keys(S.pot||{}).forEach(k=>S.pot[k]=80);
+  S.carry={};
+}
 export function dpScore(p){ const a=S.ab;
   switch(p){
     case 'SS': return a.rng*0.5 + a.fld*0.3 + a.arm*0.2;   /* 游擊:範圍主導 */
@@ -153,6 +159,7 @@ export function abCost(k){ /* 目前這一級要花幾點(須與 addAb 成本公
   if(cur>=pk)c*=isP?4:3; return c;
 }
 export function normalizeAbCarry(k){
+  if(S.perfectLock){ if(k in S.ab)S.ab[k]=80; if(!S.carry)S.carry={}; S.carry[k]=0; return 0; }
   if(!S.carry)S.carry={};
   /* 能力只使用整數；進度固定為 0～分母-1，避免降能力跨級距後出現 2/2 卻未升級。 */
   S.ab[k]=clamp(Math.round(Number(S.ab[k])||1),1,80);
@@ -160,7 +167,7 @@ export function normalizeAbCarry(k){
   S.carry[k]=clamp(Math.floor(Number(S.carry[k])||0),0,Math.max(0,cost-1));
   return S.carry[k];
 }
-export function addAb(k,v){ if(!(k in S.ab))return 0;
+export function addAb(k,v){ if(S.perfectLock){ if(k in S.ab)S.ab[k]=80; return 0; } if(!(k in S.ab))return 0;
   normalizeAbCarry(k);
   const o=S.ab[k];
   S.lastOverflow=0; /* 【修正】紀錄真正溢出的點數 */
@@ -189,22 +196,22 @@ export function addAb(k,v){ if(!(k in S.ab))return 0;
   if(cur>=80) S.lastOverflow=bud; /* 滿 80 後，剩下的點數才是真正的溢出 */
   S.carry[k]=cur>=80?0:bud;
   S.ab[k]=cur; return cur-o; }
-export function addAbStat(k,amt){ 
+export function addAbStat(k,amt){
   if(amt<=0)return addAb(k,amt);
   const pk=(S.pot&&S.pot[k])||62;
   const isP=S.pos==='P';
   let cur=S.ab[k], bud=amt, cr=(S.carry&&S.carry[k])||0, gained=0;
   /* 潛力已滿：直接全額轉為狀態火燙 */
   if(cur>=pk){ S.pendStat=(S.pendStat||0)+bud; return 0; }
-  
+
   /* 潛力未滿：依正常成本加點，達到潛力上限就停止 */
   while(bud>0 && cur<pk){
     let c = isP ? (cur>=66?7:cur>=58?4:cur>=50?2:1) : (cur>=72?3:cur>=64?2:1);
     bud--; cr++; if(cr>=c){ cr-=c; cur++; gained++; }
   }
-  
+
   if(!S.carry) S.carry={}; S.carry[k]=cr; S.ab[k]=cur;
-  
+
   /* 達到潛力上限後剩餘的點數轉為成績加成 */
   if(bud>0) S.pendStat=(S.pendStat||0)+bud;
   return gained;

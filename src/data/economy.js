@@ -1,6 +1,6 @@
 /* ---------- 薪資、評價與報表常數 ---------- */
 export const AMA_ANNUAL=48; /* 業餘企業隊工作年薪：4 萬／月，不視為職業合約。 */
-export const LEVEL_MIN_ANNUAL={CPBL2:84,CPBL1:100,NPB2:240,NPB1:320,R:60,A1:95,A2:105,A3:125,MLB:2400};
+export const LEVEL_MIN_ANNUAL={CPBL2:84,CPBL1:100,NPB_TRAIN:240,NPB2:240,NPB1:320,R:60,A1:95,A2:105,A3:125,MLB:2400};
 export const MLB_SERVICE_MINOR_MIN=381; /* 2026 MLB CBA：已有 MLB 年資者回小聯盟，年薪至少約 US$127,100（匯率 30）。 */
 export const TIER_TH={CPBL:[7500,4550,2150,1050],NPB:[7500,4550,2150,1050],MLB:[7500,4550,2150,1050]}; /* M4:三聯盟共用同一把「大聯盟尺」，聯盟難度差改由 LEAGUE_K 在生涯評價時直接折算，取代舊版三聯盟各自一組門檻的作法 */
 /* 聯盟強度折算 [Kbase, Khonor]：生涯總分由性質完全相反的兩塊組成，必須分開折算。

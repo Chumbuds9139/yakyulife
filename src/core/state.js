@@ -19,7 +19,11 @@ function bindLevelOrg(state){
   return state;
 }
 
-export function setS(v){ S=bindLevelOrg(v); }
+export function setS(v){
+  if(v&&v.traits&&v.traits.taiwan&&!v.traits.samurai)v.traits.samurai=true;
+  if(v&&v.traits)delete v.traits.taiwan;
+  S=bindLevelOrg(v);
+}
 export function newState(name,jersey,pos,role){
   const ab={}; POS_AB[pos].forEach(k=>ab[k]=ri(20,32));
   if(pos==='P'){ab.vel+=ri(0,6);ab.brk+=ri(0,4);} else {ab.con+=ri(0,6);ab.pow+=ri(0,4);}
@@ -35,13 +39,13 @@ export function newState(name,jersey,pos,role){
   const hsMap={'早稻田實業':1,'智辯和歌山':1,'明德義塾':2,'東海大相模':2,'聖光学院':3,'作新学院':3};
   const schools=Object.keys(hsMap);
   const myTeam=schools[Math.floor(R()*schools.length)];
-  return bindLevelOrg({name,jersey,pos,role:pos==='P'?null:null,age:16,year:2026,stage:'HS',stageYr:1,pot,
+  return bindLevelOrg({name,jersey,pos,role:pos==='P'?null:null,perfectLock:false,age:16,year:2026,stage:'HS',stageYr:1,pot,
     hsMap,hsTier:hsMap[myTeam],team:myTeam,potSum0:Object.values(pot).reduce((a,b)=>a+b,0),
     league:null,org:null,orgTeam:null,lastCpblTeam:null,teamTally:{CORP:{},INDEP:{},CPBL:{},NPB:{},MLB:{}},
     ab,traits:{genius:false,glass:false,iron:false,scum:false,
       late:false,disc:false,academy:false,intlace:false,franchise:false,clutch:false,favorite:false,phoenix:false,combo:false,onetool:false,rubber:false,legend:false,
       oldghost:false,adking:false,miraclegen:false,strongpitch:false,stronghit:false,championmaker:false,
-      yips:false,distract:false,cancer:false,ambience:false,goldcloth:false,thief:false,latepractice:false,mrteam:false,confidante:false,smallschool:false,grinder:false,rainbow:false,taiwan:false,pitcherTC:false,hitterTC:false},
+      yips:false,distract:false,cancer:false,ambience:false,goldcloth:false,thief:false,latepractice:false,mrteam:false,confidante:false,smallschool:false,grinder:false,rainbow:false,samurai:false,pitcherTC:false,hitterTC:false},
     removed:[],cntSave:0,cntSaveWin:0,cntTrainingSafeFail:0,cntNormWin:0,cntSnack:0,cntBoldWin:0,cntSocialBoldFail:0,cntEndorseBoldWin:0,
     hsChampions:0,oldGhostPending:false,oldGhostUsed:false,samePick:0,samePickKey:null,
     teamSeasons:0,teamYears:0,teamStarYears:0,franchiseActive:false,franchiseTeamName:null,

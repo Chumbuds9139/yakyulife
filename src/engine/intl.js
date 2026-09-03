@@ -48,6 +48,16 @@ export function intlFormat(wbc){
     ?{minOvr:55,par:LV.MLB.par,ranks:['冠軍','亞軍','四強止步','八強止步','預賽出局'],games:[7,7,6,5,4]}
     :{minOvr:52,par:LV.NPB1.par,ranks:['冠軍','亞軍','季軍','殿軍','預賽出局'],games:[9,9,9,9,5]};
 }
+const JAPAN_INTL_STRENGTH={
+  wbc:{2006:7,2009:8,2013:6,2017:5,2023:8,2026:7},
+  p12:{2015:5,2019:7,2024:7}
+};
+export function japanIntlStrength(year,wbc){
+  const table=wbc?JAPAN_INTL_STRENGTH.wbc:JAPAN_INTL_STRENGTH.p12;
+  if(table[year]!=null)return table[year];
+  const ys=Object.keys(table).map(Number).filter(y=>y<year).sort((a,b)=>a-b);
+  return ys.length?table[ys[ys.length-1]]:6;
+}
 export function maybeIntl(done){
   const wbc=(S.year-2026)%4===0; let p12=(S.year-2028)%4===0;
   if(S.lv==='MLB')p12=false; /* 大聯盟球員只打經典賽,不打 12 強 */
@@ -65,14 +75,15 @@ export function maybeIntl(done){
   const opts=[
     {t:forced?'⋯⋯只能報到（強制徵召）':'披上國家隊戰袍',main:true,s:'依成績獲得能力點｜下季受傷機率 +10%',f:()=>{
       /* 國家隊成敗看整體興衰,個人只佔一小部分 */
-      const b=clamp(Math.round((ovr()-52)*0.35),0,8);
+      const teamStrength=japanIntlStrength(S.year,wbc);
+      const b=clamp(Math.round((ovr()-52)*0.35)+Math.round((teamStrength-5)*0.8),0,8);
       const i=intlFinishIndex(R()*100,b,!!S.traits.championmaker);
       const rk=intlFmt.ranks[i], teamGames=intlFmt.games[i], pts=[6,5,4,2,1][i];
       let gpts=pts; if(S.traits.intlace)gpts=Math.max(pts,2);
       S.pool+=gpts; S.injNext=S.traits.intlace?0:10; S.intlCount++;
       /* Team Taiwan(挺台灣):國際賽出賽超過 5 次 */
-      if(!S.traits.taiwan&&S.intlCount>5){ S.traits.taiwan=true;
-        card('gold','隱藏稱號：Team Taiwan',`永遠把國家榮耀放在比職涯更高的位子，台灣球迷的心中永遠有一幅畫：你在球場上向全場比劃著胸口，那是你心中最榮耀的地方。`); board(1); }
+      if(!S.traits.samurai&&S.intlCount>5){ S.traits.samurai=true;
+        card('gold','隱藏稱號：武士精神',`永遠把日本代表的榮耀放在比個人職涯更高的位置。你在球場上拍著胸口、向看台致意的那一刻，成為球迷心中最驕傲的畫面。`); board(1); }
       /* 先產生並保存本屆成績；事件卡與生涯結算共用同一份資料，不在結算時重骰 */
       let intlSt;
       { const a=S.ab, par=intlFmt.par, clutch=S.traits.clutch?1:0;
@@ -86,7 +97,7 @@ export function maybeIntl(done){
             g = clamp(Math.round(teamGames*(0.55+R()*0.25)),1,teamGames); /* 牛棚登板數隨球隊實際賽程增減 */
             ip = normalizeIP(g * (0.8 + R() * 0.8)); /* 每次上場大約拆彈或投 0.8~1.6 局；量化為完整出局數 */
           }
-          
+
           const k9=clamp(7.5+dd*0.12+clutch*.5,4,14);
           const era=clamp(3.6-dd*0.16-clutch*.35,0.8,8);
           /* 與職業球季共用同一把 BB/9、H/9 尺；短期賽按實際局數縮放。 */

@@ -6,7 +6,7 @@ import {AMA_ANNUAL} from '../data/economy.js?v=1.5.11';
 import {card, choose, board, divider} from '../ui/dom.js?v=1.5.11';
 import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.5.11';
 import {allocUI} from '../ui/alloc.js?v=1.5.11';
-import {addAb, ovr, dposReview, statBonusTxt} from '../engine/ability.js?v=1.5.11';
+import {addAb, ovr, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.5.11';
 import {rollInjury, tjCap} from '../engine/injury.js?v=1.5.11';
 import {isMrTeamEligible} from '../engine/tenure.js?v=1.5.11';
 import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.5.11';
@@ -17,14 +17,14 @@ import {loveEvent} from './love.js?v=1.5.11';
 import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.5.11';
 import {endGame} from '../ui/retire.js?v=1.5.11';
 /* ================= 年度流程 ================= */
-export function startYear(){ S.yearOutsideIncome=0; stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
+export function startYear(){ S.yearOutsideIncome=0; enforcePerfectAbilities(); stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* ---------- 季初 ---------- */
 export function phasePre(){
   board(0); S.tmpInj=0; S.seasonFactor=1; S.skipMid=false; S.marketInjury='healthy'; S.prevD=S.lastD||0; S.lastD=0; S.lastPayD=0; /* 先保留上季 d 供投手定位判定 */
   checkChampionTrait(); /* 舊存檔已有五冠時也會補解鎖。 */
   if(S.age>=48){ buyoutRemaining(1,true); endGame('身體已到極限，'+S.year+' 年春訓後宣布引退。'); return; }
   const declAge=S.age-(S.traits.disc?2:0); /* 自律狂:衰退曲線整體延後兩年 */
-  if(declAge>=32){ const baseDec=declAge>=35?5+(declAge-35):2;
+  if(!S.perfectLock&&declAge>=32){ const baseDec=declAge>=35?5+(declAge-35):2;
     const oldGhostActive=!!(S.oldGhostPending&&!S.oldGhostUsed);
     const dec=oldGhostActive?Math.max(1,Math.round(baseDec*0.5)):baseDec;
     const catcherCallDec=S.pos==='C'?Math.max(1,Math.round(dec*0.5)):dec;
