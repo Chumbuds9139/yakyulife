@@ -18,7 +18,10 @@ function installAbilityLock(){
   Object.defineProperty(S,'ab',{configurable:true,enumerable:true,get(){return abRef;},set(v){abRef=guard(v);}});
   Object.defineProperty(S,'pot',{configurable:true,enumerable:true,get(){return potRef;},set(v){potRef=guard(v);}});
 
-  /* 日本版不再有兵役／列管系統；保留舊存檔欄位只是為了相容，不參與任何遊戲邏輯。 */
+  /* TJ = Tommy John 風險量表，不是兵役。無敵模式固定為 0，代表投手不會因手肘尺側副韌帶傷勢觸發 Tommy John 手術、整季報銷與能力下降。 */
+  let tj=0;
+  Object.defineProperty(S,'tj',{configurable:true,enumerable:true,get(){return tj;},set(v){tj=S.invincible?0:Math.max(0,Number(v)||0);}});
+  S.tj=0;
 
   let tradeHeat=-100;
   Object.defineProperty(S,'tradeHeat',{configurable:true,enumerable:true,get(){return tradeHeat;},set(v){tradeHeat=S.invincible?-100:Number(v)||0;}});
@@ -36,7 +39,7 @@ function installAbilityLock(){
   Object.defineProperty(S,'ct',{configurable:true,enumerable:true,get(){return ctRef;},set(v){ctRef=normalizeCt(v);}});
   if(ctRef)ctRef=normalizeCt(ctRef);
 
-  card('gold','隱藏屬性解鎖：無敵','你在角色創建時輸入了傳說中的守位密碼。<b class="hl">無敵</b> 已啟用：能力與潛力永久鎖定 80、受傷率 0%、代言收入 +100%、事件卡成功率 100%、國家隊與職業隊奪冠率 100%、交易保護、招牌溢價 +100%。<br><span class="dim">這是一個獨立特殊狀態，不會把任何一般正面特質加入你的球員。</span>');
+  card('gold','隱藏屬性解鎖：無敵','你在角色創建時輸入了傳說中的守位密碼。<b class="hl">無敵</b> 已啟用：能力與潛力永久鎖定 80、受傷率 0%、TJ 量表鎖定 0、代言收入 +100%、事件卡成功率 100%、國家隊與職業隊奪冠率 100%、交易保護、招牌溢價 +100%。<br><span class="dim">TJ 是 Tommy John 風險量表，不是兵役；日本版沒有兵役／列管系統，也不會把任何一般正面特質加入你的球員。</span>');
   board(0);
 }
 
