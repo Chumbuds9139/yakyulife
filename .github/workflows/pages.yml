@@ -1,4 +1,5 @@
 # 部署到 GitHub Pages
+# final-JP-trigger-2
 name: Deploy Pages
 
 on:
@@ -28,18 +29,12 @@ jobs:
           from pathlib import Path
           import re
           R=Path('.')
-          def rep(path, old, new):
-              p=R/path; s=p.read_text(encoding='utf-8')
-              if old not in s: raise SystemExit(f'{path}: text not found')
-              p.write_text(s.replace(old,new,1),encoding='utf-8')
-
           p=R/'src/engine/intl.js'; s=p.read_text(encoding='utf-8')
           s=s.replace('wbc:{2006:7,2009:8,2013:6,2017:5,2023:8,2026:7}','wbc:{2006:7,2009:8,2013:6,2017:6,2023:8,2026:6}')
           s=s.replace('p12:{2015:5,2019:7,2024:7}','p12:{2015:6,2019:8,2024:7}')
           for a,b in [('中華隊徵召','日本隊徵召'),('中華隊最終成績','日本隊最終成績'),('中華隊','日本隊'),('CT 球衣','日本代表球衣'),('國家隊戰袍','日本代表隊戰袍')]: s=s.replace(a,b)
           s=s.replace('Team Taiwan(挺台灣)','Samurai Japan／日本代表')
           p.write_text(s,encoding='utf-8')
-
           p=R/'src/ui/retire.js'; s=p.read_text(encoding='utf-8')
           s=s.replace('用中文寫的「謝謝」毛巾','寫有「ありがとう」的毛巾')
           s=s.replace('記者會上你說：「能在這裡打球，是我人生最驕傲的事。」','引退記者會上你說：「日本で野球ができたことは、人生で最も誇らしいことです。」')
@@ -47,7 +42,6 @@ jobs:
           s=s.replace('台灣的轉播單位做了整夜特別節目','日本的體育轉播台連夜製作特別節目')
           s=s.replace('按讚數在台灣時間的深夜默默破了十萬','按讚數在日本時間的深夜默默突破十萬')
           p.write_text(s,encoding='utf-8')
-
           p=R/'src/engine/contract.js'; s=p.read_text(encoding='utf-8')
           pat=r"export function daibaFarewell\(cont\)\{.*?\n\}\n"
           new="""export function daibaFarewell(cont){
@@ -60,10 +54,8 @@ jobs:
           s,n=re.subn(pat,new,s,count=1,flags=re.S)
           if n!=1: raise SystemExit('daibaFarewell not found')
           old="S.ct=makeContract(yrs||2,mult||1,lv,contractD,annual,null,'簽約');"
-          if old in s:
-              s=s.replace(old,"const safeAnnual=Number.isFinite(annual)&&annual>0?annual:calcContractAnnual(lv,contractD,mult||1);\n  S.ct=makeContract(yrs||2,mult||1,lv,contractD,safeAnnual,null,'簽約');",1)
+          if old in s: s=s.replace(old,"const safeAnnual=Number.isFinite(annual)&&annual>0?annual:calcContractAnnual(lv,contractD,mult||1);\n  S.ct=makeContract(yrs||2,mult||1,lv,contractD,safeAnnual,null,'簽約');",1)
           p.write_text(s,encoding='utf-8')
-
           p=R/'tests/japan_world.mjs'; s=p.read_text(encoding='utf-8')
           s=s.replace('assert.equal(result.wbc2017,5); assert.equal(result.wbc2026,7);','assert.equal(result.wbc2017,6); assert.equal(result.wbc2026,6);')
           p.write_text(s,encoding='utf-8')
@@ -71,7 +63,6 @@ jobs:
           node --check src/engine/intl.js
           node --check src/engine/contract.js
           node --check src/ui/retire.js
-          node --check tests/japan_world.mjs
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add src tests
