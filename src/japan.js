@@ -24,7 +24,7 @@ document.querySelectorAll('#seg-pos button').forEach(btn=>btn.addEventListener('
   if(seq.length===SECRET.length&&seq.every((v,i)=>v===SECRET[i])){seq=[];armed=true;window.alert('侍魂已覺醒：所有正面附加效果解鎖，能力永遠鎖定滿級。開始這段生涯後生效。');}
 }));
 const start=document.getElementById('btn-start');
-if(start)start.addEventListener('click',()=>{if(!armed)return;const wait=()=>S?installAbilityLock():setTimeout(wait,0);wait();});
+if(start)start.addEventListener('click',()=>{if(!armed)return;setTimeout(()=>{if(S)installAbilityLock();},0);});
 
 function localizeJapanText(root){
   if(!root||S?.org==='CPBL')return;
@@ -36,5 +36,5 @@ function localizeJapanText(root){
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT), nodes=[]; while(w.nextNode())nodes.push(w.currentNode);
   for(const n of nodes){let t=n.nodeValue;for(const [a,b] of r)t=t.split(a).join(b);if(t!==n.nodeValue)n.nodeValue=t;}
 }
-const observer=new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)localizeJapanText(n);})));
+const observer=new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)localizeJapanText(n);}))); 
 observer.observe(document.body,{childList:true,subtree:true}); localizeJapanText(document.body);
