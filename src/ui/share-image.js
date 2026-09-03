@@ -1,14 +1,14 @@
-import {S} from '../core/state.js?v=1.5.11';
-import {SEED} from '../core/rng.js?v=1.5.11';
-import {APP_VER, OFFICIAL_HOST} from '../config.js?v=1.5.11';
-import {TEAM_COLOR, LG_N} from '../data/teams.js?v=1.5.11';
-import {RP_TICKS} from '../data/economy.js?v=1.5.11';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.5.11';
-import {$, teamChip, modalOpen, modalClose} from './dom.js?v=1.5.11';
-import {THEME_NAMES} from './prefs.js?v=1.5.11';
-import {traitNames, traitColorRank} from './traits.js?v=1.5.11';
-import {fmtMoney} from '../engine/contract.js?v=1.5.11';
-import {rpTagline, rpFamily, RP_F3, RP_F2, rpCumData, rpIntlData, rpHonorItems, rpOrgOf, rpProData, rpSalaryData, championshipYear} from './retire.js?v=1.5.11';
+import {S} from '../core/state.js?v=1.5.16';
+import {SEED} from '../core/rng.js?v=1.5.16';
+import {APP_VER, OFFICIAL_HOST} from '../config.js?v=1.5.16';
+import {TEAM_COLOR, LG_N} from '../data/teams.js?v=1.5.16';
+import {RP_TICKS} from '../data/economy.js?v=1.5.16';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.5.16';
+import {$, teamChip, modalOpen, modalClose} from './dom.js?v=1.5.16';
+import {THEME_NAMES} from './prefs.js?v=1.5.16';
+import {traitNames, traitColorRank} from './traits.js?v=1.5.16';
+import {fmtMoney} from '../engine/contract.js?v=1.5.16';
+import {rpTagline, rpFamily, RP_F3, RP_F2, rpCumData, rpIntlData, rpHonorItems, rpOrgOf, rpProData, rpSalaryData, championshipYear} from './retire.js?v=1.5.16';
 /* 結算圖（Canvas 產生 PNG，回傳 data URL 供面板顯示與儲存）
    Single-sheet settlement layout from the design handoff, drawn 1:1 at the
    design's 820px width. The layout is rendered twice: a measure pass on a
@@ -238,7 +238,7 @@ export function renderShareImage(evals,picks,opt){
     } else { c.font='13px '+F_SANS; c.fillStyle=C_DIM; mid('（無職業層級出賽紀錄）',PADX,y+9); y+=22; }
     /* ---- 國際賽逐屆成績 ---- */
     if(intl){
-      sec('國際賽逐屆成績（中華隊 '+S.intlCount+' 屆）');
+      sec('國際賽逐屆成績（日本代表 '+S.intlCount+' 屆）');
       const cols=tcols([{t:'年度',w:56,a:'l'},{t:'賽事',w:140,a:'l',zh:true},{t:'結果',w:96,a:'l',zh:true}]
         .concat(intl.hd.map(t=>({t,w:56,a:'r'}))));
       thRow(cols);

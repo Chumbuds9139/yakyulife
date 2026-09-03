@@ -1,13 +1,13 @@
-import {S} from '../core/state.js?v=1.5.11';
-import {ri, pick, chance} from '../core/rng.js?v=1.5.11';
-import {NPB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.5.11';
-import {card, choose, board, menuModal} from '../ui/dom.js?v=1.5.11';
-import {tlNote} from '../ui/timeline.js?v=1.5.11';
-import {ovr, playerType} from './ability.js?v=1.5.11';
-import {primaryPos} from './career.js?v=1.5.11';
-import {fmtMoney, makeOffers, pickOfferUI, signTo, makeContract, rollCpblImport} from './contract.js?v=1.5.11';
-import {startYear} from '../flow/phases.js?v=1.5.11';
-import {endGame} from '../ui/retire.js?v=1.5.11';
+import {S} from '../core/state.js?v=1.5.16';
+import {ri, pick, chance} from '../core/rng.js?v=1.5.16';
+import {NPB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.5.16';
+import {card, choose, board, menuModal} from '../ui/dom.js?v=1.5.16';
+import {tlNote} from '../ui/timeline.js?v=1.5.16';
+import {ovr, playerType} from './ability.js?v=1.5.16';
+import {primaryPos} from './career.js?v=1.5.16';
+import {fmtMoney, makeOffers, pickOfferUI, signTo, makeContract, rollCpblImport} from './contract.js?v=1.5.16';
+import {startYear} from '../flow/phases.js?v=1.5.16';
+import {endGame} from '../ui/retire.js?v=1.5.16';
 
 /* ---------- 日本版：選秀與生涯路口 ---------- */
 const JP_UNI=['早稻田大學','慶應義塾大學','明治大學','東洋大學','中央大學'];
@@ -78,6 +78,12 @@ function amateurOffseasonDecision(){
 
 function clampChance(v){return Math.max(8,Math.min(78,v));}
 
+function draftAssignLevel(rd,o){
+  if(rd<=2)return 'NPB2';
+  if(o>=56)return 'NPB2';
+  return 'NPB_TRAIN';
+}
+
 export function runDraft(fromSchool,cb){
   S.npbDraftEntered=true;
   const o=ovr();
@@ -91,23 +97,34 @@ export function runDraft(fromSchool,cb){
   }
   const bonus=[0,1800,1000,600,500,350,300,250,150,120,100][rd]||100;
   const team=pick(NPB_TEAMS);
-  const lv=o>=56?'NPB2':'NPB_TRAIN';
+  const lv=draftAssignLevel(rd,o);
   const accept=()=>{
     S.stage='PRO'; S.team=''; S.salary+=bonus; S.svc=0; S.faElig=false;
     signTo('NPB',lv,team,ri(2,3),1);
-    card('gold','日本職棒選秀會',`第 <b class="hl">${rd}</b> 輪獲 <b class="hl">${team}</b> 指名！簽約金約 <b class="hl">${fmtMoney(bonus)}</b>。${lv==='NPB2'?'進入二軍體系':'進入育成體系'}出發。`);
+    card('gold','日本職棒選秀會',`第 <b class="hl">${rd}</b> 輪獲 <b class="hl">${team}</b> 指名！簽約金約 <b class="hl">${fmtMoney(bonus)}</b>。${lv==='NPB2'?'進入二軍支配下':'進入育成契約'}出發。`);
     tlNote(4,'日職選秀第'+rd+'輪'); board(0); cb();
   };
   if(rd>=3 && S.age<20){
     choose(`日本職棒選秀會 · 第 ${rd} 輪獲 ${team} 指名`,[
-      {t:'接受指名，加盟球隊',main:true,s:`簽約金 ${fmtMoney(bonus)}｜${lv==='NPB2'?'二軍':'育成'}出發`,f:accept},
+      {t:'接受指名，加盟球隊',main:true,s:`簽約金 ${fmtMoney(bonus)}｜${lv==='NPB2'?'二軍支配下':'育成契約'}出發`,f:accept},
       {t:(S.stage==='HS'||(S.stage==='U'&&S.stageYr<4))?'重返校園，再拚一年':'重返業餘，再拚一年',warn:true,s:'放棄本次指名｜日職選秀不再重來',f:()=>{
-        const goUni=(S.stage==='HS')||(S.stage==='U'&&S.stageYr<4);
-        const fresh=(S.stage==='HS');
-        card('info',goUni?'重返校園':'重返業餘',`你對選秀順位不滿意。${goUni?(fresh?'決定進入大學繼續深造':'留在校隊繼續磨練'):'選擇投身社會人球界或獨立聯盟'}。日職選秀每人一生只有一次，之後要等球團合約或其他出路。`);
-        if(fresh||goUni){ S.stage='U'; S.stageYr=0; S.team=pick(JP_UNI); }
-        else if(S.age<=25) enterJapaneseAmateur(pick(['CORP','INDEP']),pick(CORPORATE_TEAMS.concat(INDEP_TEAMS)));
-        if(fromSchool) cb(); else advance();
+        const fromHS=S.stage==='HS';
+        const fromU=S.stage==='U'&&S.stageYr<4;
+        const fromAmateur=S.org==='CORP'||S.org==='INDEP';
+        if(fromHS){
+          S.stage='U'; S.stageYr=0; S.team=pick(JP_UNI);
+          card('info','重返校園',`你對選秀順位不滿意，決定進入 <b class="hl">${S.team}</b> 繼續深造。日職選秀每人一生只有一次，之後要等球團合約或其他出路。`);
+        }else if(fromU){
+          card('info','重返校園',`你對選秀順位不滿意，留在 <b class="hl">${S.team}</b> 繼續磨練。日職選秀每人一生只有一次。`);
+        }else if(fromAmateur){
+          card('info','重返業餘',`你對選秀順位不滿意，繼續留在${S.org==='CORP'?'社會人':'獨立聯盟'}。日職選秀每人一生只有一次，之後要等球團合約或其他出路。`);
+        }else{
+          card('info','重返業餘','你對選秀順位不滿意。選擇投身社會人球界或獨立聯盟。日職選秀每人一生只有一次，之後要等球團合約或其他出路。');
+          if(S.age<=25) enterJapaneseAmateur(pick(['CORP','INDEP']),pick(CORPORATE_TEAMS.concat(INDEP_TEAMS)));
+        }
+        if(fromSchool) cb();
+        else if(fromAmateur) startYear();
+        else advance();
       }}]);
     return;
   }
@@ -117,7 +134,9 @@ export function runDraft(fromSchool,cb){
 export function pathChoiceHS(){
   const o=ovr();
   const opts=[
-    {t:'就讀大學（延長養成）',s:'一年僅 2 場大賽加點｜大二起可投入日職選秀（僅一次）',f:()=>{ S.stage='U'; S.stageYr=0; S.team=pick(JP_UNI); card('info','升學',`進入 <b class="hl">${S.team}</b> 棒球隊。`); advance(); }}
+    {t:'就讀大學（延長養成）',s:'一年僅 2 場大賽加點｜大二起可投入日職選秀（僅一次）',f:()=>{ S.stage='U'; S.stageYr=0; S.team=pick(JP_UNI); card('info','升學',`進入 <b class="hl">${S.team}</b> 棒球隊。`); advance(); }},
+    {t:'加入社會人棒球',s:'不消耗日職選秀資格｜企業隊業餘合約',f:()=>{enterJapaneseAmateur('CORP',pick(CORPORATE_TEAMS)); card('info','加盟社會人',`高中畢業後加入 <b class="hl">${S.orgTeam}</b>。日職選秀資格仍在，之後季末仍可投入一次。`); advance(); }},
+    {t:'加入獨立聯盟',s:'不消耗日職選秀資格｜獨立聯盟舞台',f:()=>{enterJapaneseAmateur('INDEP',pick(INDEP_TEAMS)); card('info','加盟獨立聯盟',`高中畢業後加入 <b class="hl">${S.orgTeam}</b>。日職選秀資格仍在，之後季末仍可投入一次。`); advance(); }}
   ];
   if(!enteredNpbDraft()){
     opts.push({t:'投入日本職棒選秀',s:'目前綜合 '+o+'｜生涯僅一次',f:()=>runDraft(false,r=>{

@@ -1,5 +1,5 @@
-import {S, nextStep} from './core/state.js?v=1.5.11';
-import {board, card, actToggleSync} from './ui/dom.js?v=1.5.11';
+import {S} from './core/state.js?v=1.5.16';
+import {board, card} from './ui/dom.js?v=1.5.16';
 
 const SECRET=['P','C','IF','OF','OF','IF','C','P'];
 let seq=[]; let armed=false; let lockInstalled=false; let mlbJapanFarewellShown=false;
@@ -53,9 +53,7 @@ if(start)start.addEventListener('click',()=>{if(!armed)return;setTimeout(()=>{if
 function localizeJapanText(root){
   if(!root||S?.org==='CPBL')return;
   const r=[
-    ['中華隊徵召','日本代表邀請'],['日本代表徵召','日本代表邀請'],['婉拒本次代表隊徵召','考量身體狀況婉拒'],['披上日本代表戰袍','披上國家隊戰袍'],['中華隊','日本代表'],['台灣的轉播單位','日本の放送局'],['台灣時間','日本時間'],['台灣棒球','日本野球'],['台灣球迷','日本のファン'],['台灣的力量','日本の力'],
-    ['用中文寫的「謝謝」毛巾','「ありがとう」と書かれたタオル'],['用不太標準的中文問你「還會回來嗎」','「また日本に戻ってきますか」と日本語で尋ねられ'],
-    ['不動產營業員','不動産営業'],['板模工','建設現場の職人'],['早餐店','喫茶店'],['少棒隊員','少年野球の子どもたち'],['公司壘球隊','会社の草野球チーム'],['消防員','消防士'],['乙組業餘棒球隊','社会人クラブチーム'],['台北大巨蛋','東京ドーム'],['臺北大巨蛋','東京ドーム']
+    ['中華隊徵召','日本代表邀請'],['日本代表徵召','日本代表邀請'],['婉拒本次代表隊徵召','考量身體狀況婉拒'],['披上日本代表戰袍','披上國家隊戰袍'],['中華隊','日本代表']
   ];
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),nodes=[]; while(w.nextNode())nodes.push(w.currentNode);
   for(const n of nodes){let t=n.nodeValue;for(const [a,b] of r)t=t.split(a).join(b);if(t!==n.nodeValue)n.nodeValue=t;}
@@ -71,32 +69,16 @@ function maybeJapanMlbFarewell(){
   const mlb=S.stats?.MLB,npb=S.stats?.NPB,cpbl=S.stats?.CPBL;
   if(!(mlb&&mlb.yr>0)||((npb&&npb.yr>0)||(cpbl&&cpbl.yr>0)))return;
   mlbJapanFarewellShown=true;
-  card('gold','日本球界からの招待','現役生活の大半を美国で過ごしたあなたに、日本球界から声がかかった。東京ドームで<b class="hl">一日限りのNPB選手</b>として始球式を務めてほしい——そんな特別な招待だった。満員のスタンドを見渡し、あなたは最後の一球を投げる。勝敗ではなく、日本野球への感謝を込めた一球だ。');
+  card('gold','日本球界的邀請','現役大半歲月在美國度過的你，接到日本球界的邀請。東京巨蛋邀你以一日 NPB 選手的身分擔任開球——滿場看台前，你投出的不是勝負，而是對日本野球的感謝。');
   board(1);
-}
-
-function recoverEmptyCpblAction(){
-  if(!S||S.org!=='CPBL'||S.done)return;
-  const a=document.getElementById('act');
-  if(!a||a.style.display==='none'||a.querySelector('button'))return;
-  const title=a.querySelector('.title');
-  if(!title)return;
-  const b=document.createElement('button');
-  b.className='btn main';
-  b.textContent='繼續';
-  b.onclick=()=>{a.innerHTML='';nextStep();};
-  a.appendChild(b);
-  actToggleSync();
 }
 
 const observer=new MutationObserver(ms=>{
   normalizeJapanContract();
   ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)localizeJapanText(n);}));
   maybeJapanMlbFarewell();
-  recoverEmptyCpblAction();
 });
 observer.observe(document.body,{childList:true,subtree:true});
 localizeJapanText(document.body);
 normalizeJapanContract();
 maybeJapanMlbFarewell();
-recoverEmptyCpblAction();

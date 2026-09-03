@@ -1,9 +1,9 @@
-import {S} from '../core/state.js?v=1.5.11';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.11';
-import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.11';
-import {LV} from '../data/teams.js?v=1.5.11';
-import {card, choose, board} from '../ui/dom.js?v=1.5.11';
-import {roleN, pitcherRole} from './season.js?v=1.5.11';
+import {S} from '../core/state.js?v=1.5.16';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.16';
+import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.16';
+import {LV} from '../data/teams.js?v=1.5.16';
+import {card, choose, board} from '../ui/dom.js?v=1.5.16';
+import {roleN, pitcherRole} from './season.js?v=1.5.16';
 export function enforcePerfectAbilities(){
   if(!S?.perfectLock)return;
   Object.keys(S.ab||{}).forEach(k=>S.ab[k]=80);
@@ -106,17 +106,17 @@ export function dposReview(cont){
     f:()=>{ S.dpos=p; card('info','守位調整',`球團季末評估後，新球季改守 <b class="hl">${DPN[p]}</b>。`); cont(); }}));
   choose(`守位會議：教練團認為你的守備已撐不住 ${DPN[S.dpos]}（${LV[S.lv].n}標準）`,opts);
 }
-/* 只會這個:只吃三種角色維度——打擊(力量/Contact)、跑壘(速度)、守備(綜合) */
+/* 只會這個:只吃三種角色維度——打擊(力量/擊球)、跑壘(速度)、守備(綜合) */
 export function careerAllStars(){ let n=0; ['CPBL','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }
 export function toolGap(){ const a=S.ab;
-  const hit=Math.max(a.pow,a.con);        /* 打擊維度:力量或 Contact 取高 */
+  const hit=Math.max(a.pow,a.con);        /* 打擊維度:力量或擊球取高 */
   const run=a.spd;                         /* 跑壘維度 */
   const def=S.pos==='C'?(a.rng+a.fld+a.arm+a.cat)/4:(a.rng+a.fld+a.arm)/3; /* 守備綜合 */
   const dims=[['hit',hit,'代打'],['run',run,'代跑'],['def',def,'代守']];
   dims.sort((x,y)=>y[1]-x[1]);
   const topDim=dims[0], secDim=dims[1];
   const gap=topDim[1]-secDim[1];
-  /* 對照角色:代打看力量/Contact 哪個高決定文案來源 */
+  /* 對照角色:代打看力量/擊球哪個高決定文案來源 */
   const role=topDim[2];
   return {gap, role, val:topDim[1], dim:topDim[0]}; }
 export function ovr(){

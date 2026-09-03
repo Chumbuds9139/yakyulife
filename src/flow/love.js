@@ -1,12 +1,12 @@
-import {S} from '../core/state.js?v=1.5.11';
-import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.11';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.11';
-import {card, choose, board} from '../ui/dom.js?v=1.5.11';
-import {addAb, addAbStat, statBonusTxt, abGainTxt} from '../engine/ability.js?v=1.5.11';
+import {S} from '../core/state.js?v=1.5.16';
+import {R, pick, chance, clamp} from '../core/rng.js?v=1.5.16';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.16';
+import {card, choose, board} from '../ui/dom.js?v=1.5.16';
+import {addAb, addAbStat, statBonusTxt, abGainTxt} from '../engine/ability.js?v=1.5.16';
 /* 出廠預設為全虛構人名;玩家可透過隱藏編輯器自訂名單(僅存於玩家本機) */
-export let CHEER=['林曉晴','陳若彤','張沛慈','王詠恩','許昀熙','蘇采蓁','周依潔','郭芷萱'];
+export let CHEER=['佐藤葵','高橋美月','伊藤陽菜','渡邊結衣','小林咲良','中村彩花','加藤凜','吉田真緒'];
 export const CHEER_DEFAULT=CHEER.slice();
-export let CHEER_SAFE=['馮海莎']; /* 不會變成小三的名單:可交往/結婚,永不出現在外遇人選 */
+export let CHEER_SAFE=['山本海紗']; /* 不會變成小三的名單:可交往/結婚,永不出現在外遇人選 */
 export function datePool(){ /* 交往/結婚名單 */
   if(CHEER_SAFE.length>=CHEER.length) return CHEER_SAFE.slice();      /* 安全名單較長:直接整組替換 */
   return CHEER_SAFE.concat(CHEER.slice(CHEER_SAFE.length));           /* 較短:同數量替換進名單 */
@@ -57,10 +57,10 @@ export function loveEvent(next){
     const confessionChance=former?(twiceCaught?0:30):65;
     card('info',former?'舊情重燃':'場外話題',former
       ?`你和前妻 <b class="hl">${p}</b> 再次被拍到一起出現。記者立刻追了上來，想知道這次見面究竟代表什麼。`
-      :`你和啦啦隊女神 <b class="hl">${p}</b> 被拍到球場外同框，緋聞登上娛樂版頭條。${L.exes.length?'（評論區：「離過婚還這麼搶手」）':''}`);
+      :`你和應援團的 <b class="hl">${p}</b> 被拍到球場外同框，緋聞登上娛樂版頭條。${L.exes.length?'（評論區：「離過婚還這麼搶手」）':''}`);
     choose('記者把麥克風遞到你面前：「兩位是在交往嗎？」',[
       {t:former?'再次告白：「我想重新開始」':'大方承認：「請大家祝福我們」',
-       s:former?`她是否願意重新相信你（成功率 ${confessionChance}%）`:'還要看她那邊敢不敢承認（球團有禁愛令傳聞）',f:()=>{
+       s:former?`她是否願意重新相信你（成功率 ${confessionChance}%）`:'還要看她那邊敢不敢承認（球團不太鼓勵球員與應援團公開交往）',f:()=>{
         if(chance(confessionChance)){ L.st='dating'; L.partner=p; L.dyrs=0; L.datedTimes=(L.datedTimes||0)+1;
           const gt=loveGainTxt('sta',1); board(1);
           card('gold',former?'重新開始':'戀情公開',former
@@ -74,7 +74,7 @@ export function loveEvent(next){
           ?(twiceCaught
             ?`她深吸了一口氣：「你當我是白癡？」只差沒有甩一巴掌在你臉上。`
             :`破碎的信任完全無法恢復，她的姊妹要她吃點好的，何必眷戀你這個爛男人？`)
-          :`她隔天透過經紀公司否認：「只是普通朋友。」據傳啦啦隊<b class="dn">禁愛令</b>壓力不小。你一個人站在風裡，超級尷尬。`); }
+          :`她隔天透過事務所否認：「只是普通朋友。」據傳球團<b class="dn">不希望球員與應援團公開交往</b>，壓力不小。你一個人站在風裡，超級尷尬。`); }
         next(); }},
       {t:'笑而不答，快步走過',main:true,s:'不承認就沒有下文',f:()=>{
         card('info','未完待續','緋聞燒了三天就退燒。也許時機還沒到。'); next(); }}]); return;

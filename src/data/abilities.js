@@ -1,5 +1,5 @@
 /* ---------- 能力與守位資料 ---------- */
-export const ABL={sta:'體力',vel:'球速',ctl:'控球',brk:'變化球',con:'Contact',pow:'力量',spd:'速度',eye:'選球',rng:'守備範圍',fld:'接球',arm:'臂力',cat:'配球'};
+export const ABL={sta:'體力',vel:'球速',ctl:'控球',brk:'變化球',con:'擊球',pow:'力量',spd:'速度',eye:'選球',rng:'守備範圍',fld:'接球',arm:'臂力',cat:'配球'};
 export const POS_AB={P:['sta','vel','ctl','brk'],C:['sta','con','pow','spd','eye','rng','fld','arm','cat'],IF:['sta','con','pow','spd','eye','rng','fld','arm'],OF:['sta','con','pow','spd','eye','rng','fld','arm']};
 export const POSN={P:'投手',C:'捕手',IF:'內野手',OF:'外野手'};
 /* ---------- 守位系統 ---------- */

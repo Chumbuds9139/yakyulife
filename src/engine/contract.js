@@ -1,18 +1,18 @@
-import {S} from '../core/state.js?v=1.5.11';
-import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.11';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.11';
-import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.11';
-import {card, choose, board} from '../ui/dom.js?v=1.5.11';
-import {tlNote} from '../ui/timeline.js?v=1.5.11';
-import {ovr} from './ability.js?v=1.5.11';
-import {injuryMarketStatus} from './injury.js?v=1.5.11';
-import {hasActiveFranchise} from './tenure.js?v=1.5.11';
-import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.11';
-import {capTeam} from './career.js?v=1.5.11';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.11';
-import {advance} from './draft.js?v=1.5.11';
-import {finishContractYear} from '../flow/phases.js?v=1.5.11';
-import {endGame} from '../ui/retire.js?v=1.5.11';
+import {S} from '../core/state.js?v=1.5.16';
+import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.16';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.16';
+import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.16';
+import {card, choose, board} from '../ui/dom.js?v=1.5.16';
+import {tlNote} from '../ui/timeline.js?v=1.5.16';
+import {ovr} from './ability.js?v=1.5.16';
+import {injuryMarketStatus} from './injury.js?v=1.5.16';
+import {hasActiveFranchise} from './tenure.js?v=1.5.16';
+import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.16';
+import {capTeam} from './career.js?v=1.5.16';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.16';
+import {advance} from './draft.js?v=1.5.16';
+import {finishContractYear} from '../flow/phases.js?v=1.5.16';
+import {endGame} from '../ui/retire.js?v=1.5.16';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
@@ -335,7 +335,13 @@ export function outOfOrg(o){
   if(S.age>=33){ offers.push({t:'就此引退',warn:true,f:()=>{buyoutRemaining(1);daibaFarewell(()=>endGame('收到戰力外通告後，'+S.year+' 年選擇引退。'));}}); }
   choose('新東家的邀請',offers.map(x=>({...x,f:()=>{x.f();advance();}})));
 }
-export function teamListOf(org){ return org==='CPBL'?CPBL_TEAMS:org==='NPB'?NPB_TEAMS:MLB_TEAMS; }
+export function teamListOf(org){
+  if(org==='CPBL')return CPBL_TEAMS;
+  if(org==='NPB')return NPB_TEAMS;
+  if(org==='CORP')return CORPORATE_TEAMS;
+  if(org==='INDEP')return INDEP_TEAMS;
+  return MLB_TEAMS;
+}
 export function signTo(org,lv,team,yrs,mult,annual,quiet){
   const sourceLv=S.lastLv||S.lv,contractD=ratingAtLevel(currentSalaryRating(S.lastD||0),sourceLv,lv);
   S.org=org; S.lv=lv;

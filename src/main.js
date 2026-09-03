@@ -1,13 +1,13 @@
-import {SEED, setSeed, seedInit} from './core/rng.js?v=1.5.11';
-import {S, setS, newState} from './core/state.js?v=1.5.11';
-import {APP_VER} from './config.js?v=1.5.11';
-import {POSN} from './data/abilities.js?v=1.5.11';
-import {teamDisplayName} from './data/teams.js?v=1.5.11';
-import {$, card, modalClose, actToggleSync} from './ui/dom.js?v=1.5.11';
-import {THEME_KEY, BIG_KEY, applyTheme, applyMobileUI, applyBigText, updDispSum} from './ui/prefs.js?v=1.5.11';
-import {allocFullClose} from './ui/alloc.js?v=1.5.11';
-import {TL, resetTL, renderTimeline, tlScrollTo} from './ui/timeline.js?v=1.5.11';
-import {startYear} from './flow/phases.js?v=1.5.11';
+import {SEED, setSeed, seedInit} from './core/rng.js?v=1.5.16';
+import {S, setS, newState} from './core/state.js?v=1.5.16';
+import {APP_VER} from './config.js?v=1.5.16';
+import {POSN} from './data/abilities.js?v=1.5.16';
+import {teamDisplayName} from './data/teams.js?v=1.5.16';
+import {$, card, modalClose, actToggleSync} from './ui/dom.js?v=1.5.16';
+import {THEME_KEY, BIG_KEY, applyTheme, applyMobileUI, applyBigText, updDispSum} from './ui/prefs.js?v=1.5.16';
+import {allocFullClose} from './ui/alloc.js?v=1.5.16';
+import {TL, resetTL, renderTimeline, tlScrollTo} from './ui/timeline.js?v=1.5.16';
+import {startYear} from './flow/phases.js?v=1.5.16';
 
 /* ================= 開場設定 ================= */
 /* iOS Safari zoom guards. Pinch: Safari ignores maximum-scale/user-scalable, so the
@@ -112,9 +112,20 @@ document.querySelectorAll('#seg-pos button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#seg-pos button').forEach(x=>x.classList.remove('on'));
   b.classList.add('on'); selPos=b.dataset.v;
 });
+try{
+  const posQ=new URLSearchParams(location.search).get('pos');
+  if(posQ&&['P','C','IF','OF'].includes(posQ)){
+    selPos=posQ;
+    document.querySelectorAll('#seg-pos button').forEach(x=>{
+      x.classList.toggle('on',x.dataset.v===posQ);
+    });
+  }
+}catch(e){}
+let careerStarted=false;
 $('btn-start').onclick=()=>{
+  if(careerStarted||S)return;
   const sv=$('seed-show').value.trim(); if(sv)setSeed(sv); /* 玩家可直接輸入流水碼 */
-  history.replaceState(null,'','?seed='+encodeURIComponent(SEED));
+  history.replaceState(null,'','?seed='+encodeURIComponent(SEED)+'&pos='+encodeURIComponent(selPos));
   seedInit(SEED);
   const enteredName=$('in-name').value.trim();
   const rawNo=$('in-number').value.trim();
@@ -143,13 +154,15 @@ $('btn-start').onclick=()=>{
       localStorage.setItem(PLAYER_JERSEY_KEY,String(jersey));
     }catch(e){}
   }
+  careerStarted=true;
+  const startBtn=$('btn-start'); if(startBtn)startBtn.disabled=true;
   setS(newState(nm,jersey,selPos,null));
   S.teamName=function(){ return teamDisplayName(this); };
   $('start').style.display='none';
   $('board').style.display=''; $('act').style.display='';
   resetTL(); renderTimeline();
   const ts=$('tl-seed'); if(ts)ts.textContent=SEED;
-  card('info','球員誕生',`${S.year} 年春天，${POSN[S.pos]} <b class="hl">${S.name}</b> 加入 <b class="hl">${S.team}</b> 棒球隊。雄心壯志，野心勃勃，他的世界正要因為棒球展開。<br><span style="color:var(--dim);font-size:12px">提示：22 歲前累積擲出 5 次「6」可覺醒隱藏素質。</span>`);
+  card('info','球員誕生',`${S.year} 年春天，${POSN[S.pos]} <b class="hl">${S.name}</b> 加入 <b class="hl">${S.team}</b> 棒球隊。雄心壯志，野心勃勃，他的世界正要因為棒球展開。<br><span style="color:var(--dim);font-size:12px">提示：22 歲前累積擲出 5 次「6」可覺醒隱藏素質。重整頁面不會保存進度，同一種子可重播。</span>`);
   startYear();
 };
 /* ================= PWA installability: manifest built at runtime as a Blob; icons are

@@ -92,6 +92,8 @@ export function teamDisplayName(s){
   if(s.org==='CORP'||s.org==='INDEP'||s.lv==='CORP'||s.lv==='INDEP')return s.orgTeam;
   if(s.lv==='MLB')return s.orgTeam;
   if(LV[s.lv]&&LV[s.lv].org==='MiLB')return s.orgTeam+({R:'新人聯盟',A1:'1A',A2:'2A',A3:'3A'}[s.lv]||'');
+  if(s.lv==='NPB_TRAIN')return s.orgTeam+'育成';
   if(s.lv==='CPBL1'||s.lv==='NPB1')return s.orgTeam;
-  return s.orgTeam+'二軍';
+  if(s.lv==='NPB2'||s.lv==='CPBL2')return s.orgTeam+'二軍';
+  return s.orgTeam;
 }
