@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Repair exact syntax typo
+      - name: Repair exact syntax typo and remove this workflow
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -25,5 +25,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/engine/contract.js
+          git rm .github/workflows/fix-contract-syntax.yml
           git commit -m "fix: repair contract syntax typo"
           git push origin HEAD:main
