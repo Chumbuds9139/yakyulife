@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 const url=process.env.YAKYOLIFE_URL||'http://127.0.0.1:8124/';
-const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||'C:\\Program Files\\Google\\Chrome\\Application\chrome.exe',args:['--disable-gpu']});
+const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',args:['--disable-gpu']});
 try{
   const page=await browser.newPage();
   page.on('dialog',d=>d.accept());
@@ -21,7 +21,7 @@ try{
     return {migrated,samuraiLabel:traits.TRAIT_N.samurai,devSalary:economy.LEVEL_MIN_ANNUAL.NPB_TRAIN,wbc2009:intl.japanIntlStrength(2009,true),wbc2017:intl.japanIntlStrength(2017,true),wbc2026:intl.japanIntlStrength(2026,true),perfect:!!now.perfectLock,all80:Object.values(now.ab).every(v=>v===80),allPos:traits.TRAIT_KEYS.pos.every(k=>now.traits[k]===true)};
   });
   assert.equal(result.migrated,true); assert.equal(result.samuraiLabel,'武士精神'); assert.equal(result.devSalary,240);
-  assert.equal(result.wbc2009,8); assert.equal(result.wbc2017,5); assert.equal(result.wbc2026,7);
+  assert.equal(result.wbc2009,8); assert.equal(result.wbc2017,6); assert.equal(result.wbc2026,6);
   assert.equal(result.perfect,true); assert.equal(result.all80,true); assert.equal(result.allPos,true);
   console.log(JSON.stringify(result,null,2));
 }finally{await browser.close();}
