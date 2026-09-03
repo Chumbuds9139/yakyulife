@@ -1,0 +1,153 @@
+name: JP world localization pass
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply controlled Japanese world fixes
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          ROOT=Path('.')
+
+          def replace_once(path, old, new):
+              p=ROOT/path
+              s=p.read_text(encoding='utf-8')
+              if old not in s:
+                  raise SystemExit(f'expected text not found in {path}: {old[:120]!r}')
+              if s.count(old)!=1:
+                  raise SystemExit(f'expected exactly one match in {path}, got {s.count(old)}')
+              p.write_text(s.replace(old,new),encoding='utf-8')
+
+          # 1) NPB developmental contract floor: never display 0 anymore.
+          replace_once('src/data/economy.js',
+              'export const LEVEL_MIN_ANNUAL={CPBL2:84,CPBL1:100,NPB2:240,NPB1:320,R:60,A1:95,A2:105,A3:125,MLB:2400};',
+              'export const LEVEL_MIN_ANNUAL={CPBL2:84,CPBL1:100,NPB_TRAIN:240,NPB2:240,NPB1:320,R:60,A1:95,A2:105,A3:125,MLB:2400};')
+
+          # 2) Rename the internal Taiwan trait key to samurai, while keeping old saves migratable.
+          for p in ROOT.glob('src/**/*.js'):
+              s=p.read_text(encoding='utf-8')
+              if 'taiwan' in s:
+                  p.write_text(s.replace('taiwan','samurai'),encoding='utf-8')
+
+          replace_once('src/core/state.js',
+              'export function setS(v){ S=bindLevelOrg(v); }',
+              "export function setS(v){\n  if(v&&v.traits&&v.traits.taiwan&&!v.traits.samurai)v.traits.samurai=true;\n  if(v&&v.traits)delete v.traits.taiwan;\n  S=bindLevelOrg(v);\n}")
+          replace_once('src/core/state.js',
+              'late:false,disc:false,academy:false,intlace:false,franchise:false,clutch:false,favorite:false,phoenix:false,combo:false,onetool:false,rubber:false,legend:false,',
+              'late:false,disc:false,academy:false,intlace:false,franchise:false,clutch:false,favorite:false,phoenix:false,combo:false,onetool:false,rubber:false,legend:false,')
+          replace_once('src/core/state.js',
+              'yips:false,distract:false,cancer:false,ambience:false,goldcloth:false,thief:false,latepractice:false,mrteam:false,confidante:false,smallschool:false,grinder:false,rainbow:false,samurai:false,pitcherTC:false,hitterTC:false},',
+              'yips:false,distract:false,cancer:false,ambience:false,goldcloth:false,thief:false,latepractice:false,mrteam:false,confidante:false,smallschool:false,grinder:false,rainbow:false,samurai:false,pitcherTC:false,hitterTC:false},')
+
+          # 3) International games: Japan / Samurai Japan, with historical team-strength adjustment.
+          intl=ROOT/'src/engine/intl.js'
+          s=intl.read_text(encoding='utf-8')
+          anchor='export function maybeIntl(done){'
+          strength='''const JAPAN_INTL_STRENGTH={\n  wbc:{2006:7,2009:8,2013:6,2017:5,2023:8,2026:7},\n  p12:{2015:5,2019:7,2024:7}\n};\nexport function japanIntlStrength(year,wbc){\n  const table=wbc?JAPAN_INTL_STRENGTH.wbc:JAPAN_INTL_STRENGTH.p12;\n  if(table[year]!=null)return table[year];\n  const ys=Object.keys(table).map(Number).filter(y=>y<year).sort((a,b)=>a-b);\n  return ys.length?table[ys[ys.length-1]]:6;\n}\n'''
+          if anchor not in s: raise SystemExit('intl anchor missing')
+          s=s.replace(anchor,strength+anchor,1)
+          old='const b=clamp(Math.round((ovr()-52)*0.35),0,8);'
+          new='const teamStrength=japanIntlStrength(S.year,wbc);\n      const b=clamp(Math.round((ovr()-52)*0.35)+Math.round((teamStrength-5)*0.8),0,8);'
+          if s.count(old)!=1: raise SystemExit('intl b formula mismatch')
+          s=s.replace(old,new,1)
+          s=s.replace('隱藏稱號：Team Taiwan','隱藏稱號：武士精神')
+          s=s.replace('永遠把國家榮耀放在比職涯更高的位子，台灣球迷的心中永遠有一幅畫：你在球場上向全場比劃著胸口，那是你心中最榮耀的地方。','永遠把日本代表的榮耀放在比個人職涯更高的位置。你在球場上拍著胸口、向看台致意的那一刻，成為球迷心中最驕傲的畫面。')
+          intl.write_text(s,encoding='utf-8')
+
+          # 4) Samurai trait display text.
+          traits=ROOT/'src/data/traits.js'
+          s=traits.read_text(encoding='utf-8')
+          s=s.replace("samurai:'Team Taiwan'","samurai:'武士精神'")
+          s=s.replace("samurai:'國際賽徵召超過 5 次的國家隊常客'","samurai:'國際賽徵召超過 5 次的日本代表常客'")
+          traits.write_text(s,encoding='utf-8')
+
+          # 5) Perfect-stat secret: position sequence P,C,IF,OF,OF,IF,C,P.
+          japan_js='''import {S} from './core/state.js?v=1.5.11';\nimport {POS_AB} from './data/abilities.js?v=1.5.11';\nimport {TRAIT_KEYS} from './data/traits.js?v=1.5.11';\nimport {board, card} from './ui/dom.js?v=1.5.11';\n\nconst SECRET=['P','C','IF','OF','OF','IF','C','P'];\nlet seq=[];\nlet armed=false;\nlet lockInstalled=false;\n\nfunction installAbilityLock(){\n  if(!S||lockInstalled)return;\n  lockInstalled=true;\n  S.perfectLock=true;\n  Object.keys(S.ab||{}).forEach(k=>S.ab[k]=80);\n  Object.keys(S.pot||{}).forEach(k=>S.pot[k]=80);\n  S.carry={};\n  TRAIT_KEYS.pos.forEach(k=>{ S.traits[k]=true; });\n  /* The flag is checked by the core training/decline paths; this proxy also catches\n     direct injury/event writes so the 80 cap really is permanent for the secret run. */\n  const oldAb=S.ab, oldPot=S.pot;\n  const guard=(target)=>new Proxy(target,{\n    set(t,k,v){ if(S.perfectLock && Object.prototype.hasOwnProperty.call(t,k)){ t[k]=80; return true; } t[k]=v; return true; }\n  });\n  Object.defineProperty(S,'ab',{configurable:true,enumerable:true,get(){return oldAb;},set(v){return true;}});\n  S.ab=guard(oldAb);\n  Object.defineProperty(S,'pot',{configurable:true,enumerable:true,get(){return oldPot;},set(v){return true;}});\n  S.pot=guard(oldPot);\n  card('gold','隱藏彩蛋：侍魂開啟','你在角色創建時輸入了傳說中的守位密碼。<b class="hl">所有正面附加效果已解鎖，所有能力值與潛力上限永久鎖定 80。</b> 這一局，規則由你寫。');\n  board(0);\n}\n\ndocument.querySelectorAll('#seg-pos button').forEach(btn=>{\n  btn.addEventListener('click',()=>{\n    const v=btn.dataset.v;\n    seq.push(v);\n    if(seq.length>SECRET.length)seq.shift();\n    if(seq.length===SECRET.length&&seq.every((v,i)=>v===SECRET[i])){\n      seq=[]; armed=true;\n      window.alert('侍魂已覺醒：所有正面附加效果解鎖，能力永遠鎖定滿級。開始這段生涯後生效。');\n    }\n  });\n});\n\nconst start=document.getElementById('btn-start');\nif(start)start.addEventListener('click',()=>{\n  if(!armed)return;\n  const wait=()=>{ if(S){ installAbilityLock(); return; } setTimeout(wait,0); };\n  wait();\n});\n\nfunction localizeJapanText(root){\n  if(!root||S?.org==='CPBL')return;\n  const replacements=[\n    ['中華隊','日本代表'],['中華隊徵召','日本代表徵召'],\n    ['台灣的轉播單位','日本の放送局'],['台灣時間','日本時間'],\n    ['台灣棒球','日本野球'],['台灣球迷','日本のファン'],\n    ['台灣的力量','日本の力'],['用中文寫的「謝謝」毛巾','「ありがとう」と書かれたタオル'],\n    ['用不太標準的中文問你「還會回來嗎」','「また日本に戻ってきますか」と日本語で尋ねられ'],\n    ['不動產營業員','不動産営業'],['板模工','建設現場の職人'],['早餐店','喫茶店'],\n    ['少棒隊員','少年野球の子どもたち'],['公司壘球隊','会社の草野球チーム'],['消防員','消防士'],\n    ['乙組業餘棒球隊','社会人クラブチーム'],\n    ['台北大巨蛋','東京ドーム'],['臺北大巨蛋','東京ドーム']\n  ];\n  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);\n  const nodes=[]; while(walker.nextNode())nodes.push(walker.currentNode);\n  for(const n of nodes){ let t=n.nodeValue; for(const [a,b] of replacements)t=t.split(a).join(b); if(t!==n.nodeValue)n.nodeValue=t; }\n}\n\nconst observer=new MutationObserver(ms=>{ for(const m of ms){ for(const n of m.addedNodes){ if(n.nodeType===1)localizeJapanText(n); } } });\nobserver.observe(document.body,{childList:true,subtree:true});\nlocalizeJapanText(document.body);\n'''
+          (ROOT/'src/japan.js').write_text(japan_js,encoding='utf-8')
+
+          # Load the localization module before the main module so the secret listener is ready.
+          idx=ROOT/'index.html'
+          s=idx.read_text(encoding='utf-8')
+          marker='<script type="module" src="src/main.js?v=1.5.11-ui-complete"></script>'
+          if marker not in s: raise SystemExit('index main script marker missing')
+          s=s.replace(marker,'<script type="module" src="src/japan.js?v=1.5.11-jp"></script>\n'+marker,1)
+          idx.write_text(s,encoding='utf-8')
+
+          # 6) Core perfect-lock enforcement for normal ability paths.
+          ability=ROOT/'src/engine/ability.js'
+          s=ability.read_text(encoding='utf-8')
+          old='export function addAb(k,v){ if(!(k in S.ab))return 0;'
+          new='export function addAb(k,v){ if(S.perfectLock){ if(k in S.ab)S.ab[k]=80; return 0; } if(!(k in S.ab))return 0;'
+          if s.count(old)!=1: raise SystemExit('ability addAb marker mismatch')
+          s=s.replace(old,new,1)
+          old='export function addAbStat(k,amt){ \n  if(amt<=0)return addAb(k,amt);'
+          new='export function addAbStat(k,amt){ \n  if(S.perfectLock){ if(k in S.ab)S.ab[k]=80; return 0; }\n  if(amt<=0)return addAb(k,amt);'
+          if s.count(old)!=1: raise SystemExit('ability addAbStat marker mismatch')
+          s=s.replace(old,new,1)
+          s=s.replace('export function normalizeAbCarry(k){\n  if(!S.carry)S.carry={};', 'export function normalizeAbCarry(k){\n  if(S.perfectLock){ if(k in S.ab)S.ab[k]=80; if(!S.carry)S.carry={}; S.carry[k]=0; return 0; }\n  if(!S.carry)S.carry={};',1)
+          ability.write_text(s,encoding='utf-8')
+
+          # 7) Decline cannot bypass the perfect lock.
+          phases=ROOT/'src/flow/phases.js'
+          s=phases.read_text(encoding='utf-8')
+          old='  const declAge=S.age-(S.traits.disc?2:0); /* 自律狂:衰退曲線整體延後兩年 */\n  if(declAge>=32){'
+          new='  const declAge=S.age-(S.traits.disc?2:0); /* 自律狂:衰退曲線整體延後兩年 */\n  if(!S.perfectLock&&declAge>=32){'
+          if s.count(old)!=1: raise SystemExit('phase decline marker mismatch')
+          s=s.replace(old,new,1)
+          phases.write_text(s,encoding='utf-8')
+
+          # 8) Injury cannot bypass the perfect lock.
+          injury=ROOT/'src/engine/injury.js'
+          s=injury.read_text(encoding='utf-8')
+          old='export function injuryProb(){ /* 基礎風險從 24 降為 15，減少動不動就受傷的頻率 */\n  let p=15+S.injNext;'
+          new='export function injuryProb(){ /* 基礎風險從 24 降為 15，減少動不動就受傷的頻率 */\n  if(S.perfectLock)return 0;\n  let p=15+S.injNext;'
+          if s.count(old)!=1: raise SystemExit('injury marker mismatch')
+          s=s.replace(old,new,1)
+          injury.write_text(s,encoding='utf-8')
+
+          # 9) Keep perfect abilities at the beginning of every season as a second safety net.
+          old="import {addAb, ovr, dposReview, statBonusTxt} from '../engine/ability.js?v=1.5.11';"
+          new="import {addAb, ovr, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.5.11';"
+          if s:=phases.read_text(encoding='utf-8'):
+              pass
+          s=phases.read_text(encoding='utf-8')
+          if old not in s: raise SystemExit('phase ability import marker missing')
+          s=s.replace(old,new,1)
+          old='export function startYear(){ S.yearOutsideIncome=0; stepQ.length=0;'
+          new='export function startYear(){ S.yearOutsideIncome=0; enforcePerfectAbilities(); stepQ.length=0;'
+          if s.count(old)!=1: raise SystemExit('phase startYear marker mismatch')
+          s=s.replace(old,new,1)
+          phases.write_text(s,encoding='utf-8')
+
+          # Add the exported safety function if it is not already present.
+          ability=ROOT/'src/engine/ability.js'
+          s=ability.read_text(encoding='utf-8')
+          marker='export function dpScore(p){'
+          fn='''export function enforcePerfectAbilities(){\n  if(!S?.perfectLock)return;\n  Object.keys(S.ab||{}).forEach(k=>S.ab[k]=80);\n  Object.keys(S.pot||{}).forEach(k=>S.pot[k]=80);\n  S.carry={};\n}\n'''
+          if 'export function enforcePerfectAbilities' not in s:
+              if marker not in s: raise SystemExit('ability function anchor missing')
+              s=s.replace(marker,fn+marker,1)
+          ability.write_text(s,encoding='utf-8')
+
+          # 10) Remove this one-shot workflow in the same commit that contains the changes.
+          wf=Path('.github/workflows/jp-world-localization.yml')
+          wf.unlink()
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src index.html .github/workflows/jp-world-localization.yml
+          git diff --cached --check
+          git commit -m "feat: localize Japan world and add samurai secret"
+          git push origin HEAD:main
