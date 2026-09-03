@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 globalThis.location={search:''};
 const state=await import('../src/core/state.js');
 const {LV, PATHS, NPB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, CPBL_TEAMS}=await import('../src/data/teams.js');
+const {OFFICIAL_URL}=await import('../src/config.js');
 
-assert.deepEqual(PATHS.NPB, ['NPB_TRAIN','NPB2','NPB1','MLB']);
+assert.deepEqual(PATHS.NPB, ['NPB_TRAIN','NPB2','NPB1']);
 assert.deepEqual(PATHS.CORP, ['CORP','NPB2','NPB1']);
 assert.deepEqual(PATHS.INDEP, ['INDEP','NPB2','NPB1']);
+assert.equal(PATHS.NPB.includes('MLB'), false);
 assert.equal(PATHS.NPB.includes('CPBL1'), false);
 assert.equal(PATHS.NPB.includes('CPBL2'), false);
 assert.equal(LV.NPB_TRAIN.org, 'NPB');
@@ -18,6 +20,7 @@ assert.ok(NPB_TEAMS.length >= 12);
 assert.ok(INDEP_TEAMS.length >= 3);
 assert.ok(CORPORATE_TEAMS.length >= 3);
 assert.ok(CPBL_TEAMS.length >= 6);
+assert.equal(OFFICIAL_URL, 'https://chumbuds9139.github.io/yakyulife/');
 
 state.setS(state.newState('test', 1, 'C', null));
 assert.equal(state.stageLabel(), '高一');
