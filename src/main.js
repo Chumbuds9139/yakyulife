@@ -2,7 +2,7 @@ import {SEED, setSeed, seedInit} from './core/rng.js?v=1.5.11';
 import {S, setS, newState} from './core/state.js?v=1.5.11';
 import {APP_VER} from './config.js?v=1.5.11';
 import {POSN} from './data/abilities.js?v=1.5.11';
-import {LV} from './data/teams.js?v=1.5.11';
+import {teamDisplayName} from './data/teams.js?v=1.5.11';
 import {$, card, modalClose, actToggleSync} from './ui/dom.js?v=1.5.11';
 import {THEME_KEY, BIG_KEY, applyTheme, applyMobileUI, applyBigText, updDispSum} from './ui/prefs.js?v=1.5.11';
 import {allocFullClose} from './ui/alloc.js?v=1.5.11';
@@ -144,13 +144,7 @@ $('btn-start').onclick=()=>{
     }catch(e){}
   }
   setS(newState(nm,jersey,selPos,null));
-  S.teamName=function(){
-    if(!this.orgTeam)return '';
-    if(this.lv==='MLB')return this.orgTeam;
-    if(LV[this.lv].org==='MiLB')return this.orgTeam+({R:'新人聯盟',A1:'1A',A2:'2A',A3:'3A'}[this.lv]);
-    if(this.lv==='CPBL1'||this.lv==='NPB1')return this.orgTeam;
-    return this.orgTeam+'二軍';
-  };
+  S.teamName=function(){ return teamDisplayName(this); };
   $('start').style.display='none';
   $('board').style.display=''; $('act').style.display='';
   resetTL(); renderTimeline();

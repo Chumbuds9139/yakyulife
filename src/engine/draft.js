@@ -21,35 +21,34 @@ function enterJapaneseAmateur(org,team){
 }
 
 /* 社會人／獨立聯盟的 NPB 去向是「球團取得球員」的事件，不再視為一般升降級。
-   社會人依規則需滿一定年限才進入通常的 NPB 選秀資格；獨立聯盟則可較早挑戰。
+   打完一季後一律可投入日職選秀；表現夠好時十二球團可能遞來合約／買斷。
    每次成功轉入都明確寫入 NPB 球團，避免球員帶著業餘隊名卻顯示在 NPB。 */
 function amateurOffseasonDecision(){
   if(S.org!=='CORP'&&S.org!=='INDEP')return false;
   const corp=S.org==='CORP';
-  const eligibleDraft=corp?S.stageYr>=3:S.stageYr>=2;
   const o=ovr();
   const buyoutChance=clampChance((o-(corp?47:44))*5+25);
-  const target=pick(NPB_TEAMS);
   const opts=[];
 
-  if(eligibleDraft){
-    opts.push({t:'投入日本職棒選秀',main:true,s:`綜合 ${o}｜${corp?'社會人選秀資格已解禁':'獨立聯盟可直接挑戰選秀'}`,f:()=>runDraft(false,r=>{
-      if(r==='fail'){
-        card('info','今年未獲 NPB 指名',`${corp?'社會人':'獨立聯盟'}生涯繼續，下一年度仍可再戰。`);
-        startYear();
-      }else startYear();
-    })});
-  }
+  opts.push({t:'投入日本職棒選秀',main:true,s:`綜合 ${o}｜${corp?'社會人':'獨立聯盟'}投入日職選秀`,f:()=>runDraft(false,r=>{
+    if(r==='fail'){
+      card('info','今年未獲 NPB 指名',`${corp?'社會人':'獨立聯盟'}生涯繼續，下一年度仍可再戰。`);
+      startYear();
+    }else startYear();
+  })});
 
   if(chance(buyoutChance)){
     const lv=o>=56?'NPB2':'NPB_TRAIN';
-    const annual=Math.max(lv==='NPB2'?180:120,Math.round((o+ri(-2,5))*(lv==='NPB2'?5:3.2)));
-    opts.push({t:'接受 NPB 球團合約／買斷',s:`${target} 主動接觸｜${lv==='NPB2'?'二軍':'育成'}起步｜年薪約 ${fmtMoney(annual)}`,f:()=>{
+    const n=ri(1,3);
+    const bonusBase=lv==='NPB2'?280:160;
+    opts.push({t:'接受十二球團合約／買斷',s:`有球團主動接觸｜${lv==='NPB2'?'二軍':'育成'}起步`,f:()=>{
       const oldTeam=S.orgTeam;
-      S.stage='PRO'; S.org='NPB'; S.team=''; S.svc=0; S.faElig=false;
-      signTo('NPB',lv,target,ri(1,2),1);
-      card('gold','NPB 球團正式合約',`${target} 看上你在${corp?'社會人':'獨立聯盟'}的表現，與原球團完成合約協商後正式簽入。<b class="hl">${oldTeam}</b> 的經歷成為你的 NPB 入門履歷；現在所屬球團為 <b class="hl">${target}</b>，從 ${lv==='NPB2'?'二軍':'育成'} 出發。`);
-      tlNote(4,`NPB球團簽約：${target}`); board(0); startYear();
+      S.svc=0; S.faElig=false; S.team='';
+      const offers=makeOffers('NPB',n,bonusBase,1,2,lv,null);
+      pickOfferUI('日本職棒十二球團 · 合約／買斷','NPB',offers,()=>{
+        card('gold','NPB 球團正式合約',`${S.orgTeam} 看上你在${corp?'社會人':'獨立聯盟'}的表現，與原球團 <b class="hl">${oldTeam}</b> 完成合約協商後正式簽入。業餘隊名不會帶到日職；現在所屬為 <b class="hl">${S.orgTeam}</b>，從 ${lv==='NPB2'?'二軍':'育成'} 出發。`);
+        tlNote(4,`NPB球團簽約：${S.orgTeam}`); board(0); startYear();
+      });
     }});
   }
 

@@ -54,7 +54,7 @@ export const LV={
 export function spLoad(lv){ const L=LV[lv]; if(!L)return 1; return ((L.g||120)/(L.rot||5))/24; }
 
 /* 日本版升降級路徑；社會人／獨立聯盟不再自動升入 NPB。
-   進入 NPB 必須經由日本職棒選秀或球團正式合約／買斷事件。
+   進入 NPB 必須經由日本職棒選秀或十二球團正式合約／買斷。
    CPBL 是海外洋將市場：培養型（二軍）→ 一軍洋將。缺這條路徑時，
    movement() 會對 PATHS[S.org] 取 undefined 再 .indexOf，季末行動按鈕被清掉後炸掉。 */
 export const PATHS={
@@ -80,4 +80,18 @@ export function teamNick(team){
     '台中猛獁':'猛獁','府城雄獅':'雄獅','桃園金剛':'金剛','新北騎士':'騎士','台北恐龍':'恐龍','高雄神鵰':'神鵰'
   };
   return map[team]||(team||'').slice(-2);
+}
+
+export function isAmateurClub(team){
+  return CORPORATE_TEAMS.includes(team)||INDEP_TEAMS.includes(team);
+}
+
+/* 社會人／獨立聯盟不是二軍。日職二軍後綴只加在真正的 NPB／中職農場隊。 */
+export function teamDisplayName(s){
+  if(!s||!s.orgTeam)return '';
+  if(s.org==='CORP'||s.org==='INDEP'||s.lv==='CORP'||s.lv==='INDEP')return s.orgTeam;
+  if(s.lv==='MLB')return s.orgTeam;
+  if(LV[s.lv]&&LV[s.lv].org==='MiLB')return s.orgTeam+({R:'新人聯盟',A1:'1A',A2:'2A',A3:'3A'}[s.lv]||'');
+  if(s.lv==='CPBL1'||s.lv==='NPB1')return s.orgTeam;
+  return s.orgTeam+'二軍';
 }

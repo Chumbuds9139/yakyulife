@@ -323,6 +323,9 @@ export function movement(){
       {t:'高掛球鞋',warn:true,f:()=>endGame('在業餘球隊劃下句點。')}]);
     return;
   }
+  /* 社會人／獨立聯盟不是 NPB 農場，季末不走 PATHS 升降、也不因戰力外直接進日職二軍。
+     去向由 amateurOffseasonDecision（選秀／十二球團買斷／再留一年）決定。 */
+  if(S.org==='CORP'||S.org==='INDEP'){ advance(); return; }
   /* 職業 */
   if(S.org==='NPB')S.npbYears++;
   if(LV[S.lv].top){ /* 轉換聯盟：直接解除球團 5 年控制期限制，往後只要合約到期就是自由球員 */

@@ -2,13 +2,23 @@ import assert from 'node:assert/strict';
 
 globalThis.location={search:''};
 const state=await import('../src/core/state.js');
-const {LV, PATHS, NPB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, CPBL_TEAMS}=await import('../src/data/teams.js');
+const {LV, PATHS, NPB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, CPBL_TEAMS, isAmateurClub, teamDisplayName}=await import('../src/data/teams.js');
 const {OFFICIAL_URL}=await import('../src/config.js');
 
 assert.deepEqual(PATHS.NPB, ['NPB_TRAIN','NPB2','NPB1']);
 assert.deepEqual(PATHS.CPBL, ['CPBL2','CPBL1']);
 assert.deepEqual(PATHS.CORP, ['CORP']);
 assert.deepEqual(PATHS.INDEP, ['INDEP']);
+assert.equal(PATHS.CORP.some(lv=>String(lv).startsWith('NPB')), false);
+assert.equal(PATHS.INDEP.some(lv=>String(lv).startsWith('NPB')), false);
+assert.equal(isAmateurClub('豐田戰鷹'), true);
+assert.equal(isAmateurClub('群馬星雲'), true);
+assert.equal(isAmateurClub('東京巨人'), false);
+assert.equal(teamDisplayName({org:'CORP',lv:'CORP',orgTeam:'豐田戰鷹'}), '豐田戰鷹');
+assert.equal(teamDisplayName({org:'INDEP',lv:'INDEP',orgTeam:'群馬星雲'}), '群馬星雲');
+assert.ok(!teamDisplayName({org:'CORP',lv:'CORP',orgTeam:'豐田戰鷹'}).includes('二軍'));
+assert.equal(teamDisplayName({org:'NPB',lv:'NPB2',orgTeam:'東京巨人'}), '東京巨人二軍');
+assert.equal(teamDisplayName({org:'NPB',lv:'NPB1',orgTeam:'東京巨人'}), '東京巨人');
 assert.equal(PATHS.NPB.includes('MLB'), false);
 assert.equal(PATHS.NPB.includes('CPBL1'), false);
 assert.equal(PATHS.NPB.includes('CPBL2'), false);

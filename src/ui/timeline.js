@@ -8,8 +8,8 @@ export function tlStage(){
   if(!S)return '';
   if(S.stage==='HS')return '高中 · '+S.team;
   if(S.stage==='U')return '大學 · '+S.team;
-  if(S.stage==='CORP')return '社會人 · '+S.team;
-  if(S.stage==='INDEP')return '獨立聯盟 · '+S.team;
+  if(S.org==='CORP'||S.stage==='CORP'||S.lv==='CORP')return '社會人 · '+(S.orgTeam||S.team||'');
+  if(S.org==='INDEP'||S.stage==='INDEP'||S.lv==='INDEP')return '獨立聯盟 · '+(S.orgTeam||S.team||'');
   const og={CPBL:'中職',NPB:'日職',MiLB:'MLB／小聯盟'}[S.org]||'職業';
   return og+' · '+(S.orgTeam||'');
 }
