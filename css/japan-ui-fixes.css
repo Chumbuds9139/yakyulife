@@ -1,21 +1,55 @@
-/* Japan fork UI polish: keep the author control aligned with the display-settings control. */
+/* Keep the start-screen secondary controls visually identical: two equal-width controls,
+   one row when there is room, and a clean stack on very narrow screens. */
 #start-footer .start-secondary{
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  width:min(100%,560px);
+  margin:10px auto 0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  align-items:stretch;
   gap:10px;
-  flex-wrap:wrap;
-}
-#start-footer .start-secondary #author-credit{
-  margin-top:0 !important;
-  min-height:42px;
-  height:42px;
-  padding-top:0;
-  padding-bottom:0;
-  line-height:40px;
 }
 #start-footer .start-secondary #fld-display{
   margin:0;
+  min-width:0;
+  width:100%;
+}
+#start-footer .start-secondary #fld-display summary{
+  width:100%;
+  min-height:42px;
+  height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:8px 12px;
+  border:1px solid var(--btnedge);
+  border-radius:var(--r);
+  background:var(--btnbg);
+  color:var(--btntx);
+  font:inherit;
+  font-weight:700;
+  line-height:24px;
+  cursor:pointer;
+  list-style:none;
+}
+#start-footer .start-secondary #fld-display summary::-webkit-details-marker{display:none}
+#start-footer .start-secondary #fld-display summary:hover{border-color:var(--accent)}
+#start-footer .start-secondary #author-credit{
+  width:100%;
+  min-width:0;
+  min-height:42px;
+  height:42px;
+  margin:0 !important;
+  padding:8px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  line-height:24px;
+  text-align:center;
+  white-space:nowrap;
+}
+@media(max-width:380px){
+  #start-footer .start-secondary{grid-template-columns:1fr;}
 }
 
 /* The easter egg is a state attribute, not a normal positive trait. */
