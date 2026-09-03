@@ -5,7 +5,7 @@ import {LV} from '../data/teams.js?v=1.5.11';
 /* ================= 遊戲狀態 ================= */
 export let S=null, stepQ=[];
 
-/* 升降級跨聯盟時，lv 才是最可靠的聯盟來源；集中同步 org，避免社會人／獨立聯盟升上 NPB 後仍被當成原聯盟。 */
+/* 升降級跨聯盟時，lv 才是最可靠的聯盟來源；集中同步 org，避免社會人／獨立聯盟升上 NPB 後仍被當作原聯盟。 */
 function bindLevelOrg(state){
   let current=state.lv;
   Object.defineProperty(state,'lv',{
@@ -35,11 +35,10 @@ export function newState(name,jersey,pos,role){
     sh.forEach((k,i)=>{ pot[k]= i===0?ri(72,80) : i===1?ri(64,74) : i===2?ri(56,68) : ri(46,62); });
     if(pos==='C')pot.rng=ri(32,40);
   }
-  /* 日本高校固定分級（隱藏）: T1 名門 +6 / T2 中堅 ±0 / T3 地方校 -6 */
   const hsMap={'早稻田實業':1,'智辯和歌山':1,'明德義塾':2,'東海大相模':2,'聖光学院':3,'作新学院':3};
   const schools=Object.keys(hsMap);
   const myTeam=schools[Math.floor(R()*schools.length)];
-  return bindLevelOrg({name,jersey,pos,role:pos==='P'?null:null,perfectLock:false,age:16,year:2026,stage:'HS',stageYr:1,pot,
+  return bindLevelOrg({name,jersey,pos,role:pos==='P'?null:null,perfectLock:false,invincible:false,age:16,year:2026,stage:'HS',stageYr:1,pot,
     hsMap,hsTier:hsMap[myTeam],team:myTeam,potSum0:Object.values(pot).reduce((a,b)=>a+b,0),
     league:null,org:null,orgTeam:null,lastCpblTeam:null,teamTally:{CORP:{},INDEP:{},CPBL:{},NPB:{},MLB:{}},
     ab,traits:{genius:false,glass:false,iron:false,scum:false,
