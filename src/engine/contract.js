@@ -651,6 +651,27 @@ export function rollCpblCrossOffers(o,d,rollJP,rollUSA){
   const usa=o>=57&&d>=2&&!!rollUSA();
   return {jp,usa};
 }
+/* 社會人／獨立聯盟／日職二軍 → 中職洋將。門檻看綜合能力：達培養型就能被看見，
+   達一軍洋將門檻則開一軍約。不是升降級，是台灣球團主動遞約。 */
+export function cpblImportSpec(o, from){
+  const ability=Number(o)||0;
+  if(ability<LV.CPBL2.min)return null;
+  const lv=ability>=LV.CPBL1.min?'CPBL1':'CPBL2';
+  const floor=from==='NPB2'?50:from==='CORP'?47:44;
+  const base=from==='NPB2'?32:from==='CORP'?24:20;
+  let p=Math.round((ability-floor)*6+base);
+  const age=S&&Number.isFinite(S.age)?S.age:24;
+  if(age>=36)p=Math.round(p*0.45);
+  if(age>=38)p=Math.round(p*0.2);
+  p=Math.max(10,Math.min(62,p));
+  return {lv, chance:p, from};
+}
+export function rollCpblImport(o, from){
+  const spec=cpblImportSpec(o, from);
+  if(!spec)return null;
+  if(o>=LV.CPBL1.min+4)return spec;
+  return chance(spec.chance)?spec:null;
+}
 export function crossOffers(o){
   const fin=()=>advance();
   const mp=contractMarketProfile(S.lastD||0);
@@ -692,5 +713,22 @@ export function crossOffers(o){
           card('gold','入札成立',`<b class="hl">${of.team}</b>與你簽下固定年薪 <b class="hl">${fmtMoney(annual)}</b> × <b class="hl">${y} 年</b>、保障總額 <b class="hl">${fmtMoney(total)}</b>的合約；另支付 <b class="hl">${fmtMoney(release)}</b>讓渡金給 <b class="hl">${formerTeam}</b>。讓渡金不計入你的生涯收入。`);
           fin(); },()=>{ S.lv=savedLv; fin(); },'留在日職','不接受這份入札合約，留在原球隊',of.mult,false); }})),
       {t:'留在日職',main:true,f:fin}]); return; }
+  if(S.lv==='NPB2'){
+    const spec=rollCpblImport(o,'NPB2');
+    if(spec){
+      const n=ri(1,2);
+      const bonusBase=spec.lv==='CPBL1'?260:140;
+      const offers=makeOffers('CPBL',n,bonusBase,1,2,spec.lv,null).map(of=>priceBid(of,spec.lv));
+      choose('中華職棒遞來洋將合約',[
+        ...offers.map(of=>({
+          t:of.team+`（${LV[of.lv||spec.lv].n}）`,
+          s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(of.annual)} × ${of.yrs} 年｜總額 ${fmtMoney(of.annual*of.yrs)}`,
+        f:()=>{S.salary+=of.bonus;signTo('CPBL',spec.lv,of.team,of.yrs,1,of.annual);fin();}
+        })),
+        {t:'留在日職二軍',main:true,f:fin}
+      ]);
+      return;
+    }
+  }
   fin();
 }

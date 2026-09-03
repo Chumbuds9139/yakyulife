@@ -5,7 +5,7 @@ import {card, choose, board, menuModal} from '../ui/dom.js?v=1.5.11';
 import {tlNote} from '../ui/timeline.js?v=1.5.11';
 import {ovr, playerType} from './ability.js?v=1.5.11';
 import {primaryPos} from './career.js?v=1.5.11';
-import {fmtMoney, makeOffers, pickOfferUI, signTo, makeContract} from './contract.js?v=1.5.11';
+import {fmtMoney, makeOffers, pickOfferUI, signTo, makeContract, rollCpblImport} from './contract.js?v=1.5.11';
 import {startYear} from '../flow/phases.js?v=1.5.11';
 import {endGame} from '../ui/retire.js?v=1.5.11';
 
@@ -22,9 +22,9 @@ function enterJapaneseAmateur(org,team){
   tlNote(3,org==='CORP'?'加盟社會人':'加盟獨立聯盟');
 }
 
-/* 社會人／獨立聯盟的 NPB 去向是「球團取得球員」的事件，不再視為一般升降級。
-   打完一季後若尚未參加過日職選秀，可投入一次；表現夠好時十二球團可能遞來合約／買斷。
-   每次成功轉入都明確寫入 NPB 球團，避免球員帶著業餘隊名卻顯示在 NPB。 */
+/* 社會人／獨立聯盟的職棒去向不是升降級。
+   打完一季後若尚未參加過日職選秀，可投入一次；表現夠好時十二球團可能買斷，
+   中華職棒也可能開出洋將合約。轉入職業聯盟都寫入該聯盟球隊，不帶業餘隊名。 */
 function amateurOffseasonDecision(){
   if(S.org!=='CORP'&&S.org!=='INDEP')return false;
   const corp=S.org==='CORP';
@@ -52,6 +52,21 @@ function amateurOffseasonDecision(){
       pickOfferUI('日本職棒十二球團 · 合約／買斷','NPB',offers,()=>{
         card('gold','NPB 球團正式合約',`${S.orgTeam} 看上你在${corp?'社會人':'獨立聯盟'}的表現，與原球團 <b class="hl">${oldTeam}</b> 完成合約協商後正式簽入。業餘隊名不會帶到日職；現在所屬為 <b class="hl">${S.orgTeam}</b>，從 ${lv==='NPB2'?'二軍':'育成'} 出發。`);
         tlNote(4,`NPB球團簽約：${S.orgTeam}`); board(0); startYear();
+      });
+    }});
+  }
+
+  const cpbl=rollCpblImport(o, corp?'CORP':'INDEP');
+  if(cpbl){
+    opts.push({t:'接受中職洋將合約',s:`台灣球團主動接觸｜${cpbl.lv==='CPBL1'?'一軍洋將':'二軍／培養型'}起步`,f:()=>{
+      const oldTeam=S.orgTeam;
+      S.svc=0; S.faElig=false; S.team='';
+      const n=ri(1,2);
+      const bonusBase=cpbl.lv==='CPBL1'?220:120;
+      const offers=makeOffers('CPBL',n,bonusBase,1,2,cpbl.lv,null);
+      pickOfferUI('中華職棒 · 洋將合約','CPBL',offers,()=>{
+        card('gold','跨海洋將合約',`中華職棒看上你在${corp?'社會人':'獨立聯盟'}的表現，向原球團 <b class="hl">${oldTeam}</b> 遞出合約。業餘隊名不會帶走；現在所屬為 <b class="hl">${S.orgTeam}</b>，從${cpbl.lv==='CPBL1'?'一軍洋將':'培養型'}出發。`);
+        tlNote(4,`中職簽約：${S.orgTeam}`); board(0); startYear();
       });
     }});
   }
