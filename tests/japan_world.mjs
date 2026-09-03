@@ -24,14 +24,14 @@ try{
     return {
       migrated,samuraiLabel:traits.TRAIT_N.samurai,devSalary:economy.LEVEL_MIN_ANNUAL.NPB_TRAIN,
       wbc2009:intl.japanIntlStrength(2009,true),wbc2017:intl.japanIntlStrength(2017,true),wbc2026:intl.japanIntlStrength(2026,true),
-      invincible:!!now.invincible,perfectAlias:!!now.perfectLock,tradeHeat:now.tradeHeat,
+      invincible:!!now.invincible,perfectAlias:!!now.perfectLock,tj:now.tj,tradeHeat:now.tradeHeat,
       all80:Object.values(now.ab).every(v=>v===80),allPot80:Object.values(now.pot).every(v=>v===80),
       eventOdds:[odds.safe,odds.norm,odds.bold],champChance:championship.championshipChance(10,false),intlFinish:championship.intlFinishIndex(0,0,false)
     };
   });
   assert.equal(result.migrated,true); assert.equal(result.samuraiLabel,'武士精神'); assert.equal(result.devSalary,240);
   assert.equal(result.wbc2009,10); assert.equal(result.wbc2017,7); assert.equal(result.wbc2026,8);
-  assert.equal(result.invincible,true); assert.equal(result.perfectAlias,true); assert.equal(result.tradeHeat,-100);
+  assert.equal(result.invincible,true); assert.equal(result.perfectAlias,true); assert.equal(result.tj,0); assert.equal(result.tradeHeat,-100);
   assert.equal(result.all80,true); assert.equal(result.allPot80,true); assert.deepEqual(result.eventOdds,[100,100,100]); assert.equal(result.champChance,100); assert.equal(result.intlFinish,0);
   console.log(JSON.stringify(result,null,2));
 }finally{await browser.close();}
