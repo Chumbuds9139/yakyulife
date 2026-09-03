@@ -54,13 +54,16 @@ export const LV={
 export function spLoad(lv){ const L=LV[lv]; if(!L)return 1; return ((L.g||120)/(L.rot||5))/24; }
 
 /* 日本版升降級路徑；社會人／獨立聯盟不再自動升入 NPB。
-   進入 NPB 必須經由日本職棒選秀或球團正式合約／買斷事件。 */
+   進入 NPB 必須經由日本職棒選秀或球團正式合約／買斷事件。
+   CPBL 是海外洋將市場：培養型（二軍）→ 一軍洋將。缺這條路徑時，
+   movement() 會對 PATHS[S.org] 取 undefined 再 .indexOf，季末行動按鈕被清掉後炸掉。 */
 export const PATHS={
   HS:['HS'],
   U:['U'],
   CORP:['CORP'],
   INDEP:['INDEP'],
   NPB:['NPB_TRAIN','NPB2','NPB1'],
+  CPBL:['CPBL2','CPBL1'],
   MiLB:['R','A1','A2','A3','MLB']
 };
 

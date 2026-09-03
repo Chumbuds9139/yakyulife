@@ -165,7 +165,7 @@ $('btn-start').onclick=()=>{
   try{
     const dir=location.origin+location.pathname.replace(/[^/]*$/,'');
     const mf={id:dir,name:document.title||'YaKyoLife - 棒球人生模擬器',short_name:'YaKyoLife',
-      description:'從高中三大賽到名人堂，一場種子化的台灣棒球員生涯模擬。',
+      description:'從日本高校到名人堂，一場種子化的日本棒球員生涯模擬。',
       lang:'zh-Hant',start_url:dir,scope:dir,display:'standalone',
       background_color:'#081510',theme_color:'#081510',
       icons:[{src:dir+'assets/app-icon-192.png',sizes:'192x192',type:'image/png',purpose:'any'},
