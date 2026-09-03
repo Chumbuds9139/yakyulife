@@ -7,6 +7,7 @@ import {isSP, fmtIP, outsFromIP, ipFromOuts, normalizeIP, baseballERA} from './s
 import {ovr} from './ability.js?v=1.5.11';
 import {intlFinishIndex} from './championship.js?v=1.5.11';
 import {checkChampionTrait} from '../flow/events.js?v=1.5.11';
+
 export function intlWalks(st){
   if(!st)return 0;
   if(Number.isFinite(st.BB))return Math.max(0,Math.round(st.BB));
@@ -24,7 +25,7 @@ export function intlStatLine(st){
 export function addIntlStat(st){
   if(!Number.isFinite(S.intlStat.BB))S.intlStat.BB=(S.intlLog||[]).reduce((n,r)=>n+intlWalks(r.st),0);
   const oldOuts=outsFromIP(S.intlStat.IP);
-  Object.keys(st).forEach(k=>{ if(k!=='IP')S.intlStat[k]=(S.intlStat[k]||0)+st[k]; });
+  Object.keys(st).forEach(k=>{if(k!=='IP')S.intlStat[k]=(S.intlStat[k]||0)+st[k];});
   if(Object.prototype.hasOwnProperty.call(st,'IP'))S.intlStat.IP=ipFromOuts(oldOuts+outsFromIP(st.IP));
 }
 export function intlMvpRate(st,finish){
@@ -57,69 +58,81 @@ export function japanIntlStrength(year,wbc){
   const ys=Object.keys(table).map(Number).filter(y=>y<year).sort((a,b)=>a-b);
   return ys.length?table[ys[ys.length-1]]:7;
 }
+
 export function maybeIntl(done){
-  const wbc=(S.year-2026)%4===0; let p12=(S.year-2028)%4===0;
+  const wbc=(S.year-2026)%4===0;
+  let p12=(S.year-2028)%4===0;
   if(S.lv==='MLB')p12=false;
   const intlFmt=intlFormat(wbc);
-  if(S.stage!=='PRO'||(!wbc&&!p12)||ovr()<intlFmt.minOvr||S.seasonFactor<0.5||S.rehab>0||S.skipMid){ done(); return; }
+  if(S.stage!=='PRO'||(!wbc&&!p12)||ovr()<intlFmt.minOvr||S.seasonFactor<0.5||S.rehab>0||S.skipMid){done();return;}
   const name=wbc?'世界棒球經典賽':'世界12強賽';
-  let forced=false,first=false;
-  if(S.intlLock===null){ S.intlLock=S.year; forced=true; first=true; }
-  else if(S.year-S.intlLock<5) forced=true;
-  if(forced){
-    card('info','體育部公文',first
-      ?`「查 台端符合國家代表隊遴選資格，依規定<b class="hl">強制徵召</b>，並自即日起<b class="hl">列管五年</b>，列管期間各國際賽事皆須配合徵召，不得以任何理由推辭。」——你甚至還沒拆完信封，行李箱已經被球團打包好了。`
-      :`列管期間（剩 ${5-(S.year-S.intlLock)} 年），依規定<b class="hl">強制徵召</b>。你沒有選擇。`);
-  }
-  const opts=[
-    {t:forced?'⋯⋯只能報到（強制徵召）':'披上日本代表戰袍',main:true,s:'依成績獲得能力點｜下季受傷機率 +10%',f:()=>{
-      /* 日本代表的團隊底蘊與球員實力都參與結果；歷史係數的權重比舊版更高。 */
-      const teamStrength=japanIntlStrength(S.year,wbc);
-      const personal=Math.round((ovr()-52)*0.45);
-      const historical=Math.round((teamStrength-5)*1.2);
-      const b=clamp(personal+historical,0,16);
-      const i=intlFinishIndex(R()*100,b,!!S.traits.championmaker,!!S.invincible);
-      const rk=intlFmt.ranks[i], teamGames=intlFmt.games[i], pts=[6,5,4,2,1][i];
-      let gpts=pts; if(S.traits.intlace)gpts=Math.max(pts,2);
-      S.pool+=gpts; S.injNext=S.traits.intlace?0:10; S.intlCount++;
-      if(!S.traits.samurai&&S.intlCount>5){ S.traits.samurai=true;
-        card('gold','隱藏稱號：武士精神',`永遠把日本代表的榮耀放在比個人職涯更高的位置。你在球場上拍著胸口、向看台致意的那一刻，成為球迷心中最驕傲的畫面。`); board(1); }
-      let intlSt;
-      { const a=S.ab, par=intlFmt.par, clutch=S.traits.clutch?1:0;
-        if(S.pos==='P'){ const dd=(a.vel+a.ctl+a.brk)/3-par;
-          let g, ip;
-          if(isSP()){
-            g = teamGames>=6?ri(1,2):1;
-            ip = normalizeIP(g * (4.5 + R() * 2.5));
-          } else {
-            g = clamp(Math.round(teamGames*(0.55+R()*0.25)),1,teamGames);
-            ip = normalizeIP(g * (0.8 + R() * 0.8));
-          }
-          const k9=clamp(7.5+dd*0.12+clutch*.5,4,14);
-          const era=clamp(3.6-dd*0.16-clutch*.35,0.8,8);
-          const bb9=clamp(4.6-(a.ctl-par)*0.13+N0(0.4),1.2,7.5);
-          const h9=clamp(9.2-dd*0.16+N0(0.5),5,13.5);
-          intlSt={G:g,IP:ip,H:Math.round(ip/9*h9),BB:Math.round(ip/9*bb9),SO:Math.round(ip/9*k9),ER:Math.round(era*ip/9),W:i<=2&&chance(45+clutch*8)?1:0,SV:!isSP()&&chance(30+clutch*6)?1:0};
-        } else { const dd=(a.con*0.5+a.pow*0.2+a.eye*0.18+a.spd*0.12)-par-0.5;
-          const g=teamGames, pa=g*ri(3,4);
-          const bb=Math.round(pa*clamp(0.062+(a.eye-par)*0.0034,0.045,0.17));
-          const ab=pa-bb;
-          const avg=clamp(0.270+dd*0.006+clutch*.015,0.15,0.5), h=Math.round(ab*avg);
-          const hr=Math.round(h*clamp(0.06+Math.max(0,a.pow-par)*0.006+clutch*.01,0.03,0.28));
-          intlSt={G:g,PA:pa,AB:ab,H:h,HR:hr,RBI:Math.round((hr*2.1+h*0.35)*(1+clutch*.05)),BB:bb};
+
+  /* 日本球員沒有兵役列管：代表隊是生涯選擇，不存在五年強制徵召或列管鎖定。 */
+  const participate=()=>{
+    const teamStrength=japanIntlStrength(S.year,wbc);
+    const personal=Math.round((ovr()-52)*0.45);
+    const historical=Math.round((teamStrength-5)*1.2);
+    const b=clamp(personal+historical,0,16);
+    const i=intlFinishIndex(R()*100,b,!!S.traits.championmaker,!!S.invincible);
+    const rk=intlFmt.ranks[i], teamGames=intlFmt.games[i], pts=[6,5,4,2,1][i];
+    let gpts=pts;
+    if(S.traits.intlace)gpts=Math.max(pts,2);
+    S.pool+=gpts;
+    S.injNext=S.traits.intlace?0:10;
+    S.intlCount++;
+    if(!S.traits.samurai&&S.intlCount>5){
+      S.traits.samurai=true;
+      card('gold','隱藏稱號：武士精神','永遠把日本代表的榮耀放在比個人職涯更高的位置。你在球場上拍著胸口、向看台致意的那一刻，成為球迷心中最驕傲的畫面。');
+      board(1);
+    }
+    let intlSt;
+    { const a=S.ab,par=intlFmt.par,clutch=S.traits.clutch?1:0;
+      if(S.pos==='P'){
+        let g,ip;
+        if(isSP()){
+          g=teamGames>=6?ri(1,2):1;
+          ip=normalizeIP(g*(4.5+R()*2.5));
+        }else{
+          g=clamp(Math.round(teamGames*(0.55+R()*0.25)),1,teamGames);
+          ip=normalizeIP(g*(0.8+R()*0.8));
         }
+        const dd=(a.vel+a.ctl+a.brk)/3-par;
+        const k9=clamp(7.5+dd*0.12+clutch*.5,4,14);
+        const era=clamp(3.6-dd*0.16-clutch*.35,0.8,8);
+        const bb9=clamp(4.6-(a.ctl-par)*0.13+N0(0.4),1.2,7.5);
+        const h9=clamp(9.2-dd*0.16+N0(0.5),5,13.5);
+        intlSt={G:g,IP:ip,H:Math.round(ip/9*h9),BB:Math.round(ip/9*bb9),SO:Math.round(ip/9*k9),ER:Math.round(era*ip/9),W:i<=2&&chance(45+clutch*8)?1:0,SV:!isSP()&&chance(30+clutch*6)?1:0};
+      }else{
+        const dd=(a.con*0.5+a.pow*0.2+a.eye*0.18+a.spd*0.12)-par-0.5;
+        const g=teamGames,pa=g*ri(3,4);
+        const bb=Math.round(pa*clamp(0.062+(a.eye-par)*0.0034,0.045,0.17));
+        const ab=pa-bb;
+        const avg=clamp(0.270+dd*0.006+clutch*.015,0.15,0.5),h=Math.round(ab*avg);
+        const hr=Math.round(h*clamp(0.06+Math.max(0,a.pow-par)*0.006+clutch*.01,0.03,0.28));
+        intlSt={G:g,PA:pa,AB:ab,H:h,HR:hr,RBI:Math.round((hr*2.1+h*0.35)*(1+clutch*.05)),BB:bb};
       }
-      addIntlStat(intlSt);
-      (S.intlLog||(S.intlLog=[])).push({year:S.year,name,rank:rk,teamGames,st:{...intlSt}});
-      if(i<=1)S.intlTop4=(S.intlTop4||0)+1;
-      if(!S.traits.intlace&&S.intlCount>=3&&(S.intlTop4||0)>=2){ S.traits.intlace=true;
-        card('gold','隱藏屬性解鎖：國際賽之鬼','只要穿上代表隊球衣，你的痛覺就會消失——你是為大場面而生的男人。<b class="hl">國際賽不再增加受傷風險，且每次徵召能力點保底 +2</b>。'); }
-      if(i<=2)S.honors.push(`${S.year} ${name}${rk}`);
-      if(i===0){ tlNote(3,(wbc?'經典賽':'12強')+'冠軍'); checkChampionTrait(); }
-      let ex=''; const mvpRate=intlMvpRate(intlSt,i); if(chance(mvpRate)){S.honors.push(`${S.year} ${name}MVP`);ex='你憑本屆表現被選為<b class="hl">賽會MVP</b>！';}
-      card(i<=1?'gold':'info',name,`日本代表最終成績：<b class="hl">${rk}</b>（團隊出賽 ${teamGames} 場）。${ex}<br><b>本屆個人成績：</b>${intlStatLine(intlSt)}。${S.traits.clutch?'<span class="up">（大心臟：大賽表現加成）</span>':''}<br>獲得能力點 <b class="hl">${gpts}</b> 點。${S.traits.intlace?'代表隊英雄不知何謂疲憊。':'國際賽的高強度消耗，讓下季受傷風險上升。'}`);
-      done(); }},
-    ];
-  if(!forced)opts.push({t:'以調整為由婉拒',s:'列管期已過，終於能說不',f:done});
-  choose(`日本代表徵召 · ${name}`,opts);
+    }
+    addIntlStat(intlSt);
+    (S.intlLog||(S.intlLog=[])).push({year:S.year,name,rank:rk,teamGames,st:{...intlSt}});
+    if(i<=1)S.intlTop4=(S.intlTop4||0)+1;
+    if(!S.traits.intlace&&S.intlCount>=3&&(S.intlTop4||0)>=2){
+      S.traits.intlace=true;
+      card('gold','隱藏屬性解鎖：國際賽之鬼','只要穿上代表隊球衣，你的痛覺就會消失——你是為大場面而生的男人。<b class="hl">國際賽不再增加受傷風險，且每次徵召能力點保底 +2</b>。');
+    }
+    if(i<=2)S.honors.push(`${S.year} ${name}${rk}`);
+    if(i===0){tlNote(3,(wbc?'經典賽':'12強')+'冠軍');checkChampionTrait();}
+    let ex='';
+    const mvpRate=intlMvpRate(intlSt,i);
+    if(chance(mvpRate)){S.honors.push(`${S.year} ${name}MVP`);ex='你憑本屆表現被選為<b class="hl">賽會MVP</b>！';}
+    card(i<=1?'gold':'info',name,`日本代表最終成績：<b class="hl">${rk}</b>（團隊出賽 ${teamGames} 場）。${ex}<br><b>本屆個人成績：</b>${intlStatLine(intlSt)}。${S.traits.clutch?'<span class="up">（大心臟：大賽表現加成）</span>':''}<br>獲得能力點 <b class="hl">${gpts}</b> 點。${S.traits.intlace?'代表隊英雄不知何謂疲憊。':'國際賽的高強度消耗，讓下季受傷風險上升。'}`);
+    done();
+  };
+
+  choose(`日本代表徵召 · ${name}`,[
+    {t:'披上日本代表戰袍',main:true,s:'自願參賽｜依成績獲得能力點｜下季受傷機率 +10%',f:participate},
+    {t:'婉拒本次代表隊徵召',s:'完全自由選擇，不影響日後再次受邀',f:()=>{
+      card('info','日本代表徵召',`你決定這次不參加<b class="hl">${name}</b>。這是你的生涯選擇；未來國際賽仍可再次接受代表隊邀請。`);
+      done();
+    }}
+  ]);
 }
