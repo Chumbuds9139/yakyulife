@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect transition references
+      - name: Inspect remaining migration references
         shell: bash
         run: |
-          echo '--- direct NPB -> MLB / MiLB transition references ---'
-          grep -Rni -E "NPB1.*MLB|MLB.*NPB1|S\\.lv.*MLB|S\\.lv.*NPB1|signTo\\('MiLB'.*MLB|signTo\\('MLB'" src --include='*.js' || true
-          echo '--- promotion / level-change references ---'
-          grep -Rni -E "S\\.lv=|S\\.org=|lv='MLB'|lv=\"MLB\"|org='MiLB'|org=\"MiLB\"" src --include='*.js' | head -n 250 || true
+          echo '--- source URL/contact references ---'
+          grep -Rni -E 'portaly|discord\\.gg|discord\\.com|SPONSOR_URL|OFFICIAL_URL|community|贊助支持|贊助|Discord' index.html src --include='*.html' --include='*.js' || true
+          echo '--- all explicit CBL/旅日 labels in app ---'
+          grep -Rni -E '中華職棒|中職選秀|洽談旅日|旅日合約|休學挑戰日職' index.html src --include='*.html' --include='*.js' || true
