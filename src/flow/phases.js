@@ -109,7 +109,7 @@ export function phasePre(){
     /* the season was already pushed as a college year; tlRestage() moves it to the new
        league so a short overseas stint still shows up as its own era on the career card */
     const goPro=finishDecision;
-    if(o>=reqNPB)opts.push({t:'洽談旅日合約',s:`休學挑戰日職｜大齡影響簽約金`,f:()=>{
+    if(o>=reqNPB)opts.push({t:'洽談日職合約',s:`提前挑戰日職｜大齡影響簽約金`,f:()=>{
       S.stage='PRO'; S.team=''; S.svc=0; S.faElig=false;
       pickOfferUI('日職球團報價','NPB',makeOffers('NPB',2,bonusNPB,2,3,'NPB2',null),goPro);}});
     if(o>=reqMiLB)opts.push({t:'洽談旅美合約',s:`休學挑戰小聯盟｜大齡影響簽約金`,f:()=>{
@@ -326,7 +326,7 @@ export function movement(){
   if(S.stage==='AMA'){
     if(S.age>=26){ endGame('選秀多年落榜，'+S.year+' 年結束球員身分，轉任基層教練。'); return; }
     choose('業餘年度結束',[
-      {t:'再次投入中職選秀',main:true,f:()=>runDraft(false,()=>advance())},
+      {t:'再次參加日本職棒選秀',main:true,f:()=>runDraft(false,()=>advance())},
       {t:'高掛球鞋',warn:true,f:()=>endGame('在業餘球隊劃下句點。')}]);
     return;
   }

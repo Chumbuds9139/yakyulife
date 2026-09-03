@@ -60,7 +60,7 @@ export const PATHS={
   U:['U'],
   CORP:['CORP','NPB2','NPB1'],
   INDEP:['INDEP','NPB2','NPB1'],
-  NPB:['NPB_TRAIN','NPB2','NPB1','MLB'],
+  NPB:['NPB_TRAIN','NPB2','NPB1'],
   MiLB:['R','A1','A2','A3','MLB']
 };
 

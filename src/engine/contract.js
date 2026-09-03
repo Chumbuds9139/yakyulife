@@ -296,7 +296,7 @@ export function handleDemotion(o,path,idx){
       /* 跨聯盟的去處一律走母隊優先（returnTeam）：待過的聯盟 90% 是老東家把你接回去。 */
       const alts=[];
       if(S.org==='MiLB'){
-        if(o>=LV.NPB1.min&&chance(Math.round(60*ageGateJP())))alts.push({t:'跳槽日職一軍',s:'旅日合約',f:()=>{buyoutRemaining();signTo('NPB','NPB1',returnTeam('NPB').team);advance();}});
+        if(o>=LV.NPB1.min&&chance(Math.round(60*ageGateJP())))alts.push({t:'跳槽日職一軍',s:'日職合約',f:()=>{buyoutRemaining();signTo('NPB','NPB1',returnTeam('NPB').team);advance();}});
         else if(o>=LV.NPB2.min&&chance(50))alts.push({t:'轉戰日職二軍（支配下）',f:()=>{buyoutRemaining();signTo('NPB','NPB2',returnTeam('NPB').team);advance();}});
         else alts.push(...homecomingFallbackOptions(o,{pre:buyoutRemaining,done:advance}));
       }
