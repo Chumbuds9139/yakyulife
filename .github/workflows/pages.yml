@@ -63,6 +63,12 @@ jobs:
           const {chromium}=require('playwright');
           const modules=[
             './src/core/state.js?v=1.5.11',
+            './src/data/abilities.js?v=1.5.11',
+            './src/ui/dom.js?v=1.5.11',
+            './src/ui/timeline.js?v=1.5.11',
+            './src/flow/events.js?v=1.5.11',
+            './src/engine/ability.js?v=1.5.11',
+            './src/engine/season.js?v=1.5.11',
             './src/engine/award-rules.js?v=1.5.11',
             './src/engine/awards.js?v=1.5.11',
             './src/engine/career.js?v=1.5.11',
@@ -75,7 +81,6 @@ jobs:
           (async()=>{
             const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH,args:['--disable-gpu']});
             const page=await browser.newPage();
-            page.on('pageerror',error=>console.log('BROWSER PAGE ERROR:',error.message,error.stack||''));
             await page.goto('http://127.0.0.1:8124/probe.html',{waitUntil:'domcontentloaded'}).catch(()=>{});
             const result=await page.evaluate(async(mods)=>{
               const out=[];
