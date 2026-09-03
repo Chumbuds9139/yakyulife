@@ -25,3 +25,5 @@ CPBL 不再作為日本主線的起點，而是獨立的海外市場；日本職
 ## 目前版本
 
 日本版 V1 已合併到 `main`，GitHub Pages 由 `main` 自動測試並部署；`japan-branch-v1` 保留作為第一版開發歷史與後續修正參考。
+
+<!-- final Japanese-world polish trigger -->
