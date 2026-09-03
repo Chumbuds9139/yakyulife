@@ -10,7 +10,6 @@ import {checkChampionTrait} from '../flow/events.js?v=1.5.11';
 export function intlWalks(st){
   if(!st)return 0;
   if(Number.isFinite(st.BB))return Math.max(0,Math.round(st.BB));
-  /* v1.5.8 舊存檔沒有寫入 BB；打者可由當屆 PA−AB 還原，投手則無足夠資料可回推。 */
   if(Number.isFinite(st.PA)&&Number.isFinite(st.AB))return Math.max(0,Math.round(st.PA-st.AB));
   return 0;
 }
@@ -23,15 +22,13 @@ export function intlStatLine(st){
   return `出賽 ${st.G}｜${st.PA} 打席｜打擊率 ${avg}｜${st.H} 安｜${st.HR} 轟｜${st.RBI} 打點｜${intlWalks(st)} 保送`;
 }
 export function addIntlStat(st){
-  /* 載入舊存檔後第一次再打國際賽時，先把過往打者保送補回通算，避免只累加新賽事。 */
   if(!Number.isFinite(S.intlStat.BB))S.intlStat.BB=(S.intlLog||[]).reduce((n,r)=>n+intlWalks(r.st),0);
   const oldOuts=outsFromIP(S.intlStat.IP);
   Object.keys(st).forEach(k=>{ if(k!=='IP')S.intlStat[k]=(S.intlStat[k]||0)+st[k]; });
   if(Object.prototype.hasOwnProperty.call(st,'IP'))S.intlStat.IP=ipFromOuts(oldOuts+outsFromIP(st.IP));
 }
-/* MVP 先看當屆實績，再用機率代表與其他國家球員競爭；普通成績不會入圍。 */
 export function intlMvpRate(st,finish){
-  if(finish>1)return 0; /* 賽會 MVP 原則上只從冠亞軍球隊產生 */
+  if(finish>1)return 0;
   let score=0;
   if(S.pos==='P'){
     const era=baseballERA(st)??9;
@@ -48,21 +45,23 @@ export function intlFormat(wbc){
     ?{minOvr:55,par:LV.MLB.par,ranks:['冠軍','亞軍','四強止步','八強止步','預賽出局'],games:[7,7,6,5,4]}
     :{minOvr:52,par:LV.NPB1.par,ranks:['冠軍','亞軍','季軍','殿軍','預賽出局'],games:[9,9,9,9,5]};
 }
+/* 日本長期是世界一線強權：這裡不是「真實勝率」，而是給國際賽引擎使用的歷史底蘊係數。
+   2006/2009/2023 是經典賽冠軍年份；2017、2026 仍維持強隊級距，而不是被單一場敗戰打成弱隊。 */
 const JAPAN_INTL_STRENGTH={
-  wbc:{2006:7,2009:8,2013:6,2017:5,2023:8,2026:7},
-  p12:{2015:5,2019:7,2024:7}
+  wbc:{2006:8,2009:10,2013:7,2017:7,2023:10,2026:8},
+  p12:{2015:7,2019:9,2024:9}
 };
 export function japanIntlStrength(year,wbc){
   const table=wbc?JAPAN_INTL_STRENGTH.wbc:JAPAN_INTL_STRENGTH.p12;
   if(table[year]!=null)return table[year];
   const ys=Object.keys(table).map(Number).filter(y=>y<year).sort((a,b)=>a-b);
-  return ys.length?table[ys[ys.length-1]]:6;
+  return ys.length?table[ys[ys.length-1]]:7;
 }
 export function maybeIntl(done){
   const wbc=(S.year-2026)%4===0; let p12=(S.year-2028)%4===0;
-  if(S.lv==='MLB')p12=false; /* 大聯盟球員只打經典賽,不打 12 強 */
+  if(S.lv==='MLB')p12=false;
   const intlFmt=intlFormat(wbc);
-  if(S.stage!=='PRO'||(!wbc&&!p12)||ovr()<intlFmt.minOvr||S.seasonFactor<0.5||S.rehab>0||S.skipMid){ done(); return; } /* 經典賽 55+；12 強維持 52+；復健年/報銷年不徵召 */
+  if(S.stage!=='PRO'||(!wbc&&!p12)||ovr()<intlFmt.minOvr||S.seasonFactor<0.5||S.rehab>0||S.skipMid){ done(); return; }
   const name=wbc?'世界棒球經典賽':'世界12強賽';
   let forced=false,first=false;
   if(S.intlLock===null){ S.intlLock=S.year; forced=true; first=true; }
@@ -73,40 +72,36 @@ export function maybeIntl(done){
       :`列管期間（剩 ${5-(S.year-S.intlLock)} 年），依規定<b class="hl">強制徵召</b>。你沒有選擇。`);
   }
   const opts=[
-    {t:forced?'⋯⋯只能報到（強制徵召）':'披上國家隊戰袍',main:true,s:'依成績獲得能力點｜下季受傷機率 +10%',f:()=>{
-      /* 國家隊成敗看整體興衰,個人只佔一小部分 */
+    {t:forced?'⋯⋯只能報到（強制徵召）':'披上日本代表戰袍',main:true,s:'依成績獲得能力點｜下季受傷機率 +10%',f:()=>{
+      /* 日本代表的團隊底蘊與球員實力都參與結果；歷史係數的權重比舊版更高。 */
       const teamStrength=japanIntlStrength(S.year,wbc);
-      const b=clamp(Math.round((ovr()-52)*0.35)+Math.round((teamStrength-5)*0.8),0,8);
-      const i=intlFinishIndex(R()*100,b,!!S.traits.championmaker);
+      const personal=Math.round((ovr()-52)*0.45);
+      const historical=Math.round((teamStrength-5)*1.2);
+      const b=clamp(personal+historical,0,16);
+      const i=intlFinishIndex(R()*100,b,!!S.traits.championmaker,!!S.invincible);
       const rk=intlFmt.ranks[i], teamGames=intlFmt.games[i], pts=[6,5,4,2,1][i];
       let gpts=pts; if(S.traits.intlace)gpts=Math.max(pts,2);
       S.pool+=gpts; S.injNext=S.traits.intlace?0:10; S.intlCount++;
-      /* Team Taiwan(挺台灣):國際賽出賽超過 5 次 */
       if(!S.traits.samurai&&S.intlCount>5){ S.traits.samurai=true;
         card('gold','隱藏稱號：武士精神',`永遠把日本代表的榮耀放在比個人職涯更高的位置。你在球場上拍著胸口、向看台致意的那一刻，成為球迷心中最驕傲的畫面。`); board(1); }
-      /* 先產生並保存本屆成績；事件卡與生涯結算共用同一份資料，不在結算時重骰 */
       let intlSt;
       { const a=S.ab, par=intlFmt.par, clutch=S.traits.clutch?1:0;
         if(S.pos==='P'){ const dd=(a.vel+a.ctl+a.brk)/3-par;
-          /* 【修正】區分先發與後援，並將局數與出賽場次連動，符合國際賽球數限制 */
           let g, ip;
           if(isSP()){
-            g = teamGames>=6?ri(1,2):1; /* 預賽／八強最多一場先發，進四強或 12 強複賽後才可能二度先發 */
-            ip = normalizeIP(g * (4.5 + R() * 2.5)); /* 配合球數限制，單場大約吃 4.5~7 局；量化為完整出局數 */
+            g = teamGames>=6?ri(1,2):1;
+            ip = normalizeIP(g * (4.5 + R() * 2.5));
           } else {
-            g = clamp(Math.round(teamGames*(0.55+R()*0.25)),1,teamGames); /* 牛棚登板數隨球隊實際賽程增減 */
-            ip = normalizeIP(g * (0.8 + R() * 0.8)); /* 每次上場大約拆彈或投 0.8~1.6 局；量化為完整出局數 */
+            g = clamp(Math.round(teamGames*(0.55+R()*0.25)),1,teamGames);
+            ip = normalizeIP(g * (0.8 + R() * 0.8));
           }
-
           const k9=clamp(7.5+dd*0.12+clutch*.5,4,14);
           const era=clamp(3.6-dd*0.16-clutch*.35,0.8,8);
-          /* 與職業球季共用同一把 BB/9、H/9 尺；短期賽按實際局數縮放。 */
           const bb9=clamp(4.6-(a.ctl-par)*0.13+N0(0.4),1.2,7.5);
           const h9=clamp(9.2-dd*0.16+N0(0.5),5,13.5);
           intlSt={G:g,IP:ip,H:Math.round(ip/9*h9),BB:Math.round(ip/9*bb9),SO:Math.round(ip/9*k9),ER:Math.round(era*ip/9),W:i<=2&&chance(45+clutch*8)?1:0,SV:!isSP()&&chance(30+clutch*6)?1:0};
-        } else { const dd=(a.con*0.5+a.pow*0.2+a.eye*0.18+a.spd*0.12)-par-0.5; /* 同步賽季 d 公式(含 pow) */
-          const g=teamGames, pa=g*ri(3,4); /* 國家隊球星每場先發，出賽數不得超過該名次的實際賽程 */
-          /* 與職業球季同式：選球直接決定保送率，並由 PA−BB 得到打數。 */
+        } else { const dd=(a.con*0.5+a.pow*0.2+a.eye*0.18+a.spd*0.12)-par-0.5;
+          const g=teamGames, pa=g*ri(3,4);
           const bb=Math.round(pa*clamp(0.062+(a.eye-par)*0.0034,0.045,0.17));
           const ab=pa-bb;
           const avg=clamp(0.270+dd*0.006+clutch*.015,0.15,0.5), h=Math.round(ab*avg);
@@ -116,15 +111,15 @@ export function maybeIntl(done){
       }
       addIntlStat(intlSt);
       (S.intlLog||(S.intlLog=[])).push({year:S.year,name,rank:rk,teamGames,st:{...intlSt}});
-      if(i<=1)S.intlTop4=(S.intlTop4||0)+1; /* 需打進冠亞軍才算 */
+      if(i<=1)S.intlTop4=(S.intlTop4||0)+1;
       if(!S.traits.intlace&&S.intlCount>=3&&(S.intlTop4||0)>=2){ S.traits.intlace=true;
-        card('gold','隱藏屬性解鎖：國際賽之鬼','只要穿上 CT 球衣，你的痛覺就會消失——你是為大場面而生的男人。<b class="hl">國際賽不再增加受傷風險，且每次徵召能力點保底 +2</b>。'); }
+        card('gold','隱藏屬性解鎖：國際賽之鬼','只要穿上代表隊球衣，你的痛覺就會消失——你是為大場面而生的男人。<b class="hl">國際賽不再增加受傷風險，且每次徵召能力點保底 +2</b>。'); }
       if(i<=2)S.honors.push(`${S.year} ${name}${rk}`);
       if(i===0){ tlNote(3,(wbc?'經典賽':'12強')+'冠軍'); checkChampionTrait(); }
       let ex=''; const mvpRate=intlMvpRate(intlSt,i); if(chance(mvpRate)){S.honors.push(`${S.year} ${name}MVP`);ex='你憑本屆表現被選為<b class="hl">賽會MVP</b>！';}
-      card(i<=1?'gold':'info',name,`中華隊最終成績：<b class="hl">${rk}</b>（團隊出賽 ${teamGames} 場）。${ex}<br><b>本屆個人成績：</b>${intlStatLine(intlSt)}。${S.traits.clutch?'<span class="up">（大心臟：大賽表現加成）</span>':''}<br>獲得能力點 <b class="hl">${gpts}</b> 點。${S.traits.intlace?'國家英雄不知何謂疲憊。':'國際賽的高強度消耗，讓下季受傷風險上升。'}`);
+      card(i<=1?'gold':'info',name,`日本代表最終成績：<b class="hl">${rk}</b>（團隊出賽 ${teamGames} 場）。${ex}<br><b>本屆個人成績：</b>${intlStatLine(intlSt)}。${S.traits.clutch?'<span class="up">（大心臟：大賽表現加成）</span>':''}<br>獲得能力點 <b class="hl">${gpts}</b> 點。${S.traits.intlace?'代表隊英雄不知何謂疲憊。':'國際賽的高強度消耗，讓下季受傷風險上升。'}`);
       done(); }},
     ];
   if(!forced)opts.push({t:'以調整為由婉拒',s:'列管期已過，終於能說不',f:done});
-  choose(`中華隊徵召 · ${name}`,opts);
+  choose(`日本代表徵召 · ${name}`,opts);
 }
