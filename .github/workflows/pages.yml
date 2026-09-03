@@ -35,6 +35,8 @@ jobs:
         run: |
           python3 -m http.server 8124 --bind 127.0.0.1 &
           for i in $(seq 1 40); do curl -sf http://127.0.0.1:8124/ >/dev/null && break; sleep 0.5; done
+          export CHROME_PATH="$(node -e "console.log(require('playwright').chromium.executablePath())")"
+          echo "Chromium: $CHROME_PATH"
           fail=0
           for f in tests/*.mjs; do
             if node "$f" >/tmp/out.txt 2>&1; then echo "PASS  $f"; else echo "FAIL  $f"; sed 's/^/        /' /tmp/out.txt | head -20; fail=1; fi
