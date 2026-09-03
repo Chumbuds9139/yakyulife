@@ -1,0 +1,29 @@
+name: One-shot contract syntax repair
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Repair exact syntax typo
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/engine/contract.js')
+          s=p.read_text()
+          old="offers.push(...homecomingFallbackOptions(o,{pre:()=>buyoutRemaining(1)}));); }"
+          new="offers.push(...homecomingFallbackOptions(o,{pre:()=>buyoutRemaining(1)}));"
+          if s.count(old)!=1:
+              raise SystemExit(f'expected one typo, found {s.count(old)}')
+          p.write_text(s.replace(old,new))
+          PY
+          node --experimental-default-type=module --check src/engine/contract.js
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/engine/contract.js
+          git commit -m "fix: repair contract syntax typo"
+          git push origin HEAD:main
