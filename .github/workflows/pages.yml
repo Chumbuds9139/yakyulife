@@ -75,12 +75,8 @@ jobs:
           (async()=>{
             const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH,args:['--disable-gpu']});
             const page=await browser.newPage();
-            const pageErrors=[];
-            page.on('pageerror',error=>pageErrors.push({message:error.message,stack:error.stack}));
-            page.on('console',msg=>{ if(msg.type()==='error') console.log('BROWSER CONSOLE ERROR:',msg.text()); });
-            await page.goto('http://127.0.0.1:8124/?module-probe=1',{waitUntil:'domcontentloaded'});
-            await page.waitForTimeout(250);
-            console.log('INITIAL PAGE ERRORS:',JSON.stringify(pageErrors,null,2));
+            page.on('pageerror',error=>console.log('BROWSER PAGE ERROR:',error.message,error.stack||''));
+            await page.goto('http://127.0.0.1:8124/probe.html',{waitUntil:'domcontentloaded'}).catch(()=>{});
             const result=await page.evaluate(async(mods)=>{
               const out=[];
               for(const mod of mods){
