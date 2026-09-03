@@ -3,7 +3,7 @@ import {TRAIT_KEYS} from './data/traits.js?v=1.5.11';
 import {board, card} from './ui/dom.js?v=1.5.11';
 
 const SECRET=['P','C','IF','OF','OF','IF','C','P'];
-let seq=[]; let armed=false; let lockInstalled=false;
+let seq=[]; let armed=false; let lockInstalled=false; let mlbJapanFarewellShown=false;
 
 function installAbilityLock(){
   if(!S||lockInstalled)return;
@@ -36,5 +36,20 @@ function localizeJapanText(root){
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT), nodes=[]; while(w.nextNode())nodes.push(w.currentNode);
   for(const n of nodes){let t=n.nodeValue;for(const [a,b] of r)t=t.split(a).join(b);if(t!==n.nodeValue)n.nodeValue=t;}
 }
-const observer=new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)localizeJapanText(n);}))); 
-observer.observe(document.body,{childList:true,subtree:true}); localizeJapanText(document.body);
+
+function maybeJapanMlbFarewell(){
+  if(mlbJapanFarewellShown||!S||!S.done)return;
+  const mlb=S.stats?.MLB, npb=S.stats?.NPB, cpbl=S.stats?.CPBL;
+  if(!(mlb&&mlb.yr>0)||((npb&&npb.yr>0)||(cpbl&&cpbl.yr>0)))return;
+  mlbJapanFarewellShown=true;
+  card('gold','日本球界からの招待','現役生活の大半を美国で過ごしたあなたに、日本球界から声がかかった。東京ドームで<b class="hl">一日限りのNPB選手</b>として始球式を務めてほしい——そんな特別な招待だった。満員のスタンドを見渡し、あなたは最後の一球を投げる。勝敗ではなく、日本野球への感謝を込めた一球だ。');
+  board(1);
+}
+
+const observer=new MutationObserver(ms=>{
+  ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1)localizeJapanText(n);}));
+  maybeJapanMlbFarewell();
+});
+observer.observe(document.body,{childList:true,subtree:true});
+localizeJapanText(document.body);
+maybeJapanMlbFarewell();
