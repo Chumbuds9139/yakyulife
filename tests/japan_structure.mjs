@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 
 globalThis.location={search:''};
 const state=await import('../src/core/state.js');
@@ -42,6 +43,10 @@ assert.ok(INDEP_TEAMS.length >= 3);
 assert.ok(CORPORATE_TEAMS.length >= 3);
 assert.ok(CPBL_TEAMS.length >= 6);
 assert.equal(OFFICIAL_URL, 'https://chumbuds9139.github.io/yakyulife/');
+
+const draftSrc=readFileSync(new URL('../src/engine/draft.js', import.meta.url),'utf8');
+assert.ok(draftSrc.includes("'立教大學'"));
+assert.ok(draftSrc.includes("'早稻田大學'"));
 
 state.setS(state.newState('test', 1, 'C', null));
 assert.equal(state.stageLabel(), '高一');

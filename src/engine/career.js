@@ -1,10 +1,10 @@
-import {S} from '../core/state.js?v=1.5.23';
-import {clamp} from '../core/rng.js?v=1.5.23';
-import {DPN, POSN, POS_ADJ_RUNS, POS_TIER_K, POS_TIER_STR} from '../data/abilities.js?v=1.5.23';
-import {LG_N} from '../data/teams.js?v=1.5.23';
-import {TIER_TH, LEAGUE_K, MILESTONE_DEF, HOF_TH_K} from '../data/economy.js?v=1.5.23';
-import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.23';
-import {isCareerScoringAward} from './award-rules.js?v=1.5.23';
+import {S} from '../core/state.js?v=1.5.24';
+import {clamp} from '../core/rng.js?v=1.5.24';
+import {DPN, POSN, POS_ADJ_RUNS, POS_TIER_K, POS_TIER_STR} from '../data/abilities.js?v=1.5.24';
+import {LG_N} from '../data/teams.js?v=1.5.24';
+import {TIER_TH, LEAGUE_K, MILESTONE_DEF, HOF_TH_K} from '../data/economy.js?v=1.5.24';
+import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.24';
+import {isCareerScoringAward} from './award-rules.js?v=1.5.24';
 /* ================= 生涯終章 ================= */
 const BUCKET_G={CPBL:120,NPB:143,MLB:162};
 /* 守位分：守位難度(POS_ADJ_RUNS 以「每 162 場」計)換算成該聯盟的實際球季長度。

@@ -28,11 +28,11 @@ try{
   const errors=[]; page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=cpbl-import`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.5.23');
-    const teams=await import('./src/data/teams.js?v=1.5.23');
-    const phases=await import('./src/flow/phases.js?v=1.5.23');
-    const contract=await import('./src/engine/contract.js?v=1.5.23');
-    const timeline=await import('./src/ui/timeline.js?v=1.5.23');
+    const state=await import('./src/core/state.js?v=1.5.24');
+    const teams=await import('./src/data/teams.js?v=1.5.24');
+    const phases=await import('./src/flow/phases.js?v=1.5.24');
+    const contract=await import('./src/engine/contract.js?v=1.5.24');
+    const timeline=await import('./src/ui/timeline.js?v=1.5.24');
 
     const low=contract.cpblImportSpec(40,'CORP');
     const corpMid=contract.cpblImportSpec(50,'CORP');
