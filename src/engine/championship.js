@@ -1,5 +1,5 @@
-import {clamp} from '../core/rng.js?v=1.5.16';
-import {S} from '../core/state.js?v=1.5.16';
+import {clamp} from '../core/rng.js?v=1.5.17';
+import {S} from '../core/state.js?v=1.5.17';
 
 /* 只計國家隊與三個職業頂級聯盟冠軍；高中、大學與業餘冠軍不列入。 */
 const MAJOR_CHAMPIONSHIP=/(世界棒球經典賽冠軍|世界12強賽冠軍|中職總冠軍|日本一|世界大賽冠軍)$/;

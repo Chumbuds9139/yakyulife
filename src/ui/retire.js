@@ -1,17 +1,17 @@
-import {S, blankStat, bucketOf} from '../core/state.js?v=1.5.16';
-import {R, ri, SEED} from '../core/rng.js?v=1.5.16';
-import {OFFICIAL_URL} from '../config.js?v=1.5.16';
-import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, teamNick} from '../data/teams.js?v=1.5.16';
-import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.16';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.5.16';
-import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.16';
-import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.16';
-import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.16';
-import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.16';
-import {fmtMoney} from '../engine/contract.js?v=1.5.16';
-import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.5.16';
-import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.16';
-import {shareImageSheet} from './share-image.js?v=1.5.16';
+import {S, blankStat, bucketOf, CAREER_STAT_BUCKETS, CAREER_EVAL_BUCKETS} from '../core/state.js?v=1.5.17';
+import {R, ri, SEED} from '../core/rng.js?v=1.5.17';
+import {OFFICIAL_URL} from '../config.js?v=1.5.17';
+import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, teamNick} from '../data/teams.js?v=1.5.17';
+import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.17';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.5.17';
+import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.17';
+import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.17';
+import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.17';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.17';
+import {fmtMoney} from '../engine/contract.js?v=1.5.17';
+import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.5.17';
+import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.17';
+import {shareImageSheet} from './share-image.js?v=1.5.17';
 /* ================= 結算圖資料建構 =================
    Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
    All values come from S.*; the in-game settlement cards are untouched. */
@@ -41,7 +41,7 @@ export function settlementYearHTML(year,isChampion=championshipYear(year)){
 }
 export function rpCumData(){ /* per-league career totals; best-of-column marks need 2+ rows */
   const isP=S.pos==='P';
-  const order=['MLB','NPB','CPBL','MINOR'].filter(b=>S.stats[b]);
+  const order=CAREER_STAT_BUCKETS.filter(b=>S.stats[b]);
   const hd=isP?['Yrs','G','IP','W','L','SV','HLD','SO','BB','ERA','WHIP']
              :['Yrs','G','PA','AVG','OBP','SLG','OPS','H','HR','RBI','BB','SB','DEF'];
   const rows=order.map(b=>{ const st=S.stats[b];
@@ -90,8 +90,14 @@ export function rpOrgOf(r){ /* org team + league + level label for one pro-log r
   let tm=r.tm||'', lvl='';
   for(const s of RP_LV_SUF){ if(tm.endsWith(s)){ lvl=s; tm=tm.slice(0,-s.length); break; } }
   const lg=CPBL_TEAMS.includes(tm)?'CPBL':NPB_TEAMS.includes(tm)?'NPB':MLB_TEAMS.includes(tm)?'MLB'
+    :INDEP_TEAMS.includes(tm)?'INDEP':CORPORATE_TEAMS.includes(tm)?'CORP'
     :(r.lv&&LV[r.lv]?(LV[r.lv].top||(LV[r.lv].org==='MiLB'?'MLB':LV[r.lv].org)):'CPBL');
-  if(!lvl)lvl=lg==='MLB'?'大聯盟':'一軍';
+  if(!lvl){
+    if(lg==='MLB')lvl='大聯盟';
+    else if(lg==='INDEP')lvl='獨立聯盟';
+    else if(lg==='CORP')lvl='社會人';
+    else lvl='一軍';
+  }
   return {team:tm,lg,lvl,minor:lvl!=='一軍'&&lvl!=='大聯盟'};
 }
 export function rpProData(proLogs){ /* team segments: a new block whenever the org changes */
@@ -348,8 +354,8 @@ export function endGame(reason){
   tlNote(5,'引退'); careerTimelineCard();
   /* 各聯盟數據與評價 */
   let tables='',evals=[],best=99; const tiersByLg={};
-  ['MLB','NPB','CPBL','MINOR'].forEach(b=>{ if(S.stats[b]){ tables+=statTable(b);
-    if(b!=='MINOR'){ const t=tierOf(b); tiersByLg[b]=t; evals.push(`<span class="tag">${t.name}</span>（評價分 ${t.sc}）`); best=Math.min(best,t.i); } } });
+  CAREER_STAT_BUCKETS.forEach(b=>{ if(S.stats[b]){ tables+=statTable(b);
+    if(CAREER_EVAL_BUCKETS.includes(b)){ const t=tierOf(b); tiersByLg[b]=t; evals.push(`<span class="tag">${t.name}</span>（評價分 ${t.sc}）`); best=Math.min(best,t.i); } } });
   if(best===99)best=4;
   retireScene(tiersByLg);
   /* 成就門檻:中職名人堂 或 站上日職/大聯盟 */
