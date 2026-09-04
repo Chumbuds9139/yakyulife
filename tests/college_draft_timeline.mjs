@@ -8,9 +8,9 @@ try{
   const errors=[]; page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=college-draft-timeline`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.5.25');
-    const timeline=await import('./src/ui/timeline.js?v=1.5.25');
-    const phases=await import('./src/flow/phases.js?v=1.5.25');
+    const state=await import('./src/core/state.js?v=1.5.26');
+    const timeline=await import('./src/ui/timeline.js?v=1.5.26');
+    const phases=await import('./src/flow/phases.js?v=1.5.26');
     const s=state.newState('大學選秀測試',13,'C',null);
     s.stage='U'; s.stageYr=3; s.age=21; s.year=2031; s.team='早稻田大學';
     s.teamName=function(){ return this.orgTeam+(this.lv==='NPB1'?'一軍':'二軍'); };
