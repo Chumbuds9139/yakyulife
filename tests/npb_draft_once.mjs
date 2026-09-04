@@ -18,11 +18,11 @@ try{
   const errors=[]; page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=npb-draft-once`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.5.18');
-    const teams=await import('./src/data/teams.js?v=1.5.18');
-    const phases=await import('./src/flow/phases.js?v=1.5.18');
-    const contract=await import('./src/engine/contract.js?v=1.5.18');
-    const timeline=await import('./src/ui/timeline.js?v=1.5.18');
+    const state=await import('./src/core/state.js?v=1.5.19');
+    const teams=await import('./src/data/teams.js?v=1.5.19');
+    const phases=await import('./src/flow/phases.js?v=1.5.19');
+    const contract=await import('./src/engine/contract.js?v=1.5.19');
+    const timeline=await import('./src/ui/timeline.js?v=1.5.19');
     const fresh=state.newState('選秀一次',17,'C',null);
     const s=state.newState('選秀一次',17,'C',null);
     s.stage='PRO'; s.stageYr=1; s.age=22; s.year=2032;

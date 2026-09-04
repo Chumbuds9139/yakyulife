@@ -1,18 +1,18 @@
-import {S} from '../core/state.js?v=1.5.18';
-import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.18';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.18';
-import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.18';
-import {card, choose, board} from '../ui/dom.js?v=1.5.18';
-import {tlNote} from '../ui/timeline.js?v=1.5.18';
-import {ovr} from './ability.js?v=1.5.18';
-import {injuryMarketStatus} from './injury.js?v=1.5.18';
-import {hasActiveFranchise} from './tenure.js?v=1.5.18';
-import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.18';
-import {capTeam} from './career.js?v=1.5.18';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.18';
-import {advance} from './draft.js?v=1.5.18';
-import {finishContractYear} from '../flow/phases.js?v=1.5.18';
-import {endGame} from '../ui/retire.js?v=1.5.18';
+import {S} from '../core/state.js?v=1.5.19';
+import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.19';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.19';
+import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.19';
+import {card, choose, board} from '../ui/dom.js?v=1.5.19';
+import {tlNote} from '../ui/timeline.js?v=1.5.19';
+import {ovr} from './ability.js?v=1.5.19';
+import {injuryMarketStatus} from './injury.js?v=1.5.19';
+import {hasActiveFranchise} from './tenure.js?v=1.5.19';
+import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.19';
+import {capTeam} from './career.js?v=1.5.19';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.19';
+import {advance} from './draft.js?v=1.5.19';
+import {finishContractYear} from '../flow/phases.js?v=1.5.19';
+import {endGame} from '../ui/retire.js?v=1.5.19';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
@@ -703,7 +703,7 @@ export function crossOffers(o){
         f:()=>{S.salary+=of.bonus;signTo('MiLB',ml,of.team,of.yrs,1,of.annual);fin();}}));
     }
     if(opts.length){
-      const title=both?'日、美球團同時開出旅外合約':hits.jp?'日職球團開出旅外合約':'大聯盟球探遞出合約';
+      const title=both?'日職與大聯盟同時開出合約':hits.jp?'日職球團開出合約':'大聯盟球探遞出合約';
       choose(title,[...opts,{t:'留在中職',main:true,f:fin}]); return;
     }
   }
