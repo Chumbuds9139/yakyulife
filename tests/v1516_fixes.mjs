@@ -44,13 +44,13 @@ try{
   page2.on('pageerror',error=>errors.push(error.message));
   await page2.goto(`${url}?seed=v1516-hs`,{waitUntil:'domcontentloaded'});
   const result=await page2.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.5.23');
-    const teams=await import('./src/data/teams.js?v=1.5.23');
-    const events=await import('./src/flow/events.js?v=1.5.23');
-    const data=await import('./src/data/events.js?v=1.5.23');
-    const contract=await import('./src/engine/contract.js?v=1.5.23');
-    const draft=await import('./src/engine/draft.js?v=1.5.23');
-    const abilities=await import('./src/data/abilities.js?v=1.5.23');
+    const state=await import('./src/core/state.js?v=1.5.24');
+    const teams=await import('./src/data/teams.js?v=1.5.24');
+    const events=await import('./src/flow/events.js?v=1.5.24');
+    const data=await import('./src/data/events.js?v=1.5.24');
+    const contract=await import('./src/engine/contract.js?v=1.5.24');
+    const draft=await import('./src/engine/draft.js?v=1.5.24');
+    const abilities=await import('./src/data/abilities.js?v=1.5.24');
     const s=state.newState('高校出路',8,'C',null);
     s.stage='HS'; s.stageYr=3; s.age=18; s.year=2028;
     Object.keys(s.ab).forEach(k=>s.ab[k]=40);
