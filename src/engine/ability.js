@@ -1,9 +1,9 @@
-import {S} from '../core/state.js?v=1.5.16';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.16';
-import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.16';
-import {LV} from '../data/teams.js?v=1.5.16';
-import {card, choose, board} from '../ui/dom.js?v=1.5.16';
-import {roleN, pitcherRole} from './season.js?v=1.5.16';
+import {S} from '../core/state.js?v=1.5.17';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.17';
+import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.17';
+import {LV} from '../data/teams.js?v=1.5.17';
+import {card, choose, board} from '../ui/dom.js?v=1.5.17';
+import {roleN, pitcherRole} from './season.js?v=1.5.17';
 export function enforcePerfectAbilities(){
   if(!S?.perfectLock)return;
   Object.keys(S.ab||{}).forEach(k=>S.ab[k]=80);

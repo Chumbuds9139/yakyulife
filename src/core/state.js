@@ -1,6 +1,6 @@
-import {R, ri} from './rng.js?v=1.5.16';
-import {POS_AB} from '../data/abilities.js?v=1.5.16';
-import {LV} from '../data/teams.js?v=1.5.16';
+import {R, ri} from './rng.js?v=1.5.17';
+import {POS_AB} from '../data/abilities.js?v=1.5.17';
+import {LV} from '../data/teams.js?v=1.5.17';
 export let S=null, stepQ=[];
 function bindLevelOrg(state){let current=state.lv;Object.defineProperty(state,'lv',{enumerable:true,configurable:true,get(){return current;},set(v){current=v;const l=LV[v];if(l&&l.org)state.org=l.org;}});const l=LV[current];if(l&&l.org)state.org=l.org;return state;}
 export function setS(v){if(v&&v.traits&&v.traits.taiwan&&!v.traits.samurai)v.traits.samurai=true;if(v&&v.traits)delete v.traits.taiwan;S=bindLevelOrg(v);}
@@ -15,6 +15,17 @@ export function newState(name,jersey,pos,role){
 }
 export function playerName(){return `${S.name} #${S.jersey}`;}
 export function blankStat(){return {yr:0,G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,AS:0,DEF:0,DPG:{}};}
-export function bucketOf(lv){if(lv==='NPB_TRAIN'||lv==='NPB2'||lv==='NPB1')return 'NPB';if(lv==='CPBL2'||lv==='CPBL1')return 'CPBL';if(lv==='MLB')return 'MLB';const l=lv&&LV[lv];return l&&l.top?l.top:'MINOR';}
+export function bucketOf(lv){
+  if(lv==='NPB_TRAIN'||lv==='NPB2'||lv==='NPB1')return 'NPB';
+  if(lv==='CPBL2'||lv==='CPBL1')return 'CPBL';
+  if(lv==='MLB')return 'MLB';
+  if(lv==='CORP')return 'CORP';
+  if(lv==='INDEP')return 'INDEP';
+  const l=lv&&LV[lv];
+  if(l&&(l.org==='CORP'||l.org==='INDEP'))return l.org;
+  return l&&l.top?l.top:'MINOR';
+}
+export const CAREER_STAT_BUCKETS=['MLB','NPB','CPBL','INDEP','CORP','MINOR'];
+export const CAREER_EVAL_BUCKETS=['MLB','NPB','CPBL'];
 export function nextStep(){if(S.done){stepQ=[];return;}const f=stepQ.shift();if(f)f();}
 export function stageLabel(){if(S.stage==='HS')return '高'+['一','二','三'][S.stageYr-1];if(S.stage==='U')return '大'+['一','二','三','四'][S.stageYr-1];if(S.stage==='CORP')return '社會人';if(S.stage==='INDEP')return '獨立聯盟';if(S.stage==='PRO'){if(S.lv==='NPB_TRAIN')return 'NPB育成';if(S.lv==='NPB2')return 'NPB二軍';if(S.lv==='NPB1')return 'NPB一軍';if(S.lv==='CPBL2')return '中職二軍／培養型';if(S.lv==='CPBL1')return '中職一軍／洋將';if(S.lv==='MLB')return 'MLB';const l=LV[S.lv];if(l)return l.n;}return '進行中';}
