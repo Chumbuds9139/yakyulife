@@ -12,6 +12,10 @@ assert.ok(Object.keys(state.HS_MAP).length>=7);
 assert.ok(state.newState('母隊',1,'P',null).lastLeagueTeam);
 assert.equal(state.newState('母隊',1,'P',null).lastLeagueTeam.NPB,null);
 
+const eventsSrc=readFileSync(new URL('../src/data/events.js', import.meta.url),'utf8');
+assert.equal(eventsSrc.includes('理想住狀態'),false);
+assert.ok(eventsSrc.includes('回不到理想狀態'));
+
 assert.deepEqual(PATHS.NPB, ['NPB_TRAIN','NPB2','NPB1']);
 assert.deepEqual(PATHS.CPBL, ['CPBL2','CPBL1']);
 assert.deepEqual(PATHS.CORP, ['CORP']);

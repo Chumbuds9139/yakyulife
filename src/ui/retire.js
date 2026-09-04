@@ -1,17 +1,17 @@
-import {S, blankStat, bucketOf, CAREER_STAT_BUCKETS, CAREER_EVAL_BUCKETS} from '../core/state.js?v=1.5.27';
-import {R, ri, SEED} from '../core/rng.js?v=1.5.27';
-import {OFFICIAL_URL} from '../config.js?v=1.5.27';
-import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, teamNick, npbStadium} from '../data/teams.js?v=1.5.27';
-import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.27';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.5.27';
-import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.27';
-import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.27';
-import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.27';
-import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.27';
-import {fmtMoney} from '../engine/contract.js?v=1.5.27';
-import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.5.27';
-import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.27';
-import {shareImageSheet} from './share-image.js?v=1.5.27';
+import {S, blankStat, bucketOf, CAREER_STAT_BUCKETS, CAREER_EVAL_BUCKETS} from '../core/state.js?v=1.5.28';
+import {R, ri, SEED} from '../core/rng.js?v=1.5.28';
+import {OFFICIAL_URL} from '../config.js?v=1.5.28';
+import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, teamNick, npbStadium} from '../data/teams.js?v=1.5.28';
+import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.28';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.5.28';
+import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.28';
+import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.28';
+import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.28';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.28';
+import {fmtMoney} from '../engine/contract.js?v=1.5.28';
+import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.5.28';
+import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.28';
+import {shareImageSheet} from './share-image.js?v=1.5.28';
 /* ================= 結算圖資料建構 =================
    Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
    All values come from S.*; the in-game settlement cards are untouched. */

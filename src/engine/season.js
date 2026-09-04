@@ -1,15 +1,15 @@
-import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.5.27';
-import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.27';
-import {POS_ADJ_RUNS, POS_PT_BAR} from '../data/abilities.js?v=1.5.27';
-import {LV, HS_CUPS, U_CUPS, spLoad} from '../data/teams.js?v=1.5.27';
-import {card, board} from '../ui/dom.js?v=1.5.27';
-import {ovr, careerAllStars, toolGap} from './ability.js?v=1.5.27';
-import {tjAccrue, tjGamble} from './injury.js?v=1.5.27';
+import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.5.28';
+import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.28';
+import {POS_ADJ_RUNS, POS_PT_BAR} from '../data/abilities.js?v=1.5.28';
+import {LV, HS_CUPS, U_CUPS, spLoad} from '../data/teams.js?v=1.5.28';
+import {card, board} from '../ui/dom.js?v=1.5.28';
+import {ovr, careerAllStars, toolGap} from './ability.js?v=1.5.28';
+import {tjAccrue, tjGamble} from './injury.js?v=1.5.28';
 /* temporary scaffold until awards/intl/contract/flow are extracted */
-import {demotionAudit} from './contract.js?v=1.5.27';
-import {awards} from './awards.js?v=1.5.27';
-import {maybeIntl} from './intl.js?v=1.5.27';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.27';
+import {demotionAudit} from './contract.js?v=1.5.28';
+import {awards} from './awards.js?v=1.5.28';
+import {maybeIntl} from './intl.js?v=1.5.28';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.28';
 export function bullpenRole(){ /* 牛棚內依上季表現判定中繼／終結者，與先發體力門檻分開。 */
   const pd=(S.prevD!==undefined?S.prevD:(S.lastD||0));
   /* 只有上一季已在相同頂級聯盟投牛棚，該季成績才可用於終結者升降。
