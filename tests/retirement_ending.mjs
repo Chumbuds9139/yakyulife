@@ -1,5 +1,16 @@
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {chromium} from 'playwright';
+
+const retireSrc=readFileSync(new URL('../src/ui/retire.js', import.meta.url),'utf8');
+const fanSrc=readFileSync(new URL('../src/data/economy.js', import.meta.url),'utf8');
+assert.equal(fanSrc.includes('台灣棒球'),false);
+assert.equal(retireSrc.includes('機車行'),false);
+assert.equal(retireSrc.includes('蛋餅'),false);
+assert.equal(retireSrc.includes('嗨賴'),false);
+assert.ok(retireSrc.includes('都市對抗')||retireSrc.includes('居酒屋'));
+assert.ok(retireSrc.includes('解説'));
+assert.ok(fanSrc.includes('日本野球'));
 
 const url=process.env.YAKYOLIFE_URL||'http://127.0.0.1:8124/';
 const browser=await chromium.launch({
@@ -14,8 +25,8 @@ try{
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=retirement-ending`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.5.21');
-    const retire=await import('./src/ui/retire.js?v=1.5.21');
+    const state=await import('./src/core/state.js?v=1.5.22');
+    const retire=await import('./src/ui/retire.js?v=1.5.22');
     const pitcher=retire.nextBaseEnding('P');
     const hitter=retire.nextBaseEnding('SS');
     const pitcherCoach=retire.jerseyWeightEnding('P');
@@ -62,7 +73,8 @@ try{
       withoutConditions:retire.postCareerEndingKeys(tiers,0,0),
       age24:retire.usesSecondCareerEnding(24),
       age25:retire.usesSecondCareerEnding(25),
-      mlbLeague,mlbText,npbLeague,npbText
+      mlbLeague,mlbText,npbLeague,npbText,
+      nextGame:retire.nextGameEnding('IF').body
     };
   });
 
@@ -96,6 +108,8 @@ try{
   assert.equal(result.npbLeague,'NPB');
   assert.ok(result.npbText.includes('甲子園'),result.npbText);
   assert.equal(result.npbText.includes('臺北大巨蛋'),false,result.npbText);
+  assert.equal(result.nextGame.includes('機車行'),false);
+  assert.ok(result.nextGame.includes('居酒屋')||result.nextGame.includes('甲子園'),result.nextGame);
   assert.equal(errors.length,0,errors.join('\n'));
   console.log(JSON.stringify(result,null,2));
 }finally{
