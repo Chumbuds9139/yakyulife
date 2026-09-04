@@ -1,13 +1,13 @@
-import {S} from '../core/state.js?v=1.5.17';
-import {ri, pick, chance} from '../core/rng.js?v=1.5.17';
-import {NPB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.5.17';
-import {card, choose, board, menuModal} from '../ui/dom.js?v=1.5.17';
-import {tlNote} from '../ui/timeline.js?v=1.5.17';
-import {ovr, playerType} from './ability.js?v=1.5.17';
-import {primaryPos} from './career.js?v=1.5.17';
-import {fmtMoney, makeOffers, pickOfferUI, signTo, makeContract, rollCpblImport} from './contract.js?v=1.5.17';
-import {startYear} from '../flow/phases.js?v=1.5.17';
-import {endGame} from '../ui/retire.js?v=1.5.17';
+import {S} from '../core/state.js?v=1.5.18';
+import {ri, pick, chance} from '../core/rng.js?v=1.5.18';
+import {NPB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.5.18';
+import {card, choose, board, menuModal} from '../ui/dom.js?v=1.5.18';
+import {tlNote} from '../ui/timeline.js?v=1.5.18';
+import {ovr, playerType} from './ability.js?v=1.5.18';
+import {primaryPos} from './career.js?v=1.5.18';
+import {fmtMoney, makeOffers, pickOfferUI, signTo, makeContract, rollCpblImport} from './contract.js?v=1.5.18';
+import {startYear} from '../flow/phases.js?v=1.5.18';
+import {endGame} from '../ui/retire.js?v=1.5.18';
 
 /* ---------- 日本版：選秀與生涯路口 ---------- */
 const JP_UNI=['早稻田大學','慶應義塾大學','明治大學','東洋大學','中央大學'];
@@ -24,7 +24,7 @@ function enterJapaneseAmateur(org,team){
 
 /* 社會人／獨立聯盟的職棒去向不是升降級。
    打完一季後若尚未參加過日職選秀，可投入一次；表現夠好時十二球團可能買斷，
-   中華職棒也可能開出洋將合約。轉入職業聯盟都寫入該聯盟球隊，不帶業餘隊名。 */
+   中華職棒也可能開出洋將合約。 */
 function amateurOffseasonDecision(){
   if(S.org!=='CORP'&&S.org!=='INDEP')return false;
   const corp=S.org==='CORP';
@@ -50,7 +50,7 @@ function amateurOffseasonDecision(){
       S.svc=0; S.faElig=false; S.team='';
       const offers=makeOffers('NPB',n,bonusBase,1,2,lv,null);
       pickOfferUI('日本職棒十二球團 · 合約／買斷','NPB',offers,()=>{
-        card('gold','NPB 球團正式合約',`${S.orgTeam} 看上你在${corp?'社會人':'獨立聯盟'}的表現，與原球團 <b class="hl">${oldTeam}</b> 完成合約協商後正式簽入。業餘隊名不會帶到日職；現在所屬為 <b class="hl">${S.orgTeam}</b>，從 ${lv==='NPB2'?'二軍':'育成'} 出發。`);
+        card('gold','NPB 球團正式合約',`<b class="hl">${S.orgTeam}</b>看上你在${corp?'社會人':'獨立聯盟'}的表現，向原球團 <b class="hl">${oldTeam}</b> 提出合約買斷，從${lv==='NPB2'?'二軍':'育成'}出發。`);
         tlNote(4,`NPB球團簽約：${S.orgTeam}`); board(0); startYear();
       });
     }});
@@ -65,7 +65,7 @@ function amateurOffseasonDecision(){
       const bonusBase=cpbl.lv==='CPBL1'?220:120;
       const offers=makeOffers('CPBL',n,bonusBase,1,2,cpbl.lv,null);
       pickOfferUI('中華職棒 · 洋將合約','CPBL',offers,()=>{
-        card('gold','跨海洋將合約',`中華職棒看上你在${corp?'社會人':'獨立聯盟'}的表現，向原球團 <b class="hl">${oldTeam}</b> 遞出合約。業餘隊名不會帶走；現在所屬為 <b class="hl">${S.orgTeam}</b>，從${cpbl.lv==='CPBL1'?'一軍洋將':'培養型'}出發。`);
+        card('gold','跨海洋將合約',`<b class="hl">${S.orgTeam}</b>看上你在${corp?'社會人':'獨立聯盟'}的表現，向原球團 <b class="hl">${oldTeam}</b> 提出合約買斷，從${cpbl.lv==='CPBL1'?'一軍':'培養型'}洋將出發。`);
         tlNote(4,`中職簽約：${S.orgTeam}`); board(0); startYear();
       });
     }});

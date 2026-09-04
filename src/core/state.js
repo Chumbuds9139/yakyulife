@@ -1,6 +1,6 @@
-import {R, ri} from './rng.js?v=1.5.17';
-import {POS_AB} from '../data/abilities.js?v=1.5.17';
-import {LV} from '../data/teams.js?v=1.5.17';
+import {R, ri} from './rng.js?v=1.5.18';
+import {POS_AB} from '../data/abilities.js?v=1.5.18';
+import {LV} from '../data/teams.js?v=1.5.18';
 export let S=null, stepQ=[];
 function bindLevelOrg(state){let current=state.lv;Object.defineProperty(state,'lv',{enumerable:true,configurable:true,get(){return current;},set(v){current=v;const l=LV[v];if(l&&l.org)state.org=l.org;}});const l=LV[current];if(l&&l.org)state.org=l.org;return state;}
 export function setS(v){if(v&&v.traits&&v.traits.taiwan&&!v.traits.samurai)v.traits.samurai=true;if(v&&v.traits)delete v.traits.taiwan;S=bindLevelOrg(v);}
