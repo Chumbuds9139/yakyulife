@@ -16,6 +16,8 @@ assert.equal(draftSrc.includes('不會帶走'),false);
 assert.equal(contractSrc.includes('業餘隊名'),false);
 assert.equal(contractSrc.includes('不會帶走'),false);
 assert.ok(contractSrc.includes('提出合約買斷'));
+assert.equal(contractSrc.includes('日職球團開出旅外合約'),false);
+assert.ok(contractSrc.includes('日職球團開出合約'));
 
 const url=process.env.YAKYOLIFE_URL||'http://127.0.0.1:8124/';
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',args:['--disable-gpu']});
@@ -24,11 +26,11 @@ try{
   const errors=[]; page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=cpbl-import`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.5.18');
-    const teams=await import('./src/data/teams.js?v=1.5.18');
-    const phases=await import('./src/flow/phases.js?v=1.5.18');
-    const contract=await import('./src/engine/contract.js?v=1.5.18');
-    const timeline=await import('./src/ui/timeline.js?v=1.5.18');
+    const state=await import('./src/core/state.js?v=1.5.19');
+    const teams=await import('./src/data/teams.js?v=1.5.19');
+    const phases=await import('./src/flow/phases.js?v=1.5.19');
+    const contract=await import('./src/engine/contract.js?v=1.5.19');
+    const timeline=await import('./src/ui/timeline.js?v=1.5.19');
 
     const low=contract.cpblImportSpec(40,'CORP');
     const corpMid=contract.cpblImportSpec(50,'CORP');

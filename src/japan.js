@@ -1,5 +1,5 @@
-import {S} from './core/state.js?v=1.5.18';
-import {board, card} from './ui/dom.js?v=1.5.18';
+import {S} from './core/state.js?v=1.5.19';
+import {board, card} from './ui/dom.js?v=1.5.19';
 
 const SECRET=['P','C','IF','OF','OF','IF','C','P'];
 let seq=[]; let armed=false; let lockInstalled=false; let mlbJapanFarewellShown=false;
