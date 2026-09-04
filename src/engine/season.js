@@ -1,18 +1,16 @@
-import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.5.26';
-import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.26';
-import {POS_ADJ_RUNS, POS_PT_BAR} from '../data/abilities.js?v=1.5.26';
-import {LV, HS_CUPS, U_CUPS, spLoad} from '../data/teams.js?v=1.5.26';
-import {card, board} from '../ui/dom.js?v=1.5.26';
-import {ovr, careerAllStars, toolGap} from './ability.js?v=1.5.26';
-import {tjAccrue, tjGamble} from './injury.js?v=1.5.26';
+import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.5.27';
+import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.27';
+import {POS_ADJ_RUNS, POS_PT_BAR} from '../data/abilities.js?v=1.5.27';
+import {LV, HS_CUPS, U_CUPS, spLoad} from '../data/teams.js?v=1.5.27';
+import {card, board} from '../ui/dom.js?v=1.5.27';
+import {ovr, careerAllStars, toolGap} from './ability.js?v=1.5.27';
+import {tjAccrue, tjGamble} from './injury.js?v=1.5.27';
 /* temporary scaffold until awards/intl/contract/flow are extracted */
-import {demotionAudit} from './contract.js?v=1.5.26';
-import {awards} from './awards.js?v=1.5.26';
-import {maybeIntl} from './intl.js?v=1.5.26';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.26';
-export function pitcherRole(){ /* 體力 >=52 先發;否則牛棚,牛棚內看表現升終結者 */
-  if(S.ab.sta>=52)return 'SP';
-  /* 牛棚:讀「上一季」的 d(prevD,因為 lastD 已被 phasePre 清空);頂尖 → 終結者 */
+import {demotionAudit} from './contract.js?v=1.5.27';
+import {awards} from './awards.js?v=1.5.27';
+import {maybeIntl} from './intl.js?v=1.5.27';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.27';
+export function bullpenRole(){ /* 牛棚內依上季表現判定中繼／終結者，與先發體力門檻分開。 */
   const pd=(S.prevD!==undefined?S.prevD:(S.lastD||0));
   /* 只有上一季已在相同頂級聯盟投牛棚，該季成績才可用於終結者升降。
      二軍升一軍、跨聯盟或舊存檔缺少 lastLv 時，第一季一律先從中繼開始。 */
@@ -21,6 +19,10 @@ export function pitcherRole(){ /* 體力 >=52 先發;否則牛棚,牛棚內看�
   const d=(sameTopLeague&&S.role&&S.role!=='SP')?pd:-99;
   if(S.role==='CL')return d>=1?'CL':'MR';   /* 終結者崩盤才降中繼 */
   return d>=3?'CL':'MR';                     /* 中繼打出頂尖成績升終結者 */
+}
+export function pitcherRole(){ /* 體力 >=52 先發;否則牛棚,牛棚內看表現升終結者 */
+  if(S.ab.sta>=52)return 'SP';
+  return bullpenRole();
 }
 export function outsFromIP(ip){ /* 模擬用十進位局數統一量化為實際出局數 */
   return Math.max(0,Math.round((Number(ip)||0)*3));

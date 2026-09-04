@@ -1,9 +1,9 @@
-import {S} from '../core/state.js?v=1.5.26';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.26';
-import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.26';
-import {LV} from '../data/teams.js?v=1.5.26';
-import {card, choose, board} from '../ui/dom.js?v=1.5.26';
-import {roleN, pitcherRole} from './season.js?v=1.5.26';
+import {S} from '../core/state.js?v=1.5.27';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.27';
+import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.27';
+import {LV} from '../data/teams.js?v=1.5.27';
+import {card, choose, board} from '../ui/dom.js?v=1.5.27';
+import {roleN, pitcherRole, bullpenRole} from './season.js?v=1.5.27';
 export function enforcePerfectAbilities(){
   if(!S?.perfectLock)return;
   Object.keys(S.ab||{}).forEach(k=>S.ab[k]=80);
@@ -74,11 +74,15 @@ export function dposReview(cont){
     const nr=pitcherRole(), old=S.role;
     if((old==='MR'||old==='CL')&&nr==='SP'){
       /* 後援投手體力練上先發線:球團徵詢,不強制轉 */
+      const reliefRole=bullpenRole();
       choose('球團徵詢：你的體力已達先發水準，要轉任先發嗎？',[
         {t:'轉任先發，扛起輪值',main:true,f:()=>{ S.role='SP';
           card('info','定位調整',`你點頭接下先發任務。新球季起，你是輪值的一員——<b class="hl">先發</b>。`); cont(); }},
-        {t:'留在牛棚，守住我的位置',s:'維持'+roleN(old)+'定位',f:()=>{ S.role=old;
-          card('info','留守牛棚',`你婉拒了教練團的提議——永遠準備待命，在球隊最需要我的時候，登板救火。`); cont(); }}]);
+        {t:'留在牛棚，守住我的位置',s:(reliefRole===old?'維持':'調整為')+roleN(reliefRole)+'定位',f:()=>{ S.role=reliefRole;
+          const msg=reliefRole===old
+            ?'你婉拒了教練團的提議——永遠準備待命，在球隊最需要我的時候，登板救火。'
+            :`你婉拒先發任務；教練團依上季表現，將你登錄為 <b class="hl">${roleN(reliefRole)}</b>。`;
+          card('info',reliefRole===old?'留守牛棚':'定位調整',msg); cont(); }}]);
       return;
     }
     S.role=nr;
