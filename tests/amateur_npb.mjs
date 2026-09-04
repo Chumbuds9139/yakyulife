@@ -8,11 +8,11 @@ try{
   const errors=[]; page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=amateur-npb-entry`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.5.24');
-    const teams=await import('./src/data/teams.js?v=1.5.24');
-    const phases=await import('./src/flow/phases.js?v=1.5.24');
-    const contract=await import('./src/engine/contract.js?v=1.5.24');
-    const timeline=await import('./src/ui/timeline.js?v=1.5.24');
+    const state=await import('./src/core/state.js?v=1.5.25');
+    const teams=await import('./src/data/teams.js?v=1.5.25');
+    const phases=await import('./src/flow/phases.js?v=1.5.25');
+    const contract=await import('./src/engine/contract.js?v=1.5.25');
+    const timeline=await import('./src/ui/timeline.js?v=1.5.25');
     const s=state.newState('社會人測試',17,'C',null);
     s.stage='PRO'; s.stageYr=1; s.age=22; s.year=2032;
     s.org='CORP'; s.lv='CORP'; s.orgTeam='豐田戰鷹'; s.team='豐田戰鷹';
