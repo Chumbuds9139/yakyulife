@@ -1,13 +1,14 @@
-import {R, ri} from './rng.js?v=1.5.22';
-import {POS_AB} from '../data/abilities.js?v=1.5.22';
-import {LV} from '../data/teams.js?v=1.5.22';
+import {R, ri} from './rng.js?v=1.5.23';
+import {POS_AB} from '../data/abilities.js?v=1.5.23';
+import {LV} from '../data/teams.js?v=1.5.23';
+export const HS_MAP={'早稻田實業':1,'智辯和歌山':1,'明德義塾':2,'東海大相模':2,'花卷東':2,'聖光学院':3,'作新学院':3};
 export let S=null, stepQ=[];
 function bindLevelOrg(state){let current=state.lv;Object.defineProperty(state,'lv',{enumerable:true,configurable:true,get(){return current;},set(v){current=v;const l=LV[v];if(l&&l.org)state.org=l.org;}});const l=LV[current];if(l&&l.org)state.org=l.org;return state;}
 export function setS(v){if(v&&v.traits&&v.traits.taiwan&&!v.traits.samurai)v.traits.samurai=true;if(v&&v.traits)delete v.traits.taiwan;S=bindLevelOrg(v);}
 export function newState(name,jersey,pos,role){
  const ab={};POS_AB[pos].forEach(k=>ab[k]=ri(20,32));if(pos==='P'){ab.vel+=ri(0,6);ab.brk+=ri(0,4);}else{ab.con+=ri(0,6);ab.pow+=ri(0,4);}
  const pot={},sh=(pos==='C'?POS_AB[pos].filter(k=>k!=='rng'):POS_AB[pos].slice());for(let i=sh.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=sh[i];sh[i]=sh[j];sh[j]=t;}if(pos==='P')sh.forEach((k,i)=>pot[k]=i===0?ri(70,80):i===1?ri(58,68):i===2?ri(50,60):ri(44,54));else{sh.forEach((k,i)=>pot[k]=i===0?ri(72,80):i===1?ri(64,74):i===2?ri(56,68):ri(46,62));if(pos==='C')pot.rng=ri(32,40);}
- const hsMap={'早稻田實業':1,'智辯和歌山':1,'明德義塾':2,'東海大相模':2,'聖光学院':3,'作新学院':3};const schools=Object.keys(hsMap),myTeam=schools[Math.floor(R()*schools.length)];
+ const hsMap=HS_MAP;const schools=Object.keys(hsMap),myTeam=schools[Math.floor(R()*schools.length)];
  return bindLevelOrg({name,jersey,pos,role:pos==='P'?null:null,perfectLock:false,invincible:false,age:16,year:2026,stage:'HS',stageYr:1,pot,hsMap,hsTier:hsMap[myTeam],team:myTeam,potSum0:Object.values(pot).reduce((a,b)=>a+b,0),league:null,org:null,orgTeam:null,lastCpblTeam:null,teamTally:{CORP:{},INDEP:{},CPBL:{},NPB:{},MLB:{}},ab,
  traits:{genius:false,glass:false,iron:false,scum:false,late:false,disc:false,academy:false,intlace:false,franchise:false,clutch:false,favorite:false,phoenix:false,combo:false,onetool:false,rubber:false,legend:false,oldghost:false,adking:false,miraclegen:false,strongpitch:false,stronghit:false,championmaker:false,yips:false,distract:false,cancer:false,ambience:false,goldcloth:false,thief:false,latepractice:false,mrteam:false,confidante:false,smallschool:false,grinder:false,rainbow:false,samurai:false},removed:[],
  cntSave:0,cntSaveWin:0,cntTrainingSafeFail:0,cntNormWin:0,cntSnack:0,cntBoldWin:0,cntBoldFail:0,cntSocialBoldFail:0,cntEndorseBoldWin:0,hsChampions:0,oldGhostPending:false,oldGhostUsed:false,samePick:0,samePickKey:null,teamSeasons:0,teamYears:0,teamStarYears:0,franchiseActive:false,franchiseTeamName:null,six:0,bigInj:0,glassYear:null,ironStreak:0,npbYears:0,npbDraftEntered:false,injNext:0,tmpInj:0,rehab:0,marketInjury:'healthy',salary:0,outsideIncome:0,yearOutsideIncome:0,pool:0,pendStat:0,seasonFactor:1,

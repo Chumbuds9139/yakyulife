@@ -25,8 +25,8 @@ try{
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=retirement-ending`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.5.22');
-    const retire=await import('./src/ui/retire.js?v=1.5.22');
+    const state=await import('./src/core/state.js?v=1.5.23');
+    const retire=await import('./src/ui/retire.js?v=1.5.23');
     const pitcher=retire.nextBaseEnding('P');
     const hitter=retire.nextBaseEnding('SS');
     const pitcherCoach=retire.jerseyWeightEnding('P');
