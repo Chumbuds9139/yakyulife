@@ -27,4 +27,4 @@
 
 ## 目前版本
 
-**v1.5.25**。GitHub Pages 由 `main` 自動測試並部署。
+**v1.5.26**。GitHub Pages 由 `main` 自動測試並部署。

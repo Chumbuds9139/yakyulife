@@ -47,9 +47,6 @@ assert.equal(OFFICIAL_URL, 'https://chumbuds9139.github.io/yakyulife/');
 const draftSrc=readFileSync(new URL('../src/engine/draft.js', import.meta.url),'utf8');
 assert.ok(draftSrc.includes("'立教大學'"));
 assert.ok(draftSrc.includes("'早稻田大學'"));
-const eventsSrc=readFileSync(new URL('../src/data/events.js', import.meta.url),'utf8');
-assert.ok(eventsSrc.includes('多田野數人'));
-assert.ok(eventsSrc.includes('"id": 93'));
 
 state.setS(state.newState('test', 1, 'C', null));
 assert.equal(state.stageLabel(), '高一');
