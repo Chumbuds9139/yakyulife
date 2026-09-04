@@ -5,6 +5,10 @@ const state=await import('../src/core/state.js');
 const {LV, PATHS, NPB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, CPBL_TEAMS, isAmateurClub, teamDisplayName}=await import('../src/data/teams.js');
 const {OFFICIAL_URL}=await import('../src/config.js');
 
+assert.equal(state.HS_MAP['花卷東'],2);
+assert.equal(state.HS_MAP['早稻田實業'],1);
+assert.ok(Object.keys(state.HS_MAP).length>=7);
+
 assert.deepEqual(PATHS.NPB, ['NPB_TRAIN','NPB2','NPB1']);
 assert.deepEqual(PATHS.CPBL, ['CPBL2','CPBL1']);
 assert.deepEqual(PATHS.CORP, ['CORP']);
