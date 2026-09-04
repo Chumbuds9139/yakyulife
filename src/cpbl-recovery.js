@@ -1,5 +1,5 @@
 /* CPBL recovery guard: a broken/empty action panel must never strand a career. */
-import {S, nextStep} from './core/state.js?v=1.5.26';
+import {S, nextStep} from './core/state.js?v=1.5.27';
 
 function recover(){
   if(typeof document==='undefined'||!S||S.done||S.org!=='CPBL'||S.stage!=='PRO'||S.stageYr<1)return;

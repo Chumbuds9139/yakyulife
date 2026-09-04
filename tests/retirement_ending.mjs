@@ -25,8 +25,8 @@ try{
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=retirement-ending`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.5.26');
-    const retire=await import('./src/ui/retire.js?v=1.5.26');
+    const state=await import('./src/core/state.js?v=1.5.27');
+    const retire=await import('./src/ui/retire.js?v=1.5.27');
     const pitcher=retire.nextBaseEnding('P');
     const hitter=retire.nextBaseEnding('SS');
     const pitcherCoach=retire.jerseyWeightEnding('P');
@@ -46,6 +46,26 @@ try{
     state.setS(nationalPlayer);
     const withInternational=retire.postCareerEndingKeys(tiers);
     const nationalSelected=retire.postCareerEnding(tiers,.999);
+    const withoutConditions=retire.postCareerEndingKeys(tiers,0,0);
+
+    const glass=state.newState('玻璃人結局',0,'P',null);
+    glass.traits.glass=true;
+    state.setS(glass);
+    const glassKeys=retire.postCareerEndingKeys(tiers,0,0);
+    const glassSelected=retire.postCareerEnding(tiers,.999);
+
+    const tjTwo=state.newState('TJ兩次',0,'P',null);
+    tjTwo.tjCount=2;
+    state.setS(tjTwo);
+    const tjTwoKeys=retire.postCareerEndingKeys(tiers,0,0);
+
+    const tjThree=state.newState('TJ三次',0,'P',null);
+    tjThree.tjCount=3;
+    state.setS(tjThree);
+    const tjThreeKeys=retire.postCareerEndingKeys(tiers,0,0);
+
+    const latePitcher=retire.lateAnswerEnding('P');
+    const lateHitter=retire.lateAnswerEnding('IF');
 
     const log=document.getElementById('log')||document.body;
     const mlb=state.newState('大聯盟退役',1,'IF',null);
@@ -70,7 +90,12 @@ try{
       pitcher,hitter,pitcherCoach,hitterCoach,
       withCurrentChild,withFormerChild,selected,
       withInternational,nationalSelected,
-      withoutConditions:retire.postCareerEndingKeys(tiers,0,0),
+      withoutConditions,
+      glassKeys,glassSelected,tjTwoKeys,tjThreeKeys,
+      latePitcher,lateHitter,
+      adkingComment:retire.ADKING_FAN_COMMENT,
+      oldGhostPitcher:retire.oldGhostLongCareerComment('P'),
+      oldGhostHitter:retire.oldGhostLongCareerComment('IF'),
       age24:retire.usesSecondCareerEnding(24),
       age25:retire.usesSecondCareerEnding(25),
       mlbLeague,mlbText,npbLeague,npbText,
@@ -102,6 +127,26 @@ try{
   assert(!result.withoutConditions.includes('jerseyWeight'));
   assert.equal(result.age24,true);
   assert.equal(result.age25,false);
+  assert.equal(result.latePitcher.title,'遲到的答案');
+  assert(result.latePitcher.body.includes('二十二歲那年，你的手肘開始痛'));
+  assert(result.latePitcher.body.includes('甲子園決勝'));
+  assert(result.latePitcher.body.includes('日職一軍的先發'));
+  assert(!result.latePitcher.body.includes('右腳踝'));
+  assert.equal(result.lateHitter.title,'遲到的答案');
+  assert(result.lateHitter.body.includes('右腳踝'));
+  assert(result.lateHitter.body.includes('你沒有變差，你只是還在受傷'));
+  assert(result.lateHitter.body.includes('十二球團第一輪'));
+  assert(!result.lateHitter.body.includes('二十二歲那年，你的手肘開始痛'));
+  assert(result.latePitcher.body.includes('<br><br>'));
+  assert.equal(result.withoutConditions.filter(k=>k==='lateAnswer').length,0);
+  assert.equal(result.glassKeys.filter(k=>k==='lateAnswer').length,2);
+  assert.equal(result.glassKeys.length,result.withoutConditions.length+2);
+  assert.equal(result.glassSelected.title,'遲到的答案');
+  assert.equal(result.tjTwoKeys.filter(k=>k==='lateAnswer').length,0);
+  assert.equal(result.tjThreeKeys.filter(k=>k==='lateAnswer').length,2);
+  assert.equal(result.adkingComment,'打開電視每幾分鐘就要看到他一次，去超商也會看到他的臉，退休之後會不會更常出現呢？');
+  assert.equal(result.oldGhostPitcher,'今年新人大物引退時，先發投手{n}');
+  assert.equal(result.oldGhostHitter,'今年新人大物引退時，第四棒{n}');
   assert.equal(result.mlbLeague,'MLB');
   assert.equal(result.mlbText.includes('臺北大巨蛋'),false,result.mlbText);
   assert.equal(result.mlbText.includes('中職史上'),false,result.mlbText);

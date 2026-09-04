@@ -1,13 +1,13 @@
-import {S} from '../core/state.js?v=1.5.26';
-import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.26';
-import {LV} from '../data/teams.js?v=1.5.26';
-import {card, choose, board} from '../ui/dom.js?v=1.5.26';
-import {tlNote} from '../ui/timeline.js?v=1.5.26';
-import {isSP, fmtIP, outsFromIP, ipFromOuts, normalizeIP, baseballERA} from './season.js?v=1.5.26';
-import {ovr} from './ability.js?v=1.5.26';
-import {intlFinishIndex} from './championship.js?v=1.5.26';
-import {checkChampionTrait} from '../flow/events.js?v=1.5.26';
-import {intlInviteCopy, intlEventName} from '../data/intl-copy.js?v=1.5.26';
+import {S} from '../core/state.js?v=1.5.27';
+import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.27';
+import {LV} from '../data/teams.js?v=1.5.27';
+import {card, choose, board} from '../ui/dom.js?v=1.5.27';
+import {tlNote} from '../ui/timeline.js?v=1.5.27';
+import {isSP, fmtIP, outsFromIP, ipFromOuts, normalizeIP, baseballERA} from './season.js?v=1.5.27';
+import {ovr} from './ability.js?v=1.5.27';
+import {intlFinishIndex} from './championship.js?v=1.5.27';
+import {checkChampionTrait} from '../flow/events.js?v=1.5.27';
+import {intlInviteCopy, intlEventName} from '../data/intl-copy.js?v=1.5.27';
 export {intlInviteCopy, intlEventName};
 
 export function intlWalks(st){
