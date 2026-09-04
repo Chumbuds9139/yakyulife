@@ -8,12 +8,12 @@ try{
   const errors=[]; page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=indep-bucket&pos=OF`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.5.21');
-    const season=await import('./src/engine/season.js?v=1.5.21');
-    const career=await import('./src/engine/career.js?v=1.5.21');
-    const retire=await import('./src/ui/retire.js?v=1.5.21');
-    const teams=await import('./src/data/teams.js?v=1.5.21');
-    const share=await import('./src/ui/share-image.js?v=1.5.21');
+    const state=await import('./src/core/state.js?v=1.5.22');
+    const season=await import('./src/engine/season.js?v=1.5.22');
+    const career=await import('./src/engine/career.js?v=1.5.22');
+    const retire=await import('./src/ui/retire.js?v=1.5.22');
+    const teams=await import('./src/data/teams.js?v=1.5.22');
+    const share=await import('./src/ui/share-image.js?v=1.5.22');
 
     const blank=()=>({G:80,PA:300,AB:270,H:80,HR:8,RBI:40,SB:10,BB:20,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,DEF:2});
 
