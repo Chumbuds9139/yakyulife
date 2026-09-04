@@ -1,18 +1,18 @@
-import {S} from '../core/state.js?v=1.5.19';
-import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.19';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.19';
-import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.19';
-import {card, choose, board} from '../ui/dom.js?v=1.5.19';
-import {tlNote} from '../ui/timeline.js?v=1.5.19';
-import {ovr} from './ability.js?v=1.5.19';
-import {injuryMarketStatus} from './injury.js?v=1.5.19';
-import {hasActiveFranchise} from './tenure.js?v=1.5.19';
-import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.19';
-import {capTeam} from './career.js?v=1.5.19';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.19';
-import {advance} from './draft.js?v=1.5.19';
-import {finishContractYear} from '../flow/phases.js?v=1.5.19';
-import {endGame} from '../ui/retire.js?v=1.5.19';
+import {S} from '../core/state.js?v=1.5.20';
+import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.20';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.20';
+import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.20';
+import {card, choose, board} from '../ui/dom.js?v=1.5.20';
+import {tlNote} from '../ui/timeline.js?v=1.5.20';
+import {ovr} from './ability.js?v=1.5.20';
+import {injuryMarketStatus} from './injury.js?v=1.5.20';
+import {hasActiveFranchise} from './tenure.js?v=1.5.20';
+import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.20';
+import {capTeam} from './career.js?v=1.5.20';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.20';
+import {advance} from './draft.js?v=1.5.20';
+import {finishContractYear} from '../flow/phases.js?v=1.5.20';
+import {endGame} from '../ui/retire.js?v=1.5.20';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
@@ -532,12 +532,12 @@ export function faFlow(o){
        S.ct=makeContract(y,m,S.lv,d,annual,{extOffered:false},'延長合約');
        card('info','續約',`與 <b class="hl">${S.teamName()}</b> 完成續約：固定年薪 <b class="hl">${fmtMoney(annual)}</b> × <b class="hl">${y} 年</b>，合約總額 <b class="hl">${fmtMoney(total)}</b>。`); advance(); })},
     {t:'跳出合約，測試自由市場',warn:true,s:'成績不佳可能乏人問津，只能回原隊減薪',f:()=>faMarket(o,d)}];
-  /* 5a 大聯盟合約走完:能力還撐得住日職一軍的話,亞洲最高殿堂也是一條路。
+  /* 5a 大聯盟合約走完:能力還撐得住日職一軍的話,回家鄉也是一條路。
      faFlow 只在 LV[S.lv].top 時才會跑,所以 S.org==='MiLB' 這裡必定是大聯盟。 */
   if(S.org==='MiLB'&&o>=LV.NPB1.min){
-    faOpts.push({t:'轉戰日職一軍',s:'把天賦帶回亞洲職棒的最高殿堂',
+    faOpts.push({t:'轉戰日職一軍',s:'把天賦帶回家鄉',
       f:()=>{ returnHomeSign('MiLB','NPB','NPB1',
-        `雖然大聯盟的合約書就攤在桌上，但在幾個輾轉難眠的夜裡，你還是把筆放了下來。橫越太平洋的十幾個小時、一年有兩百天在陌生的旅館醒來——你想的已經不是可以在大聯盟達成甚麼成就，而是離家近一點。長考之後，你決定把天賦帶回亞洲職棒的最高殿堂：<b class="hl">日本職棒</b>。`);
+        `雖然大聯盟的合約書就攤在桌上，但在幾個輾轉難眠的夜裡，你還是把筆放了下來。橫越太平洋的十幾個小時、一年有兩百天在陌生的旅館醒來——你想的已經不是可以在大聯盟達成甚麼成就，而是離家近一點。長考之後，你決定把天賦帶回家鄉：<b class="hl">日本職棒</b>。`);
         advance(); }});
   }
   /* 5b 日職路走不通時，海外／國內的其他出路（社會人／獨立聯盟／中職洋將） */
