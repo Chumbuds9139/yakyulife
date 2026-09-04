@@ -1,17 +1,17 @@
-import {S, blankStat, bucketOf, CAREER_STAT_BUCKETS, CAREER_EVAL_BUCKETS} from '../core/state.js?v=1.5.20';
-import {R, ri, SEED} from '../core/rng.js?v=1.5.20';
-import {OFFICIAL_URL} from '../config.js?v=1.5.20';
-import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, teamNick} from '../data/teams.js?v=1.5.20';
-import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.20';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.5.20';
-import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.20';
-import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.20';
-import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.20';
-import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.20';
-import {fmtMoney} from '../engine/contract.js?v=1.5.20';
-import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.5.20';
-import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.20';
-import {shareImageSheet} from './share-image.js?v=1.5.20';
+import {S, blankStat, bucketOf, CAREER_STAT_BUCKETS, CAREER_EVAL_BUCKETS} from '../core/state.js?v=1.5.21';
+import {R, ri, SEED} from '../core/rng.js?v=1.5.21';
+import {OFFICIAL_URL} from '../config.js?v=1.5.21';
+import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, teamNick, npbStadium} from '../data/teams.js?v=1.5.21';
+import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.21';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.5.21';
+import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.21';
+import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.21';
+import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.21';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.21';
+import {fmtMoney} from '../engine/contract.js?v=1.5.21';
+import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.5.21';
+import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.21';
+import {shareImageSheet} from './share-image.js?v=1.5.21';
 /* ================= 結算圖資料建構 =================
    Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
    All values come from S.*; the in-game settlement cards are untouched. */
@@ -232,16 +232,24 @@ export function postCareerEnding(tiers,roll){
   const ending=POST_CAREER_ENDINGS[keys[Math.min(keys.length-1,Math.floor(Math.max(0,r)*keys.length))]];
   return typeof ending==='function'?ending():ending;
 }
+export function retirementCeremonyLeague(){
+  const org=S&&S.org, lv=S&&S.lv;
+  if(org==='MLB'||lv==='MLB')return 'MLB';
+  if(org==='NPB'||lv==='NPB1'||lv==='NPB2'||lv==='NPB_TRAIN')return 'NPB';
+  if(org==='CPBL'||lv==='CPBL1'||lv==='CPBL2')return 'CPBL';
+  if(org==='MiLB'){
+    if(S.stats&&S.stats.MLB)return 'MLB';
+    if(S.stats&&S.stats.NPB)return 'NPB';
+    return 'MINOR';
+  }
+  if(S&&S.stats&&S.stats.NPB)return 'NPB';
+  if(S&&S.stats&&S.stats.MLB)return 'MLB';
+  if(S&&S.stats&&S.stats.CPBL)return 'CPBL';
+  return bucketOf(lv);
+}
 export function retireScene(tiers){
-  /* tiers: {CPBL:{i,sc},NPB:...,MLB:...} 有出賽才有 */
-  /* 生涯代表聯盟＝出賽最久的頂級聯盟;分級取生涯最佳(i 最小) */
-  let lg=bucketOf(S.lv), bestI=4;
-  const order=['MLB','NPB','CPBL'];
-  order.forEach(b=>{ if(tiers[b]&&tiers[b].i<bestI){ bestI=tiers[b].i; } });
-  /* 代表聯盟:在最佳分級的聯盟中,取出賽年資最多者 */
-  let repYr=-1;
-  order.forEach(b=>{ if(tiers[b]&&tiers[b].i===bestI){ const yy=S.stats[b]?S.stats[b].yr:0; if(yy>repYr){repYr=yy;lg=b;} } });
-  const t=tiers[lg], i=t?t.i:4, yr=S.year;
+  const lg=retirementCeremonyLeague();
+  const t=tiers&&tiers[lg], i=t?t.i:4;
   let txt='';
   if(lg==='CPBL'){
     if(i===0)txt=`引退戰選在<b class="hl">臺北大巨蛋</b>。四萬人把巨蛋塞得水洩不通，外野看板掛滿你生涯每一年的照片。九局下最後一個打席結束，全場燈光暗下，只剩一道追光打在你身上——隊友哭成一團，對手全員列隊脫帽，天團在二壘後方唱起你的應援曲改編的慢版。你繞場一周，把手套輕輕放在本壘板上。轉播單位說，這是中職史上收視最高的一場例行賽。`;
@@ -249,7 +257,9 @@ export function retireScene(tiers){
     else if(i===2)txt=`${S.pos==='P'?'球季最後一個主場日，球團安排你先發登板。投完第一局後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你投出的每一顆全力的球」。':'球季最後一個主場日，球團安排你先發打第一棒。第一個打席結束後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你的每一次全力奔跑」。'}`;
     else txt=`你在球團官網的一則新聞稿裡宣布引退。發文的那個晚上，還是有幾十個老球迷湧進你的社群留言：「辛苦了」。職業棒球就是這樣——不是每個人都有儀式，但每個認真打過球的人，都有人記得。`;
   }else if(lg==='NPB'){
-    if(i<=1)txt=`球團為你安排了<b class="hl">引退試合</b>。最後一個守備半局結束，你被單獨留在場上，兩軍球員沿著邊線列隊。花束贈呈、監督擁抱、隊友把你高高拋起——三次、四次、五次的<b class="hl">胴上げ</b>。你抱著花束繞場一周，看台上的球迷舉著寫著「ありがとう」的毛巾。引退記者會上你說：「能在這裡打球，是我人生最驕傲的事。」隔天所有體育報頭版都是你被拋在空中的那張照片。`;
+    const stadium=npbStadium(S.orgTeam||capTeam('NPB'));
+    if(i===0)txt=`引退戰選在<b class="hl">${stadium}</b>。滿場把看台塞到通道，外野看板掛滿你生涯每一年的照片。${S.pos==='P'?'九局，你走完這場先發最後一個出局數':'九局下最後一個打席結束'}，全場燈光暗下，只剩一道追光打在你身上——隊友沿著邊線列隊，對手脫帽敬禮，應援團在外野唱起你的應援曲慢版。你繞場一周，把手套輕輕放在本壘板上。隔天所有體育報頭版都是同一句話：這是日職近年最隆重的一場<b class="hl">引退試合</b>。`;
+    else if(i===1)txt=`球團為你安排了<b class="hl">引退試合</b>，主場就在<b class="hl">${stadium}</b>。最後一個守備半局結束，你被單獨留在場上，兩軍球員沿著邊線列隊。花束贈呈、監督擁抱、隊友把你高高拋起——三次、四次、五次的<b class="hl">胴上げ</b>。你抱著花束繞場一周，看台上的球迷舉著寫著「ありがとう」的毛巾。引退記者會上你說：「能在這裡打球，是我人生最驕傲的事。」隔天所有體育報頭版都是你被拋在空中的那張照片。`;
     else if(i===2)txt=`最終戰賽後，球團在場邊為你舉行了簡短的引退儀式：花束、紀念框裱的球衣、與監督的合影。廣播念出你的生涯成績時，客場球迷也起立鼓掌。記者會上有人問你「還會回來嗎」，你笑著點頭。`;
     else txt=`你透過球團發表引退聲明。整理置物櫃的那天，球團職員陪你走完最後一段球員通道，警衛伯伯跟你深深鞠了一躬。職棒生涯結束了，行李箱裡裝著幾件捨不得丟的練習衫。`;
   }else if(lg==='MLB'){
@@ -265,6 +275,7 @@ export function retireScene(tiers){
     card('gold','引退兩年後・'+mrTitle,`引退兩年後，你重新穿上了球衣，踏上了熟悉的主場。當你往投手丘一步步走去，觀眾的歡呼聲幾乎讓整個球場震動。當你踏上了投手板，你接過了主持人手中的球與手套，就像你做過幾萬次的那樣，把球往昔日的隊友手套裡扔去，雖然已經沒有了球速，但你聽到球進手套的聲音，卻是無比清脆。<br><br>你的背號 <b class="hl">#${S.jersey}</b> 被掛在了牆壁上，你曾經用表現守護著這座球場，而現在你是這座球場上永遠不可或缺的榮耀。`);
   }
   /* 名人堂票選(可多聯盟並存) */
+  const yr=S.year;
   const hofs=[], firstBallotLeagues=[];
   const HOF_CFG={CPBL:{n:'中華職棒名人堂',wait:5,total:132,lg:'中職'},NPB:{n:'日本野球殿堂',wait:5,total:326,lg:'日職'},MLB:{n:'美國棒球名人堂',wait:5,total:389,lg:'大聯盟'}};
   ['CPBL','NPB','MLB'].forEach(b=>{ const t=tiers[b]; if(!t)return;

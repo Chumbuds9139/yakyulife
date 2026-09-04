@@ -1,18 +1,18 @@
-import {S} from '../core/state.js?v=1.5.20';
-import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.20';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.20';
-import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.20';
-import {card, choose, board} from '../ui/dom.js?v=1.5.20';
-import {tlNote} from '../ui/timeline.js?v=1.5.20';
-import {ovr} from './ability.js?v=1.5.20';
-import {injuryMarketStatus} from './injury.js?v=1.5.20';
-import {hasActiveFranchise} from './tenure.js?v=1.5.20';
-import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.20';
-import {capTeam} from './career.js?v=1.5.20';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.20';
-import {advance} from './draft.js?v=1.5.20';
-import {finishContractYear} from '../flow/phases.js?v=1.5.20';
-import {endGame} from '../ui/retire.js?v=1.5.20';
+import {S} from '../core/state.js?v=1.5.21';
+import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.21';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.21';
+import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.21';
+import {card, choose, board} from '../ui/dom.js?v=1.5.21';
+import {tlNote} from '../ui/timeline.js?v=1.5.21';
+import {ovr} from './ability.js?v=1.5.21';
+import {injuryMarketStatus} from './injury.js?v=1.5.21';
+import {hasActiveFranchise} from './tenure.js?v=1.5.21';
+import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.21';
+import {capTeam} from './career.js?v=1.5.21';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.21';
+import {advance} from './draft.js?v=1.5.21';
+import {finishContractYear} from '../flow/phases.js?v=1.5.21';
+import {endGame} from '../ui/retire.js?v=1.5.21';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
@@ -280,6 +280,7 @@ export function buyoutRemaining(rate,includeCurrent){ /* 合約剩餘年數給�
 /* 引退時若曾經打過中職、但退休當下人不在中職，補一場台北大巨蛋開球告別；
    從沒踏進中職的生涯（例如純日職／純美職）就不套用這段彩蛋。 */
 export function daibaFarewell(cont){
+  if(S.org==='MLB'||S.org==='NPB'||S.org==='MiLB'){ cont(); return; }
   if(S.stage==='PRO'&&S.org!=='CPBL'&&S.lastCpblTeam&&!S._daiba){ S._daiba=true;
     card('gold','最後一球',`雖然沒能在 <b class="hl">${S.lastCpblTeam}</b> 完成告別賽，台北大巨蛋還是邀你回去，當一日中職球員開球。四萬人的注視下，你投出了生涯的最後一球——不為勝負，只為那個曾經在紅土上作夢的自己。`);
   }
