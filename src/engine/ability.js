@@ -1,9 +1,9 @@
-import {S} from '../core/state.js?v=1.5.28';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.28';
-import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.28';
-import {LV} from '../data/teams.js?v=1.5.28';
-import {card, choose, board} from '../ui/dom.js?v=1.5.28';
-import {roleN, pitcherRole, bullpenRole} from './season.js?v=1.5.28';
+import {S} from '../core/state.js?v=1.5.29';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.29';
+import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.29';
+import {LV} from '../data/teams.js?v=1.5.29';
+import {card, choose, board} from '../ui/dom.js?v=1.5.29';
+import {roleN, pitcherRole, bullpenRole} from './season.js?v=1.5.29';
 export function enforcePerfectAbilities(){
   if(!S?.perfectLock)return;
   Object.keys(S.ab||{}).forEach(k=>S.ab[k]=80);
@@ -23,7 +23,15 @@ export function dpScore(p){ const a=S.ab;
     default: return 99;
   }
 }
-export function posAdjLabel(p){ const v=POS_ADJ_RUNS[p]||0; return `薪資守位調整 ${v>0?'+':''}${v}／162 場`; }
+export function posAdjLabel(p){ const v=POS_ADJ_RUNS[p]||0; return `薪資係數調整 ${v>0?'+':''}${v}／162 場`; }
+export function posAdjDeltaLabel(from,to){
+  const d=(POS_ADJ_RUNS[to]||0)-(POS_ADJ_RUNS[from]||0);
+  if(!d)return '薪資係數不變';
+  return `薪資係數調整 ${d>0?'+':''}${d}／162 場`;
+}
+export function posMoveVerb(from,to){
+  return ((POS_ADJ_RUNS[to]||0)>(POS_ADJ_RUNS[from]||0))?'升防':'改守';
+}
 export function dpBar(){ /* 年輕球員吃潛力紅利,球團不急著拔守位 */
   const base=DP_BAR[S.lv]||0;
   const disc=(S.age<=21?7:S.age<=24?5:S.age<=26?2:0)+(S.traits&&S.traits.favorite?3:0); /* 愛將:教練不急著拔你的守位 */
@@ -101,12 +109,12 @@ export function dposReview(cont){
     const best=q[0];
     if(DP_RANK[best]<DP_RANK[S.dpos]){ /* 更高身價守位站得住了 */
       choose(`守位會議：教練團想把你推上更吃重的位置`,[
-        {t:`升防 ${DPN[best]}`,main:true,s:posAdjLabel(best),
+        {t:`${posMoveVerb(S.dpos,best)} ${DPN[best]}`,main:true,s:posAdjDeltaLabel(S.dpos,best),
          f:()=>{S.dpos=best;card('good','守位調整',`守備數據說服了所有人——新球季改守 <b class="hl">${DPN[best]}</b>。`);cont();}},
         {t:`留守 ${DPN[S.dpos]}`,f:()=>cont()}]); return; }
     cont(); return; }
   const opts=q.slice(0,2).map((p,i)=>({t:`移防 ${DPN[p]}`,main:i===0,
-    s:p==='DH'?`守備已無處可站｜${posAdjLabel(p)}`:posAdjLabel(p),
+    s:p==='DH'?`守備已無處可站｜${posAdjDeltaLabel(S.dpos,p)}`:posAdjDeltaLabel(S.dpos,p),
     f:()=>{ S.dpos=p; card('info','守位調整',`球團季末評估後，新球季改守 <b class="hl">${DPN[p]}</b>。`); cont(); }}));
   choose(`守位會議：教練團認為你的守備已撐不住 ${DPN[S.dpos]}（${LV[S.lv].n}標準）`,opts);
 }

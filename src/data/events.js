@@ -848,6 +848,7 @@ export const EVENTS=[
       "MINOR"
     ],
     "scope": "NPB",
+    "lv": "NPB_TRAIN",
     "role": "P",
     "category": "encounter",
     "intro": "支配下登錄期限逼近，每次牛棚都像最後測試。",

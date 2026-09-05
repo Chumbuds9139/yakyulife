@@ -1,18 +1,18 @@
-import {S} from '../core/state.js?v=1.5.28';
-import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.28';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.28';
-import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.28';
-import {card, choose, board} from '../ui/dom.js?v=1.5.28';
-import {tlNote} from '../ui/timeline.js?v=1.5.28';
-import {ovr} from './ability.js?v=1.5.28';
-import {injuryMarketStatus} from './injury.js?v=1.5.28';
-import {hasActiveFranchise} from './tenure.js?v=1.5.28';
-import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.28';
-import {capTeam} from './career.js?v=1.5.28';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.28';
-import {advance} from './draft.js?v=1.5.28';
-import {finishContractYear} from '../flow/phases.js?v=1.5.28';
-import {endGame} from '../ui/retire.js?v=1.5.28';
+import {S} from '../core/state.js?v=1.5.29';
+import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.29';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.29';
+import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.29';
+import {card, choose, board} from '../ui/dom.js?v=1.5.29';
+import {tlNote, tlRestage} from '../ui/timeline.js?v=1.5.29';
+import {ovr} from './ability.js?v=1.5.29';
+import {injuryMarketStatus} from './injury.js?v=1.5.29';
+import {hasActiveFranchise} from './tenure.js?v=1.5.29';
+import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.29';
+import {capTeam} from './career.js?v=1.5.29';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.29';
+import {advance} from './draft.js?v=1.5.29';
+import {finishContractYear} from '../flow/phases.js?v=1.5.29';
+import {endGame} from '../ui/retire.js?v=1.5.29';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
@@ -53,6 +53,18 @@ export function contractAnnual(){
   const annual=calcContractAnnual(S.lv,currentSalaryRating(S.lastD||0),S.ct&&S.ct.mult||1);
   if(S.ct)S.ct.annual=annual; /* 舊狀態第一次讀取時鎖定，後續年度不再隨成績浮動 */
   return annual;
+}
+/* 升級薪資保障延到合約年處理完再出卡：同一季若已 signTo 別聯盟，就不再講舊層級的底薪。 */
+export function queueSalaryFloor(to,oldAnnual){
+  S._salaryFloor={to,org:S.org,oldAnnual};
+}
+export function flushSalaryFloor(){
+  const p=S._salaryFloor; if(!p)return;
+  delete S._salaryFloor;
+  if(!S||S.org!==p.org||S.lv!==p.to||!S.ct)return;
+  if(!(Number.isFinite(p.oldAnnual)&&levelMinAnnual(S.lv)>p.oldAnnual))return;
+  const raised=contractAnnual();
+  card('info','升級薪資保障',`原合約固定年薪 <b>${fmtMoney(p.oldAnnual)}</b> 低於 ${LV[S.lv].n}保障標準；自下季起調整為 <b class="hl">${fmtMoney(raised)}</b>。只要這份合約還沒到期，即使之後被下放，也會照調整後年薪給付。`);
 }
 export function makeContract(yrs,mult,lv,d,annual,extra,kind){
   const m=mult||1,targetLv=lv||S.lv;
@@ -304,8 +316,8 @@ export function handleDemotion(o,path,idx){
       if(alts.length){
         card('bad','降級通知',`成績未達標，球團打算將你下放 <b class="dn">${LV[path[t]].n}</b>——但消息一出，其他聯盟的邀請也到了。`);
         choose('接受下放，還是換個舞台？',[
-          {t:'接受下放 '+LV[path[t]].n,main:true,f:()=>{S.lv=path[t];board(2);finishContractYear(o);}},...alts]);
-      }else{ S.lv=path[t]; card('bad','降級通知',`成績未達標，被下放至 <b class="dn">${LV[path[t]].n}</b>。`); board(2); finishContractYear(o); }
+          {t:'接受下放 '+LV[path[t]].n,main:true,f:()=>{S.lv=path[t];tlRestage();board(2);finishContractYear(o);}},...alts]);
+      }else{ S.lv=path[t]; card('bad','降級通知',`成績未達標，被下放至 <b class="dn">${LV[path[t]].n}</b>。`); tlRestage(); board(2); finishContractYear(o); }
     }
     else outOfOrg(o);
   };
@@ -362,6 +374,7 @@ export function signTo(org,lv,team,yrs,mult,annual,quiet){
   if(org!=='NPB')S.npbYears=0;
   /* quiet：呼叫端自己會寫一張更完整的卡（旅外回歸），這裡就不要再印一張制式簽約卡。 */
   if(!quiet)card('info','簽約',`與 <b class="hl">${S.teamName()}</b> 簽下固定年薪 <b class="hl">${fmtMoney(S.ct.annual)}</b> × <b class="hl">${S.ct.yrs} 年</b>，合約薪資總額 <b class="hl">${fmtMoney(S.ct.annual*S.ct.yrs)}</b>。`);
+  tlRestage();
   board(2);
 }
 function leagueKeyOf(org){ return org==='CPBL'?'CPBL':org==='NPB'?'NPB':org==='MiLB'||org==='MLB'?'MLB':null; }

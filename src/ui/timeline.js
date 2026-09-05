@@ -1,5 +1,5 @@
-import {S, stageLabel} from '../core/state.js?v=1.5.28';
-import {$, card, _curYearBody} from './dom.js?v=1.5.28';
+import {S, stageLabel} from '../core/state.js?v=1.5.29';
+import {$, card, _curYearBody} from './dom.js?v=1.5.29';
 
 /* ================= 生涯時間軸(純呈現層,不觸碰 RNG) ================= */
 export let TL=[];
@@ -20,6 +20,12 @@ export function tlPush(){
 export function tlRestage(){
   const e=TL[TL.length-1]; if(!e)return;
   e.stage=tlStage(); e.lab=stageLabel(); renderTimeline();
+  /* 升級／簽約當幀同步年度標題，避免通知寫一軍、摺疊列還停在二軍。 */
+  if(S&&_curYearBody){
+    const head=_curYearBody.previousElementSibling;
+    if(head&&head.classList.contains('yr-head'))
+      head.textContent=`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`;
+  }
 }
 export function tlNote(pri,txt){
   const e=TL[TL.length-1]; if(!e||!txt)return;

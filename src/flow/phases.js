@@ -1,21 +1,21 @@
-import {S, stepQ, nextStep, stageLabel} from '../core/state.js?v=1.5.28';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.28';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.28';
-import {LV, PATHS, teamNick} from '../data/teams.js?v=1.5.28';
-import {AMA_ANNUAL} from '../data/economy.js?v=1.5.28';
-import {card, choose, board, divider} from '../ui/dom.js?v=1.5.28';
-import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.5.28';
-import {allocUI} from '../ui/alloc.js?v=1.5.28';
-import {addAb, ovr, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.5.28';
-import {rollInjury, tjCap} from '../engine/injury.js?v=1.5.28';
-import {isMrTeamEligible} from '../engine/tenure.js?v=1.5.28';
-import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.5.28';
-import {championshipChance} from '../engine/championship.js?v=1.5.28';
-import {ageGateJP, buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, homecomingFallbackOptions, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, returnTeam, signTo, teamChampRate} from '../engine/contract.js?v=1.5.28';
-import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.5.28';
-import {loveEvent} from './love.js?v=1.5.28';
-import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.5.28';
-import {endGame} from '../ui/retire.js?v=1.5.28';
+import {S, stepQ, nextStep, stageLabel} from '../core/state.js?v=1.5.29';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.29';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.29';
+import {LV, PATHS, teamNick} from '../data/teams.js?v=1.5.29';
+import {AMA_ANNUAL} from '../data/economy.js?v=1.5.29';
+import {card, choose, board, divider} from '../ui/dom.js?v=1.5.29';
+import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.5.29';
+import {allocUI} from '../ui/alloc.js?v=1.5.29';
+import {addAb, ovr, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.5.29';
+import {rollInjury, tjCap} from '../engine/injury.js?v=1.5.29';
+import {isMrTeamEligible} from '../engine/tenure.js?v=1.5.29';
+import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.5.29';
+import {championshipChance} from '../engine/championship.js?v=1.5.29';
+import {ageGateJP, buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, homecomingFallbackOptions, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, queueSalaryFloor, returnTeam, signTo, teamChampRate} from '../engine/contract.js?v=1.5.29';
+import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.5.29';
+import {loveEvent} from './love.js?v=1.5.29';
+import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.5.29';
+import {endGame} from '../ui/retire.js?v=1.5.29';
 /* ================= 年度流程 ================= */
 export function startYear(){ S.yearOutsideIncome=0; enforcePerfectAbilities(); stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* ---------- 季初 ---------- */
@@ -410,12 +410,10 @@ export function movement(){
       if(nx2&&o>=LV[nx2].min+2&&(grade>=3||o>=LV[nx2].min+6))to=nx2;
       const oldAnnual=S.ct?(S.ct.annualSchedule&&S.ct.annualSchedule.length?S.ct.annualSchedule[0]:S.ct.annual):null;
       S.lv=to;
+      tlRestage();
       if(forced)card('good','破格拔擢','體能檢測的數字還差一點，但你的成績讓球團無法忽視——<b class="hl">直接把你拉上去</b>。');
       card('good','升級通知',`表現獲得肯定，${to!==nx?'<b class="hl">連跳兩級</b>':'晉升'} <b class="hl">${LV[to].n}</b>！`); board(2);
-      if(S.ct&&Number.isFinite(oldAnnual)&&levelMinAnnual(to)>oldAnnual){
-        const raised=contractAnnual();
-        card('info','升級薪資保障',`原合約固定年薪 <b>${fmtMoney(oldAnnual)}</b> 低於 ${LV[to].n}保障標準；自下季起調整為 <b class="hl">${fmtMoney(raised)}</b>。只要這份合約還沒到期，即使之後被下放，也會照調整後年薪給付。`);
-      }
+      if(S.ct&&Number.isFinite(oldAnnual)&&levelMinAnnual(to)>oldAnnual)queueSalaryFloor(to,oldAnnual);
       if(LV[to].top)tlNote(2,'升上'+LV[to].n);
       if(S.traits.yips){ removeTrait('yips','失憶症'); card('good','走出陰影','將身體與心靈重新來過，終於爬回了原本的高度，——<b class="hl">失憶症痊癒</b>。'); } } }
   finishContractYear(o);
