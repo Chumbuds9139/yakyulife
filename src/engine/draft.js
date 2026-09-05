@@ -1,13 +1,13 @@
-import {S} from '../core/state.js?v=1.5.28';
-import {ri, pick, chance} from '../core/rng.js?v=1.5.28';
-import {NPB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.5.28';
-import {card, choose, board, menuModal} from '../ui/dom.js?v=1.5.28';
-import {tlNote} from '../ui/timeline.js?v=1.5.28';
-import {ovr, playerType} from './ability.js?v=1.5.28';
-import {primaryPos} from './career.js?v=1.5.28';
-import {fmtMoney, makeOffers, pickOfferUI, signTo, makeContract, rollCpblImport} from './contract.js?v=1.5.28';
-import {startYear} from '../flow/phases.js?v=1.5.28';
-import {endGame} from '../ui/retire.js?v=1.5.28';
+import {S} from '../core/state.js?v=1.5.29';
+import {ri, pick, chance} from '../core/rng.js?v=1.5.29';
+import {NPB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.5.29';
+import {card, choose, board, menuModal} from '../ui/dom.js?v=1.5.29';
+import {tlNote} from '../ui/timeline.js?v=1.5.29';
+import {ovr, playerType} from './ability.js?v=1.5.29';
+import {primaryPos} from './career.js?v=1.5.29';
+import {fmtMoney, flushSalaryFloor, makeOffers, pickOfferUI, signTo, makeContract, rollCpblImport} from './contract.js?v=1.5.29';
+import {startYear} from '../flow/phases.js?v=1.5.29';
+import {endGame} from '../ui/retire.js?v=1.5.29';
 
 /* ---------- 日本版：選秀與生涯路口 ---------- */
 export const JP_UNI=['早稻田大學','慶應義塾大學','明治大學','東洋大學','中央大學','立教大學'];
@@ -178,6 +178,7 @@ export function pathChoiceU4(){
 if(typeof document!=='undefined'&&document.getElementById('btn-menu')) document.getElementById('btn-menu').onclick=menuModal;
 
 export function advance(){
+  flushSalaryFloor();
   S.age++; S.year++; S.stageYr++;
   /* 社會人／獨立聯盟不是 NPB 二軍。每個球季結束後先進入「NPB 機會窗口」，
      由選秀或球團合約／買斷決定是否轉隊；不會再因 PATHS 自動升級。 */

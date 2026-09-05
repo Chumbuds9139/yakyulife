@@ -1,6 +1,6 @@
-import {R, ri} from './rng.js?v=1.5.28';
-import {POS_AB} from '../data/abilities.js?v=1.5.28';
-import {LV} from '../data/teams.js?v=1.5.28';
+import {R, ri} from './rng.js?v=1.5.29';
+import {POS_AB} from '../data/abilities.js?v=1.5.29';
+import {LV} from '../data/teams.js?v=1.5.29';
 export const HS_MAP={'早稻田實業':1,'智辯和歌山':1,'明德義塾':2,'東海大相模':2,'花卷東':2,'聖光学院':3,'作新学院':3};
 export let S=null, stepQ=[];
 function bindLevelOrg(state){let current=state.lv;Object.defineProperty(state,'lv',{enumerable:true,configurable:true,get(){return current;},set(v){current=v;const l=LV[v];if(l&&l.org)state.org=l.org;}});const l=LV[current];if(l&&l.org)state.org=l.org;return state;}
