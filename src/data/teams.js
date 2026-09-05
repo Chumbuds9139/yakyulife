@@ -74,7 +74,9 @@ export const PATHS={
 };
 
 export const HS_CUPS=['春季大會','夏季大會（甲子園）','秋季大會'];
-export const U_CUPS=['全國大學棒球賽','關東高級大學聯盟'];
+export const U_CUPS=['全國大學棒球賽','關東大學聯盟'];
+export const CORP_CUPS=['都市對抗野球','社會人選手權'];
+export const INDEP_CUPS=['獨立聯盟總冠軍戰','東西對抗賽'];
 
 export const LG_N={NPB:'日職',CPBL:'中職',MLB:'大聯盟',MINOR:'小聯盟',CORP:'社會人',INDEP:'獨立聯盟'};
 

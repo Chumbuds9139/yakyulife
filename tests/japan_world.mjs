@@ -7,19 +7,19 @@ try{
   page.on('dialog',d=>d.accept());
   await page.goto(`${url}?seed=japan-world`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.5.29');
-    const traits=await import('./src/data/traits.js?v=1.5.29');
-    const economy=await import('./src/data/economy.js?v=1.5.29');
-    const intl=await import('./src/engine/intl.js?v=1.5.29');
-    const events=await import('./src/flow/events.js?v=1.5.29');
-    const championship=await import('./src/engine/championship.js?v=1.5.29');
+    const state=await import('./src/core/state.js?v=1.5.30');
+    const traits=await import('./src/data/traits.js?v=1.5.30');
+    const economy=await import('./src/data/economy.js?v=1.5.30');
+    const intl=await import('./src/engine/intl.js?v=1.5.30');
+    const events=await import('./src/flow/events.js?v=1.5.30');
+    const championship=await import('./src/engine/championship.js?v=1.5.30');
     const s=state.newState('侍魂測試',18,'P',null);
     s.traits.taiwan=true; state.setS(s);
     const migrated=!!s.traits.samurai&&!('taiwan' in s.traits);
     for(const v of ['P','C','IF','OF','OF','IF','C','P'])document.querySelector(`#seg-pos button[data-v="${v}"]`).click();
     document.querySelector('#btn-start').click();
     await new Promise(r=>setTimeout(r,50));
-    const now=(await import('./src/core/state.js?v=1.5.29')).S;
+    const now=(await import('./src/core/state.js?v=1.5.30')).S;
     const odds=events.evOdds();
     return {
       migrated,samuraiLabel:traits.TRAIT_N.samurai,devSalary:economy.LEVEL_MIN_ANNUAL.NPB_TRAIN,

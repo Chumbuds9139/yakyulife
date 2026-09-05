@@ -13,8 +13,8 @@ try{
   const errors=[]; page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=homecoming-last-team`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.5.29');
-    const contract=await import('./src/engine/contract.js?v=1.5.29');
+    const state=await import('./src/core/state.js?v=1.5.30');
+    const contract=await import('./src/engine/contract.js?v=1.5.30');
 
     const teamName=function(){
       if(!this.orgTeam)return '';

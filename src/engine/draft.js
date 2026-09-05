@@ -1,13 +1,13 @@
-import {S} from '../core/state.js?v=1.5.29';
-import {ri, pick, chance} from '../core/rng.js?v=1.5.29';
-import {NPB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.5.29';
-import {card, choose, board, menuModal} from '../ui/dom.js?v=1.5.29';
-import {tlNote} from '../ui/timeline.js?v=1.5.29';
-import {ovr, playerType} from './ability.js?v=1.5.29';
-import {primaryPos} from './career.js?v=1.5.29';
-import {fmtMoney, flushSalaryFloor, makeOffers, pickOfferUI, signTo, makeContract, rollCpblImport} from './contract.js?v=1.5.29';
-import {startYear} from '../flow/phases.js?v=1.5.29';
-import {endGame} from '../ui/retire.js?v=1.5.29';
+import {S} from '../core/state.js?v=1.5.30';
+import {ri, pick, chance} from '../core/rng.js?v=1.5.30';
+import {NPB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.5.30';
+import {card, choose, board, menuModal} from '../ui/dom.js?v=1.5.30';
+import {tlNote} from '../ui/timeline.js?v=1.5.30';
+import {ovr, playerType} from './ability.js?v=1.5.30';
+import {primaryPos} from './career.js?v=1.5.30';
+import {fmtMoney, flushSalaryFloor, makeOffers, pickOfferUI, signTo, makeContract, rollCpblImport} from './contract.js?v=1.5.30';
+import {startYear} from '../flow/phases.js?v=1.5.30';
+import {endGame} from '../ui/retire.js?v=1.5.30';
 
 /* ---------- 日本版：選秀與生涯路口 ---------- */
 export const JP_UNI=['早稻田大學','慶應義塾大學','明治大學','東洋大學','中央大學','立教大學'];
@@ -120,7 +120,11 @@ export function runDraft(fromSchool,cb){
           card('info','重返業餘',`你對選秀順位不滿意，繼續留在${S.org==='CORP'?'社會人':'獨立聯盟'}。日職選秀每人一生只有一次，之後要等球團合約或其他出路。`);
         }else{
           card('info','重返業餘','你對選秀順位不滿意。選擇投身社會人球界或獨立聯盟。日職選秀每人一生只有一次，之後要等球團合約或其他出路。');
-          if(S.age<=25) enterJapaneseAmateur(pick(['CORP','INDEP']),pick(CORPORATE_TEAMS.concat(INDEP_TEAMS)));
+          if(S.age<=25){
+            const org=pick(['CORP','INDEP']);
+            const team=pick(org==='CORP'?CORPORATE_TEAMS:INDEP_TEAMS);
+            enterJapaneseAmateur(org,team);
+          }
         }
         if(fromSchool) cb();
         else if(fromAmateur) startYear();

@@ -1,13 +1,13 @@
-import {SEED, setSeed, seedInit} from './core/rng.js?v=1.5.29';
-import {S, setS, newState} from './core/state.js?v=1.5.29';
-import {APP_VER} from './config.js?v=1.5.29';
-import {POSN} from './data/abilities.js?v=1.5.29';
-import {teamDisplayName} from './data/teams.js?v=1.5.29';
-import {$, card, modalClose, actToggleSync} from './ui/dom.js?v=1.5.29';
-import {THEME_KEY, BIG_KEY, applyTheme, applyMobileUI, applyBigText, updDispSum} from './ui/prefs.js?v=1.5.29';
-import {allocFullClose} from './ui/alloc.js?v=1.5.29';
-import {TL, resetTL, renderTimeline, tlScrollTo} from './ui/timeline.js?v=1.5.29';
-import {startYear} from './flow/phases.js?v=1.5.29';
+import {SEED, setSeed, seedInit} from './core/rng.js?v=1.5.30';
+import {S, setS, newState} from './core/state.js?v=1.5.30';
+import {APP_VER} from './config.js?v=1.5.30';
+import {POSN} from './data/abilities.js?v=1.5.30';
+import {teamDisplayName} from './data/teams.js?v=1.5.30';
+import {$, card, modalClose, actToggleSync} from './ui/dom.js?v=1.5.30';
+import {THEME_KEY, BIG_KEY, applyTheme, applyMobileUI, applyBigText, updDispSum} from './ui/prefs.js?v=1.5.30';
+import {allocFullClose} from './ui/alloc.js?v=1.5.30';
+import {TL, resetTL, renderTimeline, tlScrollTo} from './ui/timeline.js?v=1.5.30';
+import {startYear} from './flow/phases.js?v=1.5.30';
 
 /* ================= 開場設定 ================= */
 /* iOS Safari zoom guards. Pinch: Safari ignores maximum-scale/user-scalable, so the

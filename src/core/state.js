@@ -1,7 +1,7 @@
-import {R, ri} from './rng.js?v=1.5.29';
-import {POS_AB} from '../data/abilities.js?v=1.5.29';
-import {LV} from '../data/teams.js?v=1.5.29';
-export const HS_MAP={'早稻田實業':1,'智辯和歌山':1,'明德義塾':2,'東海大相模':2,'花卷東':2,'聖光学院':3,'作新学院':3};
+import {R, ri} from './rng.js?v=1.5.30';
+import {POS_AB} from '../data/abilities.js?v=1.5.30';
+import {LV} from '../data/teams.js?v=1.5.30';
+export const HS_MAP={'早稻田實業':1,'智辯和歌山':1,'明德義塾':2,'東海大相模':2,'花卷東':2,'聖光學院':3,'作新學院':3};
 export let S=null, stepQ=[];
 function bindLevelOrg(state){let current=state.lv;Object.defineProperty(state,'lv',{enumerable:true,configurable:true,get(){return current;},set(v){current=v;const l=LV[v];if(l&&l.org)state.org=l.org;}});const l=LV[current];if(l&&l.org)state.org=l.org;return state;}
 export function setS(v){if(v&&v.traits&&v.traits.taiwan&&!v.traits.samurai)v.traits.samurai=true;if(v&&v.traits)delete v.traits.taiwan;S=bindLevelOrg(v);}
@@ -29,4 +29,4 @@ export function bucketOf(lv){
 export const CAREER_STAT_BUCKETS=['MLB','NPB','CPBL','INDEP','CORP','MINOR'];
 export const CAREER_EVAL_BUCKETS=['MLB','NPB','CPBL'];
 export function nextStep(){if(S.done){stepQ=[];return;}const f=stepQ.shift();if(f)f();}
-export function stageLabel(){if(S.stage==='HS')return '高'+['一','二','三'][S.stageYr-1];if(S.stage==='U')return '大'+['一','二','三','四'][S.stageYr-1];if(S.stage==='CORP')return '社會人';if(S.stage==='INDEP')return '獨立聯盟';if(S.stage==='PRO'){if(S.lv==='NPB_TRAIN')return 'NPB育成';if(S.lv==='NPB2')return 'NPB二軍';if(S.lv==='NPB1')return 'NPB一軍';if(S.lv==='CPBL2')return '中職二軍／培養型';if(S.lv==='CPBL1')return '中職一軍／洋將';if(S.lv==='MLB')return 'MLB';const l=LV[S.lv];if(l)return l.n;}return '進行中';}
+export function stageLabel(){if(S.stage==='HS')return '高'+['一','二','三'][S.stageYr-1];if(S.stage==='U')return '大'+['一','二','三','四'][S.stageYr-1];if(S.stage==='PRO'){if(S.org==='CORP'||S.lv==='CORP')return '社會人';if(S.org==='INDEP'||S.lv==='INDEP')return '獨立聯盟';if(S.lv==='NPB_TRAIN')return 'NPB育成';if(S.lv==='NPB2')return 'NPB二軍';if(S.lv==='NPB1')return 'NPB一軍';if(S.lv==='CPBL2')return '中職二軍／培養型';if(S.lv==='CPBL1')return '中職一軍／洋將';if(S.lv==='MLB')return 'MLB';const l=LV[S.lv];if(l)return l.n;}return '進行中';}

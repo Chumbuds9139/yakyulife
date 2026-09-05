@@ -1,15 +1,15 @@
-import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.5.29';
-import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.29';
-import {POS_ADJ_RUNS, POS_PT_BAR} from '../data/abilities.js?v=1.5.29';
-import {LV, HS_CUPS, U_CUPS, spLoad} from '../data/teams.js?v=1.5.29';
-import {card, board} from '../ui/dom.js?v=1.5.29';
-import {ovr, careerAllStars, toolGap} from './ability.js?v=1.5.29';
-import {tjAccrue, tjGamble} from './injury.js?v=1.5.29';
+import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.5.30';
+import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.5.30';
+import {POS_ADJ_RUNS, POS_PT_BAR} from '../data/abilities.js?v=1.5.30';
+import {LV, HS_CUPS, U_CUPS, CORP_CUPS, INDEP_CUPS, spLoad} from '../data/teams.js?v=1.5.30';
+import {card, board} from '../ui/dom.js?v=1.5.30';
+import {ovr, careerAllStars, toolGap} from './ability.js?v=1.5.30';
+import {tjAccrue, tjGamble} from './injury.js?v=1.5.30';
 /* temporary scaffold until awards/intl/contract/flow are extracted */
-import {demotionAudit} from './contract.js?v=1.5.29';
-import {awards} from './awards.js?v=1.5.29';
-import {maybeIntl} from './intl.js?v=1.5.29';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.29';
+import {demotionAudit} from './contract.js?v=1.5.30';
+import {awards} from './awards.js?v=1.5.30';
+import {maybeIntl} from './intl.js?v=1.5.30';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.30';
 export function bullpenRole(){ /* 牛棚內依上季表現判定中繼／終結者，與先發體力門檻分開。 */
   const pd=(S.prevD!==undefined?S.prevD:(S.lastD||0));
   /* 只有上一季已在相同頂級聯盟投牛棚，該季成績才可用於終結者升降。
@@ -340,7 +340,7 @@ export function slgOf(st){
 export function amateurSeason(){
   if(S.seasonFactor===0){ card('bad','','整季只能在場邊看著隊友比賽。');
     S.log.push({y:S.year,age:S.age,tm:S.team||stageLabel(),line:'傷缺全季', inj:true}); nextStep(); return; }
-  const cups=S.stage==='HS'?HS_CUPS:S.stage==='U'?U_CUPS:['成棒甲組春季聯賽','成棒甲組秋季聯賽'];
+  const cups=S.stage==='HS'?HS_CUPS:S.stage==='U'?U_CUPS:S.org==='INDEP'?INDEP_CUPS:CORP_CUPS;
   const thr=S.stage==='HS'?[52,46,40,34,28]:[60,54,48,42,36];
   let gain=0,lines=[],plain=[];
   const eventForm=S.pendStat||0;
