@@ -1,17 +1,17 @@
-import {S, blankStat, bucketOf, CAREER_STAT_BUCKETS, CAREER_EVAL_BUCKETS} from '../core/state.js?v=1.5.29';
-import {R, ri, SEED} from '../core/rng.js?v=1.5.29';
-import {OFFICIAL_URL} from '../config.js?v=1.5.29';
-import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, teamNick, npbStadium} from '../data/teams.js?v=1.5.29';
-import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.29';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.5.29';
-import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.29';
-import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.29';
-import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.29';
-import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.29';
-import {fmtMoney} from '../engine/contract.js?v=1.5.29';
-import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.5.29';
-import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.29';
-import {shareImageSheet} from './share-image.js?v=1.5.29';
+import {S, blankStat, bucketOf, CAREER_STAT_BUCKETS, CAREER_EVAL_BUCKETS} from '../core/state.js?v=1.5.30';
+import {R, ri, SEED} from '../core/rng.js?v=1.5.30';
+import {OFFICIAL_URL} from '../config.js?v=1.5.30';
+import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, teamNick, npbStadium} from '../data/teams.js?v=1.5.30';
+import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.30';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.5.30';
+import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.30';
+import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.30';
+import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.30';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.30';
+import {fmtMoney} from '../engine/contract.js?v=1.5.30';
+import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.5.30';
+import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.30';
+import {shareImageSheet} from './share-image.js?v=1.5.30';
 /* ================= 結算圖資料建構 =================
    Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
    All values come from S.*; the in-game settlement cards are untouched. */
@@ -224,9 +224,9 @@ export function lateAnswerEnding(pos){
 
 你明明該有更好的成績，更好的生涯，你不比其他人差，但你比其他人還容易受傷。
 
-你不知道為甚麼。
+你不知道為什麼。
 
-所以你決定了另外一條道路，或許可以讓其他人知道為甚麼的道路。
+所以你決定了另外一條道路，或許可以讓其他人知道為什麼的道路。
 
 第一年，機構只有三個人、一台二手測力板、一個租來的鐵皮倉庫。
 
@@ -310,7 +310,7 @@ export function lateAnswerEnding(pos){
 
 一開始你只是覺得練習不夠，但不久後，你開始進入不間斷的傷痛，接著就是不斷打不到球。
 
-每次受傷回歸後，你比誰都早進打撃ケージ。你多加了兩百次揮棒、換過三支球棒、改過兩次站姿、看了幾百次錄影。
+每次受傷回歸後，你比誰都早進打擊練習籠。你多加了兩百次揮棒、換過三支球棒、改過兩次站姿、看了幾百次錄影。
 
 打撃教練說：「你重心跑掉了。」
 
@@ -350,7 +350,7 @@ export function lateAnswerEnding(pos){
 
 不是球星。是那些「莫名其妙變差了」的人。
 
-那些每天最早到、最晚走，卻越練越差的人。那些被說「心が折れた」的人。那些在深夜傳訊息問你「前輩，我是不是不行了」的人。
+那些每天最早到、最晚走，卻越練越差的人。那些被說「心死了」的人。那些在深夜傳訊息問你「前輩，我是不是不行了」的人。
 
 你在牆上貼了一張紙，寫著八個字：
 
@@ -396,7 +396,7 @@ export function lateAnswerEnding(pos){
 
 是因為終於有人告訴他：這不是他的錯。
 
-你想到三十一歲的自己，在打撃ケージ裡一個人揮到半夜，一邊揮一邊罵自己不夠努力。
+你想到三十一歲的自己，在打擊練習籠裡一個人揮到半夜，一邊揮一邊罵自己不夠努力。
 
 如果那時候有人幫你量過一次呢。
 
@@ -457,7 +457,7 @@ export const POST_CAREER_ENDINGS={
 };
 export const SECOND_CAREER_ENDINGS=[
   `你加入了獨立聯盟。平日上班、週末穿上球衣，去年在都市對抗準決賽敲出再見安打的影片被瘋傳，底下最熱門的留言是：「這揮棒不像業餘的。」——因為本來就不是。你比誰都清楚，愛棒球不一定要靠它吃飯。`,
-  `你考到了不動產營業員執照。帶看時爬沒電梯的公寓面不改色，客戶都說你氣場不一樣——十六歲就在甲子園幾千人面前投球的人，還會怕開價嗎？三年後你成了店裡的銷售王，名片頭銜下面偷偷印了一行小字：「元プロ野球選手」。`,
+  `你考到了不動產營業員執照。帶看時爬沒電梯的公寓面不改色，客戶都說你氣場不一樣——十六歲就在甲子園幾千人面前投球的人，還會怕開價嗎？三年後你成了店裡的銷售王，名片頭銜下面偷偷印了一行小字：「前職業棒球選手」。`,
   `你跟著舅舅去做土木。工地的日子曬得比春訓還黑，但你的核心力量和不服輸讓老師傅都點頭。五年後你自己出來帶班，薪水不比二軍差，而且——你笑著說——這裡沒有人會把你下放。`,
   `你穿上襯衫走進辦公室，同事只知道你「以前有在打球」。直到公司壘球隊比賽那天，你一棒把球送出圍牆，全場安靜三秒。後來每年比賽，對手公司都會先問一句：「那個人今年還在嗎？」`,
   `你頂下一間定食屋，招牌取名「滿壘」。店裡掛著你高校的球衣，豬排煎得跟你的守備一樣扎實。附近的少年野球隊員放學都來報到，因為老闆會一邊煎餃子一邊講解怎麼看投手的放球點——加蛋不加價。`,
@@ -720,7 +720,7 @@ export function endGame(reason){
       }
     }); });
   }
-  if(S.traits.glass)picks.push('他甚麼都好，只是真的太痛了，沒有那些傷他會更好的，好可惜');
+  if(S.traits.glass)picks.push('他什麼都好，只是真的太痛了，沒有那些傷他會更好的，好可惜');
   if(S.traits.iron)picks.push('鐵人謝幕。我以為今年狀元退休的時候還可以看到{n}打球');
   if(S.traits.oldghost){
     const oldGhostFans=[

@@ -1,12 +1,12 @@
-import {S} from '../core/state.js?v=1.5.29';
-import {chance, clamp} from '../core/rng.js?v=1.5.29';
-import {DPN, GLOVE_TH, GLOVE_K} from '../data/abilities.js?v=1.5.29';
-import {LV} from '../data/teams.js?v=1.5.29';
-import {card} from '../ui/dom.js?v=1.5.29';
-import {tlNote} from '../ui/timeline.js?v=1.5.29';
-import {isSP, slgOf, baseballERA} from './season.js?v=1.5.29';
-import {isCareerScoringAward} from './award-rules.js?v=1.5.29';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.29';
+import {S} from '../core/state.js?v=1.5.30';
+import {chance, clamp} from '../core/rng.js?v=1.5.30';
+import {DPN, GLOVE_TH, GLOVE_K} from '../data/abilities.js?v=1.5.30';
+import {LV} from '../data/teams.js?v=1.5.30';
+import {card} from '../ui/dom.js?v=1.5.30';
+import {tlNote} from '../ui/timeline.js?v=1.5.30';
+import {isSP, slgOf, baseballERA} from './season.js?v=1.5.30';
+import {isCareerScoringAward} from './award-rules.js?v=1.5.30';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.30';
 /* 獎項機率同時有硬下限與必得上限；數值越低越好的獎項（ERA）用 lower=true。 */
 export function awardP(value,hardLow,autoWin,base=25,lower=false){
   const ineligible=lower?value>hardLow:value<hardLow;
@@ -23,7 +23,7 @@ export function rookieAwardGuaranteed(honors,year,leagueName){
   return elite||titleCount>=2;
 }
 /* 新人資格以「曾站上更高聯盟」為準：小聯盟／二軍經歷不會取消中職新人資格，
-   但打過日職或大聯盟後返台，以及打過大聯盟後轉戰日職，均不再是新人。 */
+   但打過日職或大聯盟後轉戰中職，以及打過大聯盟後轉戰日職，均不再是新人。 */
 export function rookieLeagueEligible(bucket,stats=S.stats){
   if(bucket==='CPBL')return !(stats&&stats.NPB)&&!(stats&&stats.MLB);
   if(bucket==='NPB')return !(stats&&stats.MLB);

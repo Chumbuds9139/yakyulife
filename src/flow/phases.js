@@ -1,21 +1,21 @@
-import {S, stepQ, nextStep, stageLabel} from '../core/state.js?v=1.5.29';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.29';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.29';
-import {LV, PATHS, teamNick} from '../data/teams.js?v=1.5.29';
-import {AMA_ANNUAL} from '../data/economy.js?v=1.5.29';
-import {card, choose, board, divider} from '../ui/dom.js?v=1.5.29';
-import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.5.29';
-import {allocUI} from '../ui/alloc.js?v=1.5.29';
-import {addAb, ovr, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.5.29';
-import {rollInjury, tjCap} from '../engine/injury.js?v=1.5.29';
-import {isMrTeamEligible} from '../engine/tenure.js?v=1.5.29';
-import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.5.29';
-import {championshipChance} from '../engine/championship.js?v=1.5.29';
-import {ageGateJP, buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, homecomingFallbackOptions, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, queueSalaryFloor, returnTeam, signTo, teamChampRate} from '../engine/contract.js?v=1.5.29';
-import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.5.29';
-import {loveEvent} from './love.js?v=1.5.29';
-import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.5.29';
-import {endGame} from '../ui/retire.js?v=1.5.29';
+import {S, stepQ, nextStep, stageLabel} from '../core/state.js?v=1.5.30';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.30';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.5.30';
+import {LV, PATHS, teamNick} from '../data/teams.js?v=1.5.30';
+import {AMA_ANNUAL} from '../data/economy.js?v=1.5.30';
+import {card, choose, board, divider} from '../ui/dom.js?v=1.5.30';
+import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.5.30';
+import {allocUI} from '../ui/alloc.js?v=1.5.30';
+import {addAb, ovr, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.5.30';
+import {rollInjury, tjCap} from '../engine/injury.js?v=1.5.30';
+import {isMrTeamEligible} from '../engine/tenure.js?v=1.5.30';
+import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.5.30';
+import {championshipChance} from '../engine/championship.js?v=1.5.30';
+import {ageGateJP, buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, homecomingFallbackOptions, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, queueSalaryFloor, returnTeam, signTo, teamChampRate} from '../engine/contract.js?v=1.5.30';
+import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.5.30';
+import {loveEvent} from './love.js?v=1.5.30';
+import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.5.30';
+import {endGame} from '../ui/retire.js?v=1.5.30';
 /* ================= 年度流程 ================= */
 export function startYear(){ S.yearOutsideIncome=0; enforcePerfectAbilities(); stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* ---------- 季初 ---------- */
@@ -246,7 +246,7 @@ export function phaseEnd(){
     if(S.tradeHeat>0)S.tradeHeat=Math.max(0,S.tradeHeat-5);
     card('','季末結算',`本年度薪資：<b class="hl">${fmtMoney(sal)}</b>（生涯累計 ${fmtMoney(Math.round(S.salary))}）${S.ct?`｜合約剩 ${Math.max(0,S.ct.yrs-1)} 年`:''}${outsideText}${extra}`);
     board(2);
-  }else if(S.stage==='AMA'){
+  }else if(S.stage==='AMA'){ /* DEAD：日本線業餘是 CORP／INDEP 且 stage=PRO；舊存檔才可能走到這裡。 */
     S.salary+=AMA_ANNUAL;
     card('','企業隊年度收入',`本年度工作年薪：<b class="hl">${fmtMoney(AMA_ANNUAL)}</b>（每月 4 萬；生涯累計 ${fmtMoney(Math.round(S.salary))}）。有時候你分不清，你是員工，還是球員？${outsideText}`);
     board(2);
@@ -261,7 +261,7 @@ export function phaseEnd(){
 /* ---------- 升降級與去向 ---------- */
 export function annualHomecomingEligible(org,lv){
   /* 只有旅美（小聯盟）才談得上「回不回得去日本」；日職二軍本來就在日本國內，
-     不該每季都跳出「返台」選項。 */
+     不該每季都跳出「回日職」選項。 */
   return org==='MiLB'&&!!LV[lv]&&!LV[lv].top;
 }
 export function finishContractYear(o){
@@ -318,7 +318,7 @@ export function movement(){
   const o=ovr();
   if(S.stage==='HS'){ if(S.stageYr<3)advance(); else pathChoiceHS(); return; }
   if(S.stage==='U'){ if(S.stageYr<4)advance(); else pathChoiceU4(); return; }
-  if(S.stage==='AMA'){
+  if(S.stage==='AMA'){ /* DEAD：日本線不會把 stage 設成 AMA。 */
     if(S.age>=26){ endGame('選秀多年落榜，'+S.year+' 年結束球員身分，轉任基層教練。'); return; }
     const amaOpts=[];
     if(!S.npbDraftEntered)amaOpts.push({t:'參加日本職棒選秀',main:true,f:()=>runDraft(false,()=>advance())});

@@ -1,5 +1,5 @@
-import {S} from './core/state.js?v=1.5.29';
-import {board, card} from './ui/dom.js?v=1.5.29';
+import {S} from './core/state.js?v=1.5.30';
+import {board, card} from './ui/dom.js?v=1.5.30';
 
 const SECRET=['P','C','IF','OF','OF','IF','C','P'];
 let seq=[]; let armed=false; let lockInstalled=false; let mlbJapanFarewellShown=false;
@@ -51,7 +51,8 @@ const start=document.getElementById('btn-start');
 if(start)start.addEventListener('click',()=>{if(!armed)return;setTimeout(()=>{if(S)installAbilityLock();},0);});
 
 function localizeJapanText(root){
-  if(!root||S?.org==='CPBL')return;
+  if(!root)return;
+  /* 國家隊用詞即使在中職洋將期間也要換成日本代表；中職風味句不在這張表裡。 */
   const r=[
     ['中華隊徵召','日本代表邀請'],['日本代表徵召','日本代表邀請'],['婉拒本次代表隊徵召','考量身體狀況婉拒'],['披上日本代表戰袍','披上國家隊戰袍'],['中華隊','日本代表']
   ];

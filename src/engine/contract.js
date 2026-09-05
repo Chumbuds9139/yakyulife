@@ -1,18 +1,18 @@
-import {S} from '../core/state.js?v=1.5.29';
-import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.29';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.29';
-import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.29';
-import {card, choose, board} from '../ui/dom.js?v=1.5.29';
-import {tlNote, tlRestage} from '../ui/timeline.js?v=1.5.29';
-import {ovr} from './ability.js?v=1.5.29';
-import {injuryMarketStatus} from './injury.js?v=1.5.29';
-import {hasActiveFranchise} from './tenure.js?v=1.5.29';
-import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.29';
-import {capTeam} from './career.js?v=1.5.29';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.29';
-import {advance} from './draft.js?v=1.5.29';
-import {finishContractYear} from '../flow/phases.js?v=1.5.29';
-import {endGame} from '../ui/retire.js?v=1.5.29';
+import {S} from '../core/state.js?v=1.5.30';
+import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.30';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.30';
+import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.30';
+import {card, choose, board} from '../ui/dom.js?v=1.5.30';
+import {tlNote, tlRestage} from '../ui/timeline.js?v=1.5.30';
+import {ovr} from './ability.js?v=1.5.30';
+import {injuryMarketStatus} from './injury.js?v=1.5.30';
+import {hasActiveFranchise} from './tenure.js?v=1.5.30';
+import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.30';
+import {capTeam} from './career.js?v=1.5.30';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.5.30';
+import {advance} from './draft.js?v=1.5.30';
+import {finishContractYear} from '../flow/phases.js?v=1.5.30';
+import {endGame} from '../ui/retire.js?v=1.5.30';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
@@ -270,8 +270,8 @@ export function offseasonTradeCheck(cont){
 export function doTradeExec(){
   /* 季末交易只更換下季球隊，當季成績仍完整歸屬原隊。 */
   S.teamSeasons=0; S.teamYears=0; S.teamStarYears=0; S.franchiseActive=false; S.champThisTeam=false; S.champTeam=null;
-  const list=S.org==='CPBL'?CPBL_TEAMS:S.org==='NPB'?NPB_TEAMS:MLB_TEAMS;
-  const nt=pick(list.filter(t=>t!==S.orgTeam)); S.orgTeam=nt; rememberLeagueTeam(S.org,nt); tlNote(2,'轉隊 '+nt); board(1);
+  const list=teamListOf(S.org).filter(t=>t!==S.orgTeam);
+  const nt=list.length?pick(list):S.orgTeam; S.orgTeam=nt; rememberLeagueTeam(S.org,nt); tlNote(2,'轉隊 '+nt); board(1);
 }
 export function buyoutRemaining(rate,includeCurrent){ /* 合約剩餘年數給付:季前需包含尚未支付的當年度；季末則扣除已入帳年度。 */
   rate=rate||0.7;
@@ -289,10 +289,9 @@ export function buyoutRemaining(rate,includeCurrent){ /* 合約剩餘年數給�
   S.ct=makeContract(1,S.ct.mult,S.lv,S.lastD||0,yearly,null,'買斷結清'); /* 給付後合約結清 */
   return total;
 }
-/* 引退時若曾經打過中職、但退休當下人不在中職，補一場台北大巨蛋開球告別；
-   從沒踏進中職的生涯（例如純日職／純美職）就不套用這段彩蛋。 */
+/* 曾打中職、引退時人不在中職 → 補一場台北大巨蛋開球告別。
+   當場在中職退役走 retire.js 儀式，不在這裡重複。純日職／純美職沒有 lastCpblTeam 就不觸發。 */
 export function daibaFarewell(cont){
-  if(S.org==='MLB'||S.org==='NPB'||S.org==='MiLB'){ cont(); return; }
   if(S.stage==='PRO'&&S.org!=='CPBL'&&S.lastCpblTeam&&!S._daiba){ S._daiba=true;
     card('gold','最後一球',`雖然沒能在 <b class="hl">${S.lastCpblTeam}</b> 完成告別賽，台北大巨蛋還是邀你回去，當一日中職球員開球。四萬人的注視下，你投出了生涯的最後一球——不為勝負，只為那個曾經在紅土上作夢的自己。`);
   }
@@ -571,7 +570,7 @@ export function faFlow(o){
   if(S.org==='MiLB'&&o>=LV.NPB1.min){
     faOpts.push({t:'轉戰日職一軍',s:'把天賦帶回家鄉',
       f:()=>{ returnHomeSign('MiLB','NPB','NPB1',
-        `雖然大聯盟的合約書就攤在桌上，但在幾個輾轉難眠的夜裡，你還是把筆放了下來。橫越太平洋的十幾個小時、一年有兩百天在陌生的旅館醒來——你想的已經不是可以在大聯盟達成甚麼成就，而是離家近一點。長考之後，你決定把天賦帶回家鄉：<b class="hl">日本職棒</b>。`);
+        `雖然大聯盟的合約書就攤在桌上，但在幾個輾轉難眠的夜裡，你還是把筆放了下來。橫越太平洋的十幾個小時、一年有兩百天在陌生的旅館醒來——你想的已經不是可以在大聯盟達成什麼成就，而是離家近一點。長考之後，你決定把天賦帶回家鄉：<b class="hl">日本職棒</b>。`);
         advance(); }});
   }
   /* 5b 日職路走不通時，海外／國內的其他出路（社會人／獨立聯盟／中職洋將） */

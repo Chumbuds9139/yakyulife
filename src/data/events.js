@@ -458,7 +458,7 @@ export const EVENTS=[
     "scope": "CPBL",
     "role": "P",
     "category": "encounter",
-    "intro": "對面是選球很好的強打，你的投球策略是甚麼？",
+    "intro": "對面是選球很好的強打，你的投球策略是什麼？",
     "target": "ctl",
     "choices": {
       "bold": {
@@ -651,7 +651,7 @@ export const EVENTS=[
       "norm": {
         "label": "與教練找單一問題",
         "good": "教練指出你的身體太早跑掉，一個修正就解開了整串結。",
-        "bad": "教練用精神論跟你解釋是你態度的問題，你從頭到尾都聽不懂他在說甚麼。"
+        "bad": "教練用精神論跟你解釋是你態度的問題，你從頭到尾都聽不懂他在說什麼。"
       },
       "safe": {
         "label": "先休息一場整理心態",
