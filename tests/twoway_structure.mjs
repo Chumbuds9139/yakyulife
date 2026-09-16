@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 globalThis.location={search:''};
-const state=await import('../src/core/state.js');
-const {POS_AB,POSN}=await import('../src/data/abilities.js');
-const tw=await import('../src/engine/twoway.js');
+const state=await import('../src/core/state.js?v=1.5.30');
+const {POS_AB,POSN}=await import('../src/data/abilities.js?v=1.5.30');
+const tw=await import('../src/engine/twoway.js?v=1.5.30');
 assert.deepEqual(POS_AB.TW,['sta','vel','ctl','brk','con','pow','spd','eye']);
 assert.equal(POSN.TW,'二刀流');
 state.setS(state.newState('二刀流測試',17,'TW',null));
