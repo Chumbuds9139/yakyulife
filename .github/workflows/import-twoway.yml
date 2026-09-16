@@ -30,7 +30,10 @@ jobs:
             git rm -f docs/twoway-design.md
             git cherry-pick --continue
           }
-          git cherry-pick c601cae77f25ae517639aa1d255a7cd44b895b25
+          git cherry-pick c601cae77f25ae517639aa1d255a7cd44b895b25 || {
+            git rm -f docs/twoway-design.md
+            git cherry-pick --continue
+          }
           git branch -f twoway-upstream HEAD
           git switch main
       - name: Merge only the two-way phase 1 and 2 changes
