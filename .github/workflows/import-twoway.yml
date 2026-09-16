@@ -1,0 +1,41 @@
+name: Import upstream two-way system
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    if: ${{ !contains(github.event.head_commit.message, '[twoway-import]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Configure git
+        run: |
+          git config user.name "twoway-import-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/LeoGGcat/yakyulife.git
+          git fetch upstream main
+      - name: Import two-way phase 1 and 2 commits
+        run: |
+          set -e
+          for c in \
+            feebc6cbec91fe665f9b334294ec13b0dab23d9b \
+            33c4cf48bc16ae64fcec8cafac6e8014829c5301 \
+            c601cae77f25ae517639aa1d255a7cd44b895b25; do
+            git cherry-pick -X theirs "$c"
+          done
+      - name: Syntax check
+        run: |
+          find src -type f -name '*.js' -print0 | xargs -0 -n1 node --experimental-default-type=module --check
+      - name: Commit result
+        run: |
+          git status --short
+          if git diff --quiet; then echo 'Nothing to commit'; exit 0; fi
+          git commit -am "[twoway-import] import two-way phase 1 and 2"
+          git push origin HEAD:main
