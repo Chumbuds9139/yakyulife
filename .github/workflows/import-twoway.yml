@@ -21,21 +21,32 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/LeoGGcat/yakyulife.git
           git fetch upstream main
-      - name: Import two-way phase 1 and 2 commits
+      - name: Build a clean upstream two-way branch
         run: |
           set -e
+          git switch --detach 18c5bf257f46489595efcab7b6a8ebf0da7e4ccf
           for c in \
             feebc6cbec91fe665f9b334294ec13b0dab23d9b \
             33c4cf48bc16ae64fcec8cafac6e8014829c5301 \
             c601cae77f25ae517639aa1d255a7cd44b895b25; do
-            git cherry-pick -X theirs "$c"
+            git cherry-pick "$c"
           done
+          git branch -f twoway-upstream HEAD
+          git switch main
+      - name: Merge only the two-way phase 1 and 2 changes
+        run: |
+          set -e
+          git merge --no-ff --no-edit -X ours twoway-upstream || {
+            echo 'Unexpected merge conflict';
+            git status --short;
+            git merge --abort;
+            exit 1;
+          }
       - name: Syntax check
         run: |
           find src -type f -name '*.js' -print0 | xargs -0 -n1 node --experimental-default-type=module --check
-      - name: Commit result
+      - name: Commit merged result
         run: |
           git status --short
-          if git diff --quiet; then echo 'Nothing to commit'; exit 0; fi
-          git commit -am "[twoway-import] import two-way phase 1 and 2"
+          git commit --allow-empty -m "[twoway-import] import two-way phase 1 and 2"
           git push origin HEAD:main
