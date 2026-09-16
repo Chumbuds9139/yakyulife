@@ -7,13 +7,14 @@ function bindLevelOrg(state){let current=state.lv;Object.defineProperty(state,'l
 export function setS(v){if(v&&v.traits&&v.traits.taiwan&&!v.traits.samurai)v.traits.samurai=true;if(v&&v.traits)delete v.traits.taiwan;S=bindLevelOrg(v);}
 export function newState(name,jersey,pos,role){
  const ab={};POS_AB[pos].forEach(k=>ab[k]=ri(20,32));
- if(pos==='TW'){ab.vel+=ri(0,4);ab.con+=ri(0,4);} else if(pos==='P'){ab.vel+=ri(0,6);ab.brk+=ri(0,4);}else{ab.con+=ri(0,6);ab.pow+=ri(0,4);}
+ if(pos==='TW'){ab.vel+=ri(0,4);ab.con+=ri(0,4);ab.rng=50;ab.fld=50;ab.arm=50;ab.cat=50;} else if(pos==='P'){ab.vel+=ri(0,6);ab.brk+=ri(0,4);}else{ab.con+=ri(0,6);ab.pow+=ri(0,4);}
  const pot={},sh=(pos==='C'?POS_AB[pos].filter(k=>k!=='rng'):POS_AB[pos].slice());
  for(let i=sh.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=sh[i];sh[i]=sh[j];sh[j]=t;}
  if(pos==='TW'){
    pot.sta=ri(60,74);
    [...['vel','ctl','brk']].sort(()=>R()-0.5).forEach((k,i)=>pot[k]=i===0?ri(70,80):i===1?ri(58,68):ri(50,60));
    [...['con','pow','spd','eye']].sort(()=>R()-0.5).forEach((k,i)=>pot[k]=i===0?ri(72,80):i===1?ri(62,72):i===2?ri(54,66):ri(46,60));
+   pot.rng=pot.fld=pot.arm=pot.cat=40;
  }else if(pos==='P')sh.forEach((k,i)=>pot[k]=i===0?ri(70,80):i===1?ri(58,68):i===2?ri(50,60):ri(44,54));
  else{sh.forEach((k,i)=>pot[k]=i===0?ri(72,80):i===1?ri(64,74):i===2?ri(56,68):ri(46,62));if(pos==='C')pot.rng=ri(32,40);}
  const hsMap=HS_MAP;const schools=Object.keys(hsMap),myTeam=schools[Math.floor(R()*schools.length)];
@@ -24,16 +25,7 @@ export function newState(name,jersey,pos,role){
 }
 export function playerName(){return `${S.name} #${S.jersey}`;}
 export function blankStat(){return {yr:0,yrP:0,yrB:0,G:0,GP:0,PA:0,AB:0,H:0,pH:0,HR:0,pHR:0,RBI:0,SB:0,BB:0,pBB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,AS:0,DEF:0,DPG:{}};}
-export function bucketOf(lv){
-  if(lv==='NPB_TRAIN'||lv==='NPB2'||lv==='NPB1')return 'NPB';
-  if(lv==='CPBL2'||lv==='CPBL1')return 'CPBL';
-  if(lv==='MLB')return 'MLB';
-  if(lv==='CORP')return 'CORP';
-  if(lv==='INDEP')return 'INDEP';
-  const l=lv&&LV[lv];
-  if(l&&(l.org==='CORP'||l.org==='INDEP'))return l.org;
-  return l&&l.top?l.top:'MINOR';
-}
+export function bucketOf(lv){if(lv==='NPB_TRAIN'||lv==='NPB2'||lv==='NPB1')return 'NPB';if(lv==='CPBL2'||lv==='CPBL1')return 'CPBL';if(lv==='MLB')return 'MLB';if(lv==='CORP')return 'CORP';if(lv==='INDEP')return 'INDEP';const l=lv&&LV[lv];if(l&&(l.org==='CORP'||l.org==='INDEP'))return l.org;return l&&l.top?l.top:'MINOR';}
 export const CAREER_STAT_BUCKETS=['MLB','NPB','CPBL','INDEP','CORP','MINOR'];
 export const CAREER_EVAL_BUCKETS=['MLB','NPB','CPBL'];
 export function nextStep(){if(S.done){stepQ=[];return;}const f=stepQ.shift();if(f)f();}
