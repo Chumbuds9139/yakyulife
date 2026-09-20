@@ -1,17 +1,17 @@
-import {S, nextStep, playerName, stageLabel} from '../core/state.js?v=1.5.30';
-import {APP_VER} from '../config.js?v=1.5.30';
-import {SEED} from '../core/rng.js?v=1.5.30';
-import {renderTraits, traitNames} from './traits.js?v=1.5.30';
-import {clearAlloc, allocFullClose} from './alloc.js?v=1.5.30';
-import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.5.30';
-import {DPN, POSN} from '../data/abilities.js?v=1.5.30';
-import {TEAM_COLOR, LV} from '../data/teams.js?v=1.5.30';
-import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js?v=1.5.30';
-import {salParts, fmtMoney} from '../engine/contract.js?v=1.5.30';
-import {roleN, fmtIP, slgOf, baseballERA} from '../engine/season.js?v=1.5.30';
-import {honorGroups, yearRanges} from '../engine/career.js?v=1.5.30';
-import {isChampionshipYear} from '../engine/championship.js?v=1.5.30';
-import {playerType, ovr} from '../engine/ability.js?v=1.5.30';
+import {S, nextStep, playerName, stageLabel} from '../core/state.js?v=1.6.0';
+import {APP_VER} from '../config.js?v=1.6.0';
+import {SEED} from '../core/rng.js?v=1.6.0';
+import {renderTraits, traitNames} from './traits.js?v=1.6.0';
+import {clearAlloc, allocFullClose} from './alloc.js?v=1.6.0';
+import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.6.0';
+import {DPN, POSN} from '../data/abilities.js?v=1.6.0';
+import {TEAM_COLOR, LV} from '../data/teams.js?v=1.6.0';
+import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js?v=1.6.0';
+import {salParts, fmtMoney} from '../engine/contract.js?v=1.6.0';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP, pitG} from '../engine/season.js?v=1.6.0';
+import {honorGroups, honorSections, yearRanges, twoWayView, twHasPit, twHasBat} from '../engine/career.js?v=1.6.0';
+import {isChampionshipYear} from '../engine/championship.js?v=1.6.0';
+import {playerType, ovr} from '../engine/ability.js?v=1.6.0';
 
 export const $=id=>document.getElementById(id);
 export let _curYearBody=null; /* 當前年度的內容容器 */
@@ -191,7 +191,9 @@ function affiliationHTML(){
 }
 /* 守位晶片(實底)＋稱號晶片(金描邊) */
 function chipsHTML(){
-  const pos=(S.dpos?DPN[S.dpos]:POSN[S.pos])+(S.role?'・'+roleN(S.role):'');
+  /* 二刀流的 dpos 永遠是 DH,直接印會變成「指定打擊・先發」,把身分蓋掉了。 */
+  const posN=S.pos==='TW'?POSN.TW:(S.dpos?DPN[S.dpos]:POSN[S.pos]);
+  const pos=posN+(S.role?'・'+roleN(S.role):'');
   const typ=playerType()+(S.traits.genius?' ★':'');
   return `<span class="bd-chip pos">${pos}</span><span class="bd-chip typ">${typ}</span>`;
 }
@@ -228,12 +230,16 @@ function secHonors(){
   /* honorGroups() is ranked by prestige, which is what the settlement card wants; here the
      year is the leading column, so read it chronologically instead */
   const first=g=>{ const ys=g.yrs.filter(Boolean).map(Number); return ys.length?Math.min(...ys):Infinity; };
-  const gs=honorGroups().sort((a,b)=>first(a)-first(b));
-  const body=gs.length?gs.map(g=>{
-    const rs=yearRanges(g.yrs), n=g.yrs.length;
+  const row=g=>{ const rs=yearRanges(g.yrs), n=g.yrs.length;
     return `<div class="bd-hr"><span class="y">${rs.join('、')}</span>`+
-      `<span class="n">${g.awd}${n>1?` <b>×${n}</b>`:''}</span></div>`;
-  }).join(''):'<div class="bd-none">還沒有拿過任何獎項。</div>';
+      `<span class="n">${esc(g.awd)}${n>1?` <b>×${n}</b>`:''}</span></div>`; };
+  /* 投手獎與打擊獎分段列。只有一段的時候不印小標——單刀球員的清單維持原樣。 */
+  const secs=honorSections(honorGroups().sort((a,b)=>first(a)-first(b)));
+  const body=secs.length
+    ?(secs.length===1
+       ?secs[0].groups.map(row).join('')
+       :secs.map(sec=>`<div class="bd-hg">${sec.name}</div>`+sec.groups.map(row).join('')).join(''))
+    :'<div class="bd-none">還沒有拿過任何獎項。</div>';
   return `<div class="bd-sec sec-h"><div class="bd-sh">目前成就</div>${body}</div>`;
 }
 function secSalary(){
@@ -264,31 +270,54 @@ function secTraits(){
     (out.length?`<div class="bd-tw">${out.join('')}</div>`
                :'<div class="bd-none">還沒有覺醒任何隱藏屬性。</div>')+`</div>`;
 }
+/* 逐年分頁目前顯示哪一側（只有二刀流會用到）。存在面板的 dataset 上，
+   detailSync() 重畫時沿用，切頁或 board() 刷新都不會被打回投球側。 */
+function logSide(){
+  const d=$('bd-detail');
+  return (d&&d.dataset.yside==='bat')?'bat':'pit';
+}
 function secLog(){
-  const L=S.log||[], isP=S.pos==='P';
+  const L=S.log||[], TW=twoWayView(), side=logSide();
+  /* 二刀流：這條帶子只有六格，塞不下兩側，所以改成「點一下切投／打」，
+     切到哪一側就用回該側完整的六欄——跟單刀投手／野手看到的一模一樣。
+     舊版是投打各佔三格，等於兩邊都被砍半，而且同一列上兩組數字混在一起。 */
+  const isP=TW?side==='pit':S.pos==='P';
   const yearHTML=y=>{ const crown=isChampionshipYear(S.honors,y)
     ?'<span class="champ-crown" title="該年度奪冠" role="img" aria-label="冠軍"></span>':'';
     return `<span class="champ-slot">${crown}</span>${y}`; };
   /* 業餘年份沒有 st(逐項數據)，只有文字事蹟——這就是兩張表的分界 */
   const ama=L.filter(r=>!r.st), pro=L.filter(r=>r.st);
-  const hd=isP?['G','IP','W-L','SV','SO','ERA']:['G','PA','AVG','HR','RBI','OPS'];
-  const drop=isP?[1,0,0,1,1,0]:[1,1,0,0,1,0]; /* 手機留 3 欄:投手 IP/W-L/ERA、野手 AVG/HR/OPS */
+  /* 七欄。原本只有六欄，打者那排沒有盜壘——腳程練起來的球員在逐年表上完全看不出來，
+     而 SB 明明就在 st 裡，結算的生涯年表也一直都有這一欄。桌面量過：表格 631px，
+     球隊欄原本 267px，加到第七欄之後還有 219px，塞得下。
+     投手側同步補 WHIP，兩張表維持一樣寬——不然切投打的時候整排數字會跳。 */
+  const hd=isP?['G','IP','W-L','SV','SO','ERA','WHIP']:['G','PA','AVG','HR','RBI','OPS','SB'];
+  const drop=isP?[1,0,0,1,1,0,1]:[1,1,0,0,1,0,1]; /* 手機留 3 欄:投手 IP/W-L/ERA、野手 AVG/HR/OPS */
   const cells=v=>v.map((t,i)=>`<span class="n${drop[i]?' opt':''}">${t}</span>`).join('');
+  /* 切換掛在「職業」那一列，不掛在小標上——小標在手機版是 display:none
+     （手機用分頁列取代標題），掛上去玩家就看不到了。而且它就在它控制的那張表正上方。 */
+  const sideBtns=TW?`<span class="bd-yside">`+
+    [['pit','投球'],['bat','打擊']].map(([k,n])=>
+      `<button type="button" class="ys${k===side?' on':''}" data-ys="${k}">${n}</button>`).join('')+
+    `</span>`:'';
   let h=`<div class="bd-sec sec-y"><div class="bd-sh">生涯逐年成績</div>`;
   if(!L.length)h+='<div class="bd-none">還沒有完整打過一個球季。</div>';
   if(ama.length){ h+='<div class="bd-yg">業餘</div>';
     ama.forEach(r=>{ h+=`<div class="bd-yr${r.inj?' inj':''}"><span class="y">${yearHTML(r.y)}</span>`+
       `<span class="a opt">${r.age}</span><span class="tm">${esc(r.tm)}</span>`+
       `<span class="ln">${esc(r.line)}</span></div>`; }); }
-  if(pro.length){ h+='<div class="bd-yg">職業</div>'+
+  if(pro.length){ h+=`<div class="bd-yg">職業${sideBtns}</div>`+
       `<div class="bd-yr hd"><span class="y">年</span><span class="a opt">齡</span>`+
       `<span class="tm">球隊</span>${cells(hd)}</div>`;
-    pro.forEach(r=>{ const s=r.st; let v;
+    /* 二刀流：切到投球側就只列真的登板過的球季，打擊側只列有打席的。
+       轉型前後的單刀球季自然只會出現在它該在的那一側，不用留一排 '-'。 */
+    const use=TW?pro.filter(r=>isP?twHasPit(r.st):twHasBat(r.st)):pro;
+    use.forEach(r=>{ const s=r.st; let v;
       if(isP){ const era=baseballERA(s);
-        v=[s.G,fmtIP(s.IP),`${s.W}-${s.L}`,s.SV||0,s.SO,F2(era)];
+        v=[pitG(s),fmtIP(s.IP),`${s.W}-${s.L}`,s.SV||0,s.SO,F2(era),F2(baseballWHIP(s))];
       } else { const obp=s.PA>0?(s.H+s.BB)/s.PA:null, slg=s.AB>0?slgOf(s):null;
-        v=[s.G,s.PA,F3(s.AB>0?s.H/s.AB:null),s.HR,s.RBI,F3((obp!=null&&slg!=null)?obp+slg:null)]; }
-      /* the compact row drops BB/WHIP/SB/DEF; the full season line stays on hover */
+        v=[s.G,s.PA,F3(s.AB>0?s.H/s.AB:null),s.HR,s.RBI,F3((obp!=null&&slg!=null)?obp+slg:null),s.SB||0]; }
+      /* the compact row still drops BB/HLD/DEF; the full season line stays on hover */
       h+=`<div class="bd-yr${r.inj?' inj':''}" title="${esc(r.line)}"><span class="y">${yearHTML(r.y)}</span>`+
         `<span class="a opt">${r.age}</span><span class="tm">${esc(r.tm)}</span>${cells(v)}</div>`; }); }
   return h+'</div>';
@@ -321,6 +350,16 @@ export function detailSync(){
   d.querySelectorAll('.bd-tab').forEach(b=>b.onkeydown=e=>{
     if(e.key!=='Enter'&&e.key!==' ')return;
     e.preventDefault(); activateTab(b,e); });
+  /* 二刀流逐年表的投／打切換。與分頁按鈕同一套處理：innerHTML 會被換掉，
+     所以要 stopPropagation，重畫後再把焦點放回同一顆按鈕。 */
+  const activateSide=(b,e)=>{
+    e.stopPropagation(); d.dataset.yside=b.dataset.ys; detailSync();
+    const nb=d.querySelector(`.ys[data-ys="${b.dataset.ys}"]`); if(nb)nb.focus();
+  };
+  d.querySelectorAll('.ys').forEach(b=>{
+    b.onclick=e=>activateSide(b,e);
+    b.onkeydown=e=>{ if(e.key!=='Enter'&&e.key!==' ')return; e.preventDefault(); activateSide(b,e); };
+  });
   d.scrollTop=sc;
   /* a board() refresh must not yank the 逐年 list back to the player's rookie year */
   const y=d.querySelector('.sec-y'); if(y&&yTop!=null)y.scrollTop=yTop;

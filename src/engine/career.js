@@ -1,10 +1,11 @@
-import {S} from '../core/state.js?v=1.5.30';
-import {clamp} from '../core/rng.js?v=1.5.30';
-import {DPN, POSN, POS_ADJ_RUNS, POS_TIER_K, POS_TIER_STR} from '../data/abilities.js?v=1.5.30';
-import {LG_N} from '../data/teams.js?v=1.5.30';
-import {TIER_TH, LEAGUE_K, MILESTONE_DEF, HOF_TH_K} from '../data/economy.js?v=1.5.30';
-import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP} from './season.js?v=1.5.30';
-import {isCareerScoringAward} from './award-rules.js?v=1.5.30';
+import {S, CAREER_STAT_BUCKETS} from '../core/state.js?v=1.6.0';
+import {clamp} from '../core/rng.js?v=1.6.0';
+import {DPN, POSN, POS_ADJ_RUNS, POS_TIER_K, POS_TIER_STR} from '../data/abilities.js?v=1.6.0';
+import {LG_N} from '../data/teams.js?v=1.6.0';
+import {TIER_TH, LEAGUE_K, MILESTONE_DEF, HOF_TH_K} from '../data/economy.js?v=1.6.0';
+import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP, pitG, pitBB} from './season.js?v=1.6.0';
+import {isCareerScoringAward, HONOR_GROUP_NAMES, honorSide, splitBySide} from './award-rules.js?v=1.6.0';
+export {HONOR_GROUP_NAMES, honorSide};
 /* ================= 生涯終章 ================= */
 const BUCKET_G={CPBL:120,NPB:143,MLB:162};
 /* 守位分：守位難度(POS_ADJ_RUNS 以「每 162 場」計)換算成該聯盟的實際球季長度。
@@ -63,11 +64,44 @@ export function hitterCareerScore(st,bucket){
   const base=st.H+st.HR*3+st.SB*0.8+st.RBI*0.5+st.BB*0.3+(st.DEF||0)*6+positionScore(st,bucket);
   return base*hitterQualityFactor(st)*0.67;
 }
+/* 這一段履歷算不算二刀流，看的是他「實際打出來的東西」——同一個聯盟裡既有登板也有打席
+   ——而不是退休當下的 S.pos。原因是模擬量到的：二刀流的強制轉回中位發生在 39 歲、
+   已經打了 19 個二刀流球季之後（89.5% 的人會在生涯尾聲被收斂成單刀）。
+   用 S.pos 判斷的話，那十九年會在結算當下被整段當成純打者計分。
+   單刀投手沒有打席、單刀野手沒有登板，所以這個判斷不會誤傷他們。 */
+export function isTwoWayCareer(st){ return !!(st&&(st.GP||0)>0&&(st.PA||0)>0&&(st.IP||0)>0); }
+/* ── 二刀流的表格：投打各自一張 ──
+   曾經試過把兩側擠進同一列，但那必須砍掉一半欄位（投手側的 SV/HLD/BB/WHIP、
+   打者側的 OBP/SLG/H/BB/SB/DEF）才排得下，而且同一列上兩組數字混在一起讀不出來
+   哪個屬於哪一邊。改成兩張表之後，每一張都用回「單刀的完整欄位」，
+   二刀流反而看得比單刀還完整。這裡只留兩側各自的「有沒有出賽」判斷。
+
+   一列裡「有沒有投球側／打擊側」要各自判斷：轉型前後的單刀球季也會混在同一段生涯裡，
+   沒有產出的那一側整列不畫（薪資表例外，那一年還是有領薪水）。
+   投球側不能用 pitG()——純打者的 st.G 是出賽場數，會把每個打者都判成有投球。 */
+export const twHasPit=st=>!!(st&&((st.IP||0)>0||(st.GP||0)>0));
+export const twHasBat=st=>!!(st&&(st.PA||0)>0);
+/* 這一局要不要用二刀流版面。跟計分同一個理由：89.5% 的二刀流在退休前已經被強制轉回，
+   用 S.pos 判斷會讓那十九年的履歷用單刀版面印出來，缺的那一側整段消失。 */
+export function twoWayView(){
+  if(S.pos==='TW'||(S.twSeasons||0)>0)return true;
+  return (S.log||[]).some(r=>isTwoWayCareer(r.st))||
+    CAREER_STAT_BUCKETS.some(b=>isTwoWayCareer(S.stats&&S.stats[b]));
+}
 export function careerScore(st,bucket){
   if(S.pos==='P')return pitcherCareerScore(st,bucket);
+  /* 二刀流:兩份產出都是他真的打出來的，所以兩邊相加。會不會過強不是靠這裡壓，
+     而是靠 LEAGUE_K.TW 與 HOF_TH_K.TW 這兩個校準常數——尺歸尺、分歸分。
+     打擊側裡的 positionScore 已經含指定打擊的 −14／162 場，那一刀在這裡挨；
+     投球側完全不受影響，所以不會被同一件事罰兩次(posTierK 對二刀流也回 1)。 */
+  if(isTwoWayCareer(st))return pitcherCareerScore(st,bucket)+hitterCareerScore(st,bucket);
   return hitterCareerScore(st,bucket);
 }
 export function primaryPos(){ /* 生涯主守位:過半→該位;無過半→工具人/搖擺人(年數降序) */
+  if(S.pos==='TW'||(S.twSeasons||0)>0){
+    const ry=S.roleYears||{}, es=Object.entries(ry).sort((a,b)=>b[1]-a[1]);
+    return '二刀流'+(es.length?`（${{SP:'先發',MR:'中繼',CL:'終結者'}[es[0][0]]||''}／指定打擊）`:'');
+  }
   if(S.pos==='P'){
     const ry=S.roleYears||{}; const tot=Object.values(ry).reduce((a,b)=>a+b,0);
     if(!tot)return roleName3(S.role);
@@ -127,7 +161,23 @@ export function honorScore(bucket){
     years.get(m[1]).push(award);
   });
   let sc=0;
+  /* 二刀流同年可能既是最佳投手又是最佳打者;原本的「同年只取最高一項」會吃掉一座。
+     年度MVP 是投打共用的一座，只能算一次，所以拿它跟「投球側＋打擊側」比大小，
+     不是三者相加。 */
+  const twYear=awards=>{
+    const pitMajor=awards.some(a=>/投手三冠王/.test(a))?700:awards.some(a=>/最佳投手|賽揚/.test(a))?460:0;
+    const batMajor=awards.some(a=>/打擊三冠王/.test(a))?700:awards.some(a=>/最佳打者/.test(a))?460:0;
+    const mvp=awards.some(a=>/年度MVP/.test(a))?520:0;
+    const nP=awards.filter(a=>/(勝投王|防禦率王|三振王|救援王|中繼王)$/.test(a)).length;
+    const nB=awards.filter(a=>/(打擊王|全壘打王|盜壘王|打點王|上壘王)$/.test(a)).length;
+    return Math.max(mvp,Math.max(pitMajor,Math.min(200,nP*100))+Math.max(batMajor,Math.min(200,nB*100)));
+  };
+  const twCareer=isTwoWayCareer(S.stats[bucket]);
   years.forEach(awards=>{
+    if(twCareer){
+      const fieldingTW=awards.some(a=>/守備聖經/.test(a))?250:awards.some(a=>/金手套/.test(a))?100:0;
+      sc+=twYear(awards)+fieldingTW; return;
+    }
     /* 同年度的大獎只取最高層級；三冠王已包含其構成獎項，不重複加總。 */
     const major=awards.some(a=>/投手三冠王|打擊三冠王/.test(a))?700
       :awards.some(a=>/年度MVP/.test(a))?520
@@ -147,7 +197,9 @@ export function honorScore(bucket){
    用 DPG 而非「主守位」，所以捕手蹲十年再轉一壘的球員會拿到兩者的混合標準，
    不會因為最後幾年移防就整段生涯改用另一把尺。 */
 export function posTierK(st,bucket){
-  if(S.pos==='P'||!st||!st.DPG)return 1;
+  /* 二刀流回 1:他的守位調整已經在打擊側的 positionScore 裡扣過一次，
+     這裡再乘 DH 的 1.13 就是同一件事罰兩次。二刀流的門檻位移集中在 HOF_TH_K.TW。 */
+  if(S.pos==='P'||isTwoWayCareer(st)||!st||!st.DPG)return 1;
   let g=0,acc=0;
   Object.entries(st.DPG).forEach(([dp,games])=>{
     const n=Math.max(0,games||0); if(!n)return;
@@ -183,7 +235,7 @@ export function tierOf(bucket){
   const hs=honorScore(bucket);
   /* 生涯評價折算依「這個聯盟這段生涯的實際角色」判斷，不是看目前角色：
      救援數占推估出賽數四成以上視為終結者型生涯，套用終結者專屬折算值。 */
-  const posKey=S.pos!=='P'?'H':((st.SV||0)>=(st.IP||0)/1.05*0.4?'CL':'P');
+  const posKey=isTwoWayCareer(st)?'TW':(S.pos!=='P'?'H':((st.SV||0)>=(st.IP||0)/1.05*0.4?'CL':'P'));
   /* [Kbase,Khonor]:數據累積分與獎項分分開折算(兩者的聯盟差異性質相反,詳見 economy.js) */
   const k=((LEAGUE_K[bucket]||{})[posKey])||[1,1];
   const sc=careerScore(st,bucket)*k[0]+hs.sc*k[1],th=TIER_TH[bucket];
@@ -197,14 +249,17 @@ export function tierOf(bucket){
      不能各自去讀 TIER_TH[bucket][0] 的裸值(詳見 ui/retire.js 的說明)。 */
   return {i,sc:Math.round(sc),hofTh,name:LG_N[bucket]+['名人堂','明星球員','每日球員','邊緣球員','一頁過客'][i]};
 }
-export function statTable(bucket){
+export function statTable(bucket,side){
   const st=S.stats[bucket]; if(!st)return '';
   let rows;
-  if(S.pos==='P'){
+  /* side='pit'／'bat' 只畫該側，二刀流會呼叫兩次（見 statTables）。 */
+  const isP=side?side==='pit':(S.pos==='P');
+  if(side&&(side==='pit'?!twHasPit(st):!twHasBat(st)))return '';
+  if(isP){
     const era=st.IP>0?baseballERA(st).toFixed(2):'-';
     const whip=st.IP>0?baseballWHIP(st).toFixed(2):'-';
     rows=`<tr><th>Yrs</th><th>G</th><th>IP</th><th>W</th><th>L</th><th>SV</th><th>HLD</th><th>SO</th><th>BB</th><th>ERA</th><th>WHIP</th></tr>
-    <tr><td>${st.yr}</td><td>${st.G}</td><td>${fmtIP(st.IP)}</td><td>${st.W}</td><td>${st.L}</td><td>${st.SV||0}</td><td>${st.HLD||0}</td><td>${st.SO}</td><td>${st.BB||0}</td><td>${era}</td><td>${whip}</td></tr>`;
+    <tr><td>${st.yr}</td><td>${pitG(st)}</td><td>${fmtIP(st.IP)}</td><td>${st.W}</td><td>${st.L}</td><td>${st.SV||0}</td><td>${st.HLD||0}</td><td>${st.SO}</td><td>${pitBB(st)}</td><td>${era}</td><td>${whip}</td></tr>`;
   }else{
     const obpN = st.PA>0 ? (st.H+st.BB)/st.PA : 0;
     const slgN = slgOf(st);
@@ -216,7 +271,13 @@ export function statTable(bucket){
     <tr><td>${st.yr}</td><td>${st.G}</td><td>${st.PA}</td><td>${avg}</td><td>${obp}</td><td>${slg}</td><td>${ops}</td><td>${st.H}</td><td>${st.HR}</td><td>${st.RBI}</td><td>${st.BB||0}</td><td>${st.SB}</td><td>${st.DEF>0?'+':''}${st.DEF||0}</td></tr>`;
   }
   const asN=st.AS||0;
-  return `<p style="margin-top:8px"><b>${LG_N[bucket]}</b>${asN?` · 明星賽 ${asN} 度入選`:''}</p><table class="fin">${rows}</table>`;
+  const side名=side==='pit'?'・投球':side==='bat'?'・打擊':'';
+  return `<p style="margin-top:8px"><b>${LG_N[bucket]}${side名}</b>${asN&&side!=='bat'?` · 明星賽 ${asN} 度入選`:''}</p><table class="fin">${rows}</table>`;
+}
+/* 一個聯盟的累積數據：單刀一張、二刀流投打各一張。 */
+export function statTables(bucket){
+  if(!twoWayView())return statTable(bucket);
+  return statTable(bucket,'pit')+statTable(bucket,'bat');
 }
 export function milestoneLevel(st,key,unit){ return Math.floor((st&&st[key]||0)/unit)*unit; }
 export function milestoneLine(label,st,defs,onlyKeys){
@@ -232,7 +293,9 @@ export function careerMilestones(){
   const out=[];
   (S.hofInfo||[]).forEach(h=>out.push(`${h.lg}名人堂｜第 ${h.yr} 年入選｜得票率 ${h.pct}%`));
   const leagues=['MLB','NPB','CPBL'];
-  const defs=S.pos==='P'?MILESTONE_DEF.pit:MILESTONE_DEF.bat;
+  /* 二刀流兩邊的里程碑都要列(勝場、三振、局數 ＋ 安打、全壘打、打點…)。 */
+  const defs=(S.pos==='TW'||(S.twSeasons||0)>0)?MILESTONE_DEF.pit.concat(MILESTONE_DEF.bat)
+    :S.pos==='P'?MILESTONE_DEF.pit:MILESTONE_DEF.bat;
   const played=leagues.filter(b=>{const st=S.stats[b];return st&&((st.yr||0)>0||(st.G||0)>0||(st.PA||0)>0||(st.IP||0)>0);});
   const sum={}; defs.forEach(([key])=>sum[key]=0);
   played.forEach(b=>defs.forEach(([key])=>sum[key]+=S.stats[b][key]||0));
@@ -252,9 +315,24 @@ export function careerMilestones(){
 export function honorRank(awd){
   const intl=/經典賽|12強|奧運|亞運|國家隊/.test(awd);
   const league=intl?0:(/大聯盟|世界大賽/.test(awd)?1:(/日職|日本一/.test(awd)?2:(/中職/.test(awd)?3:4)));
-  const kind=/總冠軍|世界大賽冠軍|日本一$/.test(awd)?0:/年度MVP/.test(awd)?1:/三冠王/.test(awd)?2:/MVP/.test(awd)?3:
-    /最佳投手|最佳打者|賽揚/.test(awd)?4:/金手套/.test(awd)?5:/守備聖經/.test(awd)?6:/王/.test(awd)?7:/明星賽/.test(awd)?9:8;
-  return league*10+kind;
+  const kind=/總冠軍|世界大賽冠軍|日本一$/.test(awd)?0:/二天一流/.test(awd)?1:/年度MVP/.test(awd)?2:/三冠王/.test(awd)?3:/MVP/.test(awd)?4:
+    /最佳投手|最佳打者|賽揚/.test(awd)?5:/金手套/.test(awd)?6:/守備聖經/.test(awd)?7:/王/.test(awd)?8:/明星賽/.test(awd)?10:9;
+  return league*11+kind;
+}
+/* ── 獎項分組：通用／投手／打擊 ──
+   原本全部擠在同一張清單裡，投手獎跟打擊獎混在一起。單刀球員還看得下去，
+   二刀流的清單直接變成一團——他兩邊的獎都有。
+
+   分法就照獎項本身屬於哪一邊：
+     · 投手：勝投王／防禦率王／三振王／救援王／中繼王／投手三冠王／年度最佳投手
+     · 打擊：打擊王／全壘打王／打點王／上壘王／盜壘王／打擊三冠王／年度最佳打者／金手套／守備聖經
+     · 通用：其餘全部——年度MVP、二天一流（投打雙三冠，不屬於任何一邊）、
+             總冠軍與日本一、明星賽、國際賽的名次與賽會MVP、學生時代的大賽冠軍
+   金手套與守備聖經放進打擊那一組，是因為它們是「野手」的獎；投手金手套本遊戲沒有。 */
+/* 分組規則本體在 award-rules.js（季末的年度獎項卡也要用同一套）。 */
+export function honorSections(groups){
+  return splitBySide(groups||honorGroups(),g=>g.awd)
+    .map(sec=>({key:sec.key,name:sec.name,groups:sec.items}));
 }
 export function honorGroups(){
   const map=new Map();

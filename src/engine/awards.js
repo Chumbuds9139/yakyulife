@@ -1,12 +1,12 @@
-import {S} from '../core/state.js?v=1.5.30';
-import {chance, clamp} from '../core/rng.js?v=1.5.30';
-import {DPN, GLOVE_TH, GLOVE_K} from '../data/abilities.js?v=1.5.30';
-import {LV} from '../data/teams.js?v=1.5.30';
-import {card} from '../ui/dom.js?v=1.5.30';
-import {tlNote} from '../ui/timeline.js?v=1.5.30';
-import {isSP, slgOf, baseballERA} from './season.js?v=1.5.30';
-import {isCareerScoringAward} from './award-rules.js?v=1.5.30';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.30';
+import {S} from '../core/state.js?v=1.6.0';
+import {chance, clamp} from '../core/rng.js?v=1.6.0';
+import {DPN, GLOVE_TH, GLOVE_K} from '../data/abilities.js?v=1.6.0';
+import {LV} from '../data/teams.js?v=1.6.0';
+import {card} from '../ui/dom.js?v=1.6.0';
+import {tlNote} from '../ui/timeline.js?v=1.6.0';
+import {isSP, slgOf, baseballERA, pitG} from './season.js?v=1.6.0';
+import {isCareerScoringAward, splitBySide} from './award-rules.js?v=1.6.0';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.6.0';
 /* 獎項機率同時有硬下限與必得上限；數值越低越好的獎項（ERA）用 lower=true。 */
 export function awardP(value,hardLow,autoWin,base=25,lower=false){
   const ineligible=lower?value>hardLow:value<hardLow;
@@ -33,11 +33,15 @@ export function rookieLeagueEligible(bucket,stats=S.stats){
 export function rookieWorkloadEligible(bucket,st,pos,role){
   pos=pos||(S&&S.pos); role=role||(S&&S.role);
   const games=((LV[({CPBL:'CPBL1',NPB:'NPB1',MLB:'MLB'})[bucket]]||{}).g)||120;
-  if(pos==='P'){
-    if(role==='SP')return (st.G||0)>=Math.ceil(games*.08)&&(st.IP||0)>=Math.ceil(games*.40);
-    return (st.G||0)>=Math.ceil(games*.25)&&(st.IP||0)>=Math.ceil(games*.12);
-  }
-  return (st.G||0)>=Math.ceil(games*.40)&&(st.PA||0)>=Math.ceil(games*1.50);
+  const gp=Number.isFinite(st&&st.GP)?st.GP:((st&&st.G)||0);
+  const pitchOK=role==='SP'
+    ? gp>=Math.ceil(games*.08)&&(st.IP||0)>=Math.ceil(games*.40)
+    : gp>=Math.ceil(games*.25)&&(st.IP||0)>=Math.ceil(games*.12);
+  const batOK=(st.G||0)>=Math.ceil(games*.40)&&(st.PA||0)>=Math.ceil(games*1.50);
+  /* 二刀流任一側達到門檻就有新人王資格:兩側都要求全額會讓他哪一邊都不夠。 */
+  if(pos==='TW')return pitchOK||batOK;
+  if(pos==='P')return pitchOK;
+  return batOK;
 }
 export function canUnlockPhoenix(added,state=S){
   if(!state.traits.glass||state.traits.phoenix||state.glassYear===state.year)return false;
@@ -96,16 +100,19 @@ export function awards(bucket,st){
   {
     const d=st.d;
     const popular=bucket==='CPBL'&&S.orgTeam==='台中猛獁';
-    const workloadOK=S.pos==='P'
-      ? (isSP()?st.IP>=60:st.G>=25)
-      : st.PA>=Math.round(LV[S.lv].g*1.7);
+    const gp=pitG(st);
+    const pitWork=isSP()?st.IP>=60:gp>=25;
+    const batWork=st.PA>=Math.round(LV[S.lv].g*1.7);
+    /* 二刀流任一側達標就進得了明星賽的門。 */
+    const workloadOK=S.pos==='TW'?(pitWork||batWork):(S.pos==='P'?pitWork:batWork);
     let performanceOK=false;
-    if(S.pos==='P'){
+    if(S.pos==='P'||S.pos==='TW'){
       const era=baseballERA(st)??99;
       performanceOK=isSP()
         ? st.IP>=80&&era<=4.00
-        : st.G>=30&&era<=3.80&&((st.SV||0)>=10||(st.HLD||0)>=10||d>=2);
-    }else{
+        : gp>=30&&era<=3.80&&((st.SV||0)>=10||(st.HLD||0)>=10||d>=2);
+    }
+    if(S.pos!=='P'&&!performanceOK){
       const obp=st.PA>0?(st.H+st.BB)/st.PA:0;
       const ops=obp+slgOf(st);
       performanceOK=st.PA>=300&&(st.avg>=0.260||ops>=0.750||st.HR>=15||st.SB>=15);
@@ -123,7 +130,7 @@ export function awards(bucket,st){
 
   /* 2. 投手個人獎項 */
   let pitcherTripleCrown=false;
-  if(S.pos==='P'){
+  if(S.pos==='P'||S.pos==='TW'){
     if(isSP() && st.IP >= th.g){
       let p=awardP(st.era,th.era[0],th.era[1],30,true);
       if(p>0&&p<100)p=clamp(p+(st.IP-th.g)*0.35,30,95);
@@ -234,26 +241,46 @@ export function awards(bucket,st){
     }
   }
 
+  /* 3.5 二天一流：同一年投打雙三冠。
+     這個判定必須放在投手三冠與打擊三冠都算完之後，而且只有二刀流碰得到——
+     單刀球員不可能同時滿足兩邊的資格門檻（規定局數與規定打席）。
+     名字取自宮本武藏自創的流派，「二刀流」這個詞就是從二天一流來的。 */
+  if(pitcherTripleCrown&&hitterTripleCrown){
+    h.push(`${y} ${lgN}二天一流`);
+    if(!S.nitenichiLeagues)S.nitenichiLeagues=[];
+    if(!S.nitenichiLeagues.includes(lgN)){
+      S.nitenichiLeagues=[...S.nitenichiLeagues,lgN];
+      S.traits.nitenichi=true;
+      card('gold',`隱藏屬性解鎖：${lgN}二天一流`,
+        `勝投、防禦率、三振——投手三冠。打擊率、全壘打、打點——打擊三冠。`+
+        `<b class="hl">同一年，同一個人，六個王</b>。`+
+        `<br><br>四百年前有個劍客，左右手各拿一把刀，自創了一個流派叫「二天一流」。`+
+        `後來的人把同時投球又打擊的球員叫做「二刀流」，就是從那裡來的。`+
+        `<br>但你今天做到的事，已經不只是拿著兩把刀而已——`+
+        `<b class="hl">${lgN}二天一流</b>，你自成一派。`);
+    }
+  }
+
   /* 4. 年度 MVP（最高榮譽）：先通過真實成績門檻，再與聯盟其他球員競爭。 */
   const isReliever=S.pos==='P'&&!isSP();
-  let mvpQual=false;
-  if(S.pos==='P'){
-    if(isSP()){
-      mvpQual=st.IP>=140&&st.era<=3.20&&(st.W>=12||st.SO>=th.so[0]);
-    }else{
-      mvpQual=st.G>=50&&st.era<=2.20&&((st.SV||0)>=35||(st.HLD||0)>=30);
-    }
-  }else{
-    const obp=st.PA>0?(st.H+st.BB)/st.PA:0;
-    const ops=obp+slgOf(st);
-    mvpQual=st.PA>=LV[S.lv].g*3.6&&(
-      ops>=0.850||
-      st.HR>=th.hr[0]||
-      (st.avg>=th.avg[0]&&st.RBI>=th.rbi[0])
-    );
-  }
-  if(pitcherTripleCrown||hitterTripleCrown){
-    /* 投手/打擊三冠王：必得年度MVP，不再走機率判定。 */
+  const pitchMvpQual=()=>isSP()
+    ? st.IP>=140&&st.era<=3.20&&(st.W>=12||st.SO>=th.so[0])
+    : pitG(st)>=50&&st.era<=2.20&&((st.SV||0)>=35||(st.HLD||0)>=30);
+  const batMvpQual=()=>{
+    const obp=st.PA>0?(st.H+st.BB)/st.PA:0, ops=obp+slgOf(st);
+    return st.PA>=LV[S.lv].g*3.6&&(ops>=0.850||st.HR>=th.hr[0]||(st.avg>=th.avg[0]&&st.RBI>=th.rbi[0]));
+  };
+  /* 二刀流:任一側達到 MVP 門檻就有資格。單側就夠格已經是聯盟最頂的成績，
+     再要求兩側同時達標等於把 MVP 從二刀流手上拿掉。 */
+  let mvpQual=S.pos==='TW'?(pitchMvpQual()||batMvpQual())
+            :S.pos==='P'?pitchMvpQual():batMvpQual();
+  /* 同一年拿下年度最佳投手＋年度最佳打者，等於聯盟同時認定你是最強的投手與最強的打者，
+     那已經沒有比他更有資格拿 MVP 的人了。實務上只有二刀流碰得到：單刀球員不可能
+     同時滿足規定投球局數與規定打席。門檻比「二天一流」（投打雙三冠、一季六個王）低，
+     因為三冠裡拿到兩項就會保底該側的年度最佳，所以這條是兩邊各兩項即可。 */
+  const bothBest=h.includes(`${y} ${aceName}`)&&h.includes(`${y} ${bestBatterName}`);
+  if(pitcherTripleCrown||hitterTripleCrown||bothBest){
+    /* 投手/打擊三冠王、或投打雙料年度最佳：必得年度MVP，不再走機率判定。 */
     h.push(`${y} ${lgN}年度MVP`);
   }else if(mvpQual&&S.seasonFactor>=0.9){
     if(isReliever){
@@ -283,7 +310,14 @@ export function awards(bucket,st){
 
   /* 6. 後續獲獎觸發特質 */
   const added=h.filter(x=>x.startsWith(String(y)));
-  if(added.length){ card('gold','年度獎項',added.map(x=>x.slice(5)).join('｜'));
+  if(added.length){
+    /* 年度獎項卡也依投打分段。同一張卡裡投手獎跟打擊獎串成一長條讀不出來誰是誰，
+       二刀流尤其明顯。只有一段時不印小標，單刀球員的卡維持原樣。
+       分組規則與「目前成就」「結算卡」共用 award-rules.js 的 honorSide()。 */
+    const secs=splitBySide(added.map(x=>x.slice(5)));
+    card('gold','年度獎項', secs.length===1
+      ? secs[0].items.join('｜')
+      : secs.map(sec=>`<b class="hl">${sec.name}</b><br>${sec.items.join('｜')}`).join('<br><br>'));
     const topAw=added.find(x=>/年度MVP/.test(x))||added.find(x=>/最佳投手|最佳打者|王/.test(x))||added.find(x=>/新人王/.test(x))||added[0];
     tlNote(3,topAw.slice(5));
     if(S.traits.yips){ removeTrait('yips','失憶症'); card('good','走出陰影','站上大舞台拿下獎項的那一刻，腦海裡的雜音消失了——<b class="hl">失憶症痊癒</b>。'); }

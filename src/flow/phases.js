@@ -1,23 +1,93 @@
-import {S, stepQ, nextStep, stageLabel} from '../core/state.js?v=1.5.30';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.30';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.5.30';
-import {LV, PATHS, teamNick} from '../data/teams.js?v=1.5.30';
-import {AMA_ANNUAL} from '../data/economy.js?v=1.5.30';
-import {card, choose, board, divider} from '../ui/dom.js?v=1.5.30';
-import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.5.30';
-import {allocUI} from '../ui/alloc.js?v=1.5.30';
-import {addAb, ovr, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.5.30';
-import {rollInjury, tjCap} from '../engine/injury.js?v=1.5.30';
-import {isMrTeamEligible} from '../engine/tenure.js?v=1.5.30';
-import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.5.30';
-import {championshipChance} from '../engine/championship.js?v=1.5.30';
-import {ageGateJP, buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, homecomingFallbackOptions, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, queueSalaryFloor, returnTeam, signTo, teamChampRate} from '../engine/contract.js?v=1.5.30';
-import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.5.30';
-import {loveEvent} from './love.js?v=1.5.30';
-import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.5.30';
-import {endGame} from '../ui/retire.js?v=1.5.30';
+import {S, stepQ, nextStep, stageLabel} from '../core/state.js?v=1.6.0';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.6.0';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.6.0';
+import {LV, PATHS, teamNick} from '../data/teams.js?v=1.6.0';
+import {AMA_ANNUAL} from '../data/economy.js?v=1.6.0';
+import {card, choose, board, divider} from '../ui/dom.js?v=1.6.0';
+import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.6.0';
+import {allocUI} from '../ui/alloc.js?v=1.6.0';
+import {addAb, ovr, ovrPit, ovrBat, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.6.0';
+import {rollInjury, tjCap, tjEffortMult} from '../engine/injury.js?v=1.6.0';
+import {isMrTeamEligible} from '../engine/tenure.js?v=1.6.0';
+import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.6.0';
+import {championshipChance} from '../engine/championship.js?v=1.6.0';
+import {ageGateJP, buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, homecomingFallbackOptions, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, queueSalaryFloor, returnTeam, signTo, teamChampRate} from '../engine/contract.js?v=1.6.0';
+import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.6.0';
+import {loveEvent} from './love.js?v=1.6.0';
+import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.6.0';
+import {endGame} from '../ui/retire.js?v=1.6.0';
 /* ================= 年度流程 ================= */
 export function startYear(){ S.yearOutsideIncome=0; enforcePerfectAbilities(); stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
+/* 七下保送幾顆「6」。天才需要 5 顆，保送不足的部分要玩家自己擲出來。
+   這是二刀流整條路線的難度總開關。原作實測：保送 3 顆讓天才發生率約 88%，
+   整包名人堂率約 1.47 倍單刀母體——進得去、但不是免費的。見 docs/twoway-design.md。 */
+export const TW_SIX_GUARANTEED=3;
+/* 中途轉入二刀流時，新增那一側的起點＝現有能力平均 × 這個比例（與 ri(20,32) 取高）。
+   1.15 是原作量出來的：轉入型與七下型必須一樣難。分母含 rng/fld/arm 這些轉型後
+   用不到的守備工具，會把平均往下拉，所以 ×1.15 之後新增側大約落在現有核心工具的水準。 */
+export const TW_CONVERT_RATIO=1.15;
+export function convertToTwoWay(origin){
+  const shuffle=arr=>{ for(let i=arr.length-1;i>0;i--){const j=Math.floor(R()*(i+1));const t=arr[i];arr[i]=arr[j];arr[j]=t;} return arr; };
+  const cur=Object.keys(S.ab).map(k=>S.ab[k]);
+  const avg=cur.length?cur.reduce((a,b)=>a+b,0)/cur.length:26;
+  const base=Math.round(avg*TW_CONVERT_RATIO);
+  const add=(keys,tiers)=>{
+    const fresh=keys.filter(k=>!(k in S.ab));
+    fresh.forEach(k=>{ S.ab[k]=clamp(Math.max(ri(20,32),base),1,80); });
+    shuffle(fresh).forEach((k,i)=>{ S.pot[k]=tiers[Math.min(i,tiers.length-1)](); });
+    return fresh;
+  };
+  const gainedPit=add(['vel','ctl','brk'],[()=>ri(70,80),()=>ri(58,68),()=>ri(50,60)]);
+  const gainedBat=add(['con','pow','spd','eye'],[()=>ri(72,80),()=>ri(62,72),()=>ri(54,66),()=>ri(46,60)]);
+  S.pot.sta=Math.max(S.pot.sta||0,ri(60,74));
+  S.pos='TW'; S.twOrigin=origin||'genius'; S.role=null; S.dpos='DH'; S.twSeasons=0; S.twAuditLv=null;
+  return {gainedPit,gainedBat};
+}
+export const TW_BAR=0.5;
+function perfBarOf(L){ return (L.min-L.par)-TW_BAR; }
+function twPerfPass(keepPit){
+  const st=S.lastSt, LL=LV[S.lastLv||S.lv];
+  if(!st||!LL||!Number.isFinite(LL.min))return false;
+  const dv=keepPit?st.dBat:st.dPit;
+  if(!Number.isFinite(dv))return false;
+  return dv>=perfBarOf(LL);
+}
+export function twoWayAudit(){
+  if(S.pos!=='TW'||S.stage!=='PRO')return false;
+  const L=LV[S.lv]; if(!L||!Number.isFinite(L.min))return false;
+  if(!S.twAuditLv){ S.twAuditLv=S.lv; return false; }
+  const seen=LV[S.twAuditLv]||L, promoted=seen.min<L.min;
+  const J=promoted?seen:L;
+  S.twAuditLv=S.lv;
+  const bar=J.min-TW_BAR, p=ovrPit(), b=ovrBat();
+  if(p>=bar&&b>=bar)return false;
+  const keepPit=p>=b;
+  if(twPerfPass(keepPit))return false;
+  const lost=keepPit?'打擊':'投球';
+  S.twFellAge=S.age; S.twFellLv=S.lv;
+  S.pos=keepPit?'P':'OF';
+  S.twFell=keepPit?'pit':'bat';
+  if(keepPit){
+    S.dpos=null;
+  }else{
+    S.role=null;
+    ['rng','fld','arm'].forEach(k=>{ if(!(k in S.ab)){ S.ab[k]=ri(18,26); S.pot[k]=ri(28,40); } });
+    S.dpos='DH';
+  }
+  card('bad','二刀流終止',
+    `球團把數據攤在你面前:你的${lost}已經跟不上<b class="dn">${J.n}</b>的水準了。`+
+    `再撐下去只是兩頭落空——從今天起，你專心當一個<b class="hl">${keepPit?'投手':'打者'}</b>。`+
+    `<br>那些年投進${lost}的訓練，沒有人會還給你。`);
+  const TW_ESTABLISHED=5;
+  if(S.twOrigin==='tap'&&S.traits.genius&&(S.twSeasons||0)<TW_ESTABLISHED){
+    removeTrait('genius','天才'); S.six=0;
+    card('bad','天才褪去',
+      '那份與生俱來的手感，好像是為了二刀流才借給你的。當這條路走不下去，它也一起離開了——'+
+      '<b class="dn">「天才」解除</b>，訓練骰回到常人的 1～6 點。<br>剩下的路，要用練的。');
+  }
+  board(1);
+  return true;
+}
 /* ---------- 季初 ---------- */
 export function phasePre(){
   board(0); S.tmpInj=0; S.seasonFactor=1; S.skipMid=false; S.marketInjury='healthy'; S.prevD=S.lastD||0; S.lastD=0; S.lastPayD=0; /* 先保留上季 d 供投手定位判定 */
@@ -34,7 +104,13 @@ export function phasePre(){
       ?`配球以外能力 <b class="dn">−${dec}</b>（你的配球經驗是你珍貴的財產，不會急遽衰退，配球<b class="dn">−${catcherCallDec}</b>）`
       :`所有能力 <b class="dn">−${dec}</b>`;
     card('bad','歲月不饒人',`${declAge>=35?'第二階段（逐年加劇）':'第一階段'}衰退：${declineText}${S.traits.disc?'（自律狂：生涯延後兩年）':''}${oldGhostActive?`（老鬼：原衰退 −${baseDec}，本年減緩 50%）`:''}。訓練加點照常，但身體回不去了。`); board(0); }
-  if(S.rehab>0){ S.rehab--; S.skipMid=true; S.seasonFactor=0; S.marketInjury='rehab';
+  twoWayAudit();
+  S.pitchOut=false;
+  if(S.rehab>0&&S.rehabPitchOnly&&S.pos==='TW'){
+    S.rehab--; S.rehabPitchOnly=false; S.pitchOut=true; S.marketInjury='rehab';
+    card('bad','復健年（只停投球）',`手肘的重建還沒走完，這一季<b class="dn">完全不會登板</b>——但你還握得住球棒。球團把你排進打線，讓你用打擊撐過這一年。`);
+  }
+  else if(S.rehab>0){ S.rehab--; S.skipMid=true; S.seasonFactor=0; S.marketInjury='rehab';
     card('bad','復健年',`大傷尚未痊癒，本季確定<b class="dn">全年報銷</b>，只能在復健室度過。（擲骰減為 2 顆）`);
     const dummySt = {G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,avg:0,era:0,WHIP:0,DEF:0};
     S.log.push({y:S.year,age:S.age,tm:S.stage==='PRO'?S.teamName():(S.team||stageLabel()),line:'復健年・全年報銷', inj: true, st: S.stage==='PRO'?dummySt:null}); }
@@ -42,9 +118,16 @@ export function phasePre(){
     let n=S.skipMid?2:(()=>{const r=R();return r<0.35?3:r<0.75?4:r<0.95?5:6;})();
     if(S.traits.distract&&!S.skipMid)n=Math.max(2,n-1); /* 外務纏身 */
     if(S.traits.academy&&!S.skipMid&&chance(35))n++; /* 學院派:期望值略升 */
-    
-    const dice=[]; let newSix=0;
-    for(let i=0;i<n;i++){ const v=S.traits.genius?ri(4,6):S.traits.late?ri(3,6):ri(1,6); dice.push(v);
+    if(S.pos==='TW'&&!S.skipMid)n=Math.max(n,5);
+    let forced=new Set();
+    if(S.twOrigin==='tap'&&!S.traits.genius&&S.stage==='HS'&&!S.skipMid&&TW_SIX_GUARANTEED>0){
+      const yr=clamp(S.stageYr||1,1,3);
+      const target=Math.min(TW_SIX_GUARANTEED,Math.ceil(TW_SIX_GUARANTEED*yr/3));
+      let need=clamp(target-S.six,0,n);
+      while(forced.size<need)forced.add(Math.floor(R()*n));
+    }
+    const dice=[]; let newSix=0, justUnlockedGenius=false;
+    for(let i=0;i<n;i++){ const v=forced.has(i)?6:(S.traits.genius?ri(4,6):S.traits.late?ri(3,6):ri(1,6)); dice.push(v);
       if(v===6&&S.age<22&&!S.traits.genius){S.six++;newSix++;} }
       
     let msg=`自主訓練擲出 <b class="hl">${n}</b> 顆骰。`;
@@ -67,7 +150,7 @@ export function phasePre(){
     }
     
     card('','季初特訓',msg);
-    if(S.six>=5&&!S.traits.genius&&S.age<22){ S.traits.genius=true;
+    if(S.six>=5&&!S.traits.genius&&S.age<22){ S.traits.genius=true; S.geniusEver=true;
       {
       const exDef=S.pos==='C'?['rng','fld','arm','cat']:[];
       /* 潛力 70 以上已是高天賦，不再吃掉重新評估名額；最高只會由 69 提升至 79。 */
@@ -79,17 +162,43 @@ export function phasePre(){
         bl.push(`${ABL[k]} <b class="up">+5</b>（潛力上限 ${oldPot} → ${newPot}，實際 +${potGain}）`); });
       card('gold','隱藏素質解鎖：天才','22 歲前五度擲出高標值！從今以後，每一顆訓練骰<b class="hl">永久固定 4 點以上</b>，事件卡好結果機率提升至 <b class="hl">70%</b>。'+(bl.length?`天賦覺醒，潛能重新被評估：${bl.join('、')}。`:'')+'天賦，是藏不住的。');
       board(1);
+      justUnlockedGenius=true;
     } }
-    choose('分配訓練成果',[{t:'<i class="ph-bold ph-gear" aria-hidden="true"></i>開始分配',s:`${dice.length} 顆骰`,main:true,f:()=>dposReview(()=>allocUI({dice},'分配訓練成果（點骰套用｜球探量表：'+(S.pos==='P'?'60/70/75':'70/75')+' 以上成長遞減）',()=>nextStep()))}]);
+    const toAlloc=()=>choose('分配訓練成果',[{t:'<i class="ph-bold ph-gear" aria-hidden="true"></i>開始分配',s:`${dice.length} 顆骰`,main:true,f:()=>dposReview(()=>allocUI({dice},'分配訓練成果（點骰套用｜球探量表：'+(S.pos==='P'?'60/70/75':S.pos==='TW'?'球威 60/70/75｜其餘 70/75':'70/75')+' 以上成長遞減）',()=>nextStep()))}]);
+    if(justUnlockedGenius&&S.stage==='HS'&&S.pos!=='TW'){
+      const wasP=S.pos==='P';
+      choose('<span class="ev-h">天賦覺醒 · 教練把你叫進辦公室</span>'+
+        `<small>「你這種身體，只做一半太可惜了。」他把${wasP?'球棒':'手套跟球'}放到你面前。</small>`,[
+        {t:'兩邊都要——走二刀流',main:true,
+         s:`${wasP?'重新學打擊':'重新學投球'}（從你目前水準起步）｜訓練骰保底 5 顆｜任一側跟不上層級水準就會被強制收斂，投在另一側的點數不退還`,
+         f:()=>{ const g=convertToTwoWay('genius');
+           const names=k=>ABL[k];
+           card('gold','二刀流',
+             `你點了頭。從這一天起，你不再只是${wasP?'投手':'打者'}——<b class="hl">${wasP?'球棒':'投手丘'}</b>也成了你的功課。`+
+             `<br>新增能力：${g.gainedPit.concat(g.gainedBat).map(names).join('、')}（從頭練起）。`+
+             `<br>訓練骰顆數保底 <b class="hl">5 顆</b>；但只要投或打其中一側跟不上所在層級的水準，`+
+             `球團就會把你收斂回單刀，而那些年投進另一側的點數<b class="dn">沒有人會還給你</b>。`);
+           board(1); toAlloc(); }},
+        {t:`專心當${wasP?'投手':'打者'}`,s:'維持現狀。這個邀請不會再出現',
+         f:()=>{ S.twDeclined=true;
+           card('info','婉拒','你搖搖頭。把一件事做到最好，本身就已經夠難了。'); toAlloc(); }}]);
+      return;
+    }
+    toAlloc();
   };
   /* 投手開季：投球強度(續航+TJ 量表) */
   const preAsk=afterAsk;
-  if(S.pos==='P'&&S.stage==='PRO'&&!S.skipMid){
+  if((S.pos==='P'||S.pos==='TW')&&S.stage==='PRO'&&!S.skipMid&&!S.pitchOut){
     afterAsk=()=>{
-      choose(`開季投球規劃（手臂狀況：${(function(){const r=S.tj/tjCap();return S.rehab>0?'復健中':r>=0.85?'手肘隱隱作痛':r>=0.6?'手臂略感疲勞':r>=0.35?'狀況尚可':'手感輕盈';})()}）`,[
-        {t:'全力投',warn:true,s:'成績最佳｜手臂負荷最大（TJ 累積 ×1.30）',f:()=>{S.effort='全力投';preAsk();}},
-        {t:'普通投',main:true,s:'標準強度｜TJ 累積正常',f:()=>{S.effort='普通投';preAsk();}},
-        {t:'養生球',s:'成績保守｜省手臂（TJ 累積 ×0.80）',f:()=>{S.effort='養生球';preAsk();}}]);
+      const arm=(function(){const r=S.tj/tjCap();return S.rehab>0?'復健中':r>=0.85?'手肘隱隱作痛':r>=0.6?'手臂略感疲勞':r>=0.35?'狀況尚可':'手感輕盈';})();
+      const opts=S.pos==='TW'
+        ? [{t:'以投為主',warn:true,s:`先發場次 85%｜打擊出賽 90%｜TJ 累積 ×${tjEffortMult('TW','全力投').toFixed(2)}`,f:()=>{S.effort='全力投';preAsk();}},
+           {t:'投打並重',main:true,s:`先發場次 70%｜打擊全勤｜TJ 累積 ×${tjEffortMult('TW','普通投').toFixed(2)}`,f:()=>{S.effort='普通投';preAsk();}},
+           {t:'以打為主',s:`先發場次 50%｜打擊全勤｜TJ 累積 ×${tjEffortMult('TW','養生球').toFixed(2)}`,f:()=>{S.effort='養生球';preAsk();}}]
+        : [{t:'全力投',warn:true,s:`成績最佳｜手臂負荷最大（TJ 累積 ×${tjEffortMult('P','全力投').toFixed(2)}）`,f:()=>{S.effort='全力投';preAsk();}},
+           {t:'普通投',main:true,s:'標準強度｜TJ 累積正常',f:()=>{S.effort='普通投';preAsk();}},
+           {t:'養生球',s:`成績保守｜省手臂（TJ 累積 ×${tjEffortMult('P','養生球').toFixed(2)}）`,f:()=>{S.effort='養生球';preAsk();}}];
+      choose(`${S.pos==='TW'?'開季投打配比':'開季投球規劃'}（手臂狀況：${arm}）`,opts);
     };
   }
   /* 大學季前：日本職棒選秀／旅外（大二～大四）。日職選秀每人一生只有一次。 */
@@ -353,11 +462,12 @@ export function movement(){
   let goodReal=false;
   { const st=S.lastSt;
     if(st&&S.seasonFactor>=0.5){
-      if(S.pos==='P'){
+      if(S.pos==='P'||S.pos==='TW'){
         const era=baseballERA(st)??99, whip=baseballWHIP(st)??99;
         /* 投手:ERA 或 WHIP 達聯盟一線水準,或有一定救援/中繼產能 */
-        if(era<=4.20||whip<=1.35||(st.SV||0)>=15||(st.HLD||0)>=15)goodReal=true;
-      }else{
+        if((st.IP||0)>0&&(era<=4.20||whip<=1.35||(st.SV||0)>=15||(st.HLD||0)>=15))goodReal=true;
+      }
+      if(S.pos!=='P'&&!goodReal){
         const obp=st.PA>0?(st.H+st.BB)/st.PA:0, slg=slgOf(st), ops=obp+slg;
         /* 野手:OPS 達聯盟主力水準(.720+),或雙位數轟/盜等實質產能 */
         if(ops>=0.720||st.HR>=12||st.SB>=15||st.RBI>=(LV[S.lv].g>=150?70:55))goodReal=true;

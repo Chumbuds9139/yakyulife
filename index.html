@@ -32,8 +32,8 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/bold/style.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/fill/style.css">
-<link rel="stylesheet" href="css/style.css?v=1.5.30">
-<link rel="stylesheet" href="css/japan-ui-fixes.css?v=1.5.30">
+<link rel="stylesheet" href="css/style.css?v=1.6.0">
+<link rel="stylesheet" href="css/japan-ui-fixes.css?v=1.6.0">
 </head>
 <body>
 <div id="start">
@@ -52,10 +52,12 @@
           </div>
         </div>
         <div class="field"><label>守位</label>
-          <div class="seg" id="seg-pos">
+          <div class="seg seg-pos5" id="seg-pos">
             <button type="button" data-v="P" class="on">投手</button><button type="button" data-v="C">捕手</button>
             <button type="button" data-v="IF">內野手</button><button type="button" data-v="OF">外野手</button>
+            <button type="button" data-v="TW" class="tw">二刀流</button>
           </div>
+          <p class="seed-hint" id="tw-hint" hidden>投打兼修，訓練骰保底五顆；任一側跟不上層級水準就會被強制收斂成單刀。</p>
         </div>
         <div class="field seedline"><label for="seed-show">世界種子</label>
           <div class="seed-input-row">
@@ -87,7 +89,7 @@
   </div>
   <footer id="start-footer">
     <button class="btn main" id="btn-start"><i class="ph-fill ph-play" aria-hidden="true"></i><span>開始生涯 ▸ 高一春天</span></button>
-    <div class="start-meta"><span id="ver-badge">v1.5.30</span><a id="author-credit" href="https://github.com/LeoGGcat/yakyulife" target="_blank" rel="noopener noreferrer">原作者：最先生</a></div>
+    <div class="start-meta"><span id="ver-badge">v1.6.0</span><a id="author-credit" href="https://github.com/LeoGGcat/yakyulife" target="_blank" rel="noopener noreferrer">原作者：最先生</a></div>
   </footer>
 </div>
 <div id="app">
@@ -135,8 +137,8 @@
 </div>
 <div id="modal"><div id="modal-box"></div></div>
 <div id="alloc-full"><div id="af-inner"><div class="af-head"><span class="af-title" id="af-title"></span><button class="btn" id="af-close">收起</button></div><div id="af-body"></div></div></div>
-<script type="module" src="src/japan.js?v=1.5.30"></script>
-<script type="module" src="src/cpbl-recovery.js?v=1.5.30"></script>
-<script type="module" src="src/main.js?v=1.5.30"></script>
+<script type="module" src="src/japan.js?v=1.6.0"></script>
+<script type="module" src="src/cpbl-recovery.js?v=1.6.0"></script>
+<script type="module" src="src/main.js?v=1.6.0"></script>
 </body>
 </html>

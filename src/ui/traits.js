@@ -1,7 +1,7 @@
-import {S} from '../core/state.js?v=1.5.30';
-import {$, teamChip} from './dom.js?v=1.5.30';
-import {TRAIT_KEYS, TRAIT_N, TRAIT_FX, legendTraitNames, rainbowTraitNames, pitcherTCNames, hitterTCNames} from '../data/traits.js?v=1.5.30';
-import {TEAM_COLOR, teamNick} from '../data/teams.js?v=1.5.30';
+import {S} from '../core/state.js?v=1.6.0';
+import {$, teamChip} from './dom.js?v=1.6.0';
+import {TRAIT_KEYS, TRAIT_N, TRAIT_FX, legendTraitNames, rainbowTraitNames, pitcherTCNames, hitterTCNames, nitenichiNames} from '../data/traits.js?v=1.6.0';
+import {TEAM_COLOR, teamNick} from '../data/teams.js?v=1.6.0';
 
 export function traitNames(k){
   if(k==='legend'){
@@ -13,23 +13,24 @@ export function traitNames(k){
   }
   if(k==='pitcherTC')return pitcherTCNames(S.pitcherTCLeagues);
   if(k==='hitterTC')return hitterTCNames(S.hitterTCLeagues);
+  if(k==='nitenichi')return nitenichiNames(S.nitenichiLeagues);
   return [traitName(k)];
 }
 export function traitName(k){
   if(k==='mrteam')return (teamNick(S.mrTeamName||'')||'')+'先生';
-  if(k==='legend'||k==='rainbow'||k==='pitcherTC'||k==='hitterTC')return traitNames(k)[0]||TRAIT_N[k]||k;
+  if(k==='legend'||k==='rainbow'||k==='pitcherTC'||k==='hitterTC'||k==='nitenichi')return traitNames(k)[0]||TRAIT_N[k]||k;
   return TRAIT_N[k]||k;
 }
 export function traitTagStyle(k){
   if(TRAIT_KEYS.neg.includes(k))return 'background:#2a0f0f;border-color:#c0392b;color:#ff8b7a';
-  if(k==='legend'||k==='samurai'||k==='intlace'||k==='pitcherTC'||k==='hitterTC')return 'background:#3a2c05;border-color:#ffc95c;color:#ffe08a';
+  if(k==='legend'||k==='samurai'||k==='intlace'||k==='pitcherTC'||k==='hitterTC'||k==='nitenichi')return 'background:#3a2c05;border-color:#ffc95c;color:#ffe08a';
   if(k==='goldcloth')return 'background:#3a3505;border-color:#e8d43a;color:#fff35a';
   if(k==='mrteam'){ const c=teamChip(TEAM_COLOR[S.mrTeamName]||'#ffc95c'); return 'background:'+c.bg+';border-color:'+c.bd+';color:'+c.fg; }
   if(k==='genius'||k==='disc'||k==='clutch'||k==='favorite')return 'background:#232733;border-color:#c8d0e0;color:#e8eef7';
   return '';
 }
 export function traitColorRank(k){
-  if(k==='legend'||k==='samurai'||k==='intlace'||k==='pitcherTC'||k==='hitterTC')return 0;
+  if(k==='legend'||k==='samurai'||k==='intlace'||k==='pitcherTC'||k==='hitterTC'||k==='nitenichi')return 0;
   if(k==='mrteam')return 1;
   if(k==='genius'||k==='disc'||k==='clutch'||k==='favorite')return 2;
   if(k==='goldcloth')return 4;

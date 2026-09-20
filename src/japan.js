@@ -1,5 +1,5 @@
-import {S} from './core/state.js?v=1.5.30';
-import {board, card} from './ui/dom.js?v=1.5.30';
+import {S} from './core/state.js?v=1.6.0';
+import {board, card} from './ui/dom.js?v=1.6.0';
 
 const SECRET=['P','C','IF','OF','OF','IF','C','P'];
 let seq=[]; let armed=false; let lockInstalled=false; let mlbJapanFarewellShown=false;
@@ -44,6 +44,7 @@ function installAbilityLock(){
 }
 
 document.querySelectorAll('#seg-pos button').forEach(btn=>btn.addEventListener('click',()=>{
+  if(btn.dataset.v==='TW')return;
   seq.push(btn.dataset.v); if(seq.length>SECRET.length)seq.shift();
   if(seq.length===SECRET.length&&seq.every((v,i)=>v===SECRET[i])){seq=[];armed=true;window.alert('侍魂已覺醒：特殊屬性「無敵」已解鎖。開始這段生涯後生效。');}
 }));

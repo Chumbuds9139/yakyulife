@@ -1,17 +1,18 @@
-import {S, blankStat, bucketOf, CAREER_STAT_BUCKETS, CAREER_EVAL_BUCKETS} from '../core/state.js?v=1.5.30';
-import {R, ri, SEED} from '../core/rng.js?v=1.5.30';
-import {OFFICIAL_URL} from '../config.js?v=1.5.30';
-import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, teamNick, npbStadium} from '../data/teams.js?v=1.5.30';
-import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.5.30';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.5.30';
-import {$, card, choose, divider, board, actClear} from './dom.js?v=1.5.30';
-import {careerTimelineCard, tlNote} from './timeline.js?v=1.5.30';
-import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.5.30';
-import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP} from '../engine/season.js?v=1.5.30';
-import {fmtMoney} from '../engine/contract.js?v=1.5.30';
-import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.5.30';
-import {capTeam, careerMilestones, honorGroups, posLegendPhrase, primaryPos, statTable, tierOf, yearRanges, honorText} from '../engine/career.js?v=1.5.30';
-import {shareImageSheet} from './share-image.js?v=1.5.30';
+import {S, blankStat, bucketOf, CAREER_STAT_BUCKETS, CAREER_EVAL_BUCKETS} from '../core/state.js?v=1.6.0';
+import {R, ri, SEED} from '../core/rng.js?v=1.6.0';
+import {OFFICIAL_URL} from '../config.js?v=1.6.0';
+import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, teamNick, npbStadium} from '../data/teams.js?v=1.6.0';
+import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.6.0';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.6.0';
+import {$, card, choose, divider, board, actClear} from './dom.js?v=1.6.0';
+import {careerTimelineCard, tlNote} from './timeline.js?v=1.6.0';
+import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.6.0';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP, pitG, pitBB} from '../engine/season.js?v=1.6.0';
+import {fmtMoney} from '../engine/contract.js?v=1.6.0';
+import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.6.0';
+import {capTeam, careerMilestones, honorGroups, honorSections, posLegendPhrase, primaryPos, statTable, statTables, tierOf, yearRanges, honorText,
+  twoWayView, twHasPit, twHasBat} from '../engine/career.js?v=1.6.0';
+import {shareImageSheet} from './share-image.js?v=1.6.0';
 /* ================= 結算圖資料建構 =================
    Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
    All values come from S.*; the in-game settlement cards are untouched. */
@@ -20,7 +21,7 @@ import {shareImageSheet} from './share-image.js?v=1.5.30';
 export function rpTagline(){
   const first=S.log.length?S.log[0].y:'?';
   return `${primaryPos()}｜${first}–${S.year}｜引退時 ${S.age} 歲`+
-    (S.pos==='P'&&(S.tjCrises||S.tjCount)?`｜手肘危機×${S.tjCrises||0}／TJ×${S.tjCount}`:'');
+    ((S.pos==='P'||twoWayView())&&(S.tjCrises||S.tjCount)?`｜手肘危機×${S.tjCrises||0}／TJ×${S.tjCount}`:'');
 }
 export function rpFamily(){
   const lv=S.love, kid=n=>n?`（育${n}）`:'';
@@ -39,23 +40,63 @@ export function settlementYearHTML(year,isChampion=championshipYear(year)){
   const crown=isChampion?'<span class="champ-crown" title="該年度奪冠" role="img" aria-label="冠軍"></span>':'';
   return `<span class="champ-slot">${crown}</span>${year}`;
 }
-export function rpCumData(){ /* per-league career totals; best-of-column marks need 2+ rows */
-  const isP=S.pos==='P';
-  const order=CAREER_STAT_BUCKETS.filter(b=>S.stats[b]);
+export const rpSideName=side=>side==='pit'?'投球':'打擊';
+/* 職業逐年成績的 HTML。side='pit'／'bat' 時只畫該側、並用回該側完整的單刀欄位；
+   不給 side 就是單刀球員照舊。 */
+export function proYearTableHTML(proLogs,side){
+  const isP = side ? side==='pit' : (!twoWayView() && S.pos==='P');
+  const use = side ? proLogs.filter(r=>side==='pit'?twHasPit(r.st):twHasBat(r.st)) : proLogs;
+  if(!use.length) return '';
+  const head = isP
+    ? `<tr><th>年</th><th>齡</th><th style="text-align:left">球隊</th><th>G</th><th>IP</th><th>W</th><th>L</th><th>SV</th><th>HLD</th><th>SO</th><th>BB</th><th>ERA</th><th>WHIP</th></tr>`
+    : `<tr><th>年</th><th>齡</th><th style="text-align:left">球隊</th><th>G</th><th>PA</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>H</th><th>HR</th><th>RBI</th><th>BB</th><th>SB</th><th>DEF</th></tr>`;
+  const rows = use.map(r => {
+    const cS = r.inj ? 'color:var(--bad);font-weight:700;' : '';
+    const s = r.st || blankStat();
+    const yr = `<td>${settlementYearHTML(r.y,proChampionshipYear(r.y))}</td><td>${r.age}</td>`;
+    if(isP){
+      const tag = r.role ? '·'+roleN(r.role) : '';
+      const era = s.IP>0 ? baseballERA(s).toFixed(2) : '-';
+      const whip = s.IP>0 ? baseballWHIP(s).toFixed(2) : '-';
+      return `<tr style="${cS}">${yr}<td style="text-align:left;white-space:nowrap">${r.tm}${tag}</td>`+
+        `<td>${pitG(s)}</td><td>${fmtIP(s.IP)}</td><td>${s.W}</td><td>${s.L}</td><td>${s.SV||0}</td>`+
+        `<td>${s.HLD||0}</td><td>${s.SO}</td><td>${pitBB(s)}</td><td>${era}</td><td>${whip}</td></tr>`;
+    }
+    const obpN = s.PA>0 ? (s.H+s.BB)/s.PA : 0, slgN = slgOf(s);
+    const f = v => v.toFixed(3).replace(/^0/,'');
+    return `<tr style="${cS}">${yr}<td style="text-align:left;white-space:nowrap">${r.tm}${r.p?'·'+r.p:''}</td>`+
+      `<td>${s.G}</td><td>${s.PA}</td><td>${s.AB>0?f(s.H/s.AB):'-'}</td><td>${s.PA>0?f(obpN):'-'}</td>`+
+      `<td>${s.AB>0?f(slgN):'-'}</td><td>${s.AB>0?f(obpN+slgN):'-'}</td><td>${s.H}</td><td>${s.HR}</td>`+
+      `<td>${s.RBI}</td><td>${s.BB||0}</td><td>${s.SB}</td><td>${s.DEF>0?'+':''}${s.DEF||0}</td></tr>`;
+  }).join('');
+  return `<table class="fin">${head}${rows}</table>`;
+}
+export function intlTableHTML(side){
+  const d=rpIntlData(side); if(!d.rows.length)return '';
+  const rows=d.rows.map(r=>`<tr><td>${settlementYearHTML(r.year,r.rank==='冠軍')}</td>`+
+    `<td style="text-align:left;white-space:nowrap">${r.name}</td><td>${r.rank}</td>`+
+    r.txt.map(v=>`<td>${v}</td>`).join('')+`</tr>`).join('');
+  return `<table class="fin"><tr><th>年度</th><th>賽事</th><th>結果</th>`+
+    d.hd.map(h=>`<th>${h}</th>`).join('')+`</tr>${rows}`+
+    `<tr><th colspan="3">國際賽通算</th>${d.tot.map(v=>`<td>${v}</td>`).join('')}</tr></table>`;
+}
+export function rpCumData(side){ /* per-league career totals; best-of-column marks need 2+ rows */
+  const TW=twoWayView(), isP=side?side==='pit':(!TW&&S.pos==='P');
+  const order=CAREER_STAT_BUCKETS.filter(b=>S.stats[b])
+    .filter(b=>!side||(side==='pit'?twHasPit(S.stats[b]):twHasBat(S.stats[b])));
   const hd=isP?['Yrs','G','IP','W','L','SV','HLD','SO','BB','ERA','WHIP']
              :['Yrs','G','PA','AVG','OBP','SLG','OPS','H','HR','RBI','BB','SB','DEF'];
   const rows=order.map(b=>{ const st=S.stats[b];
     if(isP){
-      const era=baseballERA(st), whip=baseballWHIP(st);
-      return {b,txt:[st.yr,st.G,fmtIP(st.IP),st.W,st.L,st.SV||0,st.HLD||0,st.SO,st.BB||0,RP_F2(era),RP_F2(whip)],
-              num:[st.yr,st.G,st.IP,st.W,st.L,st.SV||0,st.HLD||0,st.SO,st.BB||0,era,whip]};
+      const era=baseballERA(st), whip=baseballWHIP(st), g=pitG(st), bb=pitBB(st);
+      return {b,txt:[st.yr,g,fmtIP(st.IP),st.W,st.L,st.SV||0,st.HLD||0,st.SO,bb,RP_F2(era),RP_F2(whip)],
+              num:[st.yr,g,st.IP,st.W,st.L,st.SV||0,st.HLD||0,st.SO,bb,era,whip]};
     }
     const obp=st.PA>0?(st.H+st.BB)/st.PA:null, slg=st.AB>0?slgOf(st):null,
           avg=st.AB>0?st.H/st.AB:null, ops=(obp!=null&&slg!=null)?obp+slg:null;
     return {b,txt:[st.yr,st.G,st.PA,RP_F3(avg),RP_F3(obp),RP_F3(slg),RP_F3(ops),st.H,st.HR,st.RBI,st.BB||0,st.SB,(st.DEF>0?'+':'')+(st.DEF||0)],
             num:[st.yr,st.G,st.PA,avg,obp,slg,ops,st.H,st.HR,st.RBI,st.BB||0,st.SB,st.DEF||0]};
   });
-  /* Yrs never marked; pitcher L/BB "best" is meaningless; ERA/WHIP take the minimum */
   const minCols=isP?{9:1,10:1}:{}, skip=isP?{0:1,4:1,8:1}:{0:1}, best={};
   if(rows.length>=2)hd.forEach((_,i)=>{ if(skip[i])return;
     const vs=rows.map(r=>r.num[i]).filter(v=>v!=null&&!(v===0&&!minCols[i]));
@@ -63,19 +104,20 @@ export function rpCumData(){ /* per-league career totals; best-of-column marks n
   rows.forEach(r=>r.best=r.num.map((v,i)=>best[i]!=null&&v===best[i]));
   return {hd,rows};
 }
-export function rpIntlData(){
-  const isP=S.pos==='P', IS=S.intlStat, il=S.intlLog||[];
+export function rpIntlData(side){
+  const TW=twoWayView(), isP=side?side==='pit':(!TW&&S.pos==='P'), IS=S.intlStat, il=S.intlLog||[];
   const walks=st=>Number.isFinite(st&&st.BB)?Math.max(0,Math.round(st.BB)):
     (Number.isFinite(st&&st.PA)&&Number.isFinite(st&&st.AB)?Math.max(0,Math.round(st.PA-st.AB)):0);
   const totalBB=Number.isFinite(IS.BB)?Math.max(0,Math.round(IS.BB)):il.reduce((n,r)=>n+walks(r.st),0);
+  const use=side?il.filter(r=>side==='pit'?twHasPit(r.st):twHasBat(r.st)):il;
   if(isP){
     return {hd:['G','IP','W','SV','SO','BB','ERA'],
-      rows:il.map(r=>{ const st=r.st; return {year:r.year,name:r.name,rank:r.rank,
-        txt:[st.G,fmtIP(st.IP),st.W,st.SV,st.SO,walks(st),RP_F2(baseballERA(st))]}; }),
-      tot:[IS.G,fmtIP(IS.IP),IS.W,IS.SV,IS.SO,totalBB,RP_F2(baseballERA(IS))]};
+      rows:use.map(r=>{ const st=r.st; return {year:r.year,name:r.name,rank:r.rank,
+        txt:[pitG(st),fmtIP(st.IP),st.W,st.SV||0,st.SO,pitBB(st),RP_F2(baseballERA(st))]}; }),
+      tot:[pitG(IS),fmtIP(IS.IP),IS.W,IS.SV||0,IS.SO,pitBB(IS),RP_F2(baseballERA(IS))]};
   }
   return {hd:['G','PA','AVG','H','HR','RBI','BB'],
-    rows:il.map(r=>{ const st=r.st; return {year:r.year,name:r.name,rank:r.rank,
+    rows:use.map(r=>{ const st=r.st; return {year:r.year,name:r.name,rank:r.rank,
       txt:[st.G,st.PA,RP_F3(st.AB>0?st.H/st.AB:null),st.H,st.HR,st.RBI,walks(st)]}; }),
     tot:[IS.G,IS.PA,RP_F3(IS.AB>0?IS.H/IS.AB:null),IS.H,IS.HR,IS.RBI,totalBB]};
 }
@@ -100,23 +142,20 @@ export function rpOrgOf(r){ /* org team + league + level label for one pro-log r
   }
   return {team:tm,lg,lvl,minor:lvl!=='一軍'&&lvl!=='大聯盟'};
 }
-export function rpProData(proLogs){ /* team segments: a new block whenever the org changes */
-  const isP=S.pos==='P';
+export function rpProData(proLogs,side){ /* team segments: a new block whenever the org changes */
+  const TW=twoWayView(), isP=side?side==='pit':(!TW&&S.pos==='P');
   const hd=isP?['G','IP','W-L','SV','HLD','SO','BB','ERA','WHIP']
              :['G','PA','AVG','OBP','SLG','OPS','H','HR','RBI','BB','SB','DEF'];
   const blocks=[]; let cur=null;
-  proLogs.forEach(r=>{ const o=rpOrgOf(r);
+  (side?proLogs.filter(r=>side==='pit'?twHasPit(r.st):twHasBat(r.st)):proLogs).forEach(r=>{ const o=rpOrgOf(r);
     if(!cur||cur.team!==o.team||cur.lg!==o.lg){ cur={team:o.team,lg:o.lg,rows:[]}; blocks.push(cur); }
     const s=r.st||blankStat(); let txt,era=null,ops=null;
     if(isP){ era=baseballERA(s);
-      txt=[s.G,fmtIP(s.IP),`${s.W}-${s.L}`,s.SV||0,s.HLD||0,s.SO,s.BB||0,RP_F2(era),RP_F2(baseballWHIP(s))];
+      txt=[pitG(s),fmtIP(s.IP),`${s.W}-${s.L}`,s.SV||0,s.HLD||0,s.SO,pitBB(s),RP_F2(era),RP_F2(baseballWHIP(s))];
     } else { const obp=s.PA>0?(s.H+s.BB)/s.PA:null, slg=s.AB>0?slgOf(s):null;
       ops=(obp!=null&&slg!=null)?obp+slg:null;
       txt=[s.G,s.PA,RP_F3(s.AB>0?s.H/s.AB:null),RP_F3(obp),RP_F3(slg),RP_F3(ops),s.H,s.HR,s.RBI,s.BB||0,s.SB,(s.DEF>0?'+':'')+(s.DEF||0)];
     }
-    /* level cell carries the season's role: fielding position for batters (一軍·CF),
-       SP/MR/CL for pitchers (一軍·先發). r.p is already the position actually played,
-       so a forced-DH season reads as DH here exactly as it does in the in-game table. */
     const dp=isP?(r.role?roleN(r.role):''):(r.p||'');
     cur.rows.push({y:r.y,champ:proChampionshipYear(r.y),age:r.age,lvl:o.lvl+(dp?'·'+dp:''),minor:o.minor,
       inj:!!r.inj,txt,sv:s.SV||0,era,hr:s.HR||0,ops});
@@ -136,19 +175,23 @@ export function rpProData(proLogs){ /* team segments: a new block whenever the o
     else { if(bHR>0&&r.hr===bHR)r.best[7]=true; if(r.ops!=null&&r.ops===bOPS)r.best[5]=true; } }));
   return {hd,blocks};
 }
-export function rpSalaryData(proLogs){
-  const isP=S.pos==='P';
+export function rpSalaryData(proLogs,side){
+  const TW=twoWayView(), isP=side?side==='pit':(!TW&&S.pos==='P');
   const hd=isP?['年薪','G','IP','W-L','SV','ERA']
              :['年薪','G','PA','AVG','HR','RBI','OPS'];
   const rows=(proLogs||[]).map(r=>{ const s=r.st||blankStat(),o=rpOrgOf(r);
+    const has=side?(side==='pit'?twHasPit(s):twHasBat(s)):true;
+    const pay=Number.isFinite(r.salary)?fmtMoney(Math.round(r.salary)):'—';
     let txt;
-    if(isP){
-      txt=[Number.isFinite(r.salary)?fmtMoney(Math.round(r.salary)):'—',s.G,fmtIP(s.IP),`${s.W}-${s.L}`,s.SV||0,RP_F2(baseballERA(s))];
+    if(!has){ txt=[pay].concat(hd.slice(1).map(()=>'-')); }
+    else if(isP){
+      txt=[pay,pitG(s),fmtIP(s.IP),`${s.W}-${s.L}`,s.SV||0,RP_F2(baseballERA(s))];
     }else{
       const obp=s.PA>0?(s.H+s.BB)/s.PA:null,slg=s.AB>0?slgOf(s):null,ops=(obp!=null&&slg!=null)?obp+slg:null;
-      txt=[Number.isFinite(r.salary)?fmtMoney(Math.round(r.salary)):'—',s.G,s.PA,RP_F3(s.AB>0?s.H/s.AB:null),s.HR||0,s.RBI||0,RP_F3(ops)];
+      txt=[pay,s.G,s.PA,RP_F3(s.AB>0?s.H/s.AB:null),s.HR||0,s.RBI||0,RP_F3(ops)];
     }
-    return {y:r.y,age:r.age,team:o.team,lvl:o.lvl+(isP&&r.role?'·'+roleN(r.role):!isP&&r.p?'·'+r.p:''),inj:!!r.inj,
+    const dp=isP?(r.role?roleN(r.role):''):(r.p||'');
+    return {y:r.y,age:r.age,team:o.team,lvl:o.lvl+(dp?'·'+dp:''),inj:!!r.inj,
       pay:Number.isFinite(r.salary)?Math.round(r.salary):null,txt};
   });
   /* 合約分段：用付薪當下標記的 ctId 分組，每一份合約都自成一段——包含單年約。
@@ -174,28 +217,35 @@ export function rpSalaryData(proLogs){
   }
   return {hd,rows};
 }
+export function endingPos(){ return twoWayView()?'TW':S.pos; }
 export function nextGameEnding(pos){
   /* 先固定球員身分再組文，結果不留下括號候選字或不連貫的守位敘事。 */
-  const pitcher=pos==='P';
-  const role=pitcher
+  const role=pos==='TW'
+    ?{strain:'踏地與滑壘',first:'第一局，你投出了一次三振；第三局，你打出一支平凡的一壘安打。',
+      realize:'站上一壘、把護肘交給壘指導的那一刻，你忽然發現——'}
+    :pos==='P'
     ?{strain:'踏地',first:'第一局，你投出了一次三振。',realize:'回投手丘整理狀態時，你忽然發現——'}
     :{strain:'滑壘',first:'第一打席，你打出一支平凡的一壘安打。',realize:'站上一壘的那一刻，你忽然發現——'};
   return {title:'下一場比賽',body:`沒有鎂光燈，沒有滿場的觀眾。你揹著有點髒的球具袋，走進了休息室。<br>休息室裡有的孩子，才剛從大學畢業，眼裡依舊閃耀著對職業的嚮往。<br>你想起他們看見你的時候，眼神滿是詫異，然後有人小聲地說出你的名字——那個曾經出現在球員卡上、出現在運動報紙頭版的名字。<br>那天，休息室變成了一個小小的簽名會。<br>球衣是獨立聯盟的，胸前印著的贊助商是巷口的居酒屋。號碼隨便發的，不是你打了十幾二十年的那一個。<br>你花了比以前更久的時間纏繃帶。膝蓋在陰雨天會提醒你，它記得所有你想忘記的${role.strain}。<br>比賽在下午三點開打。觀眾席上坐著幾位家長、一隻在陰影下打盹的狗，還有一個推著冰品車、順便看球的老先生。<br>依然有幾個熱情球迷，從年輕時就追著你的比賽。你引退了，他們也有時間了，依然常常到場舉著毛巾，唱著你的應援曲。<br>${role.first}沒有人歡呼，只有隊友在休息區敲了敲欄桿。<br>${role.realize}<br>心跳的頻率，和十六歲那年第一次踏上甲子園，一樣。<br>七局下，兩出局，一分落後。輪到一個剛從大學畢業的孩子打擊。<br>他在打擊區裡緊張到握棒的手在抖。你在後面喊了一聲他的名字，說：「看你想看的那顆就好。」<br>他真的等到了。球飛過中外野手的頭頂，落地那一秒，整支球隊像瘋了一樣衝出休息區。<br>沒有轉播、沒有慢動作重播、沒有隔天的體育報頭條。<br>但那個孩子在二壘上，笑得像剛被十二球團指名。<br>比賽結束後，大家蹲在地上一起收壘包、拔起邊線的木樁。你把整理好的球具搬上車，動作熟練得像做過一千次。<br>那個孩子跑過來，有點害羞地問你：「前輩，你為什麼還要打？」<br>你想了很久。<br>想到那些傷、那些被下放的季節、那些在二軍球場等待電話的夜晚。想到最後一場職業賽，你在休息區把帽子壓得很低，怕被拍到。<br>然後你把袋子的拉鍊拉上，說：<br>「因為明天還有下一場。」<br>天暗下來了。已經不是職業了，球場只剩下一盞燈。<br>你回頭看了一眼。<br>紅土被今天的雨打得有點坑漥，明天早上得先整理一下。<br>——你的球員生涯結束了。<br>你的棒球，還沒有。`};
 }
 export function nextBaseEnding(pos){
-  const memory=pos==='P'
+  const memory=pos==='TW'
+    ?'你想到了那些被敲出的全壘打，也想到了那些揮空的最後一個打席。同一場比賽裡，你有時候是投丟的那個，有時候是揮空的那個——輸球的理由，你比別人多了一倍。'
+    :pos==='P'
     ?'你想到了那些被敲出的全壘打。你蹲在投手丘上，看著對方從休息室出來歡呼。'
     :'你想到了最後一個打席的三振、接殺、觸殺。投手振臂，而你只是低下了頭，盯著自己的球棒。';
   return {title:'下一個壘包',body:`星期六早上八點，你開車載著小孩去球場。<br><br>和之前不同，這次去的球場不是那種有轉播車、場地整理得漂漂亮亮的球場，而是一個內野紅土有點坑坑洞洞、外野草皮有點禿，甚至因為跟成人共用場地，全壘打牆是用護欄與帆布架起的臨時全壘打牆。<br><br>就跟你小時候常去的球場一樣。<br><br>你把小孩送去集合，孩子的教練看到是你，想要過來打招呼致意。你對他搖了搖頭，示意他你只是一個家長而已。接著你就和其他家長一樣，坐到場邊的鐵板凳觀眾席（當然也引起了一陣騷動）。<br><br>比賽開始，你才發現看自己的小孩打球，比自己上場緊張一百倍。<br><br>你以前站在滿場的球場裡都不會抖，現在你兒子站上打擊區，你的手心居然在流汗。<br><br>第一打席，三振。他懊惱地盯著自己的球棒，那表情你在看自己過往的影片時常看到。<br><br>第二打席，他打了一顆滾地球穿出了二遊，形成了安打。你差點站起來大叫，但你只是用力鼓了幾下掌。<br><br>站上一壘之後，他在壘包上偷偷往你這邊看了一眼，對你比了一個 Ya。<br><br>你比了一個手勢——那是打得好的意思。<br><br>那是你爸以前對你比的手勢。你到現在才知道，原來這個動作是會傳下去的。<br><br>六局下半，最後的半局進攻，他被夾殺在二、三壘之間，比賽結束。<br><br>跑回來，跑過去，最後被觸殺出局。他坐在紅土上，很久沒有站起來。<br><br>旁邊有的家長發出遺憾的嘆氣，有的大聲鼓勵場上的小球員。<br><br>而你只是看著那個坐在紅土上的背影，什麼也沒說。<br><br>比賽結束後，回家的路上他一直沒講話。一直到你停好車，要幫他把球具搬下車之前，孩子才小聲地問：「爸，你之前的比賽，有像這樣因為你，而輸掉比賽嗎？」<br><br>「有啊。」<br><br>「幾次？」<br><br>${memory}<br><br>「我猜應該有個一兩百次吧。」<br><br>他抬起頭看你，眼睛終於亮了一點：「那麼多？真的假的？」<br><br>「真的。」你把他頭上的棒球帽戴正：「重點不是你這次的失誤，而是你這次失誤之後，你下次還敢不敢嘗試。」<br><br>吃完了飯，你的孩子拉著你，在地上擺了兩本書，要你陪他練習觸殺的 Case。<br>你偶爾認真，偶爾放他一馬。在某次的練習中，你看著他從你的手套邊緣逃掉。明明只是在小小的客廳，你卻感覺和他的距離愈來愈遠。<br><br>——你的職業生涯結束了。<br>但棒球的未來，還在繼續跑向下一個壘包。`};
 }
 export function jerseyWeightEnding(pos){
-  const painfulMemory=pos==='P'
+  const painfulMemory=pos==='TW'
+    ?'你在國際賽最後一局被一發全壘打超前，而九局下半站上打擊區的也是你，最後一個出局數同樣掛在你身上'
+    :pos==='P'
     ?'你在國際賽最後一局被一發全壘打超前'
     :'你在國際賽最後一局漏接一顆平飛球';
   return {title:'球衣的重量',body:`國家隊的辦公室，冷氣吹著，但你卻滿頭大汗，看著桌上堆著三十幾份球員資料。<br><br>你接下這個位子的那天，記者問你：「壓力會不會很大？」<br><br>你說：「還好。」<br><br>其實你回家之後失眠了四個晚上。<br><br>集訓第一天，你站在球員面前。<br><br>眼前這些人，有的在美國打球，有的是聯盟的全壘打王，有的還是才剛進職棒。他們有各自的球隊、各自的教練、各自的習慣。接下來幾個星期，你要讓他們變成同一支球隊。<br><br>你沒有講什麼熱血的話。你只說了三件事：<br><br>「第一，恭喜你們要代表國家出賽。」<br><br>「第二，就算在集訓階段被淘汰，你們也是很棒很棒的球員，只要全力以赴就好。」<br><br>「第三，如果你上場的時候手在抖，那很好。要永遠記住身上這件球衣的重量。」<br><br>集訓開始，你除了帶球隊，還要觀察那些仍在海外、不能即時回國參加集訓的選手狀況。<br><br>到了熱身賽，你們打了國內季外無敵的強隊，也對上提早來日本準備的其他國家隊，有勝有敗。不變的是，永遠都有記者拍著你在休息室苦惱的樣子。<br><br>你想起十九歲第一次入選青棒國家隊，那時候你站在最邊邊，緊張到國歌唱錯字。你想起有一年，${painfulMemory}，回國之後有半年不敢看網路。<br><br>你也想起那些沒被選上的人。那些跟你一樣努力，只是差一點的人。<br><br>那件球衣，其實不只是你的。<br><br>八強戰，第九局，一分落後，兩出局，二、三壘有人。<br><br>上來的是個剛旅外的孩子，臉上還充滿著稚氣。<br><br>還有你也曾經擁有過的企圖心。<br><br>「換代打嗎？這是他第一次一級國際賽，沒什麼經驗，前面打擊也沒有安打……」<br><br>「我之前很多經驗時還不是會輸球。」你搖了搖頭：「看看他的表情，讓他打，我扛。」<br><br>投手投出第一顆球，他奮力一揮。<br><br>那顆球飛得不高，但夠遠。<br><br>落地的時候，休息區的人全部衝出去。你站在原地沒有動，只是把帽子壓低了一點，怕鏡頭拍到。<br><br>因為你眼眶熱了。<br><br>不是為了這場勝利，是為了那個孩子——他剛剛完成的，是你年輕時沒能完成的事。<br><br>賽後訪問，記者問你：「教練，你覺得這支球隊最強的是什麼？」<br><br>你想了想。<br><br>「不是速度，也不是打擊。」<br><br>「是他們每一個人，身上的球衣，有日本的重量，更有日本的力量。」<br><br>回程的飛機上，大家都睡了。<br><br>距離日本還很遠，但你卻睡不著。<br><br>你想到那些年，你每一次參加國家隊。你知道這會讓你那年的賽季比較辛苦，也知道可能會影響你的未來。<br><br>但你永遠義無反顧、全力以赴，就跟這些已經睡著的孩子一樣。<br><br>因為你知道，身上這件球衣代表著什麼。<br><br>而你把這件球衣傳承下去，就和前輩傳承給你一樣。`};
 }
 export function lateAnswerEnding(pos){
-  const pitcher=pos==='P';
+  const pitcher=pos==='P'||pos==='TW';
   const text=pitcher?`退役後，你沒有投入教職，也沒有進入球團。
 
 你只是日以繼夜在思考，怎麼樣彌補你的遺憾。
@@ -445,14 +495,312 @@ export function lateAnswerEnding(pos){
 而你用剩下的人生，把那個答案找了出來，交給了下一個人。`;
   return {title:'遲到的答案',body:text.trim().replace(/\r?\n\s*\r?\n/g,'<br><br>').replace(/\r?\n/g,'<br>')};
 }
+/* ── 二刀流的結局 ──
+   走完二刀流的人，引退時最該被講的就是這件事，所以它在結局卡池裡佔一半
+   （作法跟 lateAnswer 的兩倍權重同源：把同一個 key 塞進去多份）。
+
+   三種結局由狀態決定，不擲骰：
+     · 撐到衰退期都還是二刀流   → 〈全部的棒球〉
+     · 衰退之前被收斂、留下打擊 → 〈我留下的那一半〉
+     · 衰退之前被收斂、留下投球 → 〈另外那一半〉
+   「衰退之前」的界線跟 phases.js 的衰退判定同一條：declAge >= 32，
+   而 declAge 是實際年齡扣掉自律狂的兩年，所以真實年齡的門檻是 32（自律狂 34）。
+   撐過那條線之後才停止投打兼修的人算走完全程——他不是放棄，是身體到了。 */
+export function declineStartAge(){ return 32+((S.traits&&S.traits.disc)?2:0); }
+export function twoWayEndingKey(){
+  if(!((S.twSeasons||0)>0))return null;        /* 從來沒有真的以二刀流打完任何一個球季 */
+  if(S.pos==='TW')return 'twAll';              /* 一路走到引退 */
+  if(!S.twFell)return 'twAll';                 /* 有二刀流球季但沒被收斂過 */
+  if((S.twFellAge||0)>=declineStartAge())return 'twAll';  /* 撐過衰退線才停，算走完 */
+  return S.twFell==='pit'?'twHalfPit':'twHalfBat';        /* 收斂後留下的那一邊 */
+}
+/* 長文轉 HTML：空行變段落，單行換行變 <br>。與 lateAnswerEnding 同一套。 */
+function proseBody(text){
+  return text.trim().replace(/\r?\n\s*\r?\n/g,'<br><br>').replace(/\r?\n/g,'<br>');
+}
+export function twoWayAllEnding(){
+  return {title:'全部的棒球',body:proseBody(`
+你剛進職業的時候，沒有人相信這件事能成。
+
+會議室裡，三位教練輪流跟你談話，內容大同小異：
+
+「你投球有潛力，但打擊也不差。我們希望你先專心一邊。」
+
+你問：「一定要選嗎？」
+
+「不然你會兩邊都不成。」
+
+你說：「那我兩邊都要。」
+
+從此之後，你的行程表跟別人不一樣。
+
+別人牛棚練完就收工，你還要去打擊籠。別人打擊練習結束可以休息，你要去做投球後的恢復。
+
+你的一天比別人多了三個小時，睡眠比別人少兩個小時。
+
+當你每次有一邊的表現低潮時，總會有人說：「他應該要專心了。」
+
+更多人說的是：「不自量力。」
+
+那天你投完球，手臂沉得像灌了水泥，然後還要站上打擊區。第一球你連球都沒看清楚。
+
+你在休息室裡坐了很久，教練走過來，沒有罵你，只說了一句：
+
+「累就說。」
+
+你說：「不累。」
+
+其實你的手在抖。
+
+但你想起小時候第一次拿到手套跟球棒，你根本沒想過要選一個。
+
+你只是想打棒球。全部的棒球。
+
+然後有一天，一切開始不一樣了。
+
+六月的某一場，你先發九局失一分，同一場自己打出兩分砲。
+
+比賽結束的時候，全場的人站著沒有離開。
+
+主播在轉播裡說了一句後來被剪了幾萬次的話：
+
+「各位觀眾，我們今天看到的，可能是我們這輩子只會看到一次的事。」
+
+生涯結束那天，記者問你：「你覺得你證明了什麼？」
+
+你想了很久。
+
+「我沒有要證明什麼。」
+
+「我只是不想把自己切成一半。」
+
+多年後，某個少年在受訪時說，他想投球也想打擊。
+
+記者問他：「不會太貪心嗎？」
+
+他說：「不會啊。以前有人做到過。」`)};
+}
+export function twoWayHalfBatEnding(){
+  return {title:'我留下的那一半',body:proseBody(`
+你放棄二刀流的那天，天氣很好。
+
+沒有記者會，沒有聲明稿。只是訓練結束後，你走進教練辦公室，坐下來，說：
+
+「我專心打擊就好。」
+
+教練看著你，很久沒說話。最後他說：「好。」
+
+你們都沒有提那句「早就跟你說過了」。
+
+你試了四年。
+
+四年裡，你的手肘發炎過兩次。
+
+你投球的時候在想打擊，打擊的時候手臂在痛。
+
+你知道自己每一邊都停在一個位置——那個位置叫「差一點」。
+
+而職業球場上，「差一點」是最殘忍的四個字。它不會讓你被淘汰，只會讓你一直留在原地，看著別人走過去。
+
+最後讓你決定的，是一場很普通的比賽。
+
+你先發，三局掉四分。走下投手丘的時候，你聽見自己的呼吸聲比心跳大。
+
+那天晚上你坐在球員宿舍的床邊，打開手機，看著自己高中時的影片。
+
+畫面裡那個十七歲的你，投完球跑回休息區，笑得很大聲。
+
+你看著看著，忽然很安靜地想通一件事：
+
+你不是撐不下去。
+
+你是終於願意承認，你其實比較擅長其中一邊。
+
+專心打擊的第一年，你打出生涯新高。
+
+不是因為變強了，是因為——
+
+你的腦袋終於只剩下一件事。
+
+你可以整個賽前都在研究對方投手，而不是在想自己明天要投幾球。你可以在打擊練習裡多留三十分鐘，而不必去做恢復。
+
+你第一次知道，專心是什麼感覺。
+
+但有件事你從來沒跟別人說過。
+
+每次比賽前，你都會一個人走去牛棚外面站一下。
+
+不做什麼，就站著，看別人投球。
+
+有一次被隊友撞見，問你在幹嘛。
+
+你說：「沒事，吹風。」
+
+生涯最後一年，記者問你：「會不會後悔那四年？」
+
+你搖頭。
+
+「那四年我什麼都沒得到。」
+
+「但我因為投過球，所以我知道投手在想什麼。」
+
+「兩好球之後，他手指怎麼放、肩膀怎麼開、他今天哪一顆球沒信心——這些不是打者教練教我的。」
+
+「是我自己站在那裡，投過幾百顆之後才知道的。」
+
+記者笑：「所以那四年還是有用。」
+
+你說：
+
+「不是有用。是那四年變成了我。」
+
+退休後，你回去看母校比賽。
+
+有個孩子跑來問你：「前輩，我兩邊都想做，可是大家都叫我選一個。」
+
+你蹲下來，跟他一樣高。
+
+「你會很累。」
+
+「我知道。」
+
+「而且你可能會失敗。」
+
+他愣了一下。
+
+你拍拍他的肩膀，說：
+
+「但是你試過以後，就算最後只留下一半——」
+
+「那一半，也會比別人的一半厚。」`)};
+}
+export function twoWayHalfPitEnding(){
+  return {title:'另外那一半',body:proseBody(`
+你放棄二刀流的那天，是在打擊練習的中途。
+
+你揮了一球，沒中。再一球，又沒中。
+
+打擊教練在後面說：「你的手在痛齁。」
+
+你沒有回答。
+
+那天晚上你去敲教練辦公室的門，坐下來說：
+
+「我專心投球就好。」
+
+教練點點頭，什麼都沒多問。
+
+你走出去的時候，把球棒袋留在那裡沒有帶走。
+
+你試了四年。
+
+四年裡，你的手肘發炎兩次。你的球速一直卡在某個數字上不去，因為投球隔天你還要打擊，恢復永遠做不完整。
+
+而你的成績是兩邊都「還可以」。
+
+而在職業球場上，「還可以」是最安靜的死法——沒有人會淘汰你，只是也沒有人會為你騰出位置。
+
+最後讓你決定的，是一顆你打不到的球。
+
+那場比賽，對方的終結者投了一顆外角滑球。
+
+你連揮的動作都做不完整，因為你的手肘在出棒的瞬間刺痛了一下。
+
+你站在打擊區裡，看著那顆球進到捕手手套。
+
+然後你忽然想到——
+
+如果那顆球是我投的，該有多好。
+
+那一刻你就知道了。
+
+你不是撐不下去。你是心裡早就有答案，只是不敢承認。
+
+然後你放棄的那一年，你的投球成績馬上就有所突破。
+
+不是因為你變強了，是因為——
+
+你終於可以睡飽。
+
+你可以把賽後恢復做完整，可以把牛棚的每一顆球都投到有意義，可以在賽前一整天都只想同一個打者。
+
+你第一次知道，專心是什麼感覺。
+
+但有件事你從來沒跟別人說過。
+
+每次到客場，你都會在賽前一個人走進打擊籠。
+
+不揮棒，就站在打擊區裡，看著投手丘。
+
+有一次被隊友撞見，問你在幹嘛。
+
+你說：「沒事，吹一下風。」
+
+打擊籠裡沒有風。
+
+你比別的投手多了一樣東西。
+
+滿球數的時候，投手教練會出來問你要投什麼。
+
+你總是知道。
+
+因為你站在打擊區裡幾百次，你知道兩好三壞的時候，打者的腦袋裡有多吵。你知道他其實只想等一顆，也知道他不敢等——因為他怕被三振的樣子被拍下來。
+
+你知道當一個打者往前站半步，那不是準備攻擊，是心虛。
+
+有一次捕手問你：「你怎麼都猜得到他要幹嘛？」
+
+你笑了笑：「我不是猜的。」
+
+「我當過他。」
+
+生涯最後一年，記者問你：「會不會後悔那四年？」
+
+你搖頭。
+
+「那四年我成績很爛。」
+
+「但我因為打過球，所以我知道站在那裡有多害怕。」
+
+「我知道哪一種球會讓打者晚上睡不著。不是因為它多快，是因為他不知道下次還會不會出現。」
+
+記者笑：「所以那四年還是有用。」
+
+你說：
+
+「不是有用。是那四年變成了我。」
+
+退休後，你回去看母校比賽。
+
+有個孩子跑來問你：「前輩，我兩邊都想做，可是大家都叫我選一個。」
+
+你蹲下來，跟他一樣高。
+
+「你會很累。」
+
+「我知道。」
+
+「而且你可能會失敗。」
+
+他愣了一下。
+
+你拍拍他的肩膀：
+
+「但你試過以後，就算最後只留下一半——」
+
+「你也會知道另外一半在想什麼。」`)};
+}
 export const POST_CAREER_ENDINGS={
   coach:{title:'還在同一片草皮上',body:`球具掛上牆的那天，你以為告別就此完成。<br><br>隔年春訓，你卻換了一件寫著自己名字、卻沒有背號意義的球衣，重新走進熟悉的休息區。手套換成了記事本，揮棒換成了一句句在耳邊的提醒。<br><br>你會在深夜看完三十球的慢動作重播，只為了告訴某個菜鳥：「你的前腳，早了0.2秒。」<br><br>有人說教練是站在光後面的人。但當你看著那個曾經笨拙的孩子，在滿場歡聲中繞過本壘，你忽然明白——<br><br>你從來沒有離開過球場，只是換了一種方式，繼續打球。`},
   scout:{title:'在無人的看台上',body:`你的辦公室，是一張又一張空蕩蕩的鐵椅。<br><br>地方高校、大學野球、社會人的紅土球場。你帶著測速槍與一本翻爛的筆記本，跑遍那些沒有轉播、沒有掌聲的角落。<br><br>大多數時候，你什麼也沒找到。但偶爾，在某個午後的第七局，會有一顆球從陌生少年的手中飛出，讓你在筆記本上重重畫下一個圈。<br><br>沒有人會記得球探的名字。若干年後，當那個少年站上日職一軍的投手丘，鏡頭只會拍到他。<br><br>但你會坐在電視機前，安靜地笑一下。<br><br>有些人負責發光，有些人負責——在天亮以前，先看見光。`},
   grassroots:{title:'紅土上的第一步',body:`你回到了故鄉的小學。<br><br>球隊只有十四個人，手套是別人捐的，午餐要靠家長輪流準備。你教他們的第一件事，不是揮棒，是把球具排整齊。<br><br>這裡不會有選秀，不會有合約，不會有滿場的加油聲。有的只是每天放學後那兩個小時，和一整片被夕陽曬得溫熱的紅土。<br><br>有些孩子會走得很遠，有些孩子明年就不打了。你都送到路口為止。<br><br>多年後，某個穿著職業球衣的年輕人，在採訪中被問到誰影響他最深。<br><br>他想了想，說出了一個沒有人聽過的名字。<br><br>那是你，還有那片，永遠等著下一批孩子的紅土。`},
-  nextBase:()=>nextBaseEnding(S.pos),
-  jerseyWeight:()=>jerseyWeightEnding(S.pos),
-  lateAnswer:()=>lateAnswerEnding(S.pos),
-  nextGame:()=>nextGameEnding(S.pos),
+  nextBase:()=>nextBaseEnding(endingPos()),
+  jerseyWeight:()=>jerseyWeightEnding(endingPos()),
+  lateAnswer:()=>lateAnswerEnding(endingPos()),
+  nextGame:()=>nextGameEnding(endingPos()),
+  twAll:()=>twoWayAllEnding(),
+  twHalfBat:()=>twoWayHalfBatEnding(),
+  twHalfPit:()=>twoWayHalfPitEnding(),
   otherAngle:{title:'另一個角度',body:`走進球場時，你還是逕直走向休息室，只是你身上穿的已經不是球衣了。<br>守衛看你一眼，什麼也沒問就讓你過去。你的證件掛在胸前，上面寫著「解説」。<br>下午四點，打擊練習。<br>你站在護網後面，跟以前一樣看著球飛。差別只在於，現在你手上拿的是筆記本，穿的是西裝。<br>「前輩！」有人在你背後喊。是那個去年才升上一軍的內野手。<br>「手怎麼樣？」<br>「還好啦，就有點腫。」他把手舉起來給你看，指節有點變形。「監督說今天先讓我打 DH。」<br>你點點頭，在本子上寫了一行字。這是解説的工作——不是為了講出來，是為了知道「什麼時候不要講」。<br>你又晃去牛棚，跟投手教練閒聊三分鐘。你問今天誰不能用，他說了兩個名字，然後補一句：「別講喔。」<br>「我知道。」你說。你當然知道。你以前也是那個「別講喔」的人。<br>下午六點四十，放送席。<br>主播已經坐好了，看到你笑：「今天有料嗎？」<br>「有一點。但都不能講。」<br>主播笑了，他知道這句話的意思，他也不深問。<br>比賽開始。<br>一局上，第一棒打了一顆看似平凡的右外野飛球。<br>主播：「這只是個平凡的飛球——哇，出牆了！」<br>你：「仰角略高，但今天這個球場有風，把距離帶走了。」<br>五局，滿壘。<br>主播：「這球呢？這球呢？」<br>你：「感覺很有機會，只是很可惜，有點切到棒頭了。」<br>你看著主播越講越急，而你只是從放送席看著那個你很熟悉的球場，只是用一個很不熟悉的角度。<br>七局，那個手指腫起來的內野手站上打擊區。<br>主播：「他今天打 DH，狀況看起來還不錯耶。」<br>你頓了半秒。<br>「嗯，不錯。」<br>球數兩好三壞，他咬中一顆外角速球，打向右外野，落地形成二壘安打。整個休息區跳起來。<br>主播：「這球！這球！漂亮！」<br>你在麥克風前笑了一下，說：「這球打得很好。」<br>你沒說的是：他今天連握棒都會痛，這支安打是他忍著打的。<br>有些事情不用說出來，才是對場上那個人最好的尊重。<br>九局結束。<br>你收好耳機，走出放送席，下樓的時候剛好遇到那個內野手，手上冰敷袋纏得像個白糰子。<br>「前輩，我今天那支——」<br>「我知道。」你說，「打得很好。」<br>他愣了一下，然後笑得像個大學生。<br>隔天，有球迷剪了一段主播的實況精華，後面疊上你那冷靜的解説，配字：<br>「這只是個平凡的飛球。」<br>底下最高讚的留言寫著：<br>「主播講平凡，不一定平凡，但這個解説的每一句話，都像是預言。」<br>——你不在場上了。<br>但你知道每一顆球，究竟平不平凡。`}
 };
 export const SECOND_CAREER_ENDINGS=[
@@ -468,7 +816,7 @@ export const SECOND_CAREER_ENDINGS=[
 export function usesSecondCareerEnding(age){ return Number(age)<25; }
 export const ADKING_FAN_COMMENT='打開電視每幾分鐘就要看到他一次，去超商也會看到他的臉，退休之後會不會更常出現呢？';
 export function oldGhostLongCareerComment(pos){
-  return `今年新人大物引退時，${pos==='P'?'先發投手':'第四棒'}{n}`;
+  return `今年新人大物引退時，${pos==='TW'?'二刀流':pos==='P'?'先發投手':'第四棒'}{n}`;
 }
 export function postCareerEndingKeys(tiers,kids,internationalAppearances){
   const childCount=kids===undefined
@@ -483,6 +831,11 @@ export function postCareerEndingKeys(tiers,kids,internationalAppearances){
   if(internationalCount>0)keys.push('jerseyWeight');
   /* 符合傷病條件時放入兩份，讓本結局相對每個其他結局具有兩倍抽選權重。 */
   if((S.traits&&S.traits.glass)||Number(S.tjCount||0)>=3)keys.push('lateAnswer','lateAnswer');
+  /* 二刀流的結局佔一半：塞進與「其餘全部」等量的份數，抽中機率正好 50%。
+     不管走完還是中途放棄都一樣重——那段路是這個人最定義自己的事。
+     用 keys.length 而不是寫死份數，所以之後新增其他結局也不會把比例洗掉。 */
+  const tw=twoWayEndingKey();
+  if(tw){ const half=keys.length; for(let i=0;i<half;i++)keys.push(tw); }
   return keys;
 }
 export function postCareerEnding(tiers,roll){
@@ -510,18 +863,20 @@ export function retireScene(tiers){
   const t=tiers&&tiers[lg], i=t?t.i:4;
   let txt='';
   if(lg==='CPBL'){
-    if(i===0)txt=`引退戰選在<b class="hl">臺北大巨蛋</b>。四萬人把巨蛋塞得水洩不通，外野看板掛滿你生涯每一年的照片。${S.pos==='P'?'九局，你走完這場先發最後一個出局數':'九局下最後一個打席結束'}，全場燈光暗下，只剩一道追光打在你身上——隊友哭成一團，對手全員列隊脫帽，應援團在二壘後方唱起你的應援曲慢版。你繞場一周，把手套輕輕放在本壘板上。隔天台灣報紙寫：這是中職近年最轟動的一場日本人洋將引退。`;
-    else if(i===1)txt=`球團為你舉辦了引退儀式。主場滿場，大螢幕播放生涯回顧影片，從高校歲月到${S.pos==='P'?'職棒初登板':'職棒初安打'}，一幕一幕。老隊友從各地回來替你獻花，總教練在致詞時哽咽到說不下去。最後你脫下球帽向四個方向的看板深深鞠躬，應援團的鼓聲直到你走進休息室都沒有停。`;
-    else if(i===2)txt=`${S.pos==='P'?'球季最後一個主場日，球團安排你先發登板。投完第一局後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你投出的每一顆全力的球」。':'球季最後一個主場日，球團安排你先發打第一棒。第一個打席結束後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你的每一次全力奔跑」。'}`;
+    if(i===0)txt=`引退戰選在<b class="hl">臺北大巨蛋</b>。四萬人把巨蛋塞得水洩不通，外野看板掛滿你生涯每一年的照片。${twoWayView()?'九局，你投完最後一個出局數，也打完最後一個打席':S.pos==='P'?'九局，你走完這場先發最後一個出局數':'九局下最後一個打席結束'}，全場燈光暗下，只剩一道追光打在你身上——隊友哭成一團，對手全員列隊脫帽，應援團在二壘後方唱起你的應援曲慢版。你繞場一周，把手套輕輕放在本壘板上。隔天台灣報紙寫：這是中職近年最轟動的一場日本人洋將引退。`;
+    else if(i===1)txt=`球團為你舉辦了引退儀式。主場滿場，大螢幕播放生涯回顧影片，從高校歲月到${twoWayView()?'職棒初登板與職棒初安打':S.pos==='P'?'職棒初登板':'職棒初安打'}，一幕一幕。老隊友從各地回來替你獻花，總教練在致詞時哽咽到說不下去。最後你脫下球帽向四個方向的看板深深鞠躬，應援團的鼓聲直到你走進休息室都沒有停。`;
+    else if(i===2)txt=`${twoWayView()?'球季最後一個主場日，球團安排你先發登板，並且排在打線的第四棒。投完第一局、打完第一個打席後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你替我們站上兩個位置」。':S.pos==='P'?'球季最後一個主場日，球團安排你先發登板。投完第一局後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你投出的每一顆全力的球」。':'球季最後一個主場日，球團安排你先發打第一棒。第一個打席結束後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你的每一次全力奔跑」。'}`;
     else txt=`你在球團官網的一則新聞稿裡宣布引退。發文的那個晚上，還是有幾十個老球迷湧進你的社群留言：「辛苦了」。職業棒球就是這樣——不是每個人都有儀式，但每個認真打過球的人，都有人記得。`;
   }else if(lg==='NPB'){
     const stadium=npbStadium(S.orgTeam||capTeam('NPB'));
-    if(i===0)txt=`引退戰選在<b class="hl">${stadium}</b>。滿場把看台塞到通道，外野看板掛滿你生涯每一年的照片。${S.pos==='P'?'九局，你走完這場先發最後一個出局數':'九局下最後一個打席結束'}，全場燈光暗下，只剩一道追光打在你身上——隊友沿著邊線列隊，對手脫帽敬禮，應援團在外野唱起你的應援曲慢版。你繞場一周，把手套輕輕放在本壘板上。隔天所有體育報頭版都是同一句話：這是日職近年最隆重的一場<b class="hl">引退試合</b>。`;
+    if(i===0)txt=`引退戰選在<b class="hl">${stadium}</b>。滿場把看台塞到通道，外野看板掛滿你生涯每一年的照片。${twoWayView()?'九局，你投完最後一個出局數，也打完最後一個打席':S.pos==='P'?'九局，你走完這場先發最後一個出局數':'九局下最後一個打席結束'}，全場燈光暗下，只剩一道追光打在你身上——隊友沿著邊線列隊，對手脫帽敬禮，應援團在外野唱起你的應援曲慢版。你繞場一周，把手套輕輕放在本壘板上。隔天所有體育報頭版都是同一句話：這是日職近年最隆重的一場<b class="hl">引退試合</b>。`;
     else if(i===1)txt=`球團為你安排了<b class="hl">引退試合</b>，主場就在<b class="hl">${stadium}</b>。最後一個守備半局結束，你被單獨留在場上，兩軍球員沿著邊線列隊。花束贈呈、監督擁抱、隊友把你高高拋起——三次、四次、五次的<b class="hl">胴上げ</b>。你抱著花束繞場一周，看台上的球迷舉著寫著「ありがとう」的毛巾。引退記者會上你說：「能在這裡打球，是我人生最驕傲的事。」隔天所有體育報頭版都是你被拋在空中的那張照片。`;
     else if(i===2)txt=`最終戰賽後，球團在場邊為你舉行了簡短的引退儀式：花束、紀念框裱的球衣、與監督的合影。廣播念出你的生涯成績時，客場球迷也起立鼓掌。記者會上有人問你「還會回來嗎」，你笑著點頭。`;
     else txt=`你透過球團發表引退聲明。整理置物櫃的那天，球團職員陪你走完最後一段球員通道，警衛伯伯跟你深深鞠了一躬。職棒生涯結束了，行李箱裡裝著幾件捨不得丟的練習衫。`;
   }else if(lg==='MLB'){
-    if(i<=1)txt=S.pos==='P'
+    if(i<=1)txt=twoWayView()
+      ?`主場最終戰，球團安排你先發登板，並且排在打線的第四棒。投完第一局、打完第一個打席後被換下場，全場起立鼓掌長達三分鐘，主審退到一旁靜靜等待。隊友全部走出休息室與你擁抱，大螢幕播放致敬影片——<b class="hl">Curtain Call</b>，你向全場揮帽致意兩次。賽後記者會擠滿各國媒體，日本的轉播單位做了整夜特別節目。`
+      :S.pos==='P'
       ?`主場最終戰，九局，你面對這場最後一名打者。三振後走下投手丘，全場起立鼓掌長達三分鐘，主審退到一旁靜靜等待。隊友全部走出休息室與你擁抱，大螢幕播放致敬影片——<b class="hl">Curtain Call</b>，你向全場揮帽致意兩次。賽後記者會擠滿各國媒體，日本的轉播單位做了整夜特別節目。`
       :`主場最終戰，你最後一個打席前，全場觀眾起立鼓掌長達三分鐘，主審退到一旁靜靜等待。打席結束，你被換下場，隊友全部走出休息室與你擁抱，大螢幕播放致敬影片——<b class="hl">Curtain Call</b>，你走出休息室向全場揮帽致意兩次。賽後記者會擠滿各國媒體，日本的轉播單位做了整夜特別節目。`;
     else if(i===2)txt=`球隊在你生涯最後一個系列賽前於場邊舉行了簡單儀式：致贈裱框球衣與紀念浮雕，隊友列隊擊掌。當地報紙寫道：「他不是超級巨星，但他是每個總教練都想要的那種球員。」日本時間的深夜，家鄉的球迷轉發了那篇報導。`;
@@ -629,7 +984,7 @@ export function endGame(reason){
   tlNote(5,'引退'); careerTimelineCard();
   /* 各聯盟數據與評價 */
   let tables='',evals=[],best=99; const tiersByLg={};
-  CAREER_STAT_BUCKETS.forEach(b=>{ if(S.stats[b]){ tables+=statTable(b);
+  CAREER_STAT_BUCKETS.forEach(b=>{ if(S.stats[b]){ tables+=statTables(b);
     if(CAREER_EVAL_BUCKETS.includes(b)){ const t=tierOf(b); tiersByLg[b]=t; evals.push(`<span class="tag">${t.name}</span>（評價分 ${t.sc}）`); best=Math.min(best,t.i); } } });
   if(best===99)best=4;
   retireScene(tiersByLg);
@@ -639,8 +994,8 @@ export function endGame(reason){
     /* 小學校之光:T3 弱旅出身 */
     if(!S.traits.smallschool && S.hsTier===3){ S.traits.smallschool=true;
       card('gold','隱藏特性：小學校之光',`雖然不是出自名門高校，你還是站上了頂級舞台。春訓時監督曾對你說：「甲子園沒能走完的路，職業會再給你一次。」你做到了。你把那所沒人聽過的學校，帶到了全國轉播裡。`); }
-    /* 努力仔:初始潛力總和偏低(投手≤237/野手≤469) */
-    const grindTh = S.pos==='P'?237:469;
+    /* 努力仔:初始潛力總和偏低(投手≤237/野手≤469/二刀流≤508)。 */
+    const grindTh = S.pos==='P'?237:S.pos==='TW'?508:469;
     if(!S.traits.grinder && (S.potSum0||999)<=grindTh){ S.traits.grinder=true;
       card('gold','隱藏特性：努力仔',`天賦平庸的球員千千萬萬，能走到這裡的卻寥寥無幾。你突然想到，曾經有個叫做西行寺幽幽子的前輩，他扛著不高的天賦，扛著大傷，仍然成為了大聯盟的明星。他曾經鼓勵過你，而你現在也走上他的道路，比別人更努力、更幸運。你們把汗水熬成天賦，最後成為了標竿。`); }
   }
@@ -653,52 +1008,43 @@ export function endGame(reason){
       card('','生涯年表（業餘成績）',`<table class="fin"><tr><th>年度</th><th>齡</th><th style="text-align:left">球隊</th><th style="text-align:left">成績</th></tr>${amaRows}</table>`);
     }
     if(proLogs.length > 0){
-      const isP = S.pos === 'P';
-      const head = isP
-        ? `<tr><th>年</th><th>齡</th><th style="text-align:left">球隊</th><th>G</th><th>IP</th><th>W</th><th>L</th><th>SV</th><th>HLD</th><th>SO</th><th>BB</th><th>ERA</th><th>WHIP</th></tr>`
-        : `<tr><th>年</th><th>齡</th><th style="text-align:left">球隊</th><th>G</th><th>PA</th><th>AVG</th><th>OBP</th><th>SLG</th><th>OPS</th><th>H</th><th>HR</th><th>RBI</th><th>BB</th><th>SB</th><th>DEF</th></tr>`;
-      const rows = proLogs.map(r => {
-        const cS = r.inj ? 'color:var(--bad);font-weight:700;' : '';
-        const s = r.st || {G:0,PA:0,AB:0,H:0,HR:0,RBI:0,SB:0,BB:0,W:0,L:0,SV:0,HLD:0,IP:0,SO:0,ER:0,avg:0,era:0,WHIP:0,DEF:0};
-        if(isP){
-          const era = s.IP>0 ? baseballERA(s).toFixed(2) : '-';
-          const whip = s.IP>0 ? baseballWHIP(s).toFixed(2) : '-';
-          return `<tr style="${cS}"><td>${settlementYearHTML(r.y,proChampionshipYear(r.y))}</td><td>${r.age}</td><td style="text-align:left;white-space:nowrap">${r.tm}</td><td>${s.G}</td><td>${fmtIP(s.IP)}</td><td>${s.W}</td><td>${s.L}</td><td>${s.SV||0}</td><td>${s.HLD||0}</td><td>${s.SO}</td><td>${s.BB||0}</td><td>${era}</td><td>${whip}</td></tr>`;
-        } else {
-          const obpN = s.PA>0 ? (s.H+s.BB)/s.PA : 0;
-          const slgN = slgOf(s);
-          const avg = s.AB>0 ? (s.H/s.AB).toFixed(3).replace(/^0/,'') : '-';
-          const obp = s.PA>0 ? obpN.toFixed(3).replace(/^0/,'') : '-';
-          const slg = s.AB>0 ? slgN.toFixed(3).replace(/^0/,'') : '-';
-          const ops = s.AB>0 ? (obpN+slgN).toFixed(3).replace(/^0/,'') : '-';
-          return `<tr style="${cS}"><td>${settlementYearHTML(r.y,proChampionshipYear(r.y))}</td><td>${r.age}</td><td style="text-align:left;white-space:nowrap">${r.tm}${r.p?"·"+r.p:""}</td><td>${s.G}</td><td>${s.PA}</td><td>${avg}</td><td>${obp}</td><td>${slg}</td><td>${ops}</td><td>${s.H}</td><td>${s.HR}</td><td>${s.RBI}</td><td>${s.BB||0}</td><td>${s.SB}</td><td>${s.DEF>0?'+':''}${s.DEF||0}</td></tr>`;
-        }
-      }).join('');
-      card('','生涯年表（職業成績）',`<table class="fin">${head}${rows}</table>`);
+      if(twoWayView()){
+        const ph=proYearTableHTML(proLogs,'pit'), bh=proYearTableHTML(proLogs,'bat');
+        if(ph)card('','生涯年表（職業・投球成績）',ph);
+        if(bh)card('','生涯年表（職業・打擊成績）',bh);
+      }else{
+        card('','生涯年表（職業成績）',proYearTableHTML(proLogs,null));
+      }
     }
   }
   let intlTable='';
-  if(S.intlCount>0){ const IS=S.intlStat;
-    const il=S.intlLog||[];
-    const walks=st=>Number.isFinite(st&&st.BB)?Math.max(0,Math.round(st.BB)):
-      (Number.isFinite(st&&st.PA)&&Number.isFinite(st&&st.AB)?Math.max(0,Math.round(st.PA-st.AB)):0);
-    const totalBB=Number.isFinite(IS.BB)?Math.max(0,Math.round(IS.BB)):il.reduce((n,r)=>n+walks(r.st),0);
-    if(S.pos==='P'){
-      const rows=il.map(r=>{ const st=r.st, era=RP_F2(baseballERA(st)); return `<tr><td>${settlementYearHTML(r.year,r.rank==='冠軍')}</td><td style="text-align:left;white-space:nowrap">${r.name}</td><td>${r.rank}</td><td>${st.G}</td><td>${fmtIP(st.IP)}</td><td>${st.W}</td><td>${st.SV}</td><td>${st.SO}</td><td>${walks(st)}</td><td>${era}</td></tr>`; }).join('');
-      const era=RP_F2(baseballERA(IS));
-      intlTable=`<h4 style="margin:12px 0 4px">國際賽逐屆成績（日本代表 ${S.intlCount} 屆）</h4><table class="fin"><tr><th>年度</th><th>賽事</th><th>結果</th><th>G</th><th>IP</th><th>W</th><th>SV</th><th>SO</th><th>BB</th><th>ERA</th></tr>${rows}<tr><th colspan="3">國際賽通算</th><td>${IS.G}</td><td>${fmtIP(IS.IP)}</td><td>${IS.W}</td><td>${IS.SV}</td><td>${IS.SO}</td><td>${totalBB}</td><td>${era}</td></tr></table>`;
-    } else {
-      const rows=il.map(r=>{ const st=r.st, avg=st.AB>0?(st.H/st.AB).toFixed(3).replace(/^0/,''):'-'; return `<tr><td>${settlementYearHTML(r.year,r.rank==='冠軍')}</td><td style="text-align:left;white-space:nowrap">${r.name}</td><td>${r.rank}</td><td>${st.G}</td><td>${st.PA}</td><td>${avg}</td><td>${st.H}</td><td>${st.HR}</td><td>${st.RBI}</td><td>${walks(st)}</td></tr>`; }).join('');
-      const avg=IS.AB>0?(IS.H/IS.AB).toFixed(3).replace(/^0/,''):'-';
-      intlTable=`<h4 style="margin:12px 0 4px">國際賽逐屆成績（日本代表 ${S.intlCount} 屆）</h4><table class="fin"><tr><th>年度</th><th>賽事</th><th>結果</th><th>G</th><th>PA</th><th>AVG</th><th>H</th><th>HR</th><th>RBI</th><th>BB</th></tr>${rows}<tr><th colspan="3">國際賽通算</th><td>${IS.G}</td><td>${IS.PA}</td><td>${avg}</td><td>${IS.H}</td><td>${IS.HR}</td><td>${IS.RBI}</td><td>${totalBB}</td></tr></table>`;
+  if(S.intlCount>0){
+    const h=n=>`<h4 style="margin:12px 0 4px">${n}</h4>`;
+    const title=`國際賽逐屆成績（日本代表 ${S.intlCount} 屆）`;
+    if(twoWayView()){
+      const ph=intlTableHTML('pit'), bh=intlTableHTML('bat');
+      if(ph)intlTable+=h(title+'・投球')+ph;
+      if(bh)intlTable+=h(title+'・打擊')+bh;
+    }else{
+      intlTable=h(title)+intlTableHTML(null);
     }
   }
   card('','生涯累積數據',(tables||'<p>（無職業層級出賽紀錄）</p>')+intlTable);
   if(evals.length)card('gold','生涯評價',evals.join('<br>'));
   /* 結算排序：名人堂 → 通算／各聯盟里程碑 → 國家隊 → MLB → NPB → CPBL → 業餘。 */
-  const settlementItems=careerMilestones().concat(honorGroups().map(honorText));
-  const honorsHTML=settlementItems.length?settlementItems.map(x=>'· '+x).join('<br>'):'（生涯未獲得任何獎項或里程碑）';
-  card(settlementItems.length?'gold':'','獎項、大賽與里程碑',honorsHTML);
+  /* 獎項依投打分成三段（通用／投手／打擊），里程碑照舊放最前面不分段。
+     只有一段的時候不印小標——單刀球員的清單維持原樣。 */
+  const milestones=careerMilestones();
+  const secs=honorSections();
+  const honorHTML=secs.length===1
+    ?secs[0].groups.map(g=>'· '+honorText(g)).join('<br>')
+    :secs.map(sec=>`<b class="hl">${sec.name}</b><br>`+sec.groups.map(g=>'· '+honorText(g)).join('<br>')).join('<br><br>');
+  const parts=[];
+  if(milestones.length)parts.push(milestones.map(x=>'· '+x).join('<br>'));
+  if(secs.length)parts.push(honorHTML);
+  const hasAny=milestones.length||secs.length;
+  card(hasAny?'gold':'','獎項、大賽與里程碑',
+    hasAny?parts.join('<br><br>'):'（生涯未獲得任何獎項或里程碑）');
   /* 特質與薪資 */
   const tr=[];
   [...TRAIT_KEYS.pos,...TRAIT_KEYS.neg].filter(k=>S.traits[k]).sort((a,b)=>traitColorRank(a)-traitColorRank(b))
@@ -708,9 +1054,9 @@ export function endGame(reason){
   const cur=lv.st==='married'?`老婆 ${lv.partner}（${lv.kids}）`:lv.st==='dating'?`交往中 ${lv.partner}（${lv.dyrs||0} 年）`:lv.st==='divorced'?'離婚':'未婚';
   const exStr=lv.exes.length?`｜前妻 ${lv.exes.map(e=>`${e.name}（${e.kids}）`).join('、')}`:'';
   const totKids=lv.kids+lv.exes.reduce((t,e)=>t+e.kids,0);
-  card('','生涯檔案',`隱藏素質：${tr.join(' ')||'（無）'}<br>家庭：${cur}${exStr}｜子女共 ${totKids} 人${lv.affairs?`｜外遇 ${lv.affairs}(${lv.caught})`:''}<br>國際賽出賽：${S.intlCount} 次｜生涯大傷：${S.bigInj} 次${S.pos==='P'?`｜手肘危機：${S.tjCrises||0} 次｜Tommy John 手術：${S.tjCount} 次`:''}<br>生涯總薪資：<b class="hl" style="font-size:18px">${fmtMoney(Math.round(S.salary))}</b>`);
+  card('','生涯檔案',`隱藏素質：${tr.join(' ')||'（無）'}<br>家庭：${cur}${exStr}｜子女共 ${totKids} 人${lv.affairs?`｜外遇 ${lv.affairs}(${lv.caught})`:''}<br>國際賽出賽：${S.intlCount} 次｜生涯大傷：${S.bigInj} 次${(S.pos==='P'||twoWayView())?`｜手肘危機：${S.tjCrises||0} 次｜Tommy John 手術：${S.tjCount} 次`:''}<br>生涯總薪資：<b class="hl" style="font-size:18px">${fmtMoney(Math.round(S.salary))}</b>`);
   /* 球迷留言 */
-  const pool=FAN[best].filter(p=>S.pos!=='P'||!p.includes('代打人生')); const picks=[];
+  const pool=FAN[best].filter(p=>!(S.pos==='P'||twoWayView())||!p.includes('代打人生')); const picks=[];
   while(picks.length<3&&pool.length)picks.push(pool.splice(Math.floor(R()*pool.length),1)[0]);
   /* 盤子留言:低聯盟明星以上,旅外到更高聯盟卻淪替補/邊緣 */
   { const LGR={CPBL:0,NPB:1,MLB:2}, CTY={CPBL:'台灣',NPB:'日本',MLB:'美國'};
@@ -725,7 +1071,7 @@ export function endGame(reason){
   if(S.traits.oldghost){
     const oldGhostFans=[
       '過去是他的、現在是他的、未來還是他的。',
-      oldGhostLongCareerComment(S.pos),
+      oldGhostLongCareerComment(endingPos()),
       '老鬼已經擋了別人快20年了，還要擋這些年輕人多久？'
     ];
     picks.push(oldGhostFans[Math.floor(R()*oldGhostFans.length)]);
