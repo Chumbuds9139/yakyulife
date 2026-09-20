@@ -1,9 +1,9 @@
-import {S} from '../core/state.js?v=1.5.30';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.5.30';
-import {ABL, POS_AB, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.5.30';
-import {LV} from '../data/teams.js?v=1.5.30';
-import {card, choose, board} from '../ui/dom.js?v=1.5.30';
-import {roleN, pitcherRole, bullpenRole} from './season.js?v=1.5.30';
+import {S} from '../core/state.js?v=1.6.0';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.6.0';
+import {ABL, POS_AB, PITCH_TOOLS, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.6.0';
+import {LV} from '../data/teams.js?v=1.6.0';
+import {card, choose, board} from '../ui/dom.js?v=1.6.0';
+import {roleN, pitcherRole, bullpenRole} from './season.js?v=1.6.0';
 export function enforcePerfectAbilities(){
   if(!S?.perfectLock)return;
   Object.keys(S.ab||{}).forEach(k=>S.ab[k]=80);
@@ -78,7 +78,8 @@ export function dposReview(cont){
     if(S.dpos==='1B'&&!dpQual('1B')){ S.dpos='DH';
       card('info','守位調整','連一壘都站不住了，新球季登錄為<b class="hl">指定打擊</b>。'); }
     cont(); return; }
-  if(S.pos==='P'){ /* 體力決定投手類型;牛棚→先發需玩家同意,先發→牛棚仍自動 */
+  if(S.pos==='P'||S.pos==='TW'){ /* 體力決定投手類型;牛棚→先發需玩家同意,先發→牛棚仍自動 */
+    if(S.pos==='TW')S.dpos='DH';
     const nr=pitcherRole(), old=S.role;
     if((old==='MR'||old==='CL')&&nr==='SP'){
       /* 後援投手體力練上先發線:球團徵詢,不強制轉 */
@@ -131,10 +132,22 @@ export function toolGap(){ const a=S.ab;
   /* 對照角色:代打看力量/擊球哪個高決定文案來源 */
   const role=topDim[2];
   return {gap, role, val:topDim[1], dim:topDim[0]}; }
+export function ovrPit(){ const a=S.ab, arr=[a.vel,a.ctl,a.brk].sort((x,y)=>y-x);
+  return arr[0]*0.42+arr[1]*0.30+arr[2]*0.18+a.sta*0.10; }
+export function ovrBat(){ const a=S.ab, off=[a.con,a.pow,a.eye,a.spd].sort((x,y)=>y-x);
+  const offv=off[0]*0.38+off[1]*0.27+off[2]*0.20+off[3]*0.15;
+  /* 二刀流沒有守備工具，打擊側比照「指定打擊」計價:守備權重 0.12 給一個固定的低檔手套值
+     (26 ≈ 一般 DH 的 dpScore('1B')−12)。這樣它跟真正 DH 的 ovr 是同一把尺。 */
+  return offv*0.88+26*0.12; }
 export function ovr(){
   const a=S.ab;
-  if(S.pos==='P'){ const arr=[a.vel,a.ctl,a.brk].sort((x,y)=>y-x);
-    return Math.round(arr[0]*0.42+arr[1]*0.30+arr[2]*0.18+a.sta*0.10); }
+  if(S.pos==='P')return Math.round(ovrPit());
+  if(S.pos==='TW'){
+    const p=ovrPit(), b=ovrBat();
+    let v=Math.round(Math.max(p,b)+clamp((Math.min(p,b)-35)*0.15,0,8));
+    if(S.traits.yips)v-=3;
+    return v;
+  }
   const off=[a.con,a.pow,a.eye,a.spd].sort((x,y)=>y-x);
   const offv=off[0]*0.38+off[1]*0.27+off[2]*0.20+off[3]*0.15;
   /* 守備分:用當前守位的 dpScore(與守位門檻系統一致);DH 無守備價值 → 以「1B 守備分 −12」計(確保同打擊下 1B 恆 > DH);未定守位則取最佳可守守位的分 */
@@ -150,6 +163,12 @@ export function playerType(){
   const a=S.ab;
   const decliningVeteran=S.stage==='PRO'&&(S.age-(S.traits.disc?2:0))>=32;
   if(S.traits.onetool&&S.toolRole)return S.toolRole+'工具人';
+  if(S.pos==='TW'){
+    const pm=Math.max(a.vel,a.ctl,a.brk), bm=Math.max(a.con,a.pow,a.eye,a.spd);
+    if(Math.max(pm,bm)<52)return decliningVeteran?'老將':'潛力股';
+    if(Math.abs(pm-bm)<=4)return '二刀流';
+    return pm>bm?'二刀流・投手型':'二刀流・打者型';
+  }
   if(S.pos==='P'){
     const m=Math.max(a.vel,a.ctl,a.brk);
     if(m<52)return decliningVeteran?'老將':'潛力股';
@@ -165,10 +184,19 @@ export function playerType(){
   if(cand[0][1]-cand[1][1]<=3&&cand[0][1]>=60)return '全能型';
   return cand[0][0];
 }
-export function abCost(k){ /* 目前這一級要花幾點(須與 addAb 成本公式一致，含體力的例外) */
-  const cur=S.ab[k], pk=(S.pot&&S.pot[k])||62, isP=S.pos==='P';
-  let c=(isP&&k!=='sta')?(cur>=66?7:cur>=58?4:cur>=50?2:1):(cur>=72?3:cur>=64?2:1);
-  if(cur>=pk)c*=isP?4:3; return c;
+export const isPitchTool=k=>PITCH_TOOLS.includes(k);
+export function abStepCost(k,cur){
+  return isPitchTool(k)?(cur>=66?7:cur>=58?4:cur>=50?2:1)
+                       :(cur>=72?3:cur>=64?2:1);
+}
+export function abOverCapMult(k){
+  if(S.pos==='TW')return isPitchTool(k)?4:3;
+  return S.pos==='P'?4:3;
+}
+export function abCost(k){ /* 目前這一級要花幾點(與 addAb 共用同一組公式) */
+  const cur=S.ab[k], pk=(S.pot&&S.pot[k])||62;
+  let c=abStepCost(k,cur);
+  if(cur>=pk)c*=abOverCapMult(k); return c;
 }
 export function normalizeAbCarry(k){
   if(S.perfectLock){ if(k in S.ab)S.ab[k]=80; if(!S.carry)S.carry={}; S.carry[k]=0; return 0; }
@@ -191,7 +219,6 @@ export function addAb(k,v){ if(S.perfectLock){ if(k in S.ab)S.ab[k]=80; return 0
   if(!S.carry)S.carry={};
   let cur=o,bud=v+(S.carry[k]||0); /* 未滿一級的點數累積在進度槽,不再蒸發 */
   const pk=(S&&S.pot&&S.pot[k])||62;
-  const isP=S&&S.pos==='P';
   while(bud>0&&cur<80){
     /* v1.5.9 體力單獨改用野手曲線。體力不是球威，卻跟球速/控球/變化球吃同一條
        最陡的成本(66 以上每點 7)，而先發必須把體力墊到 52 才站得上輪值——那些點數
@@ -201,9 +228,8 @@ export function addAb(k,v){ if(S.perfectLock){ if(k in S.ab)S.ab[k]=80; return 0
        只動體力這一項(球威成本與超潛力 ×4 都不碰)之後：−3.3 → −1.3，
        名人堂率 15/14/15/55%——普通運氣只動 3 個百分點，但「天賦好又健康」
        從 15% 回到 55%，跟捕手(54)、游擊(52) 對齊。後援幾乎不受影響(本來就不練體力)。 */
-    let cost=(isP&&k!=='sta')?(cur>=66?7:cur>=58?4:cur>=50?2:1)  /* 投手球威,養成成本最陡 */
-              :(cur>=72?3:cur>=64?2:1);                          /* 野手9項與投手體力 */
-    if(cur>=pk)cost*=isP?4:3; /* 天花板之上:投手×4、野手×3 */
+    let cost=abStepCost(k,cur);
+    if(cur>=pk)cost*=abOverCapMult(k);
     if(bud>=cost){bud-=cost;cur++;} else break; }
   if(cur>=80) S.lastOverflow=bud; /* 滿 80 後，剩下的點數才是真正的溢出 */
   S.carry[k]=cur>=80?0:bud;
@@ -211,14 +237,13 @@ export function addAb(k,v){ if(S.perfectLock){ if(k in S.ab)S.ab[k]=80; return 0
 export function addAbStat(k,amt){
   if(amt<=0)return addAb(k,amt);
   const pk=(S.pot&&S.pot[k])||62;
-  const isP=S.pos==='P';
   let cur=S.ab[k], bud=amt, cr=(S.carry&&S.carry[k])||0, gained=0;
   /* 潛力已滿：直接全額轉為狀態火燙 */
   if(cur>=pk){ S.pendStat=(S.pendStat||0)+bud; return 0; }
 
   /* 潛力未滿：依正常成本加點，達到潛力上限就停止 */
   while(bud>0 && cur<pk){
-    let c = isP ? (cur>=66?7:cur>=58?4:cur>=50?2:1) : (cur>=72?3:cur>=64?2:1);
+    let c = abStepCost(k,cur);
     bud--; cr++; if(cr>=c){ cr-=c; cur++; gained++; }
   }
 

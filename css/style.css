@@ -181,8 +181,20 @@ a{color:var(--info)}
 .bd-tc.off .n{color:var(--dim);text-decoration:line-through}
 /* 逐年成績 */
 .sec-y{overflow-x:auto}
-.bd-yg{font-size:10px;color:var(--dim);letter-spacing:.2em;margin:2px 0 3px}
+.bd-yg{display:flex;align-items:center;font-size:10px;color:var(--dim);letter-spacing:.2em;margin:2px 0 3px}
 .bd-yg~.bd-yg{margin-top:8px}
+/* 二刀流逐年表的投／打切換。掛在「職業」那一列的右邊，不另外佔一行——
+   這條帶子已經夠窄了。小標(.bd-sh)在手機版是 display:none，不能掛在那裡。 */
+.bd-yg .bd-yside{margin-left:auto;display:inline-flex;gap:4px}
+.bd-yg .ys{font-family:var(--sans);font-size:10.5px;line-height:16px;font-weight:600;
+  letter-spacing:0;padding:0 7px;border-radius:var(--radius-badge);cursor:pointer;
+  background:transparent;border:1px solid var(--border-default);color:var(--text-muted)}
+.bd-yg .ys.on{border-color:var(--accent-primary);color:var(--accent-primary)}
+.bd-yg .ys:focus-visible{outline:2px solid var(--accent-primary);outline-offset:1px}
+/* 成就清單的投打分段小標。跟 .bd-yg（逐年表的「業餘／職業」）同一個視覺層級，
+   但它在的是成就那一張表，字級與間距要跟 .bd-hr 對齊。 */
+.bd-hg{font-size:10px;color:var(--dim);letter-spacing:.2em;margin:7px 0 3px}
+.bd-hg:first-child{margin-top:0}
 .bd-yr{display:flex;font-family:var(--mono);font-size:11.5px;padding:3px 0;
   border-bottom:1px solid color-mix(in srgb,var(--edge) 55%,transparent)}
 .bd-yr.hd{font-size:10.5px;color:var(--dim);padding:2px 0;border-bottom:1px solid var(--edge)}
@@ -270,6 +282,11 @@ a{color:var(--info)}
 .statline{font-family:var(--mono);font-size:14px;line-height:22px;color:var(--text-secondary);background:var(--surface-default);
   border:1px dashed var(--border-default);border-radius:min(var(--radius-component),6px);
   padding:var(--space-8) var(--space-12);margin-top:var(--space-8)}
+/* 二刀流的球季數據：兩個框疊在同一張卡裡，靠得比單獨一個框近一點，
+   讀起來才像「同一季的兩份工作」而不是兩張卡。 */
+.statline.tw{margin-top:var(--space-6)}
+.statline .side{display:inline-block;min-width:1.5em;margin-right:var(--space-8);
+  font-family:var(--sans);font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--accent-primary)}
 table.fin,table.st{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;margin-top:var(--space-8)}
 table.fin th,table.fin td,table.st th,table.st td{border-bottom:1px solid var(--border-default);padding:4px 4px;text-align:right;white-space:nowrap}
 table.fin th,table.st th{color:var(--text-muted);font-weight:500;letter-spacing:.05em}
@@ -467,6 +484,15 @@ body[data-theme='c'] .lockup-sub em,body[data-theme='d'] .lockup-sub em{text-sha
 .seg button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;box-shadow:0 0 0 1px var(--bg)}
 .seg button.on{background:var(--surface-interactive);color:var(--text-primary);border:2px solid var(--accent-primary);padding:11px 7px}
 .seg button:disabled{background:transparent;border-color:var(--border-default);color:var(--text-muted);cursor:default;transform:none;box-shadow:none}
+.seg.seg-pos5{grid-template-columns:repeat(5,1fr);gap:6px}
+.seg.seg-pos5 button{font-size:15px;padding:12px 4px;letter-spacing:-.01em}
+.seg.seg-pos5 button.on{padding:11px 3px}
+.seg.seg-pos5 button.tw{color:var(--accent-primary);border-color:var(--accent-primary)}
+.seg.seg-pos5 button.tw.on{color:var(--text-primary)}
+@media(max-width:360px){
+  .seg.seg-pos5{gap:4px}
+  .seg.seg-pos5 button{font-size:14px;padding:12px 2px}
+}
 #fld-ui{display:none} /* desktop-width only; shown via the media query below */
 /* display settings: a quiet text line at the seed line's visual weight, not a panel */
 #start-footer{flex:none;width:100%;max-width:560px;margin:0 auto;padding:var(--space-12) var(--space-16) calc(var(--space-12) + env(safe-area-inset-bottom,0px));

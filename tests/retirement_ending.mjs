@@ -25,8 +25,8 @@ try{
   page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=retirement-ending`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.5.30');
-    const retire=await import('./src/ui/retire.js?v=1.5.30');
+    const state=await import('./src/core/state.js?v=1.6.0');
+    const retire=await import('./src/ui/retire.js?v=1.6.0');
     const pitcher=retire.nextBaseEnding('P');
     const hitter=retire.nextBaseEnding('SS');
     const pitcherCoach=retire.jerseyWeightEnding('P');
@@ -67,6 +67,29 @@ try{
     const latePitcher=retire.lateAnswerEnding('P');
     const lateHitter=retire.lateAnswerEnding('IF');
 
+    /* 二刀流結局：key 由狀態決定不擲骰，而且在卡池裡佔一半 */
+    const tw=(patch)=>{ const s=state.newState('二刀流',0,patch.pos==='TW'?'TW':(patch.pos==='P'?'P':'IF'),null);
+      Object.assign(s,patch); if(patch._disc)s.traits.disc=true; state.setS(s);
+      const key=retire.twoWayEndingKey(), keys=retire.postCareerEndingKeys(tiers,0,0);
+      return {key,total:keys.length,mine:keys.filter(k=>k===key).length}; };
+    const twCases={
+      kept:      tw({pos:'TW',twSeasons:19,age:41}),
+      lateFall:  tw({pos:'P', twSeasons:16,twFell:'pit',twFellAge:38,age:41}),
+      gavePit:   tw({pos:'P', twSeasons:4, twFell:'pit',twFellAge:24,age:38}),
+      gaveBat:   tw({pos:'OF',twSeasons:4, twFell:'bat',twFellAge:24,age:38}),
+      atDecline: tw({pos:'P', twSeasons:12,twFell:'pit',twFellAge:33,age:39}),
+      discLine:  tw({pos:'P', twSeasons:12,twFell:'pit',twFellAge:33,age:39,_disc:1}),
+      never:     tw({pos:'P', twSeasons:0, age:38}),
+    };
+    const twTitles={
+      all:retire.twoWayAllEnding().title,
+      bat:retire.twoWayHalfBatEnding().title,
+      pit:retire.twoWayHalfPitEnding().title,
+      allBody:retire.twoWayAllEnding().body,
+      batBody:retire.twoWayHalfBatEnding().body,
+      pitBody:retire.twoWayHalfPitEnding().body,
+    };
+
     const log=document.getElementById('log')||document.body;
     const mlb=state.newState('大聯盟退役',1,'IF',null);
     mlb.org='MLB'; mlb.lv='MLB'; mlb.orgTeam='紐約帝國';
@@ -92,7 +115,7 @@ try{
       withInternational,nationalSelected,
       withoutConditions,
       glassKeys,glassSelected,tjTwoKeys,tjThreeKeys,
-      latePitcher,lateHitter,
+      latePitcher,lateHitter,twCases,twTitles,
       adkingComment:retire.ADKING_FAN_COMMENT,
       oldGhostPitcher:retire.oldGhostLongCareerComment('P'),
       oldGhostHitter:retire.oldGhostLongCareerComment('IF'),
@@ -155,6 +178,35 @@ try{
   assert.equal(result.npbText.includes('臺北大巨蛋'),false,result.npbText);
   assert.equal(result.nextGame.includes('機車行'),false);
   assert.ok(result.nextGame.includes('居酒屋')||result.nextGame.includes('甲子園'),result.nextGame);
+
+  /* ── 二刀流結局 ──
+     key 由狀態決定，不擲骰；三種狀況各對一個結局，而且在卡池裡正好佔一半。
+     「衰退之前」那條線跟 phases.js 同源：一般人 32 歲、自律狂 34 歲。 */
+  const T=result.twCases;
+  assert.equal(T.kept.key,'twAll','一路二刀流到引退應該是〈全部的棒球〉');
+  assert.equal(T.lateFall.key,'twAll','38 歲才停止投打兼修，算走完全程');
+  assert.equal(T.atDecline.key,'twAll','33 歲已經在衰退期，不算半途放棄');
+  assert.equal(T.discLine.key,'twHalfPit','自律狂的衰退從 34 歲起，33 歲停止就是半途放棄');
+  assert.equal(T.gavePit.key,'twHalfPit','留下投球');
+  assert.equal(T.gaveBat.key,'twHalfBat','留下打擊');
+  assert.equal(T.never.key,null,'從來不是二刀流就沒有這個結局');
+  for(const k of ['kept','lateFall','gavePit','gaveBat','atDecline','discLine']){
+    assert.equal(T[k].mine*2,T[k].total,`${k} 的二刀流結局沒有佔一半：${T[k].mine}/${T[k].total}`);
+  }
+  assert.equal(T.never.total,T.gavePit.total/2,'沒有二刀流結局時卡池應該只有一半大');
+  assert.equal(result.twTitles.all,'全部的棒球');
+  assert.equal(result.twTitles.bat,'我留下的那一半');
+  assert.equal(result.twTitles.pit,'另外那一半');
+  for(const b of ['allBody','batBody','pitBody']){
+    assert(result.twTitles[b].includes('<br><br>'),b+' 沒有段落');
+    assert(!/\n/.test(result.twTitles[b]),b+' 還留著原始換行');
+  }
+  assert(result.twTitles.allBody.includes('我只是不想把自己切成一半'));
+  assert(result.twTitles.batBody.includes('那一半，也會比別人的一半厚'));
+  assert(result.twTitles.pitBody.includes('你也會知道另外一半在想什麼'));
+  assert(!result.twTitles.batBody.includes('我當過他'),'留打的結局不該有留投的句子');
+  assert(!result.twTitles.pitBody.includes('比別人的一半厚'),'留投的結局不該有留打的句子');
+
   assert.equal(errors.length,0,errors.join('\n'));
   console.log(JSON.stringify(result,null,2));
 }finally{

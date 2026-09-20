@@ -1,18 +1,18 @@
-import {S} from '../core/state.js?v=1.5.30';
-import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.5.30';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.5.30';
-import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.5.30';
-import {card, choose, board} from '../ui/dom.js?v=1.5.30';
-import {tlNote, tlRestage} from '../ui/timeline.js?v=1.5.30';
-import {ovr} from './ability.js?v=1.5.30';
-import {injuryMarketStatus} from './injury.js?v=1.5.30';
-import {hasActiveFranchise} from './tenure.js?v=1.5.30';
-import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.5.30';
-import {capTeam} from './career.js?v=1.5.30';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.5.30';
-import {advance} from './draft.js?v=1.5.30';
-import {finishContractYear} from '../flow/phases.js?v=1.5.30';
-import {endGame} from '../ui/retire.js?v=1.5.30';
+import {S} from '../core/state.js?v=1.6.0';
+import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.6.0';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.6.0';
+import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.6.0';
+import {card, choose, board} from '../ui/dom.js?v=1.6.0';
+import {tlNote, tlRestage} from '../ui/timeline.js?v=1.6.0';
+import {ovr} from './ability.js?v=1.6.0';
+import {injuryMarketStatus} from './injury.js?v=1.6.0';
+import {hasActiveFranchise} from './tenure.js?v=1.6.0';
+import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.6.0';
+import {capTeam} from './career.js?v=1.6.0';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.6.0';
+import {advance} from './draft.js?v=1.6.0';
+import {finishContractYear} from '../flow/phases.js?v=1.6.0';
+import {endGame} from '../ui/retire.js?v=1.6.0';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
@@ -21,9 +21,20 @@ export function hasMlbService(){
 export function levelMinAnnual(lv){
   return /^R$|^A[123]$/.test(lv)&&hasMlbService()?MLB_SERVICE_MINOR_MIN:(LEVEL_MIN_ANNUAL[lv]||0);
 }
+/* 二刀流的轉折點拉到 22（見下面 salaryFor 的說明）。 */
+export const TW_KNEE=22;
 export function salaryFor(lv,d){
-  /* 不設硬上限，但 15 以上只計 35%：歷史級種子仍可刷新紀錄，二次曲線不會失控衝破現實頂薪數倍。 */
-  const raw=Math.max(0,d||0),p=raw<=15?raw:15+(raw-15)*0.35;
+  /* 不設硬上限，但轉折點以上只計 35%：歷史級種子仍可刷新紀錄，二次曲線不會失控衝破現實頂薪數倍。
+
+     二刀流的轉折點不一樣。原因是「二刀流薪水偏低」的真正出處在這裡，不在 twoWayD：
+     twoWayD 把弱側折算進來之後，二刀流的評價幾乎一定落在 15 以上，於是他多做的
+     那一份工作整份掉進被壓縮的區間，只計 35%。而中職這條公式根本沒有轉折點，
+     所以症狀只出現在日職與大聯盟——正好是二刀流最該被付錢的地方。
+     實測（日職 投16/打18）：單刀同強度 1億4,128萬、二刀流 1億7,080萬，只多兩成；
+     現實裡大谷的合約是頂級純打者的 1.75 倍。轉折點拉到 22 之後是 2億1,164萬（1.50 倍），
+     大聯盟同一組是 1.89 倍。弱側低的時候評價還在 15 以下，完全不受影響。 */
+  const raw=Math.max(0,d||0), knee=S.pos==='TW'?TW_KNEE:15;
+  const p=raw<=knee?raw:knee+(raw-knee)*0.35;
   switch(lv){
     case 'CPBL2':case 'NPB2':case 'R':case 'A1':case 'A2':case 'A3':return levelMinAnnual(lv);
     case 'CPBL1':return Math.round(120+raw*65+raw*raw*3);
