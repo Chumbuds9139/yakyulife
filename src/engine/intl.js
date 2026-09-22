@@ -1,13 +1,13 @@
-import {S} from '../core/state.js?v=1.6.0';
-import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.6.0';
-import {LV} from '../data/teams.js?v=1.6.0';
-import {card, choose, board} from '../ui/dom.js?v=1.6.0';
-import {tlNote} from '../ui/timeline.js?v=1.6.0';
-import {isSP, fmtIP, outsFromIP, ipFromOuts, normalizeIP, baseballERA} from './season.js?v=1.6.0';
-import {ovr} from './ability.js?v=1.6.0';
-import {intlFinishIndex} from './championship.js?v=1.6.0';
-import {checkChampionTrait} from '../flow/events.js?v=1.6.0';
-import {intlInviteCopy, intlEventName} from '../data/intl-copy.js?v=1.6.0';
+import {S} from '../core/state.js?v=1.6.1';
+import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.6.1';
+import {LV} from '../data/teams.js?v=1.6.1';
+import {card, choose, board} from '../ui/dom.js?v=1.6.1';
+import {tlNote} from '../ui/timeline.js?v=1.6.1';
+import {isSP, fmtIP, outsFromIP, ipFromOuts, normalizeIP, baseballERA} from './season.js?v=1.6.1';
+import {ovr} from './ability.js?v=1.6.1';
+import {intlFinishIndex} from './championship.js?v=1.6.1';
+import {checkChampionTrait} from '../flow/events.js?v=1.6.1';
+import {intlInviteCopy, intlEventName} from '../data/intl-copy.js?v=1.6.1';
 export {intlInviteCopy, intlEventName};
 /* 這一屆算不算二刀流：同一屆裡既有登板也有打席。二刀流在退休前多半已被強制轉回，
    所以跟 career.isTwoWayCareer() 一樣，看的是實績而不是當下的 S.pos。 */

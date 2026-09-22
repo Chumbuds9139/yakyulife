@@ -34,10 +34,10 @@ try{
   const errors=[]; page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=p0-p3`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.6.0');
-    const teams=await import('./src/data/teams.js?v=1.6.0');
-    const contract=await import('./src/engine/contract.js?v=1.6.0');
-    const {card}=await import('./src/ui/dom.js?v=1.6.0');
+    const state=await import('./src/core/state.js?v=1.6.1');
+    const teams=await import('./src/data/teams.js?v=1.6.1');
+    const contract=await import('./src/engine/contract.js?v=1.6.1');
+    const {card}=await import('./src/ui/dom.js?v=1.6.1');
 
     const s=state.newState('告別測試',21,'IF',null);
     s.stage='PRO'; s.org='NPB'; s.lv='NPB1'; s.orgTeam='九州鷹';
@@ -74,7 +74,7 @@ try{
     state.setS(amateur);
     const org='CORP', team=teams.CORPORATE_TEAMS[0];
     /* 抽樣 20 次：org 與隊名必須同屬社會人或同屬獨立。 */
-    const {pick}=await import('./src/core/rng.js?v=1.6.0');
+    const {pick}=await import('./src/core/rng.js?v=1.6.1');
     const samples=[];
     for(let i=0;i<20;i++){
       const o=pick(['CORP','INDEP']);
@@ -88,7 +88,7 @@ try{
     const cpblCard=document.createElement('div');
     cpblCard.textContent='中華隊徵召你參加世界棒球經典賽';
     document.body.appendChild(cpblCard);
-    const japan=await import('./src/japan.js?v=1.6.0');
+    const japan=await import('./src/japan.js?v=1.6.1');
     const locS=state.newState('洋將',10,'OF',null);
     locS.stage='PRO'; locS.org='CPBL'; locS.lv='CPBL1';
     state.setS(locS);

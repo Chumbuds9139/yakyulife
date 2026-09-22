@@ -1,9 +1,9 @@
-import {S} from '../core/state.js?v=1.6.0';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.6.0';
-import {ABL, POS_AB, PITCH_TOOLS, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.6.0';
-import {LV} from '../data/teams.js?v=1.6.0';
-import {card, choose, board} from '../ui/dom.js?v=1.6.0';
-import {roleN, pitcherRole, bullpenRole} from './season.js?v=1.6.0';
+import {S, levelName} from '../core/state.js?v=1.6.1';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.6.1';
+import {ABL, POS_AB, PITCH_TOOLS, DPN, DP_TH, DP_BAR, POS_ADJ_RUNS, DP_RANK} from '../data/abilities.js?v=1.6.1';
+import {LV} from '../data/teams.js?v=1.6.1';
+import {card, choose, board} from '../ui/dom.js?v=1.6.1';
+import {roleN, pitcherRole, bullpenRole} from './season.js?v=1.6.1';
 export function enforcePerfectAbilities(){
   if(!S?.perfectLock)return;
   Object.keys(S.ab||{}).forEach(k=>S.ab[k]=80);
@@ -68,7 +68,7 @@ export function dposReview(cont){
         f:()=>{S.dpos='1B';card('info','守位調整','捕手裝備收進置物櫃——新球季改守<b class="hl">一壘</b>。');cont();}});
       opts.push({t:'轉任 指定打擊',main:!opts.length,s:posAdjLabel('DH'),
         f:()=>{S.dpos='DH';card('info','守位調整',`${issue}成了聯盟笑話，球團決定讓你專心打擊——<b class="hl">DH</b>。`);cont();}});
-      choose(`守位會議：教練團已經不敢讓你蹲捕（${LV[S.lv].n}標準）`,opts); return;
+      choose(`守位會議：教練團已經不敢讓你蹲捕（${levelName(S.lv)}標準）`,opts); return;
     }
     if(cOk()){ /* 守備練回來了,可以回鍋蹲捕 */
       choose('守位會議：牛棚捕手回報你的接捕又行了',[
@@ -117,7 +117,7 @@ export function dposReview(cont){
   const opts=q.slice(0,2).map((p,i)=>({t:`移防 ${DPN[p]}`,main:i===0,
     s:p==='DH'?`守備已無處可站｜${posAdjDeltaLabel(S.dpos,p)}`:posAdjDeltaLabel(S.dpos,p),
     f:()=>{ S.dpos=p; card('info','守位調整',`球團季末評估後，新球季改守 <b class="hl">${DPN[p]}</b>。`); cont(); }}));
-  choose(`守位會議：教練團認為你的守備已撐不住 ${DPN[S.dpos]}（${LV[S.lv].n}標準）`,opts);
+  choose(`守位會議：教練團認為你的守備已撐不住 ${DPN[S.dpos]}（${levelName(S.lv)}標準）`,opts);
 }
 /* 只會這個:只吃三種角色維度——打擊(力量/擊球)、跑壘(速度)、守備(綜合) */
 export function careerAllStars(){ let n=0; ['CPBL','NPB','MLB'].forEach(b=>{ if(S.stats[b])n+=(S.stats[b].AS||0); }); return n; }

@@ -1,15 +1,15 @@
-import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.6.0';
-import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.6.0';
-import {POS_ADJ_RUNS, POS_PT_BAR} from '../data/abilities.js?v=1.6.0';
-import {LV, HS_CUPS, U_CUPS, CORP_CUPS, INDEP_CUPS, spLoad} from '../data/teams.js?v=1.6.0';
-import {card, board} from '../ui/dom.js?v=1.6.0';
-import {ovr, careerAllStars, toolGap} from './ability.js?v=1.6.0';
-import {tjAccrue, tjGamble} from './injury.js?v=1.6.0';
+import {S, blankStat, bucketOf, nextStep, stageLabel} from '../core/state.js?v=1.6.1';
+import {R, ri, chance, clamp, N0} from '../core/rng.js?v=1.6.1';
+import {POS_ADJ_RUNS, POS_PT_BAR} from '../data/abilities.js?v=1.6.1';
+import {LV, HS_CUPS, U_CUPS, CORP_CUPS, INDEP_CUPS, spLoad} from '../data/teams.js?v=1.6.1';
+import {card, board} from '../ui/dom.js?v=1.6.1';
+import {ovr, careerAllStars, toolGap} from './ability.js?v=1.6.1';
+import {tjAccrue, tjGamble} from './injury.js?v=1.6.1';
 /* temporary scaffold until awards/intl/contract/flow are extracted */
-import {demotionAudit} from './contract.js?v=1.6.0';
-import {awards} from './awards.js?v=1.6.0';
-import {maybeIntl} from './intl.js?v=1.6.0';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.6.0';
+import {demotionAudit} from './contract.js?v=1.6.1';
+import {awards} from './awards.js?v=1.6.1';
+import {maybeIntl} from './intl.js?v=1.6.1';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.6.1';
 export function bullpenRole(){ /* 牛棚內依上季表現判定中繼／終結者，與先發體力門檻分開。 */
   const pd=(S.prevD!==undefined?S.prevD:(S.lastD||0));
   /* 只有上一季已在相同頂級聯盟投牛棚，該季成績才可用於終結者升降。
@@ -515,7 +515,9 @@ export function proSeason(){
       board(1); } }
   else if(S.seasonFactor<0.95)S.ironStreak=0;
   /* 只會這個:先看夠不夠格當主力,夠格絕不判工具人;不夠格才看有無突出工具 */
-  if(S.pos!=='P'){ const tg=toolGap();
+  /* 二刀流排除:toolGap() 的守備維度讀 rng/fld/arm，二刀流沒有這三項，算出來會是 NaN。
+     何況「只剩一項武器的替補奇兵」跟二刀流本來就是互斥的角色。 */
+  if(S.pos!=='P'&&S.pos!=='TW'){ const tg=toolGap();
     /* 主力判定:還原健康狀態下的預估出賽數,傷病缺陣不影響評估
        (出賽數公式含 seasonFactor,除回即得健康時的預估;表現係數仍保留) */
     const projG = S.seasonFactor > 0 ? (st.G / S.seasonFactor) : 0;
