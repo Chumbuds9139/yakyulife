@@ -1,21 +1,21 @@
-import {S, stepQ, nextStep, stageLabel, levelName} from '../core/state.js?v=1.6.1';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.6.1';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.6.1';
-import {LV, PATHS, teamNick} from '../data/teams.js?v=1.6.1';
-import {AMA_ANNUAL} from '../data/economy.js?v=1.6.1';
-import {card, choose, board, divider} from '../ui/dom.js?v=1.6.1';
-import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.6.1';
-import {allocUI} from '../ui/alloc.js?v=1.6.1';
-import {addAb, ovr, ovrPit, ovrBat, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.6.1';
-import {rollInjury, tjCap, tjEffortMult} from '../engine/injury.js?v=1.6.1';
-import {isMrTeamEligible, accrueCpbl1Service} from '../engine/tenure.js?v=1.6.1';
-import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.6.1';
-import {championshipChance} from '../engine/championship.js?v=1.6.1';
-import {ageGateJP, buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, homecomingFallbackOptions, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, queueSalaryFloor, returnTeam, signTo, teamChampRate} from '../engine/contract.js?v=1.6.1';
-import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.6.1';
-import {loveEvent} from './love.js?v=1.6.1';
-import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.6.1';
-import {endGame} from '../ui/retire.js?v=1.6.1';
+import {S, stepQ, nextStep, stageLabel, levelName} from '../core/state.js?v=1.6.2';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.6.2';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.6.2';
+import {LV, PATHS, teamNick} from '../data/teams.js?v=1.6.2';
+import {AMA_ANNUAL} from '../data/economy.js?v=1.6.2';
+import {card, choose, board, divider} from '../ui/dom.js?v=1.6.2';
+import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.6.2';
+import {allocUI} from '../ui/alloc.js?v=1.6.2';
+import {addAb, ovr, ovrPit, ovrBat, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.6.2';
+import {rollInjury, tjCap, tjEffortMult} from '../engine/injury.js?v=1.6.2';
+import {isMrTeamEligible, accrueCpbl1Service} from '../engine/tenure.js?v=1.6.2';
+import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.6.2';
+import {championshipChance} from '../engine/championship.js?v=1.6.2';
+import {ageGateJP, buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, homecomingFallbackOptions, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, queueSalaryFloor, returnTeam, signTo, teamChampRate} from '../engine/contract.js?v=1.6.2';
+import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.6.2';
+import {loveEvent} from './love.js?v=1.6.2';
+import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.6.2';
+import {endGame} from '../ui/retire.js?v=1.6.2';
 /* ================= 年度流程 ================= */
 export function startYear(){ S.yearOutsideIncome=0; enforcePerfectAbilities(); stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* 七下保送幾顆「6」。天才需要 5 顆，保送不足的部分要玩家自己擲出來。

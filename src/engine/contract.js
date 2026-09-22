@@ -1,18 +1,18 @@
-import {S, levelName} from '../core/state.js?v=1.6.1';
-import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.6.1';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.6.1';
-import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.6.1';
-import {card, choose, board} from '../ui/dom.js?v=1.6.1';
-import {tlNote, tlRestage} from '../ui/timeline.js?v=1.6.1';
-import {ovr} from './ability.js?v=1.6.1';
-import {injuryMarketStatus} from './injury.js?v=1.6.1';
-import {hasActiveFranchise} from './tenure.js?v=1.6.1';
-import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.6.1';
-import {capTeam} from './career.js?v=1.6.1';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.6.1';
-import {advance} from './draft.js?v=1.6.1';
-import {finishContractYear} from '../flow/phases.js?v=1.6.1';
-import {endGame} from '../ui/retire.js?v=1.6.1';
+import {S, levelName} from '../core/state.js?v=1.6.2';
+import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.6.2';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.6.2';
+import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.6.2';
+import {card, choose, board} from '../ui/dom.js?v=1.6.2';
+import {tlNote, tlRestage} from '../ui/timeline.js?v=1.6.2';
+import {ovr} from './ability.js?v=1.6.2';
+import {injuryMarketStatus} from './injury.js?v=1.6.2';
+import {hasActiveFranchise} from './tenure.js?v=1.6.2';
+import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.6.2';
+import {capTeam} from './career.js?v=1.6.2';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.6.2';
+import {advance} from './draft.js?v=1.6.2';
+import {finishContractYear} from '../flow/phases.js?v=1.6.2';
+import {endGame} from '../ui/retire.js?v=1.6.2';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
@@ -456,7 +456,7 @@ export function homecomingFallbackOptions(o,cfg){
     S.ct=makeContract(1,1,'INDEP',0,36,null,'業餘球團合約');
     card('info','加盟獨立聯盟',`沒有職棒球團開價，獨立聯盟球隊卻願意給你舞台——你決定加入 <b class="hl">${team}</b>，繼續留在球場上。`); board(2);
   })});
-  if(o>=LV.CPBL1.min&&chance(60))opts.push({t:'挑戰中職洋將名額',s:'台灣中華職棒開出洋將合約',f:()=>run(()=>{
+  if(o>=LV.CPBL1.min&&chance(60))opts.push({t:'挑戰中職洋將名額',s:'台灣中華職棒開出洋將合約'+(S.cpblDomestic?'':'｜一軍待滿 9 年視同本土'),f:()=>run(()=>{
     const dest=returnTeam('CPBL');
     signTo('CPBL','CPBL1',dest.team,ri(1,2),1,undefined,true);
     card('info','海外挑戰',`台灣中華職棒的 <b class="hl">${dest.team}</b> 開出洋將合約，邀你跨海挑戰——你把握這個機會，前進台灣職棒。`); board(2);
@@ -769,7 +769,7 @@ export function crossOffers(o){
       const n=ri(1,2);
       const bonusBase=spec.lv==='CPBL1'?260:140;
       const offers=makeOffers('CPBL',n,bonusBase,1,2,spec.lv,null).map(of=>priceBid(of,spec.lv));
-      choose('中華職棒遞來洋將合約',[
+      choose('中華職棒遞來洋將合約'+(S.cpblDomestic?'':'｜一軍待滿 9 年視同本土'),[
         ...offers.map(of=>({
           t:of.team+`（${LV[of.lv||spec.lv].n}）`,
           s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(of.annual)} × ${of.yrs} 年｜總額 ${fmtMoney(of.annual*of.yrs)}`,

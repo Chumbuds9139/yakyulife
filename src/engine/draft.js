@@ -1,13 +1,13 @@
-import {S} from '../core/state.js?v=1.6.1';
-import {ri, pick, chance} from '../core/rng.js?v=1.6.1';
-import {NPB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.6.1';
-import {card, choose, board, menuModal} from '../ui/dom.js?v=1.6.1';
-import {tlNote} from '../ui/timeline.js?v=1.6.1';
-import {ovr, playerType} from './ability.js?v=1.6.1';
-import {primaryPos} from './career.js?v=1.6.1';
-import {fmtMoney, flushSalaryFloor, makeOffers, pickOfferUI, signTo, makeContract, rollCpblImport} from './contract.js?v=1.6.1';
-import {startYear} from '../flow/phases.js?v=1.6.1';
-import {endGame} from '../ui/retire.js?v=1.6.1';
+import {S} from '../core/state.js?v=1.6.2';
+import {ri, pick, chance} from '../core/rng.js?v=1.6.2';
+import {NPB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.6.2';
+import {card, choose, board, menuModal} from '../ui/dom.js?v=1.6.2';
+import {tlNote} from '../ui/timeline.js?v=1.6.2';
+import {ovr, playerType} from './ability.js?v=1.6.2';
+import {primaryPos} from './career.js?v=1.6.2';
+import {fmtMoney, flushSalaryFloor, makeOffers, pickOfferUI, signTo, makeContract, rollCpblImport} from './contract.js?v=1.6.2';
+import {startYear} from '../flow/phases.js?v=1.6.2';
+import {endGame} from '../ui/retire.js?v=1.6.2';
 
 /* ---------- 日本版：選秀與生涯路口 ---------- */
 export const JP_UNI=['早稻田大學','慶應義塾大學','明治大學','東洋大學','中央大學','立教大學'];
@@ -58,7 +58,7 @@ function amateurOffseasonDecision(){
 
   const cpbl=rollCpblImport(o, corp?'CORP':'INDEP');
   if(cpbl){
-    opts.push({t:'接受中職洋將合約',s:`台灣球團主動接觸｜${cpbl.lv==='CPBL1'?'一軍洋將':'二軍／培養型'}起步`,f:()=>{
+    opts.push({t:'接受中職洋將合約',s:`台灣球團主動接觸｜${cpbl.lv==='CPBL1'?'一軍洋將':'二軍／培養型'}起步${S.cpblDomestic?'':'｜一軍待滿 9 年視同本土'}`,f:()=>{
       const oldTeam=S.orgTeam;
       S.svc=0; S.faElig=false; S.team='';
       const n=ri(1,2);
