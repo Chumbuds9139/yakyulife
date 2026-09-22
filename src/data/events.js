@@ -3095,7 +3095,7 @@ export const EVENTS=[
     "role": "TW",
     "category": "training",
     "intro": "教練問你：不投球的那幾天，要不要試著站上外野？",
-    "target": "fld",
+    "target": "spd",
     "choices": {
       "bold": {
         "label": "我可以守，給我手套",
@@ -3185,7 +3185,7 @@ export const EVENTS=[
     "role": "TW",
     "category": "training",
     "intro": "投球是把力量往前送，揮棒是把力量轉出去。你的肩膀最近分不清楚自己在做哪一件。",
-    "target": "arm",
+    "target": "vel",
     "choices": {
       "bold": {
         "label": "兩種動作一起改，找出共通的軸",

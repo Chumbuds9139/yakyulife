@@ -13,14 +13,14 @@ try{
   const errors=[]; page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=level-sync`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.6.0');
-    const timeline=await import('./src/ui/timeline.js?v=1.6.0');
-    const phases=await import('./src/flow/phases.js?v=1.6.0');
-    const contract=await import('./src/engine/contract.js?v=1.6.0');
-    const ability=await import('./src/engine/ability.js?v=1.6.0');
-    const events=await import('./src/flow/events.js?v=1.6.0');
-    const data=await import('./src/data/events.js?v=1.6.0');
-    const {board}=await import('./src/ui/dom.js?v=1.6.0');
+    const state=await import('./src/core/state.js?v=1.6.1');
+    const timeline=await import('./src/ui/timeline.js?v=1.6.1');
+    const phases=await import('./src/flow/phases.js?v=1.6.1');
+    const contract=await import('./src/engine/contract.js?v=1.6.1');
+    const ability=await import('./src/engine/ability.js?v=1.6.1');
+    const events=await import('./src/flow/events.js?v=1.6.1');
+    const data=await import('./src/data/events.js?v=1.6.1');
+    const {board}=await import('./src/ui/dom.js?v=1.6.1');
 
     const teamName=function(){ return this.orgTeam||''; };
 

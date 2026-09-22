@@ -1,21 +1,21 @@
-import {S, stepQ, nextStep, stageLabel} from '../core/state.js?v=1.6.0';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.6.0';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.6.0';
-import {LV, PATHS, teamNick} from '../data/teams.js?v=1.6.0';
-import {AMA_ANNUAL} from '../data/economy.js?v=1.6.0';
-import {card, choose, board, divider} from '../ui/dom.js?v=1.6.0';
-import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.6.0';
-import {allocUI} from '../ui/alloc.js?v=1.6.0';
-import {addAb, ovr, ovrPit, ovrBat, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.6.0';
-import {rollInjury, tjCap, tjEffortMult} from '../engine/injury.js?v=1.6.0';
-import {isMrTeamEligible} from '../engine/tenure.js?v=1.6.0';
-import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.6.0';
-import {championshipChance} from '../engine/championship.js?v=1.6.0';
-import {ageGateJP, buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, homecomingFallbackOptions, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, queueSalaryFloor, returnTeam, signTo, teamChampRate} from '../engine/contract.js?v=1.6.0';
-import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.6.0';
-import {loveEvent} from './love.js?v=1.6.0';
-import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.6.0';
-import {endGame} from '../ui/retire.js?v=1.6.0';
+import {S, stepQ, nextStep, stageLabel, levelName} from '../core/state.js?v=1.6.1';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.6.1';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.6.1';
+import {LV, PATHS, teamNick} from '../data/teams.js?v=1.6.1';
+import {AMA_ANNUAL} from '../data/economy.js?v=1.6.1';
+import {card, choose, board, divider} from '../ui/dom.js?v=1.6.1';
+import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.6.1';
+import {allocUI} from '../ui/alloc.js?v=1.6.1';
+import {addAb, ovr, ovrPit, ovrBat, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.6.1';
+import {rollInjury, tjCap, tjEffortMult} from '../engine/injury.js?v=1.6.1';
+import {isMrTeamEligible, accrueCpbl1Service} from '../engine/tenure.js?v=1.6.1';
+import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.6.1';
+import {championshipChance} from '../engine/championship.js?v=1.6.1';
+import {ageGateJP, buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, homecomingFallbackOptions, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, queueSalaryFloor, returnTeam, signTo, teamChampRate} from '../engine/contract.js?v=1.6.1';
+import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.6.1';
+import {loveEvent} from './love.js?v=1.6.1';
+import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.6.1';
+import {endGame} from '../ui/retire.js?v=1.6.1';
 /* ================= 年度流程 ================= */
 export function startYear(){ S.yearOutsideIncome=0; enforcePerfectAbilities(); stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* 七下保送幾顆「6」。天才需要 5 顆，保送不足的部分要玩家自己擲出來。
@@ -175,7 +175,7 @@ export function phasePre(){
            const names=k=>ABL[k];
            card('gold','二刀流',
              `你點了頭。從這一天起，你不再只是${wasP?'投手':'打者'}——<b class="hl">${wasP?'球棒':'投手丘'}</b>也成了你的功課。`+
-             `<br>新增能力：${g.gainedPit.concat(g.gainedBat).map(names).join('、')}（從頭練起）。`+
+             `<br>新增能力：${g.gainedPit.concat(g.gainedBat).map(names).join('、')}（從你目前水準起步）。`+
              `<br>訓練骰顆數保底 <b class="hl">5 顆</b>；但只要投或打其中一側跟不上所在層級的水準，`+
              `球團就會把你收斂回單刀，而那些年投進另一側的點數<b class="dn">沒有人會還給你</b>。`);
            board(1); toAlloc(); }},
@@ -447,7 +447,13 @@ export function movement(){
     S.svc=(S.svc||0)+1; if(S.svc>=5)S.faElig=true;
   }
   if(S.skipMid){ finishContractYear(o); return; } /* 復健年不升降級，但照常累積年資、消耗合約年度與處理到期續約。 */
-  if(o<30){ buyoutRemaining(1); const floorName=(LV[S.lv]&&LV[S.lv].n)||'目前層級'; endGame('能力已跌破'+floorName+'最低水準，'+S.year+' 年球季後遭釋出，被迫引退。'); return; }
+  if(accrueCpbl1Service(S)){
+    card('gold','視同本土',
+      `中華職棒聯盟來了公文。一軍年資累積滿九年——從今天起，你不再佔用球隊的洋將名額，登錄規定<b class="hl">視同本土球員</b>。`+
+      `<br>休息室有人把你名牌上的「洋將」劃掉：「你現在是自己人了。」`);
+    board(2);
+  }
+  if(o<30){ buyoutRemaining(1); const floorName=levelName(S.lv)||'目前層級'; endGame('能力已跌破'+floorName+'最低水準，'+S.year+' 年球季後遭釋出，被迫引退。'); return; }
   const path=PATHS[S.org];
   /* 中職洋將等海外市場若漏登 PATHS，不能讓 indexOf 把整個季末流程炸掉（行動面板已被上一顆按鈕清掉）。 */
   if(!path){ finishContractYear(o); return; }
@@ -455,6 +461,7 @@ export function movement(){
   if(idx<0){ finishContractYear(o); return; }
   let minReq=LV[S.lv].min;
   if(S.org==='NPB'&&S.npbYears>=8){ minReq-=4; }
+  if(S.lv==='CPBL1'&&S.cpblDomestic){ minReq-=4; }
   const perf=(S.seasonFactor>=0.5)?(S.lastD||0):null; /* 傷缺季不看成績 */
   /* 得獎保護傘:當季拿過個人獎項(MVP/王/最佳投手,不含明星賽)→絕不下放/釋出 */
   const wonAward = S.honors.some(x=>x.startsWith(String(S.year))&&/王|MVP|賽揚|澤村|最佳投手|最佳打者|金手套|守備聖經/.test(x)&&!/明星賽/.test(x));

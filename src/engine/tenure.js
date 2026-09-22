@@ -8,3 +8,22 @@ export function isMrTeamEligible(firstTeamSeasons,starSeasons){
 export function hasActiveFranchise(state){
   return !!(state&&state.traits&&state.traits.franchise&&state.franchiseActive);
 }
+
+/* 羅力條款：中職一軍年資滿 9 年，洋將改視同本土、不佔洋將名額。
+   只計真正站上一軍、且該季有出賽的年（復健年／傷缺過半不算）。年資離隊不歸零。 */
+export const CPBL_DOMESTIC_YEARS=9;
+export function isCpblDomestic(state){ return !!(state&&state.cpblDomestic); }
+export function cpbl1YearQualifies(state){
+  if(!state||state.stage!=='PRO'||state.lv!=='CPBL1')return false;
+  if(state.skipMid)return false;
+  return (state.seasonFactor||0)>=0.5;
+}
+export function accrueCpbl1Service(state){
+  if(!cpbl1YearQualifies(state))return false;
+  state.cpbl1Years=(state.cpbl1Years||0)+1;
+  if(!state.cpblDomestic&&state.cpbl1Years>=CPBL_DOMESTIC_YEARS){
+    state.cpblDomestic=true;
+    return true;
+  }
+  return false;
+}

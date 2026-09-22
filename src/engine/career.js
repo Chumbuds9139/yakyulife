@@ -1,10 +1,10 @@
-import {S, CAREER_STAT_BUCKETS} from '../core/state.js?v=1.6.0';
-import {clamp} from '../core/rng.js?v=1.6.0';
-import {DPN, POSN, POS_ADJ_RUNS, POS_TIER_K, POS_TIER_STR} from '../data/abilities.js?v=1.6.0';
-import {LG_N} from '../data/teams.js?v=1.6.0';
-import {TIER_TH, LEAGUE_K, MILESTONE_DEF, HOF_TH_K} from '../data/economy.js?v=1.6.0';
-import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP, pitG, pitBB} from './season.js?v=1.6.0';
-import {isCareerScoringAward, HONOR_GROUP_NAMES, honorSide, splitBySide} from './award-rules.js?v=1.6.0';
+import {S, CAREER_STAT_BUCKETS} from '../core/state.js?v=1.6.1';
+import {clamp} from '../core/rng.js?v=1.6.1';
+import {DPN, POSN, POS_ADJ_RUNS, POS_TIER_K, POS_TIER_STR} from '../data/abilities.js?v=1.6.1';
+import {LG_N} from '../data/teams.js?v=1.6.1';
+import {TIER_TH, LEAGUE_K, MILESTONE_DEF, HOF_TH_K} from '../data/economy.js?v=1.6.1';
+import {fmtIP, slgOf, roleName3, baseballERA, baseballWHIP, pitG, pitBB} from './season.js?v=1.6.1';
+import {isCareerScoringAward, HONOR_GROUP_NAMES, honorSide, splitBySide} from './award-rules.js?v=1.6.1';
 export {HONOR_GROUP_NAMES, honorSide};
 /* ================= 生涯終章 ================= */
 const BUCKET_G={CPBL:120,NPB:143,MLB:162};
@@ -89,12 +89,10 @@ export function twoWayView(){
     CAREER_STAT_BUCKETS.some(b=>isTwoWayCareer(S.stats&&S.stats[b]));
 }
 export function careerScore(st,bucket){
-  if(S.pos==='P')return pitcherCareerScore(st,bucket);
-  /* 二刀流:兩份產出都是他真的打出來的，所以兩邊相加。會不會過強不是靠這裡壓，
-     而是靠 LEAGUE_K.TW 與 HOF_TH_K.TW 這兩個校準常數——尺歸尺、分歸分。
-     打擊側裡的 positionScore 已經含指定打擊的 −14／162 場，那一刀在這裡挨；
-     投球側完全不受影響，所以不會被同一件事罰兩次(posTierK 對二刀流也回 1)。 */
+  /* 二刀流要先於 S.pos 判斷：收斂成投手之後若走 pitcherCareerScore，
+     那十幾年的打擊產出會整段從評價裡消失。tierOf 已經用 isTwoWayCareer 選 TW 係數。 */
   if(isTwoWayCareer(st))return pitcherCareerScore(st,bucket)+hitterCareerScore(st,bucket);
+  if(S.pos==='P')return pitcherCareerScore(st,bucket);
   return hitterCareerScore(st,bucket);
 }
 export function primaryPos(){ /* 生涯主守位:過半→該位;無過半→工具人/搖擺人(年數降序) */
