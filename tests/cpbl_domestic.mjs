@@ -64,10 +64,29 @@ assert.equal(state.stageLabel(),'中職一軍／洋將');
 state.S.cpblDomestic=true;
 assert.equal(state.stageLabel(),'中職一軍');
 assert.equal(state.levelName('CPBL1'),'中職一軍');
+assert.equal(state.levelName('CPBL2'),'中職二軍');
+state.S.lv='CPBL2';
+assert.equal(state.stageLabel(),'中職二軍');
+state.S.lv='CPBL1';
+state.S.cpblDomestic=false;
+assert.equal(state.levelName('CPBL2'),'中職二軍／培養型');
 
 const phaseSrc=readFileSync(new URL('../src/flow/phases.js', import.meta.url),'utf8');
 assert.ok(phaseSrc.includes('accrueCpbl1Service'));
 assert.ok(phaseSrc.includes('視同本土'));
 assert.ok(phaseSrc.includes("S.lv==='CPBL1'&&S.cpblDomestic"));
+
+const contractSrc=readFileSync(new URL('../src/engine/contract.js', import.meta.url),'utf8');
+assert.ok(contractSrc.includes('export function cpblEntryFlavor'));
+assert.ok(contractSrc.includes('回歸中職母隊'));
+assert.ok(contractSrc.includes('重返中職'));
+assert.ok(contractSrc.includes("returnHomeSign(S.org||'NPB','CPBL','CPBL1')"));
+assert.ok(contractSrc.includes("returnHomeSign('NPB','CPBL',spec.lv)"));
+assert.ok(contractSrc.includes('接受中職回歸合約'));
+assert.ok(contractSrc.includes('接受中職洋將合約'));
+const draftSrc=readFileSync(new URL('../src/engine/draft.js', import.meta.url),'utf8');
+assert.ok(draftSrc.includes('cpblEntryFlavor'));
+assert.ok(draftSrc.includes('returnHomeSign'));
+assert.ok(draftSrc.includes('flavor.amateurT'));
 
 console.log('cpbl_domestic ok');

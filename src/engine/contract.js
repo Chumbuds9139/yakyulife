@@ -1,18 +1,18 @@
-import {S, levelName} from '../core/state.js?v=1.6.1';
-import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.6.1';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.6.1';
-import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.6.1';
-import {card, choose, board} from '../ui/dom.js?v=1.6.1';
-import {tlNote, tlRestage} from '../ui/timeline.js?v=1.6.1';
-import {ovr} from './ability.js?v=1.6.1';
-import {injuryMarketStatus} from './injury.js?v=1.6.1';
-import {hasActiveFranchise} from './tenure.js?v=1.6.1';
-import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.6.1';
-import {capTeam} from './career.js?v=1.6.1';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.6.1';
-import {advance} from './draft.js?v=1.6.1';
-import {finishContractYear} from '../flow/phases.js?v=1.6.1';
-import {endGame} from '../ui/retire.js?v=1.6.1';
+import {S, levelName} from '../core/state.js?v=1.6.3';
+import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.6.3';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.6.3';
+import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.6.3';
+import {card, choose, board} from '../ui/dom.js?v=1.6.3';
+import {tlNote, tlRestage} from '../ui/timeline.js?v=1.6.3';
+import {ovr} from './ability.js?v=1.6.3';
+import {injuryMarketStatus} from './injury.js?v=1.6.3';
+import {hasActiveFranchise} from './tenure.js?v=1.6.3';
+import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.6.3';
+import {capTeam} from './career.js?v=1.6.3';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.6.3';
+import {advance} from './draft.js?v=1.6.3';
+import {finishContractYear} from '../flow/phases.js?v=1.6.3';
+import {endGame} from '../ui/retire.js?v=1.6.3';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
@@ -324,10 +324,10 @@ export function handleDemotion(o,path,idx){
         else alts.push(...homecomingFallbackOptions(o,{pre:buyoutRemaining,done:advance}));
       }
       if(alts.length){
-        card('bad','降級通知',`成績未達標，球團打算將你下放 <b class="dn">${LV[path[t]].n}</b>——但消息一出，其他聯盟的邀請也到了。`);
+        card('bad','降級通知',`成績未達標，球團打算將你下放 <b class="dn">${levelName(path[t])||LV[path[t]].n}</b>——但消息一出，其他聯盟的邀請也到了。`);
         choose('接受下放，還是換個舞台？',[
-          {t:'接受下放 '+LV[path[t]].n,main:true,f:()=>{S.lv=path[t];tlRestage();board(2);finishContractYear(o);}},...alts]);
-      }else{ S.lv=path[t]; card('bad','降級通知',`成績未達標，被下放至 <b class="dn">${LV[path[t]].n}</b>。`); tlRestage(); board(2); finishContractYear(o); }
+          {t:'接受下放 '+ (levelName(path[t])||LV[path[t]].n),main:true,f:()=>{S.lv=path[t];tlRestage();board(2);finishContractYear(o);}},...alts]);
+      }else{ S.lv=path[t]; card('bad','降級通知',`成績未達標，被下放至 <b class="dn">${levelName(path[t])||LV[path[t]].n}</b>。`); tlRestage(); board(2); finishContractYear(o); }
     }
     else outOfOrg(o);
   };
@@ -419,7 +419,8 @@ export function returnTeam(org){
   const others=teamListOf(org).filter(t=>t!==home);
   return {team:pick(others.length?others:teamListOf(org)),home,back:false};
 }
-const LEAGUE_OF={CPBL:'中職',NPB:'日職',MiLB:'大聯盟'};
+const LEAGUE_OF={CPBL:'中職',NPB:'日職',MiLB:'大聯盟',MLB:'大聯盟',CORP:'社會人',INDEP:'獨立聯盟'};
+function lvDisplay(lv){ return levelName(lv)||(LV[lv]&&LV[lv].n)||''; }
 /* 從 from 聯盟回到 org 聯盟並簽約。intro 是「為什麼回來」，簽完再依有沒有回到母隊寫結果。 */
 export function returnHomeSign(from,org,lv,intro,o){
   const dest=(o&&o.dest)||returnTeam(org), lg=LEAGUE_OF[org]||'', fromN=LEAGUE_OF[from]||'海外';
@@ -432,14 +433,45 @@ export function returnHomeSign(from,org,lv,intro,o){
   }else if(dest.home){
     card('info','輾轉加盟',`從 <b class="hl">${fromN}</b> 旅外回歸，原本你要重返在${lg}的母隊 <b class="dn">${dest.home}</b>，但在談判過程中，雙方在合約金額以及角色定位上始終有所歧異，最後你沒有辦法重返母隊。輾轉之間，<b class="hl">${dest.team}</b> 遞出了報價——你以${detail}加入 ${dest.team}，在另一座球場重新開始。`);
   }else{
-    card('info','新東家',`<b class="hl">${dest.team}</b> 以${detail}簽下你，你將在${LV[lv].n}展開全新的一章。`);
+    card('info','新東家',`<b class="hl">${dest.team}</b> 以${detail}簽下你，你將在${lvDisplay(lv)}展開全新的一章。`);
   }
 }
 /* ---------- 日職路走不通時的其他出路 ----------
    日本出身球員的預設順位是先設法回日職；只有在日職沒人要時，才輪到這裡：
-   社會人／獨立聯盟是留在日本國內的路，中職洋將則是跨海挑戰。
+   社會人／獨立聯盟是留在日本國內的路，中職則是跨海挑戰。
+   第一次去中職仍是洋將約；去過之後再回來走母隊優先，對齊日職回歸。
+   視同本土之後，任何中職入口都不再寫「洋將」。
    三個選項各自用 chance() 模擬「球團願不願意開價」，門檻不到或運氣不好就不會出現，
    全部落空時呼叫端要自己準備「留在原地」或「引退」的收尾。 */
+export function cpblEntryFlavor(lv){
+  const home=homeTeamOf('CPBL');
+  const domestic=!!(S&&S.cpblDomestic);
+  const nine=domestic?'':'｜一軍待滿 9 年視同本土';
+  const target=lv||'CPBL1';
+  const returning=!!(home||domestic);
+  if(returning){
+    const startN=target==='CPBL1'?'一軍':'二軍';
+    return {
+      returning:true, domestic, home,
+      optionT:domestic?'回歸中職母隊':'重返中職',
+      optionS:(domestic?'視同本土球員｜優先談回離開前的那一隊':'優先談回離開前的那一隊')+nine,
+      chooseTitle:domestic?'中職母隊伸出橄欖枝':'中職球團邀你回歸'+nine,
+      pickTitle:'中華職棒 · 回歸',
+      amateurT:domestic?'接受中職回歸合約':'重返中職',
+      amateurS:`台灣球團主動接觸｜${startN}起步｜母隊優先`+nine,
+    };
+  }
+  const firstStart=target==='CPBL1'?'一軍洋將':'二軍／培養型';
+  return {
+    returning:false, domestic:false, home:null,
+    optionT:'挑戰中職洋將名額',
+    optionS:'台灣中華職棒開出洋將合約'+nine,
+    chooseTitle:'中華職棒遞來洋將合約'+nine,
+    pickTitle:'中華職棒 · 洋將合約',
+    amateurT:'接受中職洋將合約',
+    amateurS:`台灣球團主動接觸｜${firstStart}起步`+nine,
+  };
+}
 export function homecomingFallbackOptions(o,cfg){
   const pre=(cfg&&cfg.pre)||null, done=(cfg&&cfg.done)||null;
   const run=fn=>{ if(pre)pre(); fn(); if(done)done(); };
@@ -456,18 +488,25 @@ export function homecomingFallbackOptions(o,cfg){
     S.ct=makeContract(1,1,'INDEP',0,36,null,'業餘球團合約');
     card('info','加盟獨立聯盟',`沒有職棒球團開價，獨立聯盟球隊卻願意給你舞台——你決定加入 <b class="hl">${team}</b>，繼續留在球場上。`); board(2);
   })});
-  if(o>=LV.CPBL1.min&&chance(60))opts.push({t:'挑戰中職洋將名額',s:'台灣中華職棒開出洋將合約',f:()=>run(()=>{
-    const dest=returnTeam('CPBL');
-    signTo('CPBL','CPBL1',dest.team,ri(1,2),1,undefined,true);
-    card('info','海外挑戰',`台灣中華職棒的 <b class="hl">${dest.team}</b> 開出洋將合約，邀你跨海挑戰——你把握這個機會，前進台灣職棒。`); board(2);
-  })});
+  if(o>=LV.CPBL1.min&&chance(60)){
+    const flavor=cpblEntryFlavor('CPBL1');
+    opts.push({t:flavor.optionT,s:flavor.optionS,f:()=>run(()=>{
+      if(flavor.returning){
+        returnHomeSign(S.org||'NPB','CPBL','CPBL1');
+      }else{
+        const dest=returnTeam('CPBL');
+        signTo('CPBL','CPBL1',dest.team,ri(1,2),1,undefined,true);
+        card('info','海外挑戰',`台灣中華職棒的 <b class="hl">${dest.team}</b> 開出洋將合約，邀你跨海挑戰——你把握這個機會，前進台灣職棒。`); board(2);
+      }
+    })});
+  }
   return opts;
 }
 /* 多隊報價選擇:opts=[{team,bonus,yrs,mult,lv}] */
 export function pickOfferUI(title,org,offers,after){
   choose(title,offers.map(of=>{ const lv=of.lv||S.lv, offerD=ratingAtLevel(currentSalaryRating(S.lastD||0),S.lastLv||S.lv,lv), annual=calcContractAnnual(lv,offerD,of.mult||1);
     return {
-      t:of.team+(of.lv?`（${LV[of.lv].n}）`:''),
+      t:of.team+(of.lv?`（${lvDisplay(of.lv)}）`:''),
       s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(annual)} × ${of.yrs} 年｜合約薪資總額 ${fmtMoney(annual*of.yrs)}`,
       f:()=>{ S.salary+=of.bonus;
         signTo(org,lv,of.team,of.yrs,of.mult||1,annual);
@@ -584,7 +623,7 @@ export function faFlow(o){
         `雖然大聯盟的合約書就攤在桌上，但在幾個輾轉難眠的夜裡，你還是把筆放了下來。橫越太平洋的十幾個小時、一年有兩百天在陌生的旅館醒來——你想的已經不是可以在大聯盟達成什麼成就，而是離家近一點。長考之後，你決定把天賦帶回家鄉：<b class="hl">日本職棒</b>。`);
         advance(); }});
   }
-  /* 5b 日職路走不通時，海外／國內的其他出路（社會人／獨立聯盟／中職洋將） */
+  /* 5b 日職路走不通時，海外／國內的其他出路（社會人／獨立聯盟／中職） */
   if(S.org!=='CPBL')faOpts.push(...homecomingFallbackOptions(o,{done:advance}));
   choose(`合約到期 · 取得自由球員（FA）資格（球隊奪冠率 ${teamChampRate(S.orgTeam)}%）`,faOpts);
 }
@@ -642,13 +681,13 @@ export function faMarket(o,d,settings){
   const ctyOrder={CPBL:0,NPB:1,MiLB:2,MLB:2};
   offers.sort((a,b)=>(ctyOrder[a.org]??9)-(ctyOrder[b.org]??9)); /* 依國家排序:台→日→美 */
   const offerOpts=offers.map(of=>of.cold?({
-    t:`${cty(of.org)}｜${of.team}（${LV[of.lv].n}）`,
+    t:`${cty(of.org)}｜${of.team}（${lvDisplay(of.lv)}）`,
     s:`球團冷處理報價｜固定年薪 ${fmtMoney(of.annual)} × 1 年｜原行情 ×0.90`,
     f:()=>{ signTo(of.org,of.lv,of.team,1,of.mult,of.annual);
       card('info','轉投新東家',`原球團不願意簽你，所以<b class="hl">${of.team}</b>趁虛而入，用較低的代價帶走了你。`);
       advance(); }
   }):({
-    t:`${cty(of.org)}｜${of.team}（${LV[of.lv].n}）`,
+    t:`${cty(of.org)}｜${of.team}（${lvDisplay(of.lv)}）`,
     s:`${of.posting?'日美入札｜讓渡金依最終合約另計':`簽約金 ${fmtMoney(of.bonus)}`}｜奪冠率 ${teamChampRate(of.team)}%｜長/短：${estL(of)}`,
     f:()=>{ const savedLv=S.lv,formerTeam=S.teamName(); S.lv=of.lv;
       termChoice(o,d,`${of.team} · 選擇合約類型`,(y,m,annual,total)=>{ S.lv=savedLv;
@@ -701,8 +740,9 @@ export function rollCpblCrossOffers(o,d,rollJP,rollUSA){
   const usa=o>=57&&d>=2&&!!rollUSA();
   return {jp,usa};
 }
-/* 社會人／獨立聯盟／日職二軍 → 中職洋將。門檻看綜合能力：達培養型就能被看見，
-   達一軍洋將門檻則開一軍約。不是升降級，是台灣球團主動遞約。 */
+/* 社會人／獨立聯盟／日職二軍 → 中職。門檻看綜合能力：達培養型就能被看見，
+   達一軍門檻則開一軍約。不是升降級，是台灣球團主動遞約。
+   第一次去仍是洋將約；去過中職再回來改走母隊回歸，視同本土後不再寫洋將。 */
 export function cpblImportSpec(o, from){
   const ability=Number(o)||0;
   if(ability<LV.CPBL2.min)return null;
@@ -737,13 +777,13 @@ export function crossOffers(o){
     if(hits.jp){
       const jl=o>=51?'NPB1':'NPB2';
       makeOffers('NPB',2,1200,2,3,jl,null).map(of=>priceBid(of,jl)).forEach(of=>opts.push({
-        t:(both?'🇯🇵 ':'')+of.team+`（${LV[jl].n}）`,s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(of.annual)} × ${of.yrs} 年｜總額 ${fmtMoney(of.annual*of.yrs)}`,
+        t:(both?'🇯🇵 ':'')+of.team+`（${lvDisplay(jl)}）`,s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(of.annual)} × ${of.yrs} 年｜總額 ${fmtMoney(of.annual*of.yrs)}`,
         f:()=>{S.salary+=of.bonus;signTo('NPB',jl,of.team,of.yrs,1,of.annual);fin();}}));
     }
     if(hits.usa){
       const ml=o>=60?'MLB':'A3';
       makeOffers('MiLB',2,2000,2,4,ml,null).map(of=>priceBid(of,ml)).forEach(of=>opts.push({
-        t:(both?'🇺🇸 ':'')+of.team+`（${LV[ml].n}）`,s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(of.annual)} × ${of.yrs} 年｜總額 ${fmtMoney(of.annual*of.yrs)}`,
+        t:(both?'🇺🇸 ':'')+of.team+`（${lvDisplay(ml)}）`,s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(of.annual)} × ${of.yrs} 年｜總額 ${fmtMoney(of.annual*of.yrs)}`,
         f:()=>{S.salary+=of.bonus;signTo('MiLB',ml,of.team,of.yrs,1,of.annual);fin();}}));
     }
     if(opts.length){
@@ -766,12 +806,23 @@ export function crossOffers(o){
   if(S.lv==='NPB2'){
     const spec=rollCpblImport(o,'NPB2');
     if(spec){
+      const flavor=cpblEntryFlavor(spec.lv);
+      if(flavor.returning){
+        choose(flavor.chooseTitle,[
+          {t:flavor.optionT,s:flavor.optionS,f:()=>{
+            returnHomeSign('NPB','CPBL',spec.lv);
+            board(0); fin();
+          }},
+          {t:'留在日職二軍',main:true,f:fin}
+        ]);
+        return;
+      }
       const n=ri(1,2);
       const bonusBase=spec.lv==='CPBL1'?260:140;
       const offers=makeOffers('CPBL',n,bonusBase,1,2,spec.lv,null).map(of=>priceBid(of,spec.lv));
-      choose('中華職棒遞來洋將合約',[
+      choose(flavor.chooseTitle,[
         ...offers.map(of=>({
-          t:of.team+`（${LV[of.lv||spec.lv].n}）`,
+          t:of.team+`（${lvDisplay(of.lv||spec.lv)}）`,
           s:`簽約金 ${fmtMoney(of.bonus)}｜固定年薪 ${fmtMoney(of.annual)} × ${of.yrs} 年｜總額 ${fmtMoney(of.annual*of.yrs)}`,
         f:()=>{
           const oldTeam=S.orgTeam;
