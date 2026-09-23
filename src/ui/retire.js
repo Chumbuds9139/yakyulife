@@ -1,18 +1,18 @@
-import {S, blankStat, bucketOf, CAREER_STAT_BUCKETS, CAREER_EVAL_BUCKETS} from '../core/state.js?v=1.6.1';
-import {R, ri, SEED} from '../core/rng.js?v=1.6.1';
-import {OFFICIAL_URL} from '../config.js?v=1.6.1';
-import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, teamNick, npbStadium} from '../data/teams.js?v=1.6.1';
-import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.6.1';
-import {TRAIT_KEYS} from '../data/traits.js?v=1.6.1';
-import {$, card, choose, divider, board, actClear} from './dom.js?v=1.6.1';
-import {careerTimelineCard, tlNote} from './timeline.js?v=1.6.1';
-import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.6.1';
-import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP, pitG, pitBB} from '../engine/season.js?v=1.6.1';
-import {fmtMoney} from '../engine/contract.js?v=1.6.1';
-import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.6.1';
+import {S, blankStat, bucketOf, CAREER_STAT_BUCKETS, CAREER_EVAL_BUCKETS} from '../core/state.js?v=1.6.3';
+import {R, ri, SEED} from '../core/rng.js?v=1.6.3';
+import {OFFICIAL_URL} from '../config.js?v=1.6.3';
+import {LV, LG_N, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, teamNick, npbStadium} from '../data/teams.js?v=1.6.3';
+import {TIER_TH, FAN, RP_LV_SUF} from '../data/economy.js?v=1.6.3';
+import {TRAIT_KEYS} from '../data/traits.js?v=1.6.3';
+import {$, card, choose, divider, board, actClear} from './dom.js?v=1.6.3';
+import {careerTimelineCard, tlNote} from './timeline.js?v=1.6.3';
+import {traitNames, traitTagStyle, traitColorRank} from './traits.js?v=1.6.3';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP, pitG, pitBB} from '../engine/season.js?v=1.6.3';
+import {fmtMoney} from '../engine/contract.js?v=1.6.3';
+import {isChampionshipYear, isProChampionshipYear} from '../engine/championship.js?v=1.6.3';
 import {capTeam, careerMilestones, honorGroups, honorSections, posLegendPhrase, primaryPos, statTable, statTables, tierOf, yearRanges, honorText,
-  twoWayView, twHasPit, twHasBat} from '../engine/career.js?v=1.6.1';
-import {shareImageSheet} from './share-image.js?v=1.6.1';
+  twoWayView, twHasPit, twHasBat} from '../engine/career.js?v=1.6.3';
+import {shareImageSheet} from './share-image.js?v=1.6.3';
 /* ================= 結算圖資料建構 =================
    Data builders for shareImage()'s canvas layout (design handoff 2026-08-14).
    All values come from S.*; the in-game settlement cards are untouched. */
@@ -863,7 +863,7 @@ export function retireScene(tiers){
   const t=tiers&&tiers[lg], i=t?t.i:4;
   let txt='';
   if(lg==='CPBL'){
-    if(i===0)txt=`引退戰選在<b class="hl">臺北大巨蛋</b>。四萬人把巨蛋塞得水洩不通，外野看板掛滿你生涯每一年的照片。${twoWayView()?'九局，你投完最後一個出局數，也打完最後一個打席':S.pos==='P'?'九局，你走完這場先發最後一個出局數':'九局下最後一個打席結束'}，全場燈光暗下，只剩一道追光打在你身上——隊友哭成一團，對手全員列隊脫帽，應援團在二壘後方唱起你的應援曲慢版。你繞場一周，把手套輕輕放在本壘板上。隔天台灣報紙寫：這是中職近年最轟動的一場日本人洋將引退。`;
+    if(i===0)txt=`引退戰選在<b class="hl">臺北大巨蛋</b>。四萬人把巨蛋塞得水洩不通，外野看板掛滿你生涯每一年的照片。${twoWayView()?'九局，你投完最後一個出局數，也打完最後一個打席':S.pos==='P'?'九局，你走完這場先發最後一個出局數':'九局下最後一個打席結束'}，全場燈光暗下，只剩一道追光打在你身上——隊友哭成一團，對手全員列隊脫帽，應援團在二壘後方唱起你的應援曲慢版。你繞場一周，把手套輕輕放在本壘板上。隔天台灣報紙寫：這是中職近年最轟動的一場${S.cpblDomestic?'日本人球星':'日本人洋將'}引退。`;
     else if(i===1)txt=`球團為你舉辦了引退儀式。主場滿場，大螢幕播放生涯回顧影片，從高校歲月到${twoWayView()?'職棒初登板與職棒初安打':S.pos==='P'?'職棒初登板':'職棒初安打'}，一幕一幕。老隊友從各地回來替你獻花，總教練在致詞時哽咽到說不下去。最後你脫下球帽向四個方向的看板深深鞠躬，應援團的鼓聲直到你走進休息室都沒有停。`;
     else if(i===2)txt=`${twoWayView()?'球季最後一個主場日，球團安排你先發登板，並且排在打線的第四棒。投完第一局、打完第一個打席後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你替我們站上兩個位置」。':S.pos==='P'?'球季最後一個主場日，球團安排你先發登板。投完第一局後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你投出的每一顆全力的球」。':'球季最後一個主場日，球團安排你先發打第一棒。第一個打席結束後被換下場，全場觀眾起立鼓掌，隊友在休息室門口排成兩排跟你擊掌。沒有煙火，沒有演唱會，但看台上有人拉起手寫布條：「謝謝你的每一次全力奔跑」。'}`;
     else txt=`你在球團官網的一則新聞稿裡宣布引退。發文的那個晚上，還是有幾十個老球迷湧進你的社群留言：「辛苦了」。職業棒球就是這樣——不是每個人都有儀式，但每個認真打過球的人，都有人記得。`;

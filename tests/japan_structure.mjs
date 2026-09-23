@@ -80,6 +80,10 @@ assert.equal(state.stageLabel(), '中職一軍／洋將');
 state.S.cpblDomestic = true;
 assert.equal(state.stageLabel(), '中職一軍');
 assert.equal(state.levelName('CPBL1'), '中職一軍');
+assert.equal(state.levelName('CPBL2'), '中職二軍');
+state.S.lv = 'CPBL2';
+assert.equal(state.stageLabel(), '中職二軍');
+state.S.lv = 'CPBL1';
 state.S.cpblDomestic = false;
 assert.equal(state.stageLabel(), '中職一軍／洋將');
 
