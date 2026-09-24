@@ -1,13 +1,13 @@
-import {S} from '../core/state.js?v=1.6.3';
-import {ri, pick, chance} from '../core/rng.js?v=1.6.3';
-import {NPB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.6.3';
-import {card, choose, board, menuModal} from '../ui/dom.js?v=1.6.3';
-import {tlNote} from '../ui/timeline.js?v=1.6.3';
-import {ovr, playerType} from './ability.js?v=1.6.3';
-import {primaryPos} from './career.js?v=1.6.3';
-import {fmtMoney, flushSalaryFloor, makeOffers, pickOfferUI, signTo, makeContract, rollCpblImport, cpblEntryFlavor, returnHomeSign} from './contract.js?v=1.6.3';
-import {startYear} from '../flow/phases.js?v=1.6.3';
-import {endGame} from '../ui/retire.js?v=1.6.3';
+import {S} from '../core/state.js?v=1.6.4';
+import {ri, pick, chance} from '../core/rng.js?v=1.6.4';
+import {NPB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS} from '../data/teams.js?v=1.6.4';
+import {card, choose, board, menuModal} from '../ui/dom.js?v=1.6.4';
+import {tlNote} from '../ui/timeline.js?v=1.6.4';
+import {ovr, playerType} from './ability.js?v=1.6.4';
+import {primaryPos} from './career.js?v=1.6.4';
+import {fmtMoney, flushSalaryFloor, makeOffers, pickOfferUI, signTo, makeContract, rollCpblImport, cpblEntryFlavor, returnHomeSign} from './contract.js?v=1.6.4';
+import {startYear} from '../flow/phases.js?v=1.6.4';
+import {endGame} from '../ui/retire.js?v=1.6.4';
 
 /* ---------- 日本版：選秀與生涯路口 ---------- */
 export const JP_UNI=['早稻田大學','慶應義塾大學','明治大學','東洋大學','中央大學','立教大學'];
