@@ -16,7 +16,7 @@ const draftSrc=readFileSync(new URL('../src/engine/draft.js', import.meta.url),'
 assert.ok(draftSrc.includes('rollCpblImport'));
 assert.ok(draftSrc.includes('cpblEntryFlavor'));
 assert.ok(draftSrc.includes('flavor.amateurT'));
-assert.ok(draftSrc.includes('一軍待滿 9 年視同本土'));
+assert.ok(contractSrc.includes('一軍待滿 9 年視同本土'));
 assert.ok(draftSrc.includes('提出合約買斷'));
 assert.equal(draftSrc.includes('業餘隊名'),false);
 assert.equal(draftSrc.includes('不會帶走'),false);
@@ -35,11 +35,11 @@ try{
   const errors=[]; page.on('pageerror',error=>errors.push(error.message));
   await page.goto(`${url}?seed=cpbl-import`,{waitUntil:'domcontentloaded'});
   const result=await page.evaluate(async()=>{
-    const state=await import('./src/core/state.js?v=1.6.3');
-    const teams=await import('./src/data/teams.js?v=1.6.3');
-    const phases=await import('./src/flow/phases.js?v=1.6.3');
-    const contract=await import('./src/engine/contract.js?v=1.6.3');
-    const timeline=await import('./src/ui/timeline.js?v=1.6.3');
+    const state=await import('./src/core/state.js?v=1.6.4');
+    const teams=await import('./src/data/teams.js?v=1.6.4');
+    const phases=await import('./src/flow/phases.js?v=1.6.4');
+    const contract=await import('./src/engine/contract.js?v=1.6.4');
+    const timeline=await import('./src/ui/timeline.js?v=1.6.4');
 
     const low=contract.cpblImportSpec(40,'CORP');
     const corpMid=contract.cpblImportSpec(50,'CORP');

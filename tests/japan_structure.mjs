@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 
 globalThis.location={search:''};
 const state=await import('../src/core/state.js');
-const {LV, PATHS, NPB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, CPBL_TEAMS, isAmateurClub, teamDisplayName}=await import('../src/data/teams.js');
+const {LV, PATHS, NPB_TEAMS, INDEP_TEAMS, CORPORATE_TEAMS, CPBL_TEAMS, isAmateurClub, teamDisplayName, npbStadium}=await import('../src/data/teams.js');
 const {OFFICIAL_URL}=await import('../src/config.js');
 
 assert.equal(state.HS_MAP['花卷東'],2);
@@ -51,6 +51,8 @@ assert.ok(NPB_TEAMS.length >= 12);
 assert.ok(INDEP_TEAMS.length >= 3);
 assert.ok(CORPORATE_TEAMS.length >= 3);
 assert.ok(CPBL_TEAMS.length >= 6);
+assert.equal(npbStadium('北方鬥士'), 'ES CON FIELD');
+assert.equal(npbStadium('北方鬥士').includes('札幌巨蛋'), false);
 assert.equal(OFFICIAL_URL, 'https://chumbuds9139.github.io/yakyulife/');
 
 const draftSrc=readFileSync(new URL('../src/engine/draft.js', import.meta.url),'utf8');
