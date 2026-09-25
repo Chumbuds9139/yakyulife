@@ -1,17 +1,17 @@
-import {S, nextStep, playerName, stageLabel} from '../core/state.js?v=1.6.4';
-import {APP_VER} from '../config.js?v=1.6.4';
-import {SEED} from '../core/rng.js?v=1.6.4';
-import {renderTraits, traitNames} from './traits.js?v=1.6.4';
-import {clearAlloc, allocFullClose} from './alloc.js?v=1.6.4';
-import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.6.4';
-import {DPN, POSN} from '../data/abilities.js?v=1.6.4';
-import {TEAM_COLOR, LV} from '../data/teams.js?v=1.6.4';
-import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js?v=1.6.4';
-import {salParts, fmtMoney} from '../engine/contract.js?v=1.6.4';
-import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP, pitG} from '../engine/season.js?v=1.6.4';
-import {honorGroups, honorSections, yearRanges, twoWayView, twHasPit, twHasBat} from '../engine/career.js?v=1.6.4';
-import {isChampionshipYear} from '../engine/championship.js?v=1.6.4';
-import {playerType, ovr} from '../engine/ability.js?v=1.6.4';
+import {S, nextStep, playerName, stageLabel, levelName} from '../core/state.js?v=1.6.5';
+import {APP_VER} from '../config.js?v=1.6.5';
+import {SEED} from '../core/rng.js?v=1.6.5';
+import {renderTraits, traitNames} from './traits.js?v=1.6.5';
+import {clearAlloc, allocFullClose} from './alloc.js?v=1.6.5';
+import {themeModal, applyBigText, applyMobileUI} from './prefs.js?v=1.6.5';
+import {DPN, POSN} from '../data/abilities.js?v=1.6.5';
+import {TEAM_COLOR, LV} from '../data/teams.js?v=1.6.5';
+import {TRAIT_KEYS, TRAIT_FX} from '../data/traits.js?v=1.6.5';
+import {salParts, fmtMoney} from '../engine/contract.js?v=1.6.5';
+import {roleN, fmtIP, slgOf, baseballERA, baseballWHIP, pitG} from '../engine/season.js?v=1.6.5';
+import {honorGroups, honorSections, yearRanges, twoWayView, twHasPit, twHasBat} from '../engine/career.js?v=1.6.5';
+import {isChampionshipYear} from '../engine/championship.js?v=1.6.5';
+import {playerType, ovr} from '../engine/ability.js?v=1.6.5';
 
 export const $=id=>document.getElementById(id);
 export let _curYearBody=null; /* 當前年度的內容容器 */
@@ -174,7 +174,7 @@ function affiliationHTML(){
   /* 手機版寫法:三個聯盟的頂級層級不掛徽章,二軍就寫二軍,美國新人聯盟寫新人,1A~3A 不變。
      學生年級與業餘成棒兩邊都寫全稱——沒有隊名可以交代那是高幾。 */
   const short=(S.stage==='PRO'&&S.lv&&LV[S.lv])
-    ? (LV[S.lv].top?'':(LV_SHORT[S.lv]||LV[S.lv].n)) : badge;
+    ? (LV[S.lv].top?'':(LV_SHORT[S.lv]||levelName(S.lv)||LV[S.lv].n)) : badge;
   const tc=proTeam&&TEAM_COLOR[proTeam];
   let name;
   if(tc){ /* 判斷顏色是否為白色，避免白底白字 */

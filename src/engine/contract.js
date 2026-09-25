@@ -1,18 +1,18 @@
-import {S, levelName} from '../core/state.js?v=1.6.4';
-import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.6.4';
-import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.6.4';
-import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.6.4';
-import {card, choose, board} from '../ui/dom.js?v=1.6.4';
-import {tlNote, tlRestage} from '../ui/timeline.js?v=1.6.4';
-import {ovr} from './ability.js?v=1.6.4';
-import {injuryMarketStatus} from './injury.js?v=1.6.4';
-import {hasActiveFranchise} from './tenure.js?v=1.6.4';
-import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.6.4';
-import {capTeam} from './career.js?v=1.6.4';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.6.4';
-import {advance} from './draft.js?v=1.6.4';
-import {finishContractYear} from '../flow/phases.js?v=1.6.4';
-import {endGame} from '../ui/retire.js?v=1.6.4';
+import {S, levelName} from '../core/state.js?v=1.6.5';
+import {R, ri, pick, chance, clamp, SEED} from '../core/rng.js?v=1.6.5';
+import {LV, PATHS, CPBL_TEAMS, NPB_TEAMS, MLB_TEAMS, CORPORATE_TEAMS, INDEP_TEAMS, isAmateurClub} from '../data/teams.js?v=1.6.5';
+import {AMA_ANNUAL, LEVEL_MIN_ANNUAL, MLB_SERVICE_MINOR_MIN} from '../data/economy.js?v=1.6.5';
+import {card, choose, board} from '../ui/dom.js?v=1.6.5';
+import {tlNote, tlRestage} from '../ui/timeline.js?v=1.6.5';
+import {ovr} from './ability.js?v=1.6.5';
+import {injuryMarketStatus} from './injury.js?v=1.6.5';
+import {hasActiveFranchise} from './tenure.js?v=1.6.5';
+import {seasonSalaryRating, currentSalaryRating} from './season.js?v=1.6.5';
+import {capTeam} from './career.js?v=1.6.5';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.6.5';
+import {advance} from './draft.js?v=1.6.5';
+import {finishContractYear} from '../flow/phases.js?v=1.6.5';
+import {endGame} from '../ui/retire.js?v=1.6.5';
 export function pitcherContractCap(){ return ({SP:7,CL:5,MR:4})[S.role]||7; }
 /* 年薪（萬台幣）。頂級聯盟採漸進曲線：底薪貼近聯盟現況，明星價值才逐步拉開。 */
 export function hasMlbService(){
@@ -196,7 +196,7 @@ export function marketRating(d,targetLv,sourceLv){
   const target=targetLv||S.lv,source=sourceLv||S.lastLv||S.lv;
   const cur=ratingAtLevel(currentSalaryRating(d),source,target), status=injuryMarketStatus();
   const prior=(S.log||[]).filter(r=>r.y!==S.year&&r.st&&Number.isFinite(r.st.d)).slice(-2).reverse()
-    .map(r=>ratingAtLevel(seasonSalaryRating(r.st,r.lv||source,S.pos==='P'?r.role:r.p),r.lv||source,target));
+    .map(r=>ratingAtLevel(seasonSalaryRating(r.st,r.lv||source,(S.pos==='P'||S.pos==='TW')?r.role:r.p),r.lv||source,target));
   const weights=status==='rehab'?[0.20,0.50,0.30]:status==='major'?[0.35,0.40,0.25]:status==='minor'?[0.55,0.30,0.15]:[0.65,0.25,0.10];
   const vals=[cur].concat(prior); let sum=0,ws=0;
   vals.forEach((v,i)=>{sum+=v*weights[i];ws+=weights[i];});
@@ -206,7 +206,7 @@ export function contractMarketProfile(d,targetLv,sourceLv){
   const target=targetLv||S.lv,source=sourceLv||S.lastLv||S.lv;
   const status=injuryMarketStatus(), rating=marketRating(d,target,source);
   const prior=(S.log||[]).filter(r=>r.y!==S.year&&r.st&&Number.isFinite(r.st.d)).slice(-2)
-    .map(r=>ratingAtLevel(seasonSalaryRating(r.st,r.lv||source,S.pos==='P'?r.role:r.p),r.lv||source,target));
+    .map(r=>ratingAtLevel(seasonSalaryRating(r.st,r.lv||source,(S.pos==='P'||S.pos==='TW')?r.role:r.p),r.lv||source,target));
   const reputation=prior.length?prior.reduce((a,b)=>a+b,0)/prior.length:rating;
   const star=reputation>=7;
   const map={
@@ -427,7 +427,7 @@ export function returnHomeSign(from,org,lv,intro,o){
   if(intro)card('info','長考',intro);
   signTo(org,lv,dest.team,o&&o.yrs,o&&o.mult,o&&o.annual,true);
   const ct=S.ct, detail=`固定年薪 <b class="hl">${fmtMoney(ct.annual)}</b> × <b class="hl">${ct.yrs} 年</b>（合約總額 <b class="hl">${fmtMoney(ct.annual*ct.yrs)}</b>）`;
-  const heroN=S.pos==='P'?'王牌':'第四棒';
+  const heroN=S.pos==='TW'?'王牌兼第四棒':S.pos==='P'?'王牌':'第四棒';
   if(dest.back){
     card('gold','回歸母隊',`從 <b class="hl">${fromN}</b> 回歸，你決定重返母隊 <b class="hl">${dest.team}</b>，而 ${dest.team} 也敞開雙臂歡迎你。球迷們無不引頸期盼你的回歸——無論你在海外的成就如何，在他們眼中，你都還是那個離開前的${heroN}。${dest.team} 以${detail}簽下你，讓你繼續在這片熟悉的紅土上，寫完屬於 ${dest.team} 的傳奇。`);
   }else if(dest.home){

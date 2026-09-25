@@ -75,6 +75,10 @@ const phaseSrc=readFileSync(new URL('../src/flow/phases.js', import.meta.url),'u
 assert.ok(phaseSrc.includes('accrueCpbl1Service'));
 assert.ok(phaseSrc.includes('視同本土'));
 assert.ok(phaseSrc.includes("S.lv==='CPBL1'&&S.cpblDomestic"));
+assert.ok(phaseSrc.includes('levelName(to)'));
+assert.ok(phaseSrc.includes('levelName(nx)'));
+assert.equal(phaseSrc.includes('LV[to].n'), false);
+assert.equal(phaseSrc.includes('LV[nx].n'), false);
 
 const contractSrc=readFileSync(new URL('../src/engine/contract.js', import.meta.url),'utf8');
 assert.ok(contractSrc.includes('export function cpblEntryFlavor'));
