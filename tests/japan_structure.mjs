@@ -53,6 +53,8 @@ assert.ok(CORPORATE_TEAMS.length >= 3);
 assert.ok(CPBL_TEAMS.length >= 6);
 assert.equal(npbStadium('北方鬥士'), 'ES CON FIELD');
 assert.equal(npbStadium('北方鬥士').includes('札幌巨蛋'), false);
+assert.equal(npbStadium('廣島鯉'), '馬自達球場');
+assert.equal(npbStadium('廣島鯉').includes('市民球場'), false);
 assert.equal(OFFICIAL_URL, 'https://chumbuds9139.github.io/yakyulife/');
 
 const draftSrc=readFileSync(new URL('../src/engine/draft.js', import.meta.url),'utf8');

@@ -1,21 +1,21 @@
-import {S, stepQ, nextStep, stageLabel, levelName} from '../core/state.js?v=1.6.4';
-import {R, ri, chance, clamp} from '../core/rng.js?v=1.6.4';
-import {ABL, POS_AB} from '../data/abilities.js?v=1.6.4';
-import {LV, PATHS, teamNick} from '../data/teams.js?v=1.6.4';
-import {AMA_ANNUAL} from '../data/economy.js?v=1.6.4';
-import {card, choose, board, divider} from '../ui/dom.js?v=1.6.4';
-import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.6.4';
-import {allocUI} from '../ui/alloc.js?v=1.6.4';
-import {addAb, ovr, ovrPit, ovrBat, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.6.4';
-import {rollInjury, tjCap, tjEffortMult} from '../engine/injury.js?v=1.6.4';
-import {isMrTeamEligible, accrueCpbl1Service} from '../engine/tenure.js?v=1.6.4';
-import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.6.4';
-import {championshipChance} from '../engine/championship.js?v=1.6.4';
-import {ageGateJP, buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, homecomingFallbackOptions, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, queueSalaryFloor, returnTeam, signTo, teamChampRate} from '../engine/contract.js?v=1.6.4';
-import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.6.4';
-import {loveEvent} from './love.js?v=1.6.4';
-import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.6.4';
-import {endGame} from '../ui/retire.js?v=1.6.4';
+import {S, stepQ, nextStep, stageLabel, levelName} from '../core/state.js?v=1.6.5';
+import {R, ri, chance, clamp} from '../core/rng.js?v=1.6.5';
+import {ABL, POS_AB} from '../data/abilities.js?v=1.6.5';
+import {LV, PATHS, teamNick} from '../data/teams.js?v=1.6.5';
+import {AMA_ANNUAL} from '../data/economy.js?v=1.6.5';
+import {card, choose, board, divider} from '../ui/dom.js?v=1.6.5';
+import {tlNote, tlPush, tlRestage} from '../ui/timeline.js?v=1.6.5';
+import {allocUI} from '../ui/alloc.js?v=1.6.5';
+import {addAb, ovr, ovrPit, ovrBat, dposReview, statBonusTxt, enforcePerfectAbilities} from '../engine/ability.js?v=1.6.5';
+import {rollInjury, tjCap, tjEffortMult} from '../engine/injury.js?v=1.6.5';
+import {isMrTeamEligible, accrueCpbl1Service} from '../engine/tenure.js?v=1.6.5';
+import {amateurSeason, proSeason, slgOf, currentSalaryRating, baseballERA, baseballWHIP, seasonGrade} from '../engine/season.js?v=1.6.5';
+import {championshipChance} from '../engine/championship.js?v=1.6.5';
+import {ageGateJP, buyoutRemaining, contractAnnual, contractMarketProfile, controlledAnnual, crossOffers, daibaFarewell, extensionOffer, faFlow, fmtMoney, handleDemotion, homecomingFallbackOptions, levelMinAnnual, makeContract, makeOffers, offseasonTradeCheck, pickOfferUI, queueSalaryFloor, returnTeam, signTo, teamChampRate} from '../engine/contract.js?v=1.6.5';
+import {drawEvents, removeTrait, checkChampionTrait} from './events.js?v=1.6.5';
+import {loveEvent} from './love.js?v=1.6.5';
+import {runDraft, pathChoiceHS, pathChoiceU4, advance} from '../engine/draft.js?v=1.6.5';
+import {endGame} from '../ui/retire.js?v=1.6.5';
 /* ================= 年度流程 ================= */
 export function startYear(){ S.yearOutsideIncome=0; enforcePerfectAbilities(); stepQ.length=0; stepQ.push(phasePre,phaseMid,phaseEnd); divider(`${S.year} 年 · ${S.age} 歲 · ${stageLabel()}`); tlPush(); nextStep(); }
 /* 七下保送幾顆「6」。天才需要 5 顆，保送不足的部分要玩家自己擲出來。
@@ -518,8 +518,8 @@ export function movement(){
     }
     else if(forced)promote=chance(55);
     if(!promote&&abilityOK){
-      if(grade<0)card('info','球團評估',`體能檢測已達 <b>${LV[nx].n}</b> 的標準，但本季<b class="hl">出賽場數不足</b>，球團看不到足夠的樣本——再打一個完整球季。`);
-      else if(grade<=1)card('info','球團評估',`體能檢測已達 <b>${LV[nx].n}</b> 的標準，但帳面成績還沒說服教練團——<b class="hl">再打一年給他們看</b>。`);
+      if(grade<0)card('info','球團評估',`體能檢測已達 <b>${levelName(nx)}</b> 的標準，但本季<b class="hl">出賽場數不足</b>，球團看不到足夠的樣本——再打一個完整球季。`);
+      else if(grade<=1)card('info','球團評估',`體能檢測已達 <b>${levelName(nx)}</b> 的標準，但帳面成績還沒說服教練團——<b class="hl">再打一年給他們看</b>。`);
     }
     if(promote){
       let to=nx;
@@ -529,9 +529,9 @@ export function movement(){
       S.lv=to;
       tlRestage();
       if(forced)card('good','破格拔擢','體能檢測的數字還差一點，但你的成績讓球團無法忽視——<b class="hl">直接把你拉上去</b>。');
-      card('good','升級通知',`表現獲得肯定，${to!==nx?'<b class="hl">連跳兩級</b>':'晉升'} <b class="hl">${LV[to].n}</b>！`); board(2);
+      card('good','升級通知',`表現獲得肯定，${to!==nx?'<b class="hl">連跳兩級</b>':'晉升'} <b class="hl">${levelName(to)}</b>！`); board(2);
       if(S.ct&&Number.isFinite(oldAnnual)&&levelMinAnnual(to)>oldAnnual)queueSalaryFloor(to,oldAnnual);
-      if(LV[to].top)tlNote(2,'升上'+LV[to].n);
+      if(LV[to].top)tlNote(2,'升上'+levelName(to));
       if(S.traits.yips){ removeTrait('yips','失憶症'); card('good','走出陰影','將身體與心靈重新來過，終於爬回了原本的高度，——<b class="hl">失憶症痊癒</b>。'); } } }
   finishContractYear(o);
 }

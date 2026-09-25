@@ -1,12 +1,12 @@
-import {S} from '../core/state.js?v=1.6.4';
-import {chance, clamp} from '../core/rng.js?v=1.6.4';
-import {DPN, GLOVE_TH, GLOVE_K} from '../data/abilities.js?v=1.6.4';
-import {LV} from '../data/teams.js?v=1.6.4';
-import {card} from '../ui/dom.js?v=1.6.4';
-import {tlNote} from '../ui/timeline.js?v=1.6.4';
-import {isSP, slgOf, baseballERA, pitG} from './season.js?v=1.6.4';
-import {isCareerScoringAward, splitBySide} from './award-rules.js?v=1.6.4';
-import {traitCard, removeTrait} from '../flow/events.js?v=1.6.4';
+import {S} from '../core/state.js?v=1.6.5';
+import {chance, clamp} from '../core/rng.js?v=1.6.5';
+import {DPN, GLOVE_TH, GLOVE_K} from '../data/abilities.js?v=1.6.5';
+import {LV} from '../data/teams.js?v=1.6.5';
+import {card} from '../ui/dom.js?v=1.6.5';
+import {tlNote} from '../ui/timeline.js?v=1.6.5';
+import {isSP, slgOf, baseballERA, pitG} from './season.js?v=1.6.5';
+import {isCareerScoringAward, splitBySide} from './award-rules.js?v=1.6.5';
+import {traitCard, removeTrait} from '../flow/events.js?v=1.6.5';
 /* 獎項機率同時有硬下限與必得上限；數值越低越好的獎項（ERA）用 lower=true。 */
 export function awardP(value,hardLow,autoWin,base=25,lower=false){
   const ineligible=lower?value>hardLow:value<hardLow;
@@ -262,7 +262,7 @@ export function awards(bucket,st){
   }
 
   /* 4. 年度 MVP（最高榮譽）：先通過真實成績門檻，再與聯盟其他球員競爭。 */
-  const isReliever=S.pos==='P'&&!isSP();
+  const isReliever=(S.pos==='P'||S.pos==='TW')&&!isSP();
   const pitchMvpQual=()=>isSP()
     ? st.IP>=140&&st.era<=3.20&&(st.W>=12||st.SO>=th.so[0])
     : pitG(st)>=50&&st.era<=2.20&&((st.SV||0)>=35||(st.HLD||0)>=30);
